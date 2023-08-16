@@ -1,0 +1,17 @@
+__pipeline__:
+  name: grandcanyon
+  main: main.jst
+  description: Human CHM13 genomics suite
+  version: 0.0.1.dev
+constants:
+  grandcanyon:
+    species: Homo sapiens
+    genome_build: t2t_chm13
+    genome_subversion_name: chm13v2
+    gene_model_name: ensembl_v110
+    gene_model_version: 110
+    reference_fasta: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa
+    reference_fai: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fai    
+    reference_dict: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.dict
+    gtf: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_06-genes.gtf
+    vep_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/v103/

@@ -1,0 +1,57 @@
+{% set samples = {} %}
+
+{% for file in dataFiles %}
+    {% set bn = file.path | basename %}
+    {% set name = file.sampleName %}
+
+    {% do file.update({'name': name}) %}
+    {% do file.update({'basename': bn}) %}
+    {% do file.update({'gltype': file.glType.lower()}) %}
+    {% do file.update({'glprep': file.glPrep.lower()}) %}
+
+    {% if 'subGroup' not in file %}
+        {% do file.update({'subGroup': 'constitutional'}) %}
+    {% endif %}
+
+    {% if name not in samples %}
+        {% do samples.update({name: {}}) %}
+        {% do samples[name].update(file) %}
+        {% do samples[name].update({"name": name}) %}
+    {% endif %}
+{% endfor %}
+
+{#
+{% for rgid, data_files in dataFiles | groupby('rgid') %}
+    {% set rg = data_files|first %}
+
+    {% if 'sampleMergeKey' in rg %}
+        {% set name = rg.sampleMergeKey %}
+    {% else %}
+        {% set name = rg.sampleName %}
+    {% endif %}
+    {% if not 'read_groups' in samples[name] %}
+        {% do samples[name].update({'read_groups': {}}) %}
+    {% endif %}
+
+    {% do samples[name]['read_groups'].update({rgid: {}}) %}
+    {% do samples[name]['read_groups'][rgid].update(rg) %}
+    {% do samples[name]['read_groups'][rgid].update({'data_files': data_files}) %}
+{% endfor %}
+#}
+
+{# Copy fastqs to project dir #}
+{# 
+{% for fastq in dataFiles %}
+    {{- copy_fastq(fastq) }}
+{% endfor %}
+#}
+
+
+{# Start of module calls
+{#
+{{- dna_alignment(samples) }}
+
+{{- constitutional_variant_calling(samples) }}
+
+{{- rna_quant_and_fusion_detection(samples) }}
+#}
