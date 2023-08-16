@@ -1,0 +1,396 @@
+{% for sample, uBAM_sets in ubams | groupby("sample") %}
+
+- name: bamtofastq_{{ sample }}
+  output: bamtofastq_{{ sample }}_done
+  cpus: 2
+  mem: 64G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+
+    #input: uBAM from dorado
+    #output: raw fastq
+    #uses -T dx option to add simplex/duplex dx flag from BAM to the fastq header
+    
+    module load {{ config.modules.singularity }}
+    
+    mkdir -p {{ config.workdir }}/fq/{{ sample }}
+    cd {{ config.workdir }}/fq/{{ sample }}
+
+    singularity exec --bind /scratch,/home {{ config.sif.samtools }} fastq -T dx {{ uBAM_sets | map(attribute='ubam') | join('') }} > {{ config.workdir }}/fq/{{ sample }}/{{ sample }}.fq \
+    
+- name: pychopper_{{ sample }}
+  after: bamtofastq_{{ sample }}
+  output: pychopper_{{ sample }}_done
+  cpus: 10
+  mem: 42G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+
+    #input: raw fastq
+    #output: pychopper chopped and rescued fastq
+
+    module load {{ config.modules.singularity }}
+
+    mkdir -p {{ config.workdir }}/pychopper/{{ sample }}
+    cd {{ config.workdir }}/pychopper/{{ sample }}
+
+    singularity exec --bind /scratch,/home {{ config.sif.pychopper }} cdna_classifier.py -m edlib -t ${SLURM_CPUS_PER_TASK} -r report.pdf -A aln_hits.bed -S statistics.tsv -u unclassified.fq -w rescued.fq {{ config.workdir }}/fq/{{ sample }}/{{ sample }}.fq full_length_output.fq
+    cat full_length_output.fq rescued.fq > pychopper_all.fq
+
+- name: minimapSIRV_{{ sample }}
+  after: pychopper_{{ sample }}
+  output: minimapSIRV_{{ sample }}_done
+  cpus: 10
+  mem: 42G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+
+    #input: pychopper chopped and rescued fastq
+    #output: SIRVome mapped SAM
+
+    module load {{ config.modules.singularity }}
+
+    mkdir -p {{ config.workdir }}/minimap2/{{ sample }}
+    cd {{ config.workdir }}/minimap2/{{ sample }}
+
+    singularity exec --bind /scratch,/home {{ config.sif.minimap2 }} minimap2 -ax splice --splice-flank=no --secondary-no -t ${SLURM_CPUS_PER_TASK} -L {{ config.file_locations.genomeSIRV }} {{ config.workdir }}/pychopper/{{ sample }}/pychopper_all.fq> {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sam 2> {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sam.log
+
+- name: samtoolsfiltSIRV_{{ sample }}
+  output: samtoolsfiltSIRV_{{ sample }}_done
+  after: minimapSIRV_{{ sample }}
+  cpus: 2
+  mem: 32G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+
+    module load {{ config.modules.singularity }}
+
+    cd {{ config.workdir }}/minimap2/{{ sample }}
+
+    singularity exec --bind /scratch,/home {{ config.sif.samtools }} samtools view -f 4 -bhu {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sam > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.bam
+
+- name: samtoolsfastq_{{ sample }}
+  output: samtoolsfastq_{{ sample }}_done
+  after: samtoolsfiltSIRV_{{ sample }}
+  cpus: 4
+  mem: 32G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+
+    module load {{ config.modules.singularity }}
+
+    cd {{ config.workdir }}/minimap2/{{ sample }}
+
+    singularity exec --bind /scratch,/home {{ config.sif.samtools }} samtools fastq -@ ${SLURM_CPUS_PER_TASK} {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.bam > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.fq
+
+- name: minimap_{{ sample }}
+  after: samtoolsfastq_{{ sample }}
+  output: minimap_{{ sample }}_done
+  cpus: 10
+  mem: 42G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+
+    mkdir -p {{ config.workdir }}/minimap2/{{ sample }}
+    cd {{ config.workdir }}/minimap2/{{ sample }}
+
+    singularity exec --bind /scratch,/home {{ config.sif.minimap2 }} minimap2 -ax map-ont -t ${SLURM_CPUS_PER_TASK} -L --secondary=no {{ config.file_locations.genome }} {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.fq> {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sam 2> {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.sam.log
+
+- name: samtoolsIndex_{{ sample }}
+  output: samtoolsIndex_{{ sample }}_done
+  after: minimap_{{ sample }}
+  cpus: 4
+  mem: 32G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+
+    module load {{ config.modules.singularity }}
+
+    cd {{ config.workdir }}/minimap2/{{ sample }}
+
+    singularity exec --bind /scratch,/home samtools sort -@ ${SLURM_CPUS_PER_TASK} -m 6G -O bam -o {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sam
+
+    singularity exec --bind /scratch,/home samtools index {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam
+
+    singularity exec --bind /scratch,/home samtools view -F 4 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ sample }}_mapped_withSupp_readLength.txt
+
+    singularity exec --bind /scratch,/home samtools view -F 4 -F 2048 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ sample }}_mapped_noSupp_readLength.txt
+
+    singularity exec --bind /scratch,/home samtools view -f 4 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ sample }}_unmapped_readLength.txt
+
+    singularity exec --bind /scratch,/home samtools view -F 4 -F 2048 -b {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.noSupp.bam
+
+    rm *.sam
+
+{% if config.pipe_params.fc %}
+- name: featureCounts_{{ sample }}
+  after: samtoolsIndex_{{ sample }}
+  output: featureCounts_{{ sample }}_done
+  cpus: 10
+  mem: 40G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-2:00
+    #SBATCH -p overflow
+
+    module load {{ config.modules.featureCounts }}
+
+    mkdir {{ config.workdir }}/counted
+    cd {{ config.workdir }}/counted
+
+    featureCounts -T ${SLURM_CPUS_PER_TASK} -t exon -g gene_id -a {{ config.file_locations.annotation }} -L -o {{ sample }}.txt {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam
+{% endif %}
+
+{% if config.pipe_params.salmon %}
+- name: salmon_{{ sample }}
+  after: minimap_{{ sample }}
+  cpus: 10
+  mem: 42G
+  output: salmon_{{ sample }}_done
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+    #SBATCH -p overflow
+
+    mkdir -p {{ config.workdir }}/quasimapped
+    cd {{ config.workdir }}/quasimapped
+
+    {{ config.sif.salmon }} quant \
+      --no-version-check \
+      --libType A \
+      --output {{ sample }} \
+      --threads ${SLURM_CPUS_PER_TASK} \
+      --numBootstraps 100 \
+      --dumpEq \
+      --ont \
+      --alignments {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sam \
+      --targets {{ config.file_locations.targets }}
+{% endif %}
+
+{% if config.pipe_params.flair %}
+- name: flair_{{ sample }}
+  output: flair_{{ sample }}_done
+  after: samtoolsIndex_{{ sample }}
+  cpus: 10
+  mem: 42G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+    #SBATCH -p overflow
+
+    module load {{ config.modules.singularity }}
+
+    mkdir -p {{ config.workdir }}/flair/{{ sample }}
+    cd {{ config.workdir }}/flair/{{ sample }}
+
+    #singularity exec {{ config.sif.flair }} flair align -r {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.fq -g {{ config.file_locations.genome }} -t ${SLURM_CPUS_PER_TASK}
+
+    singularity exec --bind /scratch,/home {{ config.sif.flair }} bam2Bed12 -i {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam > flair.aligned.bed
+    
+    singularity exec --bind /scratch,/home {{ config.sif.flair }} flair correct -q flair.aligned.bed -g {{ config.file_locations.genome }} -t ${SLURM_CPUS_PER_TASK} -f {{ config.file_locations.annotation }}
+
+    singularity exec --bind /scratch,/home {{ config.sif.flair }} flair collapse -g {{ config.file_locations.genome }} -r {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.fq -f {{ config.file_locations.annotation }} -q flair_all_corrected.bed -t ${SLURM_CPUS_PER_TASK}
+
+    printf "{{ sample }}\t{{ sample }}\tbatch1\t{{  fastq_sets | map(attribute='fq1') | join('')  }}" > reads_manifest.tsv.tmp
+    awk '{gsub("_","", $1)}1' reads_manifest.tsv.tmp | awk '{gsub("_","", $2)}1' | awk '{gsub("_","", $3)}1' > reads_manifest.tsv.tmp2
+    sed -i 's/ /\t/g' reads_manifest.tsv.tmp2
+    ( printf "\xff\xfe" ; iconv -f utf-8 -t utf-16le reads_manifest.tsv.tmp2 ) > reads_manifest.tsv
+
+    singularity exec --bind /scratch,/home {{ config.sif.flair }} flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa
+
+    singularity exec --bind /scratch,/home {{ config.sif.flair }} flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa --tpm
+
+    awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' flair.collapse.isoforms.fa | awk '{printf("%d\t%s\t%s\t%s\n",length($2),$1,$1,$2);}'  | sort -t $'\t'  -k1,1nr  | cut -f 1,2 | head > {{ sample }}_flair_top10.txt
+
+    rm *.sam
+{% endif %}
+
+
+{% if config.pipe_params.isoquant %}
+- name: isoquant_{{ sample }}
+  cpus: 20
+  mem: 42G
+  after: samtoolsIndex_{{ sample }}
+  output: isoquant_{{ sample }}_done
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-8:00
+
+    module load {{ config.modules.singularity }}
+
+    mkdir {{ config.workdir }}/isoquant/{{ sample }}
+    cd {{ config.workdir }}/isoquant/{{ sample }}
+
+    singularity exec --bind /scratch,/home {{ config.sif.isoquant }} isoquant.py --reference {{ config.file_locations.genome }} \
+    -o {{ config.workdir }}/isoquant/{{ sample }}/ \
+    -g {{ config.file_locations.annotation }} \
+    -d nanopore \
+    --complete_genedb \
+    --bam {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam \
+    --labels {{ sample }} \
+    -p {{ sample }} \
+    --sqanti_output \
+    --check_canonical \
+    -t 20 
+{% endif %}
+
+
+{% if config.pipe_params.sirv %}
+- name: samtoolsSortSIRV_{{ sample }}
+  output: samtoolsSortSIRV_{{ sample }}_done
+  after: minimapSIRV_{{ sample }}
+  cpus: 4
+  mem: 32G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+
+    module load {{ config.modules.singularity }}
+
+    cd {{ config.workdir }}/minimap2/{{ sample }}
+
+    singularity exec --bind /scratch,/home samtools sort -@ ${SLURM_CPUS_PER_TASK} -m 6G -O bam -o {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sam
+
+    singularity exec --bind /scratch,/home samtools index {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam
+
+    singularity exec --bind /scratch,/home samtools view -F 4 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","SIRV4"}' > {{ sample }}_SIRVome_mapped_withSupp_readLength.txt
+
+    singularity exec --bind /scratch,/home samtools view -F 4 -F 2048 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","SIRV4"}' > {{ sample }}_SIRVome_mapped_noSupp_readLength.txt
+
+    singularity exec --bind /scratch,/home samtools view -f 4 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ sample }}_SIRVome_unmapped_readLength.txt
+
+- name: featureCountsSIRV_{{ sample }}
+  after: samtoolsSortSIRV_{{ sample }}
+  output: featureCountsSIRV_{{ sample }}_done
+  cpus: 10
+  mem: 40G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-2:00
+
+    module load {{ config.modules.featureCounts }}
+
+    mkdir {{ config.workdir }}/counted-SIRVome
+    cd {{ config.workdir }}/counted-SIRVome
+
+    featureCounts -T ${SLURM_CPUS_PER_TASK} -t exon -g gene_id -a {{ config.file_locations.annotationSIRV }} -L -o {{ sample }}_SIRVome.txt {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam
+
+- name: salmonSIRV_{{ sample }}
+  output: salmonSIRV_{{ sample }}_done
+  after: minimapSIRV_{{ sample }}
+  cpus: 10
+  mem: 42G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+
+    mkdir -p {{ config.workdir }}/quasimapped-SIRVome
+    cd {{ config.workdir }}/quasimapped-SIRVome
+
+    {{ config.executables.salmon }} quant \
+      --no-version-check \
+      --libType A \
+      --output {{ sample }}_SIRVome \
+      --threads ${SLURM_CPUS_PER_TASK} \
+      --numBootstraps 100 \
+      --dumpEq \
+      --ont \
+      --alignments {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.bam \
+      --targets {{ config.file_locations.targetsSIRV }}
+
+
+- name: flairSIRV_{{ sample }}
+  output: flairSIRV_{{ sample }}_done
+  after: samtoolsSortSIRV_{{ sample }}
+  cpus: 10
+  mem: 42G
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+
+    module load {{ config.modules.singularity }}
+
+    mkdir -p {{ config.workdir }}/flair-SIRVome/{{ sample }}
+    cd {{ config.workdir }}/flair-SIRVome/{{ sample }}
+
+    #singularity exec {{ config.sif.flair }} flair align -r {{ config.workdir }}/pychopper/{{ sample }}/pychopper_all.fq -g {{ config.file_locations.genomeSIRV }} -t ${SLURM_CPUS_PER_TASK}
+
+    singularity exec --bind /scratch,/home {{ config.sif.flair }} bam2Bed12 -i {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam > flair.aligned.bed
+    
+    singularity exec --bind /scratch,/home {{ config.sif.flair }} flair correct -q flair.aligned.bed -g {{ config.file_locations.genomeSIRV }} -t ${SLURM_CPUS_PER_TASK} -f {{ config.file_locations.annotationSIRV }}
+
+    singularity exec --bind /scratch,/home {{ config.sif.flair }} flair collapse -g {{ config.file_locations.genomeSIRV }} -r {{ config.workdir }}/pychopper/{{ sample }}/pychopper_all.fq -f {{ config.file_locations.annotationSIRV }} -q flair_all_corrected.bed -t ${SLURM_CPUS_PER_TASK}
+
+    printf "{{ sample }}\t{{ sample }}\tbatch1\t{{ config.workdir }}/pychopper/{{ sample }}/pychopper_all.fq" > reads_manifest.tsv.tmp
+    awk '{gsub("_","", $1)}1' reads_manifest.tsv.tmp | awk '{gsub("_","", $2)}1' | awk '{gsub("_","", $3)}1' > reads_manifest.tsv
+    sed -i 's/ /\t/g' reads_manifest.tsv
+
+    singularity exec --bind /scratch,/home {{ config.sif.flair }} flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa
+
+    singularity exec --bind /scratch,/home {{ config.sif.flair }} flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa --tpm
+
+    rm *.sam
+
+
+- name: isoquantSIRV_{{ sample }}
+  cpus: 20
+  mem: 42G
+  after: samtoolsSortSIRV_{{ sample }}
+  output: isoquantSIRV_{{ sample }}_done
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+
+    mkdir {{ config.workdir }}/isoquant-SIRVome/{{ sample }}
+    cd {{ config.workdir }}/isoquant-SIRVome/{{ sample }}
+
+    module load {{ config.modules.singularity }}
+
+    singularity exec --bind /scratch,/home {{ config.sif.isoquant }} isoquant.py --reference {{ config.file_locations.genomeSIRV }} \
+    -o {{ config.workdir }}/isoquant-SIRVome/{{ sample }}/ \
+    -d nanopore \
+    -g {{ config.file_locations.annotationSIRV }} \
+    --complete_genedb \
+    --bam {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam \
+    --labels {{ sample }} \
+    -p {{ sample }} \
+    --sqanti_output \
+    --check_canonical \
+    -t 20 
+
+{% endif %}
+
+{% if config.pipe_params.sirvsuite %}
+- name: SIRVSuite_{{ sample }}
+  after: salmonSIRV_{{ sample }}
+  cpus: 1
+  mem: 42G
+  after: samtoolsSortSIRV_{{ sample }},salmonSIRV_{{ sample }}
+  output: SIRVSuite_{{ sample }}_done
+  cmd: |
+    #!/bin/bash
+    #SBATCH -t 0-4:00
+
+    module load python3
+    {{ config.conda.sirvsuite }}
+
+    mkdir -p {{ config.workdir }}/SIRVSuite/{{ sample }}
+    cd {{ config.workdir }}/quasimapped-SIRVome/{{ sample }}/
+    python3 {{ config.pygmy_path }}/accessories/quant_to_SIRVSuite.py
+    cd {{ config.workdir }}/SIRVSuite/{{ sample }}
+
+    printf "{{ sample }};{{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.sorted.bam;{{ config.workdir }}/quasimapped-SIRV/{{ sample }}/transcript_count.txt;FWD;transcript;none" > reads_manifest.tsv
+    sed -i "1isample_name;alignment_path;counting_path;read_orientation;counting_feature;replication_group" reads_manifest.tsv
+
+    SIRVsuite -i reads_manifest.tsv -o ./ --experiment-name "HBR2-14cycles-SUP" -a
+
+{% endif %}
+
+{% endfor %}

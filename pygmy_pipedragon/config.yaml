@@ -1,0 +1,36 @@
+# This file should contain everything to configure the workflow on a global scale.
+
+workdir: "/scratch/ehutchins/ont-hbr2/results/"
+
+pygmy_path: "~/tools/pygmy-pipedragon"
+
+pipe_params:
+  pychopper: TRUE
+  sirv: TRUE
+  minimap: TRUE
+  fc: TRUE
+  flair: TRUE
+  salmon: TRUE
+  sirvsuite: FALSE
+  isoquant: TRUE
+
+sif:
+  minimap2: "/home/tgenref/containers/grandcanyon/alignment/minimap2_2.26--he4a0461_1.sif"
+  flair: "~/tools/flair_2.0.0--pyhdfd78af_1.sif"
+  salmon: "/home/ehutchins/tools/salmon-1.9.0_linux_x86_64/bin/salmon"
+  isoquant: "/home/ehutchins/tools/isoquant_3.3.1--hdfd78af_0.sif"
+  pychopper: "/home/ehutchins/tools/pychopper_2.5.0--py_0.sif"
+  samtools: "/home/tgenref/containers/grandcanyon/common_tools/samtools_1.17--hd87286a_1.sif"
+
+modules:
+  singularity: "singularity/3.8.4"
+
+file_locations:
+  salmonIndex: "/scratch/ehutchins/resources/salmon_gentrome_index/"
+  genome: "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gencode.v29/GRCh38.primary_assembly.genome.fa"
+  annotation: "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gencode.v29.lncipedia_v5_2_hc/gencode_v29.lncipedia_v5_2_hc.annotation.gtf"
+  targets: "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gencode.v29.lncipedia_v5_2_hc/gencode_v29.lncipedia_v5_2_hc.annotation.fa"
+  salmonIndexSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta/salmonIndex/"
+  genomeSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta_20210507.fasta"
+  annotationSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf"
+  targetsSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa"
