@@ -8,11 +8,10 @@ pipe_params:
   pychopper: TRUE
   sirv: TRUE
   minimap: TRUE
-  fc: TRUE
-  flair: TRUE
-  salmon: TRUE
-  sirvsuite: FALSE
-  isoquant: TRUE
+  fc: FALSE
+  flair: FALSE
+  salmon: FALSE
+  isoquant: FALSE
 
 sif:
   minimap2: "/home/tgenref/containers/grandcanyon/alignment/minimap2_2.26--he4a0461_1.sif"
@@ -27,8 +26,8 @@ modules:
 
 file_locations:
   salmonIndex: "/scratch/ehutchins/resources/salmon_gentrome_index/"
-  genome: "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gencode.v29/GRCh38.primary_assembly.genome.fa"
-  annotation: "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gencode.v29.lncipedia_v5_2_hc/gencode_v29.lncipedia_v5_2_hc.annotation.gtf"
+  genome: "/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/chm13v2.0_maskedY_rCRS.fa"
+  annotation: "/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_06-genes.gtf.gz"
   targets: "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gencode.v29.lncipedia_v5_2_hc/gencode_v29.lncipedia_v5_2_hc.annotation.fa"
   salmonIndexSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta/salmonIndex/"
   genomeSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta_20210507.fasta"
