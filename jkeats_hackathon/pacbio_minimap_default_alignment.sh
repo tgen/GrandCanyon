@@ -46,7 +46,6 @@ singularity exec -B $OUTPUT_DIR -B $REFERENCE_DIR ${MINIMAP2_SIF} \
   minimap2 \
   -x map-hifi \
   -d chm13v2.0_maskedY_rCRS_mapHiFi.mmi \
-  --alt ${ALT_FILE} \
   ${REFERENCE}
 
 
