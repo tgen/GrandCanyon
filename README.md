@@ -58,7 +58,7 @@ __Example data__
   - `/scratch/bturner/grandcanyon/oxford_nano_data/tumor_KMS11/KMS11_JPN.sorted.ont.chm13.bam`
 
 - PacBio
-  - COLO829 (~20X depth): `/scratch/bturner/grandcanyon/pacbio_revio_data/estimated_20X_depth/COLO829BL_ATCCJJK_p1_CL_C2_mm_rg_sort.cram`
+  - COLO829 (~20X depth, methylation data not retained): `/scratch/bturner/grandcanyon/pacbio_revio_data/estimated_20X_depth/COLO829BL_chm13.bam`
   - SRR9087600: `/scratch/bturner/grandcanyon/pacbio_revio_data/SRX5633451/SRR9087600.fastq.gz`
 
 CHM13 v2 resources:  
