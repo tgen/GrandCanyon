@@ -1,231 +1,151 @@
-Aug-16 11:40:43.932 [main] DEBUG nextflow.cli.Launcher - $> nextflow run main.nf -bg -resume
-Aug-16 11:40:44.015 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 22.10.7
-Aug-16 11:40:44.033 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/vpagano/.nextflow/plugins; core-plugins: nf-amazon@1.11.4,nf-azure@0.14.2,nf-codecommit@0.1.2,nf-console@1.0.4,nf-ga4gh@1.0.4,nf-google@1.4.5,nf-tower@1.5.6,nf-wave@0.5.4
-Aug-16 11:40:44.042 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
-Aug-16 11:40:44.043 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
-Aug-16 11:40:44.046 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.4.1 in 'deployment' mode
-Aug-16 11:40:44.068 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
-Aug-16 11:40:44.085 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/nextflow.config
-Aug-16 11:40:44.085 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/nextflow.config
-Aug-16 11:40:44.107 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
-Aug-16 11:40:44.610 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 by global default
-Aug-16 11:40:44.626 [main] INFO  nextflow.cli.CmdRun - Launching `main.nf` [intergalactic_brenner] DSL2 - revision: 7e35ce4324
-Aug-16 11:40:44.627 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
-Aug-16 11:40:44.627 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[nf-tower@1.5.6]
-Aug-16 11:40:44.627 [main] DEBUG nextflow.plugin.PluginUpdater - Installing plugin nf-tower version: 1.5.6
-Aug-16 11:40:44.637 [main] INFO  org.pf4j.AbstractPluginManager - Plugin 'nf-tower@1.5.6' resolved
-Aug-16 11:40:44.637 [main] INFO  org.pf4j.AbstractPluginManager - Start plugin 'nf-tower@1.5.6'
-Aug-16 11:40:44.650 [main] DEBUG nextflow.plugin.BasePlugin - Plugin started nf-tower@1.5.6
-Aug-16 11:40:44.661 [main] DEBUG nextflow.secret.LocalSecretsProvider - Secrets store: /home/vpagano/.nextflow/secrets/store.json
-Aug-16 11:40:44.664 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@6af91cc8] - activable => nextflow.secret.LocalSecretsProvider@6af91cc8
-Aug-16 11:40:44.752 [main] DEBUG nextflow.Session - Session UUID: 84ea8f13-1741-4a0b-afd5-66dce6201260
-Aug-16 11:40:44.752 [main] DEBUG nextflow.Session - Run name: intergalactic_brenner
-Aug-16 11:40:44.752 [main] DEBUG nextflow.Session - Executor pool size: 36
-Aug-16 11:40:44.763 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=108; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
-Aug-16 11:40:44.768 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/nextflow.config
-Aug-16 11:40:44.768 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/nextflow.config
-Aug-16 11:40:44.769 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
-Aug-16 11:40:44.843 [main] DEBUG nextflow.cli.CmdRun - 
+Aug-16 13:24:59.802 [main] DEBUG nextflow.cli.Launcher - $> nextflow run main.nf -bg -resume
+Aug-16 13:24:59.887 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 22.10.7
+Aug-16 13:24:59.905 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/vpagano/.nextflow/plugins; core-plugins: nf-amazon@1.11.4,nf-azure@0.14.2,nf-codecommit@0.1.2,nf-console@1.0.4,nf-ga4gh@1.0.4,nf-google@1.4.5,nf-tower@1.5.6,nf-wave@0.5.4
+Aug-16 13:24:59.915 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Aug-16 13:24:59.916 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Aug-16 13:24:59.919 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.4.1 in 'deployment' mode
+Aug-16 13:24:59.941 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Aug-16 13:24:59.961 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/nextflow.config
+Aug-16 13:24:59.961 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/nextflow.config
+Aug-16 13:24:59.985 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Aug-16 13:25:00.494 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 by global default
+Aug-16 13:25:00.509 [main] INFO  nextflow.cli.CmdRun - Launching `main.nf` [clever_bell] DSL2 - revision: 7e35ce4324
+Aug-16 13:25:00.510 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+Aug-16 13:25:00.510 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[nf-tower@1.5.6]
+Aug-16 13:25:00.510 [main] DEBUG nextflow.plugin.PluginUpdater - Installing plugin nf-tower version: 1.5.6
+Aug-16 13:25:00.525 [main] INFO  org.pf4j.AbstractPluginManager - Plugin 'nf-tower@1.5.6' resolved
+Aug-16 13:25:00.525 [main] INFO  org.pf4j.AbstractPluginManager - Start plugin 'nf-tower@1.5.6'
+Aug-16 13:25:00.537 [main] DEBUG nextflow.plugin.BasePlugin - Plugin started nf-tower@1.5.6
+Aug-16 13:25:00.547 [main] DEBUG nextflow.secret.LocalSecretsProvider - Secrets store: /home/vpagano/.nextflow/secrets/store.json
+Aug-16 13:25:00.551 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@6af91cc8] - activable => nextflow.secret.LocalSecretsProvider@6af91cc8
+Aug-16 13:25:00.632 [main] DEBUG nextflow.Session - Session UUID: 84ea8f13-1741-4a0b-afd5-66dce6201260
+Aug-16 13:25:00.632 [main] DEBUG nextflow.Session - Run name: clever_bell
+Aug-16 13:25:00.632 [main] DEBUG nextflow.Session - Executor pool size: 36
+Aug-16 13:25:00.642 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=108; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+Aug-16 13:25:00.646 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/nextflow.config
+Aug-16 13:25:00.646 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/nextflow.config
+Aug-16 13:25:00.647 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Aug-16 13:25:00.716 [main] DEBUG nextflow.cli.CmdRun - 
   Version: 22.10.7 build 5853
   Created: 18-02-2023 20:32 UTC (13:32 MDT)
   System: Linux 4.18.0-305.3.1.el8_4.x86_64
   Runtime: Groovy 3.0.13 on OpenJDK 64-Bit Server VM 11.0.2+9
   Encoding: UTF-8 (UTF-8)
-  Process: 1549850@gemini-login1 [192.168.31.41]
-  CPUs: 36 - Mem: 187.4 GB (19.4 GB) - Swap: 12 GB (503.3 MB)
-Aug-16 11:40:44.873 [main] DEBUG nextflow.Session - Work-dir: /scratch/vpagano/tmp [nfs]
-Aug-16 11:40:44.873 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/bin
-Aug-16 11:40:44.883 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
-Aug-16 11:40:44.894 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
-Aug-16 11:40:44.894 [main] DEBUG nextflow.Session - Observer factory: TowerFactory
-Aug-16 11:40:45.028 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
-Aug-16 11:40:45.038 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 37; maxThreads: 1000
-Aug-16 11:40:45.139 [main] DEBUG nextflow.Session - Session start
-Aug-16 11:40:45.163 [main] DEBUG io.seqera.tower.plugin.TowerClient - Creating Tower observer -- endpoint=http://pnap-tower.tgen.org:8000/api; requestInterval=1s; aliveInterval=1m; maxRetries=5; backOffBase=3; backOffDelay=250
-Aug-16 11:40:45.405 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
-Aug-16 11:40:45.778 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
-Aug-16 11:40:45.778 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
-Aug-16 11:40:45.785 [main] DEBUG nextflow.executor.Executor - [warm up] executor > slurm
-Aug-16 11:40:45.788 [main] DEBUG n.processor.TaskPollingMonitor - Creating task monitor for executor 'slurm' > capacity: 100; pollInterval: 5s; dumpInterval: 5m 
-Aug-16 11:40:45.792 [main] DEBUG n.executor.AbstractGridExecutor - Creating executor 'slurm' > queue-stat-interval: 1m
-Aug-16 11:40:45.867 [main] DEBUG nextflow.processor.TaskProcessor - Creating *combiner* operator for each param(s) at index(es): [4]
-Aug-16 11:40:45.901 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
-Aug-16 11:40:45.902 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
-Aug-16 11:40:45.907 [main] DEBUG nextflow.Session - Workflow process names [dsl2]: call_variants, make_examples, PACBIO_DEEPVARIANT:make_examples, readCount, PACBIO_DEEPVARIANT:call_variants
-Aug-16 11:40:45.946 [main] INFO  io.seqera.tower.plugin.TowerClient - Monitor the execution with Nextflow Tower using this URL: http://pnap-tower.tgen.org:8000/user/vpagano/watch/1x3wivdj0nlTSA
-Aug-16 11:40:45.946 [main] DEBUG nextflow.Session - Igniting dataflow network (6)
-Aug-16 11:40:45.954 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > PACBIO_DEEPVARIANT:make_examples
-Aug-16 11:40:45.955 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > PACBIO_DEEPVARIANT:make_examples
-Aug-16 11:40:45.956 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > PACBIO_DEEPVARIANT:call_variants
-Aug-16 11:40:45.957 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
-Aug-16 11:40:45.957 [main] DEBUG nextflow.Session - Session await
-Aug-16 11:40:46.356 [Actor Thread 21] INFO  nextflow.processor.TaskProcessor - [a0/caf3f8] Cached process > PACBIO_DEEPVARIANT:make_examples (19)
-Aug-16 11:40:46.357 [Actor Thread 26] INFO  nextflow.processor.TaskProcessor - [98/e0423d] Cached process > PACBIO_DEEPVARIANT:make_examples (6)
-Aug-16 11:40:46.358 [Actor Thread 31] INFO  nextflow.processor.TaskProcessor - [37/1c1342] Cached process > PACBIO_DEEPVARIANT:make_examples (14)
-Aug-16 11:40:46.357 [Actor Thread 17] INFO  nextflow.processor.TaskProcessor - [67/dfde35] Cached process > PACBIO_DEEPVARIANT:make_examples (21)
-Aug-16 11:40:46.357 [Actor Thread 3] INFO  nextflow.processor.TaskProcessor - [fa/6055a1] Cached process > PACBIO_DEEPVARIANT:make_examples (33)
-Aug-16 11:40:46.356 [Actor Thread 12] INFO  nextflow.processor.TaskProcessor - [f1/e0b1f6] Cached process > PACBIO_DEEPVARIANT:make_examples (25)
-Aug-16 11:40:46.357 [Actor Thread 10] INFO  nextflow.processor.TaskProcessor - [fb/7a89da] Cached process > PACBIO_DEEPVARIANT:make_examples (27)
-Aug-16 11:40:46.357 [Actor Thread 8] INFO  nextflow.processor.TaskProcessor - [9a/82f5f2] Cached process > PACBIO_DEEPVARIANT:make_examples (24)
-Aug-16 11:40:46.357 [Actor Thread 28] INFO  nextflow.processor.TaskProcessor - [9c/ce68da] Cached process > PACBIO_DEEPVARIANT:make_examples (7)
-Aug-16 11:40:46.357 [Actor Thread 11] INFO  nextflow.processor.TaskProcessor - [3d/230946] Cached process > PACBIO_DEEPVARIANT:make_examples (26)
-Aug-16 11:40:46.356 [Actor Thread 34] INFO  nextflow.processor.TaskProcessor - [78/9fe484] Cached process > PACBIO_DEEPVARIANT:make_examples (10)
-Aug-16 11:40:46.357 [Actor Thread 22] INFO  nextflow.processor.TaskProcessor - [0c/5df55c] Cached process > PACBIO_DEEPVARIANT:make_examples (4)
-Aug-16 11:40:46.357 [Actor Thread 38] INFO  nextflow.processor.TaskProcessor - [a3/81a7c2] Cached process > PACBIO_DEEPVARIANT:make_examples (36)
-Aug-16 11:40:46.356 [Actor Thread 15] INFO  nextflow.processor.TaskProcessor - [2b/372cc2] Cached process > PACBIO_DEEPVARIANT:make_examples (22)
-Aug-16 11:40:46.357 [Actor Thread 4] INFO  nextflow.processor.TaskProcessor - [8c/7c3cd4] Cached process > PACBIO_DEEPVARIANT:make_examples (28)
-Aug-16 11:40:46.357 [Actor Thread 25] INFO  nextflow.processor.TaskProcessor - [cf/fbc3a1] Cached process > PACBIO_DEEPVARIANT:make_examples (17)
-Aug-16 11:40:46.358 [Actor Thread 32] INFO  nextflow.processor.TaskProcessor - [8a/83b564] Cached process > PACBIO_DEEPVARIANT:make_examples (9)
-Aug-16 11:40:46.358 [Actor Thread 37] INFO  nextflow.processor.TaskProcessor - [5f/5c127d] Cached process > PACBIO_DEEPVARIANT:make_examples (13)
-Aug-16 11:40:46.358 [Actor Thread 19] INFO  nextflow.processor.TaskProcessor - [18/16d9a8] Cached process > PACBIO_DEEPVARIANT:make_examples (20)
-Aug-16 11:40:46.358 [Actor Thread 33] INFO  nextflow.processor.TaskProcessor - [da/0bd004] Cached process > PACBIO_DEEPVARIANT:make_examples (30)
-Aug-16 11:40:46.358 [Actor Thread 7] INFO  nextflow.processor.TaskProcessor - [d5/0fa4bf] Cached process > PACBIO_DEEPVARIANT:make_examples (29)
-Aug-16 11:40:46.358 [Actor Thread 20] INFO  nextflow.processor.TaskProcessor - [4e/4866b1] Cached process > PACBIO_DEEPVARIANT:make_examples (3)
-Aug-16 11:40:46.358 [Actor Thread 27] INFO  nextflow.processor.TaskProcessor - [0f/3565b5] Cached process > PACBIO_DEEPVARIANT:make_examples (16)
-Aug-16 11:40:46.358 [Actor Thread 23] INFO  nextflow.processor.TaskProcessor - [ea/36ea3a] Cached process > PACBIO_DEEPVARIANT:make_examples (18)
-Aug-16 11:40:46.358 [Actor Thread 13] INFO  nextflow.processor.TaskProcessor - [1c/df3726] Cached process > PACBIO_DEEPVARIANT:make_examples (23)
-Aug-16 11:40:46.358 [Actor Thread 18] INFO  nextflow.processor.TaskProcessor - [80/bfafa3] Cached process > PACBIO_DEEPVARIANT:make_examples (2)
-Aug-16 11:40:46.358 [Actor Thread 1] INFO  nextflow.processor.TaskProcessor - [f4/7fe16b] Cached process > PACBIO_DEEPVARIANT:make_examples (35)
-Aug-16 11:40:46.358 [Actor Thread 36] INFO  nextflow.processor.TaskProcessor - [ae/605430] Cached process > PACBIO_DEEPVARIANT:make_examples (11)
-Aug-16 11:40:46.358 [Actor Thread 5] INFO  nextflow.processor.TaskProcessor - [a1/84fd08] Cached process > PACBIO_DEEPVARIANT:make_examples (32)
-Aug-16 11:40:46.359 [Actor Thread 24] INFO  nextflow.processor.TaskProcessor - [5e/d14dd4] Cached process > PACBIO_DEEPVARIANT:make_examples (5)
-Aug-16 11:40:46.359 [Actor Thread 35] INFO  nextflow.processor.TaskProcessor - [eb/559afd] Cached process > PACBIO_DEEPVARIANT:make_examples (12)
-Aug-16 11:40:46.359 [Actor Thread 29] INFO  nextflow.processor.TaskProcessor - [fa/9ea208] Cached process > PACBIO_DEEPVARIANT:make_examples (15)
-Aug-16 11:40:46.359 [Actor Thread 16] INFO  nextflow.processor.TaskProcessor - [9c/9ea0a9] Cached process > PACBIO_DEEPVARIANT:make_examples (1)
-Aug-16 11:40:46.359 [Actor Thread 30] INFO  nextflow.processor.TaskProcessor - [e0/349622] Cached process > PACBIO_DEEPVARIANT:make_examples (8)
-Aug-16 11:40:46.359 [Actor Thread 9] INFO  nextflow.processor.TaskProcessor - [8a/1b6bea] Cached process > PACBIO_DEEPVARIANT:make_examples (31)
-Aug-16 11:40:46.359 [Actor Thread 2] INFO  nextflow.processor.TaskProcessor - [9a/4e2674] Cached process > PACBIO_DEEPVARIANT:make_examples (34)
-Aug-16 11:40:46.393 [Actor Thread 29] INFO  nextflow.processor.TaskProcessor - [ae/6cb443] Cached process > PACBIO_DEEPVARIANT:make_examples (38)
-Aug-16 11:40:46.393 [Actor Thread 24] INFO  nextflow.processor.TaskProcessor - [87/26d426] Cached process > PACBIO_DEEPVARIANT:make_examples (37)
-Aug-16 11:40:46.394 [Actor Thread 27] INFO  nextflow.processor.TaskProcessor - [d4/aeba87] Cached process > PACBIO_DEEPVARIANT:make_examples (40)
-Aug-16 11:40:46.394 [Actor Thread 36] INFO  nextflow.processor.TaskProcessor - [73/c815c7] Cached process > PACBIO_DEEPVARIANT:make_examples (39)
-Aug-16 11:40:46.751 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:call_variants (1) > jobId: 5828899; workDir: /scratch/vpagano/tmp/94/54b9bd97ff70bd52afcc4bdd01f134
-Aug-16 11:40:46.751 [Task submitter] INFO  nextflow.Session - [94/54b9bd] Submitted process > PACBIO_DEEPVARIANT:call_variants (1)
-Aug-16 11:41:55.808 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5828899; id: 41; name: PACBIO_DEEPVARIANT:call_variants (1); status: COMPLETED; exit: 1; error: -; workDir: /scratch/vpagano/tmp/94/54b9bd97ff70bd52afcc4bdd01f134 started: 1692211280798; exited: 2023-08-16T18:42:34.266917Z; ]
-Aug-16 11:41:55.831 [Task monitor] ERROR nextflow.processor.TaskProcessor - Error executing process > 'PACBIO_DEEPVARIANT:call_variants (1)'
+  Process: 1597905@gemini-login1 [192.168.31.41]
+  CPUs: 36 - Mem: 187.4 GB (13.1 GB) - Swap: 12 GB (451.5 MB)
+Aug-16 13:25:00.747 [main] DEBUG nextflow.Session - Work-dir: /scratch/vpagano/tmp [nfs]
+Aug-16 13:25:00.747 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/bin
+Aug-16 13:25:00.756 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Aug-16 13:25:00.766 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Aug-16 13:25:00.767 [main] DEBUG nextflow.Session - Observer factory: TowerFactory
+Aug-16 13:25:00.899 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Aug-16 13:25:00.910 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 37; maxThreads: 1000
+Aug-16 13:25:01.026 [main] DEBUG nextflow.Session - Session start
+Aug-16 13:25:01.038 [main] DEBUG io.seqera.tower.plugin.TowerClient - Creating Tower observer -- endpoint=http://pnap-tower.tgen.org:8000/api; requestInterval=1s; aliveInterval=1m; maxRetries=5; backOffBase=3; backOffDelay=250
+Aug-16 13:25:01.270 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Aug-16 13:25:01.743 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Aug-16 13:25:01.743 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Aug-16 13:25:01.751 [main] DEBUG nextflow.executor.Executor - [warm up] executor > slurm
+Aug-16 13:25:01.754 [main] DEBUG n.processor.TaskPollingMonitor - Creating task monitor for executor 'slurm' > capacity: 100; pollInterval: 5s; dumpInterval: 5m 
+Aug-16 13:25:01.758 [main] DEBUG n.executor.AbstractGridExecutor - Creating executor 'slurm' > queue-stat-interval: 1m
+Aug-16 13:25:01.812 [main] DEBUG nextflow.processor.TaskProcessor - Creating *combiner* operator for each param(s) at index(es): [4]
+Aug-16 13:25:01.837 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Aug-16 13:25:01.837 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Aug-16 13:25:01.844 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Aug-16 13:25:01.844 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Aug-16 13:25:01.848 [main] DEBUG nextflow.Session - Workflow process names [dsl2]: call_variants, PACBIO_DEEPVARIANT:postprocess_variants, make_examples, postprocess_variants, PACBIO_DEEPVARIANT:make_examples, readCount, PACBIO_DEEPVARIANT:call_variants
+Aug-16 13:25:01.885 [main] INFO  io.seqera.tower.plugin.TowerClient - Monitor the execution with Nextflow Tower using this URL: http://pnap-tower.tgen.org:8000/user/vpagano/watch/2z7S2Fh8ouAtos
+Aug-16 13:25:01.886 [main] DEBUG nextflow.Session - Igniting dataflow network (7)
+Aug-16 13:25:01.892 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > PACBIO_DEEPVARIANT:make_examples
+Aug-16 13:25:01.893 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > PACBIO_DEEPVARIANT:make_examples
+Aug-16 13:25:01.894 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > PACBIO_DEEPVARIANT:call_variants
+Aug-16 13:25:01.895 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > PACBIO_DEEPVARIANT:postprocess_variants
+Aug-16 13:25:01.896 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
+Aug-16 13:25:01.896 [main] DEBUG nextflow.Session - Session await
+Aug-16 13:25:02.267 [Actor Thread 1] INFO  nextflow.processor.TaskProcessor - [74/13d5d4] Cached process > PACBIO_DEEPVARIANT:make_examples (35)
+Aug-16 13:25:02.267 [Actor Thread 23] INFO  nextflow.processor.TaskProcessor - [73/9e36b8] Cached process > PACBIO_DEEPVARIANT:make_examples (3)
+Aug-16 13:25:02.268 [Actor Thread 13] INFO  nextflow.processor.TaskProcessor - [2c/1276db] Cached process > PACBIO_DEEPVARIANT:make_examples (24)
+Aug-16 13:25:02.268 [Actor Thread 26] INFO  nextflow.processor.TaskProcessor - [f5/c597b3] Cached process > PACBIO_DEEPVARIANT:make_examples (15)
+Aug-16 13:25:02.268 [Actor Thread 7] INFO  nextflow.processor.TaskProcessor - [91/e5f924] Cached process > PACBIO_DEEPVARIANT:make_examples (28)
+Aug-16 13:25:02.269 [Actor Thread 31] INFO  nextflow.processor.TaskProcessor - [df/11efd6] Cached process > PACBIO_DEEPVARIANT:make_examples (7)
+Aug-16 13:25:02.268 [Actor Thread 30] INFO  nextflow.processor.TaskProcessor - [9f/5d7b28] Cached process > PACBIO_DEEPVARIANT:make_examples (13)
+Aug-16 13:25:02.268 [Actor Thread 6] INFO  nextflow.processor.TaskProcessor - [f4/d4aa6c] Cached process > PACBIO_DEEPVARIANT:make_examples (31)
+Aug-16 13:25:02.268 [Actor Thread 8] INFO  nextflow.processor.TaskProcessor - [de/e7148c] Cached process > PACBIO_DEEPVARIANT:make_examples (30)
+Aug-16 13:25:02.268 [Actor Thread 15] INFO  nextflow.processor.TaskProcessor - [b9/f19ea8] Cached process > PACBIO_DEEPVARIANT:make_examples (22)
+Aug-16 13:25:02.268 [Actor Thread 21] INFO  nextflow.processor.TaskProcessor - [49/4ba9cc] Cached process > PACBIO_DEEPVARIANT:make_examples (2)
+Aug-16 13:25:02.268 [Actor Thread 16] INFO  nextflow.processor.TaskProcessor - [6d/d8bdb8] Cached process > PACBIO_DEEPVARIANT:make_examples (20)
+Aug-16 13:25:02.268 [Actor Thread 24] INFO  nextflow.processor.TaskProcessor - [2a/a30399] Cached process > PACBIO_DEEPVARIANT:make_examples (16)
+Aug-16 13:25:02.268 [Actor Thread 18] INFO  nextflow.processor.TaskProcessor - [93/eadd47] Cached process > PACBIO_DEEPVARIANT:make_examples (19)
+Aug-16 13:25:02.268 [Actor Thread 35] INFO  nextflow.processor.TaskProcessor - [6e/76761f] Cached process > PACBIO_DEEPVARIANT:make_examples (9)
+Aug-16 13:25:02.269 [Actor Thread 34] INFO  nextflow.processor.TaskProcessor - [91/92039c] Cached process > PACBIO_DEEPVARIANT:make_examples (11)
+Aug-16 13:25:02.268 [Actor Thread 11] INFO  nextflow.processor.TaskProcessor - [a1/84ce8a] Cached process > PACBIO_DEEPVARIANT:make_examples (33)
+Aug-16 13:25:02.269 [Actor Thread 28] INFO  nextflow.processor.TaskProcessor - [d7/3af347] Cached process > PACBIO_DEEPVARIANT:make_examples (14)
+Aug-16 13:25:02.269 [Actor Thread 20] INFO  nextflow.processor.TaskProcessor - [3a/46bcb0] Cached process > PACBIO_DEEPVARIANT:make_examples (18)
+Aug-16 13:25:02.269 [Actor Thread 25] INFO  nextflow.processor.TaskProcessor - [8e/c0247b] Cached process > PACBIO_DEEPVARIANT:make_examples (4)
+Aug-16 13:25:02.269 [Actor Thread 33] INFO  nextflow.processor.TaskProcessor - [5e/27a98f] Cached process > PACBIO_DEEPVARIANT:make_examples (8)
+Aug-16 13:25:02.269 [Actor Thread 22] INFO  nextflow.processor.TaskProcessor - [ca/262fe4] Cached process > PACBIO_DEEPVARIANT:make_examples (17)
+Aug-16 13:25:02.269 [Actor Thread 9] INFO  nextflow.processor.TaskProcessor - [83/2512f6] Cached process > PACBIO_DEEPVARIANT:make_examples (29)
+Aug-16 13:25:02.269 [Actor Thread 5] INFO  nextflow.processor.TaskProcessor - [38/8ccf4c] Cached process > PACBIO_DEEPVARIANT:make_examples (27)
+Aug-16 13:25:02.269 [Actor Thread 4] INFO  nextflow.processor.TaskProcessor - [c3/062135] Cached process > PACBIO_DEEPVARIANT:make_examples (32)
+Aug-16 13:25:02.270 [Actor Thread 2] INFO  nextflow.processor.TaskProcessor - [ec/fe1f0f] Cached process > PACBIO_DEEPVARIANT:make_examples (34)
+Aug-16 13:25:02.270 [Actor Thread 27] INFO  nextflow.processor.TaskProcessor - [b0/c8c60d] Cached process > PACBIO_DEEPVARIANT:make_examples (5)
+Aug-16 13:25:02.270 [Actor Thread 36] INFO  nextflow.processor.TaskProcessor - [4b/42e0db] Cached process > PACBIO_DEEPVARIANT:make_examples (26)
+Aug-16 13:25:02.270 [Actor Thread 32] INFO  nextflow.processor.TaskProcessor - [f9/7d4874] Cached process > PACBIO_DEEPVARIANT:make_examples (12)
+Aug-16 13:25:02.270 [Actor Thread 19] INFO  nextflow.processor.TaskProcessor - [ec/3ae6b3] Cached process > PACBIO_DEEPVARIANT:make_examples (1)
+Aug-16 13:25:02.270 [Actor Thread 14] INFO  nextflow.processor.TaskProcessor - [c0/2bf0d2] Cached process > PACBIO_DEEPVARIANT:make_examples (23)
+Aug-16 13:25:02.270 [Actor Thread 37] INFO  nextflow.processor.TaskProcessor - [e3/263756] Cached process > PACBIO_DEEPVARIANT:make_examples (10)
+Aug-16 13:25:02.270 [Actor Thread 29] INFO  nextflow.processor.TaskProcessor - [bb/921dd3] Cached process > PACBIO_DEEPVARIANT:make_examples (6)
+Aug-16 13:25:02.270 [Actor Thread 10] INFO  nextflow.processor.TaskProcessor - [5f/de892a] Cached process > PACBIO_DEEPVARIANT:make_examples (21)
+Aug-16 13:25:02.270 [Actor Thread 38] INFO  nextflow.processor.TaskProcessor - [b4/95da7a] Cached process > PACBIO_DEEPVARIANT:make_examples (36)
+Aug-16 13:25:02.270 [Actor Thread 12] INFO  nextflow.processor.TaskProcessor - [e2/70e2ac] Cached process > PACBIO_DEEPVARIANT:make_examples (25)
+Aug-16 13:25:02.306 [Actor Thread 26] INFO  nextflow.processor.TaskProcessor - [1a/fbe6f7] Cached process > PACBIO_DEEPVARIANT:make_examples (39)
+Aug-16 13:25:02.307 [Actor Thread 40] INFO  nextflow.processor.TaskProcessor - [c2/4fb5f6] Cached process > PACBIO_DEEPVARIANT:make_examples (37)
+Aug-16 13:25:02.307 [Actor Thread 14] INFO  nextflow.processor.TaskProcessor - [32/1bc406] Cached process > PACBIO_DEEPVARIANT:make_examples (38)
+Aug-16 13:25:02.307 [Actor Thread 6] INFO  nextflow.processor.TaskProcessor - [12/188e3a] Cached process > PACBIO_DEEPVARIANT:make_examples (40)
+Aug-16 13:25:02.353 [Actor Thread 17] INFO  nextflow.processor.TaskProcessor - [1d/e1f09f] Cached process > PACBIO_DEEPVARIANT:call_variants (1)
+Aug-16 13:25:02.524 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:postprocess_variants (1) > jobId: 5830899; workDir: /scratch/vpagano/tmp/50/3cddf30612fe7a2c111b46e4cc8058
+Aug-16 13:25:02.524 [Task submitter] INFO  nextflow.Session - [50/3cddf3] Submitted process > PACBIO_DEEPVARIANT:postprocess_variants (1)
+Aug-16 13:25:41.766 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5830899; id: 42; name: PACBIO_DEEPVARIANT:postprocess_variants (1); status: COMPLETED; exit: 2; error: -; workDir: /scratch/vpagano/tmp/50/3cddf30612fe7a2c111b46e4cc8058 started: 1692217506764; exited: 2023-08-16T20:26:19.894566Z; ]
+Aug-16 13:25:41.789 [Task monitor] ERROR nextflow.processor.TaskProcessor - Error executing process > 'PACBIO_DEEPVARIANT:postprocess_variants (1)'
 
 Caused by:
-  Process `PACBIO_DEEPVARIANT:call_variants (1)` terminated with an error exit status (1)
+  Process `PACBIO_DEEPVARIANT:postprocess_variants (1)` terminated with an error exit status (2)
 
 Command executed:
 
-  /opt/deepvariant/bin/call_variants         --outfile COLO829BL_chm13_chr13.cvo.tfrecord.gz         --examples "COLO829BL_chm13_chr13.examples.tfrecord@40.gz"         --checkpoint "/home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/deepvariant_v0.10.0/DeepVariant-inception_v3-0.10.0+data-pacbio_standard/model.ckpt.data-00000-of-00001"
+  /opt/deepvariant/bin/postprocess_variants         --vcf_stats_report=false         --ref /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa         --infile COLO829BL_chm13_chr13.cvo.tfrecord.gz         --outfile COLO829BL_chm13_chr13_deepvariant.vcf.gz         --nonvariant_site_tfrecord_path "COLO829BL_chm13_chr13.examples.tfrecord@40.gz"
 
 Command exit status:
-  1
+  2
 
 Command output:
   (empty)
 
 Command error:
-      tf.compat.v1.app.run()
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/platform/app.py", line 36, in run
-      _run(main=main, argv=argv, flags_parser=_parse_flags_tolerate_undef)
-    File "/tmp/Bazel.runfiles_h294crv5/runfiles/absl_py/absl/app.py", line 312, in run
-      _run_main(main, args)
-    File "/tmp/Bazel.runfiles_h294crv5/runfiles/absl_py/absl/app.py", line 258, in _run_main
-      sys.exit(main(argv))
-    File "/tmp/Bazel.runfiles_h294crv5/runfiles/com_google_deepvariant/deepvariant/call_variants.py", line 494, in main
-      call_variants(
-    File "/tmp/Bazel.runfiles_h294crv5/runfiles/com_google_deepvariant/deepvariant/call_variants.py", line 453, in call_variants
-      prediction = next(predictions)
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow_estimator/python/estimator/estimator.py", line 634, in predict
-      with tf.compat.v1.train.MonitoredSession(
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 1050, in __init__
-      super(MonitoredSession, self).__init__(
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 753, in __init__
-      self._sess = _RecoverableSession(self._coordinated_creator)
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 1259, in __init__
-      _WrappedSession.__init__(self, self._create_session())
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 1264, in _create_session
-      return self._sess_creator.create_session()
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 906, in create_session
-      self.tf_sess = self._session_creator.create_session()
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 664, in create_session
-      self._scaffold.finalize()
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 229, in finalize
-      self._saver = training_saver._get_saver_or_default()  # pylint: disable=protected-access
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 632, in _get_saver_or_default
-      saver = Saver(sharded=True, allow_empty=True)
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 931, in __init__
-      self.build()
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 943, in build
-      self._build(self._filename, build_save=True, build_restore=True)
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 971, in _build
-      self.saver_def = self._builder._build_internal(  # pylint: disable=protected-access
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 534, in _build_internal
-      restore_op = self._AddShardedRestoreOps(filename_tensor, per_device,
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 408, in _AddShardedRestoreOps
-      self._AddRestoreOps(
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 360, in _AddRestoreOps
-      all_tensors = self.bulk_restore(filename_tensor, saveables, preferred_shard,
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 608, in bulk_restore
-      return io_ops.restore_v2(filename_tensor, names, slices, dtypes)
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/ops/gen_io_ops.py", line 1517, in restore_v2
-      _, _, _op, _outputs = _op_def_library._apply_op_helper(
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/framework/op_def_library.py", line 795, in _apply_op_helper
-      op = g._create_op_internal(op_type_name, inputs, dtypes=None,
-    File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/framework/ops.py", line 3798, in _create_op_internal
-      ret = Operation(
+  INFO:    Could not find any nv files on this host!
+  2023-08-16 13:25:04.645430: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+  To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+  2023-08-16 13:25:09.832829: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/.singularity.d/libs
+  2023-08-16 13:25:09.832886: W tensorflow/compiler/xla/stream_executor/cuda/cuda_driver.cc:265] failed call to cuInit: UNKNOWN ERROR (303)
+  2023-08-16 13:25:09.832909: I tensorflow/compiler/xla/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (g-c-1-7-27): /proc/driver/nvidia/version does not exist
+  E0816 13:25:09.833042 23456243885888 errors.py:61] gVCF creation requires both nonvariant_site_tfrecord_path and gvcf_outfile flags to be set.
 
 Work dir:
-  /scratch/vpagano/tmp/94/54b9bd97ff70bd52afcc4bdd01f134
+  /scratch/vpagano/tmp/50/3cddf30612fe7a2c111b46e4cc8058
 
-Tip: you can replicate the issue by changing to the process work dir and entering the command `bash .command.run`
-Aug-16 11:41:55.834 [main] DEBUG nextflow.Session - Session await > all processes finished
-Aug-16 11:41:55.836 [Task monitor] DEBUG nextflow.Session - Session aborted -- Cause: Process `PACBIO_DEEPVARIANT:call_variants (1)` terminated with an error exit status (1)
-Aug-16 11:41:55.846 [main] DEBUG nextflow.Session - Session await > all barriers passed
-Aug-16 11:41:55.853 [main] DEBUG nextflow.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=0; failedCount=1; ignoredCount=0; cachedCount=40; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=0ms; failedDuration=4m 40s; cachedDuration=21h 7m 24s;loadCpus=0; loadMemory=0; peakRunning=1; peakCpus=8; peakMemory=200 GB; ]
-Aug-16 11:41:55.876 [main] WARN  i.s.tower.plugin.TowerJsonGenerator - Tower request field `workflow.errorMessage` exceeds expected size | offending value: `    tf.compat.v1.app.run()
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/platform/app.py", line 36, in run
-    _run(main=main, argv=argv, flags_parser=_parse_flags_tolerate_undef)
-  File "/tmp/Bazel.runfiles_h294crv5/runfiles/absl_py/absl/app.py", line 312, in run
-    _run_main(main, args)
-  File "/tmp/Bazel.runfiles_h294crv5/runfiles/absl_py/absl/app.py", line 258, in _run_main
-    sys.exit(main(argv))
-  File "/tmp/Bazel.runfiles_h294crv5/runfiles/com_google_deepvariant/deepvariant/call_variants.py", line 494, in main
-    call_variants(
-  File "/tmp/Bazel.runfiles_h294crv5/runfiles/com_google_deepvariant/deepvariant/call_variants.py", line 453, in call_variants
-    prediction = next(predictions)
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow_estimator/python/estimator/estimator.py", line 634, in predict
-    with tf.compat.v1.train.MonitoredSession(
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 1050, in __init__
-    super(MonitoredSession, self).__init__(
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 753, in __init__
-    self._sess = _RecoverableSession(self._coordinated_creator)
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 1259, in __init__
-    _WrappedSession.__init__(self, self._create_session())
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 1264, in _create_session
-    return self._sess_creator.create_session()
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 906, in create_session
-    self.tf_sess = self._session_creator.create_session()
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 664, in create_session
-    self._scaffold.finalize()
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/monitored_session.py", line 229, in finalize
-    self._saver = training_saver._get_saver_or_default()  # pylint: disable=protected-access
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 632, in _get_saver_or_default
-    saver = Saver(sharded=True, allow_empty=True)
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 931, in __init__
-    self.build()
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 943, in build
-    self._build(self._filename, build_save=True, build_restore=True)
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 971, in _build
-    self.saver_def = self._builder._build_internal(  # pylint: disable=protected-access
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 534, in _build_internal
-    restore_op = self._AddShardedRestoreOps(filename_tensor, per_device,
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 408, in _AddShardedRestoreOps
-    self._AddRestoreOps(
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 360, in _AddRestoreOps
-    all_tensors = self.bulk_restore(filename_tensor, saveables, preferred_shard,
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/training/saver.py", line 608, in bulk_restore
-    return io_ops.restore_v2(filename_tensor, names, slices, dtypes)
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/ops/gen_io_ops.py", line 1517, in restore_v2
-    _, _, _op, _outputs = _op_def_library._apply_op_helper(
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/framework/op_def_library.py", line 795, in _apply_op_helper
-    op = g._create_op_internal(op_type_name, inputs, dtypes=None,
-  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/framework/ops.py", line 3798, in _create_op_internal
-    ret = Operation(`, size: 4007 (max: 255)
-Aug-16 11:41:55.928 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
-Aug-16 11:41:55.928 [main] INFO  org.pf4j.AbstractPluginManager - Stop plugin 'nf-tower@1.5.6'
-Aug-16 11:41:55.928 [main] DEBUG nextflow.plugin.BasePlugin - Plugin stopped nf-tower
-Aug-16 11:41:55.942 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye
+Tip: you can try to figure out what's wrong by changing to the process work dir and showing the script file named `.command.sh`
+Aug-16 13:25:41.791 [main] DEBUG nextflow.Session - Session await > all processes finished
+Aug-16 13:25:41.794 [Task monitor] DEBUG nextflow.Session - Session aborted -- Cause: Process `PACBIO_DEEPVARIANT:postprocess_variants (1)` terminated with an error exit status (2)
+Aug-16 13:25:41.804 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Aug-16 13:25:41.811 [main] DEBUG nextflow.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=0; failedCount=1; ignoredCount=0; cachedCount=41; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=0ms; failedDuration=35s; cachedDuration=20h 39m 49s;loadCpus=0; loadMemory=0; peakRunning=1; peakCpus=1; peakMemory=20 GB; ]
+Aug-16 13:25:41.840 [main] WARN  i.s.tower.plugin.TowerJsonGenerator - Tower request field `workflow.errorMessage` exceeds expected size | offending value: `INFO:    Could not find any nv files on this host!
+2023-08-16 13:25:04.645430: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-08-16 13:25:09.832829: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/.singularity.d/libs
+2023-08-16 13:25:09.832886: W tensorflow/compiler/xla/stream_executor/cuda/cuda_driver.cc:265] failed call to cuInit: UNKNOWN ERROR (303)
+2023-08-16 13:25:09.832909: I tensorflow/compiler/xla/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (g-c-1-7-27): /proc/driver/nvidia/version does not exist
+E0816 13:25:09.833042 23456243885888 errors.py:61] gVCF creation requires both nonvariant_site_tfrecord_path and gvcf_outfile flags to be set.`, size: 1213 (max: 255)
+Aug-16 13:25:41.894 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+Aug-16 13:25:41.894 [main] INFO  org.pf4j.AbstractPluginManager - Stop plugin 'nf-tower@1.5.6'
+Aug-16 13:25:41.895 [main] DEBUG nextflow.plugin.BasePlugin - Plugin stopped nf-tower
+Aug-16 13:25:41.909 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye

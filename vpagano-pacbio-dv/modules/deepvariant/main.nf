@@ -10,6 +10,7 @@ workflow PACBIO_DEEPVARIANT {
         bam = METADATA(bam)
         make_examples(bam, bamIndex, params.reference, params.referenceIndex, Channel.of(0..params.make_examplesInstances - 1))
         call_variants(bam, make_examples.out.collect())
+        postprocess_variants(bam, make_examples.out.collect(), call_variants.out, params.reference, params.referenceIndex)
 }
 
 process make_examples {
@@ -25,6 +26,7 @@ process make_examples {
         path "*.gz"
 
     cpus 1
+    memory '3GB'
     time '2h'
     container params.dvContainer
     
@@ -47,7 +49,6 @@ process make_examples {
         --ref ${ref} \
         --reads ${bam} \
         --examples ${meta.id}.examples.tfrecord@${params.make_examplesInstances}.gz \
-        --gvcf ${meta.id}.gvcf.tfrecord@${params.make_examplesInstances}.gz \
         --task ${instance}
     """
 }
@@ -77,4 +78,35 @@ process call_variants {
         --examples "${meta.id}.examples.tfrecord@${params.make_examplesInstances}.gz" \
         --checkpoint "${params.deepvariantModel}"
     """
+}
+
+
+process postprocess_variants {
+
+    input:
+        tuple val(meta), path(bam)
+        path exampleFiles
+        path variantFile
+        val ref
+        val refIndex
+
+    output:
+        file "*.gz"
+
+    cpus 1
+    queue 'cpu-scavenge'
+    time '4h'
+    memory '20GB'
+    container params.dvContainer
+
+    script:
+    println(meta)
+    """
+    /opt/deepvariant/bin/postprocess_variants \
+        --vcf_stats_report=false \
+        --ref ${ref} \
+        --infile ${variantFile} \
+        --outfile ${meta.id}_deepvariant.vcf.gz
+    """
+
 }
