@@ -1,0 +1,342 @@
+Aug-16 10:50:43.622 [main] DEBUG nextflow.cli.Launcher - $> nextflow run main.nf -bg
+Aug-16 10:50:43.722 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 22.10.7
+Aug-16 10:50:43.741 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/vpagano/.nextflow/plugins; core-plugins: nf-amazon@1.11.4,nf-azure@0.14.2,nf-codecommit@0.1.2,nf-console@1.0.4,nf-ga4gh@1.0.4,nf-google@1.4.5,nf-tower@1.5.6,nf-wave@0.5.4
+Aug-16 10:50:43.768 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Aug-16 10:50:43.769 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Aug-16 10:50:43.772 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.4.1 in 'deployment' mode
+Aug-16 10:50:43.783 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Aug-16 10:50:43.799 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/nextflow.config
+Aug-16 10:50:43.799 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/nextflow.config
+Aug-16 10:50:43.818 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Aug-16 10:50:44.310 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 by global default
+Aug-16 10:50:44.325 [main] INFO  nextflow.cli.CmdRun - Launching `main.nf` [high_baekeland] DSL2 - revision: 5352e2fdec
+Aug-16 10:50:44.326 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+Aug-16 10:50:44.327 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[nf-tower@1.5.6]
+Aug-16 10:50:44.327 [main] DEBUG nextflow.plugin.PluginUpdater - Installing plugin nf-tower version: 1.5.6
+Aug-16 10:50:44.341 [main] INFO  org.pf4j.AbstractPluginManager - Plugin 'nf-tower@1.5.6' resolved
+Aug-16 10:50:44.341 [main] INFO  org.pf4j.AbstractPluginManager - Start plugin 'nf-tower@1.5.6'
+Aug-16 10:50:44.354 [main] DEBUG nextflow.plugin.BasePlugin - Plugin started nf-tower@1.5.6
+Aug-16 10:50:44.366 [main] DEBUG nextflow.secret.LocalSecretsProvider - Secrets store: /home/vpagano/.nextflow/secrets/store.json
+Aug-16 10:50:44.369 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@32e652b6] - activable => nextflow.secret.LocalSecretsProvider@32e652b6
+Aug-16 10:50:44.454 [main] DEBUG nextflow.Session - Session UUID: 51b11628-17a1-4a3d-a21d-5699973e28c1
+Aug-16 10:50:44.454 [main] DEBUG nextflow.Session - Run name: high_baekeland
+Aug-16 10:50:44.454 [main] DEBUG nextflow.Session - Executor pool size: 36
+Aug-16 10:50:44.465 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=108; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+Aug-16 10:50:44.469 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/nextflow.config
+Aug-16 10:50:44.469 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/nextflow.config
+Aug-16 10:50:44.470 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Aug-16 10:50:44.540 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 22.10.7 build 5853
+  Created: 18-02-2023 20:32 UTC (13:32 MDT)
+  System: Linux 4.18.0-305.3.1.el8_4.x86_64
+  Runtime: Groovy 3.0.13 on OpenJDK 64-Bit Server VM 11.0.2+9
+  Encoding: UTF-8 (UTF-8)
+  Process: 1512909@gemini-login1 [192.168.31.41]
+  CPUs: 36 - Mem: 187.4 GB (8.8 GB) - Swap: 12 GB (503.3 MB)
+Aug-16 10:50:44.564 [main] DEBUG nextflow.Session - Work-dir: /scratch/vpagano/tmp [nfs]
+Aug-16 10:50:44.564 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /home/vpagano/GrandCanyon/vpagano-pacbio-dv/bin
+Aug-16 10:50:44.573 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Aug-16 10:50:44.584 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Aug-16 10:50:44.584 [main] DEBUG nextflow.Session - Observer factory: TowerFactory
+Aug-16 10:50:44.722 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Aug-16 10:50:44.733 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 37; maxThreads: 1000
+Aug-16 10:50:44.810 [main] DEBUG nextflow.Session - Session start
+Aug-16 10:50:44.817 [main] DEBUG io.seqera.tower.plugin.TowerClient - Creating Tower observer -- endpoint=http://pnap-tower.tgen.org:8000/api; requestInterval=1s; aliveInterval=1m; maxRetries=5; backOffBase=3; backOffDelay=250
+Aug-16 10:50:45.031 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Aug-16 10:50:45.485 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Aug-16 10:50:45.485 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Aug-16 10:50:45.493 [main] DEBUG nextflow.executor.Executor - [warm up] executor > slurm
+Aug-16 10:50:45.495 [main] DEBUG n.processor.TaskPollingMonitor - Creating task monitor for executor 'slurm' > capacity: 100; pollInterval: 5s; dumpInterval: 5m 
+Aug-16 10:50:45.499 [main] DEBUG n.executor.AbstractGridExecutor - Creating executor 'slurm' > queue-stat-interval: 1m
+Aug-16 10:50:45.552 [main] DEBUG nextflow.processor.TaskProcessor - Creating *combiner* operator for each param(s) at index(es): [4]
+Aug-16 10:50:45.569 [main] DEBUG nextflow.Session - Workflow process names [dsl2]: call_variants, make_examples, PACBIO_DEEPVARIANT:make_examples, readCount
+Aug-16 10:50:45.605 [main] INFO  io.seqera.tower.plugin.TowerClient - Monitor the execution with Nextflow Tower using this URL: http://pnap-tower.tgen.org:8000/user/vpagano/watch/2J9kJGlSuBmyBg
+Aug-16 10:50:45.605 [main] DEBUG nextflow.Session - Igniting dataflow network (5)
+Aug-16 10:50:45.611 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > PACBIO_DEEPVARIANT:make_examples
+Aug-16 10:50:45.613 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > PACBIO_DEEPVARIANT:make_examples
+Aug-16 10:50:45.613 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
+Aug-16 10:50:45.613 [main] DEBUG nextflow.Session - Session await
+Aug-16 10:50:45.969 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (20) > jobId: 5827533; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c
+Aug-16 10:50:45.970 [Task submitter] INFO  nextflow.Session - [24/f7259f] Submitted process > PACBIO_DEEPVARIANT:make_examples (20)
+Aug-16 10:50:46.015 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (19) > jobId: 5827534; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694
+Aug-16 10:50:46.016 [Task submitter] INFO  nextflow.Session - [dc/6ba5a8] Submitted process > PACBIO_DEEPVARIANT:make_examples (19)
+Aug-16 10:50:46.047 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (4) > jobId: 5827535; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7
+Aug-16 10:50:46.047 [Task submitter] INFO  nextflow.Session - [fd/2495d0] Submitted process > PACBIO_DEEPVARIANT:make_examples (4)
+Aug-16 10:50:46.072 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (29) > jobId: 5827536; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f
+Aug-16 10:50:46.073 [Task submitter] INFO  nextflow.Session - [de/6ca44a] Submitted process > PACBIO_DEEPVARIANT:make_examples (29)
+Aug-16 10:50:46.112 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (15) > jobId: 5827537; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4
+Aug-16 10:50:46.113 [Task submitter] INFO  nextflow.Session - [b6/2528bd] Submitted process > PACBIO_DEEPVARIANT:make_examples (15)
+Aug-16 10:50:46.137 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (28) > jobId: 5827538; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14
+Aug-16 10:50:46.137 [Task submitter] INFO  nextflow.Session - [4a/14d7e0] Submitted process > PACBIO_DEEPVARIANT:make_examples (28)
+Aug-16 10:50:46.160 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (1) > jobId: 5827539; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484
+Aug-16 10:50:46.161 [Task submitter] INFO  nextflow.Session - [90/7726ec] Submitted process > PACBIO_DEEPVARIANT:make_examples (1)
+Aug-16 10:50:46.184 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (6) > jobId: 5827540; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289
+Aug-16 10:50:46.184 [Task submitter] INFO  nextflow.Session - [50/a01247] Submitted process > PACBIO_DEEPVARIANT:make_examples (6)
+Aug-16 10:50:46.205 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (27) > jobId: 5827541; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864
+Aug-16 10:50:46.205 [Task submitter] INFO  nextflow.Session - [9e/cd18ea] Submitted process > PACBIO_DEEPVARIANT:make_examples (27)
+Aug-16 10:50:46.226 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (35) > jobId: 5827542; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718
+Aug-16 10:50:46.226 [Task submitter] INFO  nextflow.Session - [e8/bf111d] Submitted process > PACBIO_DEEPVARIANT:make_examples (35)
+Aug-16 10:50:46.248 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (31) > jobId: 5827543; workDir: /scratch/vpagano/tmp/74/7c5e96af7b5da96c0f862364190a24
+Aug-16 10:50:46.248 [Task submitter] INFO  nextflow.Session - [74/7c5e96] Submitted process > PACBIO_DEEPVARIANT:make_examples (31)
+Aug-16 10:50:46.270 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (14) > jobId: 5827544; workDir: /scratch/vpagano/tmp/78/99fbd672e5cea9f2e80e88913d4622
+Aug-16 10:50:46.270 [Task submitter] INFO  nextflow.Session - [78/99fbd6] Submitted process > PACBIO_DEEPVARIANT:make_examples (14)
+Aug-16 10:50:46.291 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (25) > jobId: 5827545; workDir: /scratch/vpagano/tmp/d4/2c7ffa75dca257fbd483e980264f40
+Aug-16 10:50:46.291 [Task submitter] INFO  nextflow.Session - [d4/2c7ffa] Submitted process > PACBIO_DEEPVARIANT:make_examples (25)
+Aug-16 10:50:46.312 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (2) > jobId: 5827546; workDir: /scratch/vpagano/tmp/d8/7cd6e9c7ec0b4e3acae5a6a65f9b3a
+Aug-16 10:50:46.312 [Task submitter] INFO  nextflow.Session - [d8/7cd6e9] Submitted process > PACBIO_DEEPVARIANT:make_examples (2)
+Aug-16 10:50:46.333 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (10) > jobId: 5827547; workDir: /scratch/vpagano/tmp/08/5d653daee1e4cfb2646b8fbd21f30b
+Aug-16 10:50:46.334 [Task submitter] INFO  nextflow.Session - [08/5d653d] Submitted process > PACBIO_DEEPVARIANT:make_examples (10)
+Aug-16 10:50:46.357 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (7) > jobId: 5827548; workDir: /scratch/vpagano/tmp/24/93d51e7c459586856027044191e7a5
+Aug-16 10:50:46.358 [Task submitter] INFO  nextflow.Session - [24/93d51e] Submitted process > PACBIO_DEEPVARIANT:make_examples (7)
+Aug-16 10:50:46.378 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (17) > jobId: 5827549; workDir: /scratch/vpagano/tmp/10/5ad1ca79e86dc42bccbf08958760b7
+Aug-16 10:50:46.378 [Task submitter] INFO  nextflow.Session - [10/5ad1ca] Submitted process > PACBIO_DEEPVARIANT:make_examples (17)
+Aug-16 10:50:46.399 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (21) > jobId: 5827550; workDir: /scratch/vpagano/tmp/d1/5d59418bb65b3349e75b4319e4bff5
+Aug-16 10:50:46.399 [Task submitter] INFO  nextflow.Session - [d1/5d5941] Submitted process > PACBIO_DEEPVARIANT:make_examples (21)
+Aug-16 10:50:46.434 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (23) > jobId: 5827551; workDir: /scratch/vpagano/tmp/1f/cb0a5d27d960dae48c2f996f53f2cd
+Aug-16 10:50:46.434 [Task submitter] INFO  nextflow.Session - [1f/cb0a5d] Submitted process > PACBIO_DEEPVARIANT:make_examples (23)
+Aug-16 10:50:46.455 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (33) > jobId: 5827552; workDir: /scratch/vpagano/tmp/65/bd9036ea01a2d6eac21d32bb2988ee
+Aug-16 10:50:46.455 [Task submitter] INFO  nextflow.Session - [65/bd9036] Submitted process > PACBIO_DEEPVARIANT:make_examples (33)
+Aug-16 10:50:46.475 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (34) > jobId: 5827553; workDir: /scratch/vpagano/tmp/0a/0716f2714b0c55d4b1b33a60725b2d
+Aug-16 10:50:46.476 [Task submitter] INFO  nextflow.Session - [0a/0716f2] Submitted process > PACBIO_DEEPVARIANT:make_examples (34)
+Aug-16 10:50:46.496 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (18) > jobId: 5827554; workDir: /scratch/vpagano/tmp/7e/f697e79847109c86f56d0c3be3e5d5
+Aug-16 10:50:46.496 [Task submitter] INFO  nextflow.Session - [7e/f697e7] Submitted process > PACBIO_DEEPVARIANT:make_examples (18)
+Aug-16 10:50:46.517 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (8) > jobId: 5827555; workDir: /scratch/vpagano/tmp/de/b12b2262c998dfde2a4218463834c4
+Aug-16 10:50:46.517 [Task submitter] INFO  nextflow.Session - [de/b12b22] Submitted process > PACBIO_DEEPVARIANT:make_examples (8)
+Aug-16 10:50:46.539 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (9) > jobId: 5827556; workDir: /scratch/vpagano/tmp/b5/43f7aab608bee22ca7bdaa684e91fc
+Aug-16 10:50:46.540 [Task submitter] INFO  nextflow.Session - [b5/43f7aa] Submitted process > PACBIO_DEEPVARIANT:make_examples (9)
+Aug-16 10:50:46.560 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (24) > jobId: 5827557; workDir: /scratch/vpagano/tmp/3b/67dd3b0f223de4c4f5bb5c8301a20a
+Aug-16 10:50:46.560 [Task submitter] INFO  nextflow.Session - [3b/67dd3b] Submitted process > PACBIO_DEEPVARIANT:make_examples (24)
+Aug-16 10:50:46.582 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (26) > jobId: 5827558; workDir: /scratch/vpagano/tmp/84/9b52e4a114fef9183f33b04941e428
+Aug-16 10:50:46.582 [Task submitter] INFO  nextflow.Session - [84/9b52e4] Submitted process > PACBIO_DEEPVARIANT:make_examples (26)
+Aug-16 10:50:46.604 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (11) > jobId: 5827559; workDir: /scratch/vpagano/tmp/1a/e4763146f927accba309406218df05
+Aug-16 10:50:46.604 [Task submitter] INFO  nextflow.Session - [1a/e47631] Submitted process > PACBIO_DEEPVARIANT:make_examples (11)
+Aug-16 10:50:46.626 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (30) > jobId: 5827560; workDir: /scratch/vpagano/tmp/b2/1f3ede0b80e24547910d811fa46138
+Aug-16 10:50:46.626 [Task submitter] INFO  nextflow.Session - [b2/1f3ede] Submitted process > PACBIO_DEEPVARIANT:make_examples (30)
+Aug-16 10:50:46.648 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (13) > jobId: 5827561; workDir: /scratch/vpagano/tmp/15/80d340cef25cf3272d6d2c9a9fea47
+Aug-16 10:50:46.648 [Task submitter] INFO  nextflow.Session - [15/80d340] Submitted process > PACBIO_DEEPVARIANT:make_examples (13)
+Aug-16 10:50:46.670 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (12) > jobId: 5827562; workDir: /scratch/vpagano/tmp/5a/9a68d2c1c505d06eae915b3405ab26
+Aug-16 10:50:46.671 [Task submitter] INFO  nextflow.Session - [5a/9a68d2] Submitted process > PACBIO_DEEPVARIANT:make_examples (12)
+Aug-16 10:50:46.692 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (16) > jobId: 5827563; workDir: /scratch/vpagano/tmp/dd/835bf0301f729c325a197e385fc571
+Aug-16 10:50:46.692 [Task submitter] INFO  nextflow.Session - [dd/835bf0] Submitted process > PACBIO_DEEPVARIANT:make_examples (16)
+Aug-16 10:50:46.712 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (32) > jobId: 5827564; workDir: /scratch/vpagano/tmp/34/0ce0423e5a98fc87018d8c97c2f989
+Aug-16 10:50:46.712 [Task submitter] INFO  nextflow.Session - [34/0ce042] Submitted process > PACBIO_DEEPVARIANT:make_examples (32)
+Aug-16 10:50:46.732 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (36) > jobId: 5827565; workDir: /scratch/vpagano/tmp/b5/9581355c8928f7dceeac4c3e64663f
+Aug-16 10:50:46.732 [Task submitter] INFO  nextflow.Session - [b5/958135] Submitted process > PACBIO_DEEPVARIANT:make_examples (36)
+Aug-16 10:50:46.754 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (5) > jobId: 5827566; workDir: /scratch/vpagano/tmp/e6/036d8636b6a3895d1d457fa20f7ed8
+Aug-16 10:50:46.754 [Task submitter] INFO  nextflow.Session - [e6/036d86] Submitted process > PACBIO_DEEPVARIANT:make_examples (5)
+Aug-16 10:50:46.774 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (22) > jobId: 5827567; workDir: /scratch/vpagano/tmp/0a/4e3999e9b8e54cf55b2b16a26bfeba
+Aug-16 10:50:46.774 [Task submitter] INFO  nextflow.Session - [0a/4e3999] Submitted process > PACBIO_DEEPVARIANT:make_examples (22)
+Aug-16 10:50:46.796 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (3) > jobId: 5827568; workDir: /scratch/vpagano/tmp/dd/3cfe495e8d0c1e12071f60801ca524
+Aug-16 10:50:46.796 [Task submitter] INFO  nextflow.Session - [dd/3cfe49] Submitted process > PACBIO_DEEPVARIANT:make_examples (3)
+Aug-16 10:50:46.817 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (40) > jobId: 5827569; workDir: /scratch/vpagano/tmp/1e/7cc7ca075103bf301b1ded71b65e68
+Aug-16 10:50:46.817 [Task submitter] INFO  nextflow.Session - [1e/7cc7ca] Submitted process > PACBIO_DEEPVARIANT:make_examples (40)
+Aug-16 10:50:46.838 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (37) > jobId: 5827570; workDir: /scratch/vpagano/tmp/13/f2af866ddfe67ae0104382d011b238
+Aug-16 10:50:46.838 [Task submitter] INFO  nextflow.Session - [13/f2af86] Submitted process > PACBIO_DEEPVARIANT:make_examples (37)
+Aug-16 10:50:46.859 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (38) > jobId: 5827571; workDir: /scratch/vpagano/tmp/ce/698108a68cc1d178c6d6a96d6f0f09
+Aug-16 10:50:46.859 [Task submitter] INFO  nextflow.Session - [ce/698108] Submitted process > PACBIO_DEEPVARIANT:make_examples (38)
+Aug-16 10:50:46.880 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process PACBIO_DEEPVARIANT:make_examples (39) > jobId: 5827572; workDir: /scratch/vpagano/tmp/c6/e676375b78b52a49c0e234724cb03d
+Aug-16 10:50:46.880 [Task submitter] INFO  nextflow.Session - [c6/e67637] Submitted process > PACBIO_DEEPVARIANT:make_examples (39)
+Aug-16 10:55:50.510 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 40 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: -; ]
+~> TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: -; ]
+~> TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: -; ]
+~> TaskHandler[jobId: 5827536; id: 29; name: PACBIO_DEEPVARIANT:make_examples (29); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f started: 1692208285506; exited: -; ]
+~> TaskHandler[jobId: 5827537; id: 15; name: PACBIO_DEEPVARIANT:make_examples (15); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4 started: 1692208285508; exited: -; ]
+~> TaskHandler[jobId: 5827538; id: 28; name: PACBIO_DEEPVARIANT:make_examples (28); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14 started: 1692208285510; exited: -; ]
+~> TaskHandler[jobId: 5827539; id: 1; name: PACBIO_DEEPVARIANT:make_examples (1); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484 started: 1692208285512; exited: -; ]
+~> TaskHandler[jobId: 5827540; id: 6; name: PACBIO_DEEPVARIANT:make_examples (6); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289 started: 1692208285514; exited: -; ]
+~> TaskHandler[jobId: 5827541; id: 27; name: PACBIO_DEEPVARIANT:make_examples (27); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864 started: 1692208285515; exited: -; ]
+~> TaskHandler[jobId: 5827542; id: 35; name: PACBIO_DEEPVARIANT:make_examples (35); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718 started: 1692208285517; exited: -; ]
+.. remaining tasks omitted.
+Aug-16 11:00:50.524 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 40 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: -; ]
+~> TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: -; ]
+~> TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: -; ]
+~> TaskHandler[jobId: 5827536; id: 29; name: PACBIO_DEEPVARIANT:make_examples (29); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f started: 1692208285506; exited: -; ]
+~> TaskHandler[jobId: 5827537; id: 15; name: PACBIO_DEEPVARIANT:make_examples (15); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4 started: 1692208285508; exited: -; ]
+~> TaskHandler[jobId: 5827538; id: 28; name: PACBIO_DEEPVARIANT:make_examples (28); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14 started: 1692208285510; exited: -; ]
+~> TaskHandler[jobId: 5827539; id: 1; name: PACBIO_DEEPVARIANT:make_examples (1); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484 started: 1692208285512; exited: -; ]
+~> TaskHandler[jobId: 5827540; id: 6; name: PACBIO_DEEPVARIANT:make_examples (6); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289 started: 1692208285514; exited: -; ]
+~> TaskHandler[jobId: 5827541; id: 27; name: PACBIO_DEEPVARIANT:make_examples (27); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864 started: 1692208285515; exited: -; ]
+~> TaskHandler[jobId: 5827542; id: 35; name: PACBIO_DEEPVARIANT:make_examples (35); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718 started: 1692208285517; exited: -; ]
+.. remaining tasks omitted.
+Aug-16 11:05:50.541 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 40 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: -; ]
+~> TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: -; ]
+~> TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: -; ]
+~> TaskHandler[jobId: 5827536; id: 29; name: PACBIO_DEEPVARIANT:make_examples (29); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f started: 1692208285506; exited: -; ]
+~> TaskHandler[jobId: 5827537; id: 15; name: PACBIO_DEEPVARIANT:make_examples (15); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4 started: 1692208285508; exited: -; ]
+~> TaskHandler[jobId: 5827538; id: 28; name: PACBIO_DEEPVARIANT:make_examples (28); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14 started: 1692208285510; exited: -; ]
+~> TaskHandler[jobId: 5827539; id: 1; name: PACBIO_DEEPVARIANT:make_examples (1); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484 started: 1692208285512; exited: -; ]
+~> TaskHandler[jobId: 5827540; id: 6; name: PACBIO_DEEPVARIANT:make_examples (6); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289 started: 1692208285514; exited: -; ]
+~> TaskHandler[jobId: 5827541; id: 27; name: PACBIO_DEEPVARIANT:make_examples (27); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864 started: 1692208285515; exited: -; ]
+~> TaskHandler[jobId: 5827542; id: 35; name: PACBIO_DEEPVARIANT:make_examples (35); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718 started: 1692208285517; exited: -; ]
+.. remaining tasks omitted.
+Aug-16 11:10:50.555 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 40 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: -; ]
+~> TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: -; ]
+~> TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: -; ]
+~> TaskHandler[jobId: 5827536; id: 29; name: PACBIO_DEEPVARIANT:make_examples (29); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f started: 1692208285506; exited: -; ]
+~> TaskHandler[jobId: 5827537; id: 15; name: PACBIO_DEEPVARIANT:make_examples (15); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4 started: 1692208285508; exited: -; ]
+~> TaskHandler[jobId: 5827538; id: 28; name: PACBIO_DEEPVARIANT:make_examples (28); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14 started: 1692208285510; exited: -; ]
+~> TaskHandler[jobId: 5827539; id: 1; name: PACBIO_DEEPVARIANT:make_examples (1); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484 started: 1692208285512; exited: -; ]
+~> TaskHandler[jobId: 5827540; id: 6; name: PACBIO_DEEPVARIANT:make_examples (6); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289 started: 1692208285514; exited: -; ]
+~> TaskHandler[jobId: 5827541; id: 27; name: PACBIO_DEEPVARIANT:make_examples (27); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864 started: 1692208285515; exited: -; ]
+~> TaskHandler[jobId: 5827542; id: 35; name: PACBIO_DEEPVARIANT:make_examples (35); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718 started: 1692208285517; exited: -; ]
+.. remaining tasks omitted.
+Aug-16 11:15:50.566 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 40 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: -; ]
+~> TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: -; ]
+~> TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: -; ]
+~> TaskHandler[jobId: 5827536; id: 29; name: PACBIO_DEEPVARIANT:make_examples (29); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f started: 1692208285506; exited: -; ]
+~> TaskHandler[jobId: 5827537; id: 15; name: PACBIO_DEEPVARIANT:make_examples (15); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4 started: 1692208285508; exited: -; ]
+~> TaskHandler[jobId: 5827538; id: 28; name: PACBIO_DEEPVARIANT:make_examples (28); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14 started: 1692208285510; exited: -; ]
+~> TaskHandler[jobId: 5827539; id: 1; name: PACBIO_DEEPVARIANT:make_examples (1); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484 started: 1692208285512; exited: -; ]
+~> TaskHandler[jobId: 5827540; id: 6; name: PACBIO_DEEPVARIANT:make_examples (6); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289 started: 1692208285514; exited: -; ]
+~> TaskHandler[jobId: 5827541; id: 27; name: PACBIO_DEEPVARIANT:make_examples (27); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864 started: 1692208285515; exited: -; ]
+~> TaskHandler[jobId: 5827542; id: 35; name: PACBIO_DEEPVARIANT:make_examples (35); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718 started: 1692208285517; exited: -; ]
+.. remaining tasks omitted.
+Aug-16 11:20:50.574 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 40 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: -; ]
+~> TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: -; ]
+~> TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: -; ]
+~> TaskHandler[jobId: 5827536; id: 29; name: PACBIO_DEEPVARIANT:make_examples (29); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f started: 1692208285506; exited: -; ]
+~> TaskHandler[jobId: 5827537; id: 15; name: PACBIO_DEEPVARIANT:make_examples (15); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4 started: 1692208285508; exited: -; ]
+~> TaskHandler[jobId: 5827538; id: 28; name: PACBIO_DEEPVARIANT:make_examples (28); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14 started: 1692208285510; exited: -; ]
+~> TaskHandler[jobId: 5827539; id: 1; name: PACBIO_DEEPVARIANT:make_examples (1); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484 started: 1692208285512; exited: -; ]
+~> TaskHandler[jobId: 5827540; id: 6; name: PACBIO_DEEPVARIANT:make_examples (6); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289 started: 1692208285514; exited: -; ]
+~> TaskHandler[jobId: 5827541; id: 27; name: PACBIO_DEEPVARIANT:make_examples (27); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864 started: 1692208285515; exited: -; ]
+~> TaskHandler[jobId: 5827542; id: 35; name: PACBIO_DEEPVARIANT:make_examples (35); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718 started: 1692208285517; exited: -; ]
+.. remaining tasks omitted.
+Aug-16 11:25:50.585 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 40 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: -; ]
+~> TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: -; ]
+~> TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: -; ]
+~> TaskHandler[jobId: 5827536; id: 29; name: PACBIO_DEEPVARIANT:make_examples (29); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f started: 1692208285506; exited: -; ]
+~> TaskHandler[jobId: 5827537; id: 15; name: PACBIO_DEEPVARIANT:make_examples (15); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4 started: 1692208285508; exited: -; ]
+~> TaskHandler[jobId: 5827538; id: 28; name: PACBIO_DEEPVARIANT:make_examples (28); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14 started: 1692208285510; exited: -; ]
+~> TaskHandler[jobId: 5827539; id: 1; name: PACBIO_DEEPVARIANT:make_examples (1); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484 started: 1692208285512; exited: -; ]
+~> TaskHandler[jobId: 5827540; id: 6; name: PACBIO_DEEPVARIANT:make_examples (6); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289 started: 1692208285514; exited: -; ]
+~> TaskHandler[jobId: 5827541; id: 27; name: PACBIO_DEEPVARIANT:make_examples (27); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864 started: 1692208285515; exited: -; ]
+~> TaskHandler[jobId: 5827542; id: 35; name: PACBIO_DEEPVARIANT:make_examples (35); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718 started: 1692208285517; exited: -; ]
+.. remaining tasks omitted.
+Aug-16 11:30:50.595 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 40 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: -; ]
+~> TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: -; ]
+~> TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: -; ]
+~> TaskHandler[jobId: 5827536; id: 29; name: PACBIO_DEEPVARIANT:make_examples (29); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f started: 1692208285506; exited: -; ]
+~> TaskHandler[jobId: 5827537; id: 15; name: PACBIO_DEEPVARIANT:make_examples (15); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4 started: 1692208285508; exited: -; ]
+~> TaskHandler[jobId: 5827538; id: 28; name: PACBIO_DEEPVARIANT:make_examples (28); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14 started: 1692208285510; exited: -; ]
+~> TaskHandler[jobId: 5827539; id: 1; name: PACBIO_DEEPVARIANT:make_examples (1); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484 started: 1692208285512; exited: -; ]
+~> TaskHandler[jobId: 5827540; id: 6; name: PACBIO_DEEPVARIANT:make_examples (6); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289 started: 1692208285514; exited: -; ]
+~> TaskHandler[jobId: 5827541; id: 27; name: PACBIO_DEEPVARIANT:make_examples (27); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864 started: 1692208285515; exited: -; ]
+~> TaskHandler[jobId: 5827542; id: 35; name: PACBIO_DEEPVARIANT:make_examples (35); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718 started: 1692208285517; exited: -; ]
+.. remaining tasks omitted.
+Aug-16 11:35:50.601 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 40 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: -; ]
+~> TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: -; ]
+~> TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: -; ]
+~> TaskHandler[jobId: 5827536; id: 29; name: PACBIO_DEEPVARIANT:make_examples (29); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f started: 1692208285506; exited: -; ]
+~> TaskHandler[jobId: 5827537; id: 15; name: PACBIO_DEEPVARIANT:make_examples (15); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4 started: 1692208285508; exited: -; ]
+~> TaskHandler[jobId: 5827538; id: 28; name: PACBIO_DEEPVARIANT:make_examples (28); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14 started: 1692208285510; exited: -; ]
+~> TaskHandler[jobId: 5827539; id: 1; name: PACBIO_DEEPVARIANT:make_examples (1); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484 started: 1692208285512; exited: -; ]
+~> TaskHandler[jobId: 5827540; id: 6; name: PACBIO_DEEPVARIANT:make_examples (6); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289 started: 1692208285514; exited: -; ]
+~> TaskHandler[jobId: 5827541; id: 27; name: PACBIO_DEEPVARIANT:make_examples (27); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864 started: 1692208285515; exited: -; ]
+~> TaskHandler[jobId: 5827542; id: 35; name: PACBIO_DEEPVARIANT:make_examples (35); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718 started: 1692208285517; exited: -; ]
+.. remaining tasks omitted.
+Aug-16 11:40:50.615 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 40 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: -; ]
+~> TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: -; ]
+~> TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: -; ]
+~> TaskHandler[jobId: 5827536; id: 29; name: PACBIO_DEEPVARIANT:make_examples (29); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f started: 1692208285506; exited: -; ]
+~> TaskHandler[jobId: 5827537; id: 15; name: PACBIO_DEEPVARIANT:make_examples (15); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4 started: 1692208285508; exited: -; ]
+~> TaskHandler[jobId: 5827538; id: 28; name: PACBIO_DEEPVARIANT:make_examples (28); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14 started: 1692208285510; exited: -; ]
+~> TaskHandler[jobId: 5827539; id: 1; name: PACBIO_DEEPVARIANT:make_examples (1); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484 started: 1692208285512; exited: -; ]
+~> TaskHandler[jobId: 5827540; id: 6; name: PACBIO_DEEPVARIANT:make_examples (6); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289 started: 1692208285514; exited: -; ]
+~> TaskHandler[jobId: 5827541; id: 27; name: PACBIO_DEEPVARIANT:make_examples (27); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864 started: 1692208285515; exited: -; ]
+~> TaskHandler[jobId: 5827542; id: 35; name: PACBIO_DEEPVARIANT:make_examples (35); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718 started: 1692208285517; exited: -; ]
+.. remaining tasks omitted.
+Aug-16 11:45:50.629 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 40 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: -; ]
+~> TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: -; ]
+~> TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: -; ]
+~> TaskHandler[jobId: 5827536; id: 29; name: PACBIO_DEEPVARIANT:make_examples (29); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f started: 1692208285506; exited: -; ]
+~> TaskHandler[jobId: 5827537; id: 15; name: PACBIO_DEEPVARIANT:make_examples (15); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4 started: 1692208285508; exited: -; ]
+~> TaskHandler[jobId: 5827538; id: 28; name: PACBIO_DEEPVARIANT:make_examples (28); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14 started: 1692208285510; exited: -; ]
+~> TaskHandler[jobId: 5827539; id: 1; name: PACBIO_DEEPVARIANT:make_examples (1); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484 started: 1692208285512; exited: -; ]
+~> TaskHandler[jobId: 5827540; id: 6; name: PACBIO_DEEPVARIANT:make_examples (6); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289 started: 1692208285514; exited: -; ]
+~> TaskHandler[jobId: 5827541; id: 27; name: PACBIO_DEEPVARIANT:make_examples (27); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864 started: 1692208285515; exited: -; ]
+~> TaskHandler[jobId: 5827542; id: 35; name: PACBIO_DEEPVARIANT:make_examples (35); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718 started: 1692208285517; exited: -; ]
+.. remaining tasks omitted.
+Aug-16 11:48:10.634 [Task monitor] DEBUG nextflow.file.FileHelper - NFS path (true): /scratch/vpagano/tmp
+Aug-16 11:48:10.663 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827567; id: 22; name: PACBIO_DEEPVARIANT:make_examples (22); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/0a/4e3999e9b8e54cf55b2b16a26bfeba started: 1692208285558; exited: 2023-08-16T18:48:55.840562Z; ]
+Aug-16 11:48:10.700 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827568; id: 3; name: PACBIO_DEEPVARIANT:make_examples (3); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/dd/3cfe495e8d0c1e12071f60801ca524 started: 1692208285560; exited: 2023-08-16T18:49:16.600143Z; ]
+Aug-16 11:49:05.639 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827538; id: 28; name: PACBIO_DEEPVARIANT:make_examples (28); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/4a/14d7e0a4e557da5bd2660a84e54c14 started: 1692208285510; exited: 2023-08-16T18:50:13.062352Z; ]
+Aug-16 11:49:05.650 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827539; id: 1; name: PACBIO_DEEPVARIANT:make_examples (1); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/90/7726ec05d8939df360b79a32d8d484 started: 1692208285512; exited: 2023-08-16T18:49:32.476632Z; ]
+Aug-16 11:49:05.657 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827540; id: 6; name: PACBIO_DEEPVARIANT:make_examples (6); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/50/a0124721d5775ae15881285c46f289 started: 1692208285514; exited: 2023-08-16T18:49:49.167565Z; ]
+Aug-16 11:49:05.664 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827541; id: 27; name: PACBIO_DEEPVARIANT:make_examples (27); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/9e/cd18ea32563b1253d2e46aa5f83864 started: 1692208285515; exited: 2023-08-16T18:49:39.137842Z; ]
+Aug-16 11:49:05.674 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827542; id: 35; name: PACBIO_DEEPVARIANT:make_examples (35); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/e8/bf111d2a90b9c6cbc37bb656acf718 started: 1692208285517; exited: 2023-08-16T18:49:25.527487Z; ]
+Aug-16 11:49:05.688 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827570; id: 37; name: PACBIO_DEEPVARIANT:make_examples (37); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/13/f2af866ddfe67ae0104382d011b238 started: 1692208285563; exited: 2023-08-16T18:49:43.438562Z; ]
+Aug-16 11:49:10.639 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827537; id: 15; name: PACBIO_DEEPVARIANT:make_examples (15); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/b6/2528bd816c859e94268beffe5080d4 started: 1692208285508; exited: 2023-08-16T18:50:15.278942Z; ]
+Aug-16 11:49:10.653 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827565; id: 36; name: PACBIO_DEEPVARIANT:make_examples (36); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/b5/9581355c8928f7dceeac4c3e64663f started: 1692208285554; exited: 2023-08-16T18:50:11.274082Z; ]
+Aug-16 11:49:15.639 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827569; id: 40; name: PACBIO_DEEPVARIANT:make_examples (40); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/1e/7cc7ca075103bf301b1ded71b65e68 started: 1692208285561; exited: 2023-08-16T18:50:16.881021Z; ]
+Aug-16 11:49:15.652 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827571; id: 38; name: PACBIO_DEEPVARIANT:make_examples (38); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/ce/698108a68cc1d178c6d6a96d6f0f09 started: 1692208285564; exited: 2023-08-16T18:50:12.890228Z; ]
+Aug-16 11:50:05.643 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827536; id: 29; name: PACBIO_DEEPVARIANT:make_examples (29); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/de/6ca44a1283bfabb906f14d1212ff0f started: 1692208285506; exited: 2023-08-16T18:50:32.746678Z; ]
+Aug-16 11:50:05.655 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827572; id: 39; name: PACBIO_DEEPVARIANT:make_examples (39); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/c6/e676375b78b52a49c0e234724cb03d started: 1692208285565; exited: 2023-08-16T18:50:32.376035Z; ]
+Aug-16 11:50:50.636 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 26 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: -; ]
+~> TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: -; ]
+~> TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: -; ]
+~> TaskHandler[jobId: 5827543; id: 31; name: PACBIO_DEEPVARIANT:make_examples (31); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/74/7c5e96af7b5da96c0f862364190a24 started: 1692208285519; exited: -; ]
+~> TaskHandler[jobId: 5827544; id: 14; name: PACBIO_DEEPVARIANT:make_examples (14); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/78/99fbd672e5cea9f2e80e88913d4622 started: 1692208285520; exited: -; ]
+~> TaskHandler[jobId: 5827545; id: 25; name: PACBIO_DEEPVARIANT:make_examples (25); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/d4/2c7ffa75dca257fbd483e980264f40 started: 1692208285522; exited: -; ]
+~> TaskHandler[jobId: 5827546; id: 2; name: PACBIO_DEEPVARIANT:make_examples (2); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/d8/7cd6e9c7ec0b4e3acae5a6a65f9b3a started: 1692208285524; exited: -; ]
+~> TaskHandler[jobId: 5827547; id: 10; name: PACBIO_DEEPVARIANT:make_examples (10); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/08/5d653daee1e4cfb2646b8fbd21f30b started: 1692208285526; exited: -; ]
+~> TaskHandler[jobId: 5827548; id: 7; name: PACBIO_DEEPVARIANT:make_examples (7); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/93d51e7c459586856027044191e7a5 started: 1692208285527; exited: -; ]
+~> TaskHandler[jobId: 5827549; id: 17; name: PACBIO_DEEPVARIANT:make_examples (17); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/10/5ad1ca79e86dc42bccbf08958760b7 started: 1692208285530; exited: -; ]
+.. remaining tasks omitted.
+Aug-16 11:51:05.649 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827566; id: 5; name: PACBIO_DEEPVARIANT:make_examples (5); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/e6/036d8636b6a3895d1d457fa20f7ed8 started: 1692208285557; exited: 2023-08-16T18:52:03.200224Z; ]
+Aug-16 11:52:05.649 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827549; id: 17; name: PACBIO_DEEPVARIANT:make_examples (17); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/10/5ad1ca79e86dc42bccbf08958760b7 started: 1692208285530; exited: 2023-08-16T18:52:43.44059Z; ]
+Aug-16 11:52:05.671 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827551; id: 23; name: PACBIO_DEEPVARIANT:make_examples (23); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/1f/cb0a5d27d960dae48c2f996f53f2cd started: 1692208285534; exited: 2023-08-16T18:52:44.632296Z; ]
+Aug-16 11:52:05.684 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827552; id: 33; name: PACBIO_DEEPVARIANT:make_examples (33); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/65/bd9036ea01a2d6eac21d32bb2988ee started: 1692208285536; exited: 2023-08-16T18:52:59.879325Z; ]
+Aug-16 11:52:05.696 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827554; id: 18; name: PACBIO_DEEPVARIANT:make_examples (18); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/7e/f697e79847109c86f56d0c3be3e5d5 started: 1692208285538; exited: 2023-08-16T18:52:56.703157Z; ]
+Aug-16 11:52:35.644 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827550; id: 21; name: PACBIO_DEEPVARIANT:make_examples (21); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/d1/5d59418bb65b3349e75b4319e4bff5 started: 1692208285532; exited: 2023-08-16T18:53:26.692992Z; ]
+Aug-16 11:53:05.649 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827553; id: 34; name: PACBIO_DEEPVARIANT:make_examples (34); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/0a/0716f2714b0c55d4b1b33a60725b2d started: 1692208285537; exited: 2023-08-16T18:53:58.48103Z; ]
+Aug-16 11:54:05.652 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827534; id: 19; name: PACBIO_DEEPVARIANT:make_examples (19); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/dc/6ba5a8418bdb3efa67f016d4558694 started: 1692208285503; exited: 2023-08-16T18:54:47.021474Z; ]
+Aug-16 11:54:05.668 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827557; id: 24; name: PACBIO_DEEPVARIANT:make_examples (24); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/3b/67dd3b0f223de4c4f5bb5c8301a20a started: 1692208285542; exited: 2023-08-16T18:55:03.40849Z; ]
+Aug-16 11:54:30.647 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827533; id: 20; name: PACBIO_DEEPVARIANT:make_examples (20); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/24/f7259fdea5916fe904b95487a26d6c started: 1692208280505; exited: 2023-08-16T18:55:23.672105Z; ]
+Aug-16 11:54:35.649 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827543; id: 31; name: PACBIO_DEEPVARIANT:make_examples (31); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/74/7c5e96af7b5da96c0f862364190a24 started: 1692208285519; exited: 2023-08-16T18:55:35.695247Z; ]
+Aug-16 11:54:35.658 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827544; id: 14; name: PACBIO_DEEPVARIANT:make_examples (14); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/78/99fbd672e5cea9f2e80e88913d4622 started: 1692208285520; exited: 2023-08-16T18:55:25.363757Z; ]
+Aug-16 11:54:40.646 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827555; id: 8; name: PACBIO_DEEPVARIANT:make_examples (8); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/de/b12b2262c998dfde2a4218463834c4 started: 1692208285539; exited: 2023-08-16T18:55:20.416756Z; ]
+Aug-16 11:54:40.651 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827556; id: 9; name: PACBIO_DEEPVARIANT:make_examples (9); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/b5/43f7aab608bee22ca7bdaa684e91fc started: 1692208285540; exited: 2023-08-16T18:55:10.040946Z; ]
+Aug-16 11:54:40.656 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827558; id: 26; name: PACBIO_DEEPVARIANT:make_examples (26); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/84/9b52e4a114fef9183f33b04941e428 started: 1692208285544; exited: 2023-08-16T18:55:13.217997Z; ]
+Aug-16 11:54:40.663 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827560; id: 30; name: PACBIO_DEEPVARIANT:make_examples (30); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/b2/1f3ede0b80e24547910d811fa46138 started: 1692208285547; exited: 2023-08-16T18:55:15.458821Z; ]
+Aug-16 11:55:05.653 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827535; id: 4; name: PACBIO_DEEPVARIANT:make_examples (4); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/fd/2495d033672381f7a4cb26e87939f7 started: 1692208285505; exited: 2023-08-16T18:56:02.686276Z; ]
+Aug-16 11:55:45.651 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827559; id: 11; name: PACBIO_DEEPVARIANT:make_examples (11); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/1a/e4763146f927accba309406218df05 started: 1692208285545; exited: 2023-08-16T18:56:41.927292Z; ]
+Aug-16 11:55:50.646 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 8 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827545; id: 25; name: PACBIO_DEEPVARIANT:make_examples (25); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/d4/2c7ffa75dca257fbd483e980264f40 started: 1692208285522; exited: -; ]
+~> TaskHandler[jobId: 5827546; id: 2; name: PACBIO_DEEPVARIANT:make_examples (2); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/d8/7cd6e9c7ec0b4e3acae5a6a65f9b3a started: 1692208285524; exited: -; ]
+~> TaskHandler[jobId: 5827547; id: 10; name: PACBIO_DEEPVARIANT:make_examples (10); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/08/5d653daee1e4cfb2646b8fbd21f30b started: 1692208285526; exited: -; ]
+~> TaskHandler[jobId: 5827548; id: 7; name: PACBIO_DEEPVARIANT:make_examples (7); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/24/93d51e7c459586856027044191e7a5 started: 1692208285527; exited: -; ]
+~> TaskHandler[jobId: 5827561; id: 13; name: PACBIO_DEEPVARIANT:make_examples (13); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/15/80d340cef25cf3272d6d2c9a9fea47 started: 1692208285548; exited: -; ]
+~> TaskHandler[jobId: 5827562; id: 12; name: PACBIO_DEEPVARIANT:make_examples (12); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/5a/9a68d2c1c505d06eae915b3405ab26 started: 1692208285550; exited: -; ]
+~> TaskHandler[jobId: 5827563; id: 16; name: PACBIO_DEEPVARIANT:make_examples (16); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/dd/835bf0301f729c325a197e385fc571 started: 1692208285551; exited: -; ]
+~> TaskHandler[jobId: 5827564; id: 32; name: PACBIO_DEEPVARIANT:make_examples (32); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/34/0ce0423e5a98fc87018d8c97c2f989 started: 1692208285553; exited: -; ]
+Aug-16 11:56:35.651 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827545; id: 25; name: PACBIO_DEEPVARIANT:make_examples (25); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/d4/2c7ffa75dca257fbd483e980264f40 started: 1692208285522; exited: 2023-08-16T18:57:12.257378Z; ]
+Aug-16 11:56:50.656 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827564; id: 32; name: PACBIO_DEEPVARIANT:make_examples (32); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/34/0ce0423e5a98fc87018d8c97c2f989 started: 1692208285553; exited: 2023-08-16T18:57:51.722086Z; ]
+Aug-16 11:57:05.658 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827561; id: 13; name: PACBIO_DEEPVARIANT:make_examples (13); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/15/80d340cef25cf3272d6d2c9a9fea47 started: 1692208285548; exited: 2023-08-16T18:58:02.623994Z; ]
+Aug-16 11:57:55.650 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827562; id: 12; name: PACBIO_DEEPVARIANT:make_examples (12); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/5a/9a68d2c1c505d06eae915b3405ab26 started: 1692208285550; exited: 2023-08-16T18:58:29.524823Z; ]
+Aug-16 11:57:55.657 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827563; id: 16; name: PACBIO_DEEPVARIANT:make_examples (16); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/dd/835bf0301f729c325a197e385fc571 started: 1692208285551; exited: 2023-08-16T18:58:23.222733Z; ]
+Aug-16 12:00:20.657 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827546; id: 2; name: PACBIO_DEEPVARIANT:make_examples (2); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/d8/7cd6e9c7ec0b4e3acae5a6a65f9b3a started: 1692208285524; exited: 2023-08-16T19:00:56.858539Z; ]
+Aug-16 12:00:45.652 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827548; id: 7; name: PACBIO_DEEPVARIANT:make_examples (7); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/24/93d51e7c459586856027044191e7a5 started: 1692208285527; exited: 2023-08-16T19:01:32.938822Z; ]
+Aug-16 12:00:50.650 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[jobId: 5827547; id: 10; name: PACBIO_DEEPVARIANT:make_examples (10); status: RUNNING; exit: -; error: -; workDir: /scratch/vpagano/tmp/08/5d653daee1e4cfb2646b8fbd21f30b started: 1692208285526; exited: -; ]
+Aug-16 12:01:45.653 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 5827547; id: 10; name: PACBIO_DEEPVARIANT:make_examples (10); status: COMPLETED; exit: 0; error: -; workDir: /scratch/vpagano/tmp/08/5d653daee1e4cfb2646b8fbd21f30b started: 1692208285526; exited: 2023-08-16T19:02:27.352022Z; ]
+Aug-16 12:01:45.663 [main] DEBUG nextflow.Session - Session await > all processes finished
+Aug-16 12:01:50.652 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Aug-16 12:01:50.660 [main] DEBUG nextflow.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=40; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=1d 17h 12m 43s; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=40; peakCpus=40; peakMemory=0; ]
+Aug-16 12:01:50.729 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+Aug-16 12:01:50.729 [main] INFO  org.pf4j.AbstractPluginManager - Stop plugin 'nf-tower@1.5.6'
+Aug-16 12:01:50.730 [main] DEBUG nextflow.plugin.BasePlugin - Plugin stopped nf-tower
+Aug-16 12:01:50.750 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'FileTransfer' shutdown completed (hard=false)
+Aug-16 12:01:50.751 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye
