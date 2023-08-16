@@ -137,11 +137,10 @@ function getOptions(){
 }
 
 
-HIFI_CNV_EXE="/home/clegendre/tools/pacbio/hificnv-v0.1.6-x86_64-unknown-linux-gnu/hificnv"
 module load singularity/3.8.4
 SIF_IMAGE_HIFICNV="/home/tgenref/containers/grandcanyon/copy_number/hificnv_0.1.6b--h9ee0642_0.sif"
 
-echo "capture arguments using getOPtions ... " ;
+echo "capture arguments using getOptions ... " ;
 getOptions $@
 
 
