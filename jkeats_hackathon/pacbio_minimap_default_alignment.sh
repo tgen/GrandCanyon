@@ -18,9 +18,9 @@ FGBIO_SAMTOOLS_SIF=/home/tgenref/containers/fgbio-samtools_2.0.2.sif
 ###################################
 
 # Reference files and directory
-REFERENCE=/home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa
-ALT_FILE=/home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/bwa2_2.2.1/GRCh38tgen_decoy_alts_hla.fa.alt
+REFERENCE=/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa
 REFERENCE_DIR=/home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference
+
 
 # Input file and directory
 INPUT_UBAM=/illumina_run_folders/pacbio/revio/01/r84132_20230804_002251/1_B01/hifi_reads/m84132_230804_011218_s2.hifi_reads.bc2009.bam
@@ -45,7 +45,7 @@ TEMP=/scratch/jkeats/revio/tmp
 singularity exec -B $OUTPUT_DIR -B $REFERENCE_DIR ${MINIMAP2_SIF} \
   minimap2 \
   -x map-hifi \
-  -d GRCh38tgen_decoy_alts_hla.ont.mmi \
+  -d chm13v2.0_maskedY_rCRS_mapHiFi.mmi \
   --alt ${ALT_FILE} \
   ${REFERENCE}
 
@@ -90,14 +90,14 @@ singularity exec -B $OUTPUT_DIR ${SAMTOOLS_SIF} \
     -a \
     -Y \
     -L \
-    GRCh38tgen_decoy_alts_hla.ont.mmi \
+    chm13v2.0_maskedY_rCRS_mapHiFi.mmi \
     /dev/stdin \
     | \
     singularity exec -B $OUTPUT_DIR ${SAMTOOLS_SIF} \
       samtools collate \
       --threads 10 \
       --no-PG \
-      -o ${OUTPUT_BASENAME}_mm_collated.bam \
+      -o ${OUTPUT_BASENAME}_mm_collated_chm13.bam \
       --output-fmt BAM \
       -
 
@@ -105,7 +105,7 @@ singularity exec -B $OUTPUT_DIR ${SAMTOOLS_SIF} \
 # update RG tags using zipperBAM, sort the output, and create an index
 singularity exec -B $OUTPUT_DIR -B $REFERENCE_DIR ${FGBIO_SAMTOOLS_SIF} \
   fgbio --tmp-dir ${TEMP} --compression 1 --async-io=true ZipperBams \
-  --input=${OUTPUT_BASENAME}_mm_collated.bam \
+  --input=${OUTPUT_BASENAME}_mm_collated_chm13.bam \
   --unmapped=${OUTPUT_BASENAME}_uBAM_collated.bam \
   --ref=${REFERENCE} \
   | \
@@ -113,7 +113,7 @@ singularity exec -B $OUTPUT_DIR -B $REFERENCE_DIR ${FGBIO_SAMTOOLS_SIF} \
     samtools sort \
     --threads 20 \
     --reference ${REFERENCE} \
-    -o ${OUTPUT_BASENAME}_mm_rg_sort.cram \
+    -o ${OUTPUT_BASENAME}_mm_rg_sort_chm13.cram \
     --output-fmt CRAM \
     --write-index \
     -
