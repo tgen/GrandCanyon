@@ -41,8 +41,8 @@
 ##@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 ## REQUIRED ARGUMENTS:
-# --ref REF_GENOME
-# --bam BAMFILE
+# --ref REF_GENOME  (ref usedL chm13_v2)
+# --bam BAMFILE (COLO829BL_chm13.ba)
 
 ## OPTIONAL ARGUMENTS:
 ## all the remaining ones: see the excerpt of the help or run hificnv --help
