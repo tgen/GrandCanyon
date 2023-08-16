@@ -63,10 +63,7 @@ done
 
 module load singularity
 
-DEEPVARIANT=/home/tgenref/containers/deepvariant_1.5.0.sif
-
-
-[[ -v quiet ]] || echo "singularity exec -B $PWD -B $INPUT_BIND -B $OUTPUT_BIND -B $OUTPUT_GVCF_BIND -B $REF_BIND $DEEPVARIANT sh -c \"run_deepvariant --model_type ONT_R104 --ref ${REFERENCE} --reads ${INPUT} --output_vcf ${OUTPUT} --output_gvcf ${OUTPUT_GVCF} --num_shards ${THREADS} --regions ${REGIONS} - ""
+DEEPVARIANT=/home/tgenref/containers/deepvariant_1.5.0-gpu.sif
 
 INPUT_BIND=$(dirname ${INPUT})
 OUTPUT_BIND=$(dirname ${OUTPUT})
@@ -75,4 +72,7 @@ OUTPUT_GVCF_BIND=$(dirname $OUTPUT_GVCF})
 [[ -e $OUTPUT_GVCF_BIND ]] || mkdir -p $OUTPUT_GVCF_BIND
 REF_BIND=$(dirname $REFERENCE)
 
-singularity exec -B $PWD -B $INPUT_BIND -B $OUTPUT_BIND -B $OUTPUT_GVCF_BIND -B $REF_BIND $DEEPVARIANT sh -c \"run_deepvariant --model_type ONT_R104 --ref ${REFERENCE} --reads ${INPUT} --output_vcf ${OUTPUT} --output_gvcf ${OUTPUT_GVCF} --num_shards ${THREADS} --regions ${REGIONS} - "
+[[ -v quiet ]] || echo "singularity exec -B $PWD -B $INPUT_BIND -B $OUTPUT_BIND -B $OUTPUT_GVCF_BIND -B $REF_BIND $DEEPVARIANT sh -c \"run_deepvariant --model_type ONT_R104 --ref ${REFERENCE} --reads ${INPUT} --output_vcf ${OUTPUT} --output_gvcf ${OUTPUT_GVCF} --num_shards ${THREADS} --regions ${REGIONS} - " "
+
+
+singularity exec -B $PWD -B ${INPUT_BIND} -B ${OUTPUT_BIND} -B ${OUTPUT_GVCF_BIND} -B ${REF_BIND} $DEEPVARIANT sh -c \"run_deepvariant --model_type ONT_R104 --ref ${REFERENCE} --reads ${INPUT} --output_vcf ${OUTPUT} --output_gvcf ${OUTPUT_GVCF} --num_shards ${THREADS} --regions ${REGIONS} "
