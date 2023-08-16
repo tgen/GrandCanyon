@@ -1,15 +1,5 @@
 #!/bin/bash
 
-#SBATCH --job-name="cytocad"
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=12
-#SBATCH --mem-per-cpu=16G
-#SBATCH --time=0-300:00:00
-#SBATCH -o /scratch/jzhang/report/cytocad_%j.out
-#SBATCH -e /scratch/jzhang/report/cytocad_%j.err
-#SBATCH --mail-type=BEGIN,END,FAILED
-#SBATCH --mail-user=jzhang@tgen.org
-
 print_help(){
     printf "
     Usage:
