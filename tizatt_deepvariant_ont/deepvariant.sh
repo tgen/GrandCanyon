@@ -12,7 +12,6 @@ print_help(){
         -c  | --regions      - Region (such as chr20)
         -t  | --threads      - Number of threads to use in deepvariant
         -r  | --reference    - Path to the reference fasta for alignment	
-        -q  | --quiet        - Suppresses debug/processing info
     \n"
 
     exit 0
@@ -20,8 +19,6 @@ print_help(){
 
 commands=$(echo "$(realpath $0)" $*)
 
-# Reads each argument provided after calling the script
-# if no argument is provided then the script will print a usage message
 num_args_rem=$#
 
 if [[ $num_args_rem == 0 ]] ; then
@@ -52,27 +49,27 @@ while [[ $num_args_rem -ne 0 ]] ; do
         -r|--reference)
             REFERENCE="$2"
             shift 2 ;;
-        -q|--quiet)
-            quiet="true"
-            shift 1 ;;
     esac
     num_args_rem=$((num_args_rem-1))
 done
-
-[[ -v quiet ]] || echo "Script called via $commands"
 
 module load singularity
 
 DEEPVARIANT=/home/tgenref/containers/deepvariant_1.5.0-gpu.sif
 
-INPUT_BIND=$(dirname ${INPUT})
-OUTPUT_BIND=$(dirname ${OUTPUT})
-OUTPUT_GVCF_BIND=$(dirname $OUTPUT_GVCF})
-[[ -e $OUTPUT_BIND ]] || mkdir -p $OUTPUT_BIND
-[[ -e $OUTPUT_GVCF_BIND ]] || mkdir -p $OUTPUT_GVCF_BIND
-REF_BIND=$(dirname $REFERENCE)
-
-[[ -v quiet ]] || echo "singularity exec -B $PWD -B $INPUT_BIND -B $OUTPUT_BIND -B $OUTPUT_GVCF_BIND -B $REF_BIND $DEEPVARIANT sh -c \"run_deepvariant --model_type ONT_R104 --ref ${REFERENCE} --reads ${INPUT} --output_vcf ${OUTPUT} --output_gvcf ${OUTPUT_GVCF} --num_shards ${THREADS} --regions ${REGIONS} - " "
+INPUT_DIR=$(dirname ${INPUT})
+OUTPUT_DIR=$(dirname ${OUTPUT})
+OUTPUT_GVCF_DIR=$(dirname $OUTPUT_GVCF})
+REF_DIR=$(dirname $REFERENCE)
 
 
-singularity exec -B $PWD -B ${INPUT_BIND} -B ${OUTPUT_BIND} -B ${OUTPUT_GVCF_BIND} -B ${REF_BIND} $DEEPVARIANT sh -c \"run_deepvariant --model_type ONT_R104 --ref ${REFERENCE} --reads ${INPUT} --output_vcf ${OUTPUT} --output_gvcf ${OUTPUT_GVCF} --num_shards ${THREADS} --regions ${REGIONS} "
+# Call deep variant using the model_type = ONT_R104
+singularity exec -B $PWD -B ${INPUT_DIR} -B ${OUTPUT_DIR} -B ${OUTPUT_GVCF_DIR} -B ${REF_DIR} $DEEPVARIANT \
+     run_deepvariant \
+     --model_type ONT_R104 \
+     --ref ${REFERENCE} \
+     --reads ${INPUT} \
+     --output_vcf ${OUTPUT} \
+     --output_gvcf ${OUTPUT_GVCF} \
+     --num_shards ${THREADS} \
+     --regions ${REGIONS} -
