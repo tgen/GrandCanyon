@@ -160,7 +160,7 @@ if [[ ${BAM} != "" ]] ;
 then 
 	ADD_OPTIONS=" ${ADD_OPTIONS[@]} --bam ${BAM}" ; 
 else 
-	echo -e "ERROR REFERENCE GENOEM MUST BE PROVIDED; Aborting;" ; 
+	echo -e "ERROR BAM FILE MUST BE PROVIDED; Aborting;" ; 
 	exit 1 ; 
 fi 
 
