@@ -169,13 +169,11 @@
     #https://samtools.github.io/hts-specs/SAMv1.pdf
 
     #read lengths: mapped reads only
-    singularity exec --bind /scratch,/home {{ config.sif.samtools }} samtools view -F 4 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ sample }}_mapped_withSupp_readLength.txt &
-    #read lengths: mapped reads only, no supplementary reads
-    singularity exec --bind /scratch,/home {{ config.sif.samtools }} samtools view -F 4 -F 2048 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ sample }}_mapped_noSupp_readLength.txt &
+    singularity exec --bind /scratch,/home {{ config.sif.samtools }} samtools view -F 4 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.noSecondary.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ sample }}_mapped_withSupp_readLength.txt &
+    #read lengths: mapped reads only, no supplementary or secondary reads
+    singularity exec --bind /scratch,/home {{ config.sif.samtools }} samtools view -F 4 -F 2048 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.noSecondary.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ sample }}_mapped_noSupp_readLength.txt &
     #read lengths: unmapped reads
-    singularity exec --bind /scratch,/home {{ config.sif.samtools }} samtools view -f 4 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ sample }}_unmapped_readLength.txt &
-    #read lengths: unmapped reads, no supplementary reads
-    singularity exec --bind /scratch,/home {{ config.sif.samtools }} samtools view -F 4 -F 2048 -b {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.noSupp.bam
+    singularity exec --bind /scratch,/home {{ config.sif.samtools }} samtools view -f 4 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.noSecondary.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ sample }}_unmapped_readLength.txt &
 
 {% if config.pipe_params.fc %}
 - name: featureCounts_{{ sample }}
@@ -281,8 +279,6 @@
 
     #generate file with the 10 longest isoforms
     awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' flair.collapse.isoforms.fa | awk '{printf("%d\t%s\t%s\t%s\n",length($2),$1,$1,$2);}'  | sort -t $'\t'  -k1,1nr  | cut -f 1,2 | head > {{ sample }}_flair_top10.txt
-
-    rm *.sam
 {% endif %}
 
 
