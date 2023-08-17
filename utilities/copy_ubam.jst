@@ -1,14 +1,12 @@
 {% macro copy_ubam(ubam) %}
 
 - name: copy_ubams_{{ ubam.basename | replace(".", "_") }}
-  input: {{ ubam.ubamPath }}
+  input: {{ ubam.path }}
   output: temp/ubams/{{ ubam.basename }}
   retry: 2
   cpus: 6
   walltime: "4:00:00"
   queue_preset: "DATA-MOVER"
-  container: {{ constants.tools.base.container }}
-  digest: {{ constants.tools.base.digest }}
   cmd: |
     set -uev
 

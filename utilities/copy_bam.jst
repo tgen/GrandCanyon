@@ -1,14 +1,12 @@
 {% macro copy_bam(bam) %}
 
 - name: copy_bams_{{ bam.basename | replace(".", "_") }}
-  input: {{ bam.bamPath }}
+  input: {{ bam.path }}
   output: temp/bams/{{ bam.basename }}
   retry: 2
   cpus: 6
   walltime: "4:00:00"
   queue_preset: "DATA-MOVER"
-  container: {{ constants.tools.base.container }}
-  digest: {{ constants.tools.base.digest }}
   cmd: |
     set -uev
 
