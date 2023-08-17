@@ -32,7 +32,7 @@ OUTPUT_BASENAME=/scratch/jkeats/ont_testing/KMS11_JCRBsus_p19_CL_Whole_T1_OGL14
 OUTPUT_DIR=/scratch/jkeats/ont_testing
 
 # Define tmp directory
-TEMP=/scratch/jkeats/revio/tmp
+TEMP=/scratch/jkeats/ont_testing/tmp
 
 # Define Read Group
 FULL_RG='@RG\tID:PAO86842_1_L74672\tPL:ONT\tPM:PROMETHION\tPU:PAO86842_1\tLB:L74672\tSM:KMS11_JCRBsus_p19_CL_Whole_T1\tBC:NNNNNNNN\tCN:TGen\tDS:basecall_model=dna_r10.4.1_e8.2_400bps_sup@v4.2.0;runid=a78752787a2ae9912c3ceb09e32ef4639a3a3351'
@@ -134,10 +134,12 @@ singularity exec -B $OUTPUT_DIR ${SAMTOOLS_SIF} \
       --no-PG \
       --output-fmt BAM \
       - \
-      ${OUTPUT_BASENAME}_mm_collated_chm13.bam
+      ${OUTPUT_BASENAME}_mm_collated_chm13
 
 ## NOTE: the ont alignment is much slower than the pacbio version, will need
 
+# Fix my screw up, fixed collate <prefix> in code above for future use
+#mv ${OUTPUT_BASENAME}_mm_collated_chm13.bam.bam ${OUTPUT_BASENAME}_mm_collated_chm13.bam
 
 # update RG tags using zipperBAM, sort the output, and create an index
 singularity exec -B $OUTPUT_DIR -B $REFERENCE_DIR ${FGBIO_SAMTOOLS_SIF} \
@@ -154,3 +156,24 @@ singularity exec -B $OUTPUT_DIR -B $REFERENCE_DIR ${FGBIO_SAMTOOLS_SIF} \
     --output-fmt CRAM \
     --write-index \
     -
+
+
+## NOTES: Not sure I saw this before (started at 6:48AM + 7 hours UTC offset would be 13:48, WHAT IS WITH OUR SYSTEM?): NODE= dback-c11-n02
+# OpenJDK 64-Bit Server VM warning: Insufficient space for shared memory file: 417310
+# Try using the -Djava.io.tmpdir= option to select an alternate temp location.
+
+# 13:46:21.136 WARN  NativeLibraryLoader - Unable to load libgkl_compression.so from native/libgkl_compression.so (No space left on device)
+# 13:46:21.145 WARN  NativeLibraryLoader - Unable to load libgkl_compression.so from native/libgkl_compression.so (No space left on device)
+# [2023/08/17 13:46:22 | FgBioMain | Info] Executing ZipperBams from fgbio version 2.0.2 as jkeats@dback-c11-n02 on JRE 1.8.0_352-b08 with snappy, IntelInflater, and IntelDeflater
+# 13:46:22.590 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+# 13:46:22.594 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+# 13:46:22.609 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+# 13:46:22.609 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+# 13:46:22.630 WARN  IntelDeflaterFactory - Intel Deflater not supported, using Java.util.zip.Deflater
+# [2023/08/17 13:46:29 | SamWriter | Info] Seen many non-increasing record positions. Printing Read-names as well.
+
+
+## Started a second time and you see very different messages, I think this is node related, not sure which node I was on first, current is dback-c14-n01
+# [2023/08/17 15:18:32 | FgBioMain | Info] Executing ZipperBams from fgbio version 2.0.2 as jkeats@dback-c14-n01 on JRE 1.8.0_352-b08 with snappy, IntelInflater, and IntelDeflater
+# [2023/08/17 15:18:34 | SamWriter | Info] Seen many non-increasing record positions. Printing Read-names as well.
+# [2023/08/17 15:23:43 | SamWriter | Info] Wrote      2,000,000 records.  Elapsed time: 00:05:11s.  Time for last 2,000,000:  311s.  Last read position: chr18:54,080,165.  Last read name: fdf38d23-c679-4281-8ba0-bb6ee7f309d8
