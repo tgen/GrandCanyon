@@ -128,6 +128,10 @@
     #!/bin/bash
     #SBATCH -t 0-4:00
 
+    #note: this step sortes and indexes the bam file
+    #input: human aligned bam
+    #output: sorted human aligned bam and accompanying index
+
     module load {{ config.modules.singularity }}
 
     cd {{ config.workdir }}/minimap2/{{ sample }}
@@ -146,11 +150,16 @@
     #!/bin/bash
     #SBATCH -t 0-4:00
 
+    #note: this step parses the bam file and removes secondary reads
+    #input: human aligned bam
+    #output: human aligned bam without secondary reads and accompanying index
+
     module load {{ config.modules.singularity }}
 
     cd {{ config.workdir }}/minimap2/{{ sample }}
 
     singularity exec --bind /scratch,/home {{ config.sif.samtools }} samtools view -hb -F 256 {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.noSecondary.bam
+    singularity exec --bind /scratch,/home {{ config.sif.samtools }} samtools index {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.noSecondary.bam
 
 - name: readLengths_{{ sample }}
   output: readLengths_{{ sample }}_done
@@ -160,6 +169,10 @@
   cmd: |
     #!/bin/bash
     #SBATCH -t 0-4:00
+
+    #note: this step creates a .txt file from the bam with read lengths for mapped and unmapped reads
+    #input: human aligned bam
+    #output: text files with read lengths of human mapped and unmapped reads
 
     module load {{ config.modules.singularity }}
 
@@ -184,6 +197,10 @@
   cmd: |
     #!/bin/bash
     #SBATCH -t 0-2:00
+
+    #note: this step performs gene level quantification from the human aligned bam
+    #input: human aligned bam
+    #output: gene counts
 
     module load {{ config.modules.singularity }}
 
@@ -226,6 +243,10 @@
     #!/bin/bash
     #SBATCH -t 0-4:00
 
+    #note: this step performs salmon in alignment mode for transcript quantification
+    #input: human aligned transcriptome bam
+    #output: quant.sf file with transcript uantification (tpms)
+
     module load {{ config.modules.singularity }}
 
     mkdir -p {{ config.workdir }}/salmon-align
@@ -252,6 +273,10 @@
   cmd: |
     #!/bin/bash
     #SBATCH -t 0-4:00
+
+    #note: this step performs flair for read correction, annotation, and quantification
+    #input: human aligned genome bam
+    #output: isoforms.fa, quantification, gtf
 
     module load {{ config.modules.singularity }}
 
@@ -289,6 +314,10 @@
   cmd: |
     #!/bin/bash
     #SBATCH -t 0-8:00
+
+    #note: this step performs isoquant for read correction, annotation, and quantification
+    #input: human aligned genome bam
+    #output: gene and transcript quantification, gtf
 
     module load {{ config.modules.singularity }}
 
@@ -339,7 +368,7 @@
     #!/bin/bash
     #SBATCH -t 0-2:00
 
-    module load {{ config.modules.featureCounts }}
+    module load {{ config.modules.singularity }}
 
     mkdir {{ config.workdir }}/counted-SIRVome
     cd {{ config.workdir }}/counted-SIRVome
@@ -377,6 +406,8 @@
   cmd: |
     #!/bin/bash
     #SBATCH -t 0-4:00
+
+    module load {{ config.modules.singularity }}
 
     mkdir -p {{ config.workdir }}/quasimapped-SIRVome
     cd {{ config.workdir }}/quasimapped-SIRVome

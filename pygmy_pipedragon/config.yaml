@@ -23,7 +23,6 @@ sif:
 
 modules:
   singularity: "singularity/3.8.4"
-  featureCounts: "subread/2.0.0"
 
 file_locations:
   genome: "/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa"
