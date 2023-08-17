@@ -38,7 +38,15 @@
     mkdir -p {{ config.workdir }}/pychopper/{{ sample }}
     cd {{ config.workdir }}/pychopper/{{ sample }}
 
-    singularity exec --bind /scratch,/home {{ config.sif.pychopper }} cdna_classifier.py -m edlib -t 10 -r report.pdf -A aln_hits.bed -S statistics.tsv -u unclassified.fq -w rescued.fq {{ config.workdir }}/fq/{{ sample }}/{{ sample }}.fq full_length_output.fq
+    singularity exec --bind /scratch,/home {{ config.sif.pychopper }} cdna_classifier.py \
+    -m edlib \
+    -t 10 \
+    -r report.pdf \
+    -A aln_hits.bed \
+    -S statistics.tsv \
+    -u unclassified.fq \
+    -w rescued.fq \
+    {{ config.workdir }}/fq/{{ sample }}/{{ sample }}.fq full_length_output.fq
     cat full_length_output.fq rescued.fq > pychopper_all.fq
 
 - name: minimapSIRV_{{ sample }}
@@ -59,7 +67,13 @@
     mkdir -p {{ config.workdir }}/minimap2/{{ sample }}
     cd {{ config.workdir }}/minimap2/{{ sample }}
 
-    singularity exec --bind /scratch,/home {{ config.sif.minimap2 }} minimap2 -ax splice --splice-flank=no -t 10 -L {{ config.file_locations.genomeSIRV }} {{ config.workdir }}/pychopper/{{ sample }}/pychopper_all.fq > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sam 2> {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sam.log
+    singularity exec --bind /scratch,/home {{ config.sif.minimap2 }} minimap2 \
+    -ax splice \
+    --splice-flank=no \
+    -t 10 \
+    -L \
+    {{ config.file_locations.genomeSIRV }} \
+    {{ config.workdir }}/pychopper/{{ sample }}/pychopper_all.fq > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sam 2> {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sam.log
 
 - name: samtoolsfiltSIRV_{{ sample }}
   output: samtoolsfiltSIRV_{{ sample }}_done
@@ -117,7 +131,11 @@
     mkdir -p {{ config.workdir }}/minimap2/{{ sample }}
     cd {{ config.workdir }}/minimap2/{{ sample }}
 
-    singularity exec --bind /scratch,/home {{ config.sif.minimap2 }} minimap2 -ax map-ont -t 10 -L {{ config.file_locations.genome }} {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.fq > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sam
+    singularity exec --bind /scratch,/home {{ config.sif.minimap2 }} minimap2 \
+    -ax map-ont \
+    -t 10 \
+    -L {{ config.file_locations.genome }} \
+    {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.fq > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sam
 
 - name: samtoolsIndex_{{ sample }}
   output: samtoolsIndex_{{ sample }}_done
@@ -207,7 +225,13 @@
     mkdir {{ config.workdir }}/counted
     cd {{ config.workdir }}/counted
 
-    singularity exec --bind /home,/scratch {{ config.sif.featureCounts }} featureCounts -T 10 -t exon -g gene_id -a {{ config.file_locations.annotation }} -L -o {{ sample }}.txt {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam
+    singularity exec --bind /home,/scratch {{ config.sif.featureCounts }} featureCounts \
+    -T 10 \
+    -t exon \
+    -g gene_id \
+    -a {{ config.file_locations.annotation }} \
+    -L \
+    -o {{ sample }}.txt {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam
 {% endif %}
 
 - name: minimapTran_{{ sample }}
@@ -231,7 +255,14 @@
     mkdir -p {{ config.workdir }}/minimap2/{{ sample }}
     cd {{ config.workdir }}/minimap2/{{ sample }}
 
-    singularity exec --bind /scratch,/home {{ config.sif.minimap2 }} minimap2 -ax map-ont -t 10 -L -N 100 -p 1.0 {{ config.file_locations.transcriptome }} {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.fq > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.TranscriptomeAligned.out.sam
+    singularity exec --bind /scratch,/home {{ config.sif.minimap2 }} minimap2 \
+    -ax map-ont \
+    -t 10 \
+    -L \
+    -N 100 \
+    -p 1.0 \
+    {{ config.file_locations.transcriptome }} \
+    {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.fq > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.TranscriptomeAligned.out.sam
 
 {% if config.pipe_params.salmon %}
 - name: salmon_{{ sample }}
@@ -245,7 +276,7 @@
 
     #note: this step performs salmon in alignment mode for transcript quantification
     #input: human aligned transcriptome bam
-    #output: quant.sf file with transcript uantification (tpms)
+    #output: quant.sf file with transcript quantification (tpms)
 
     module load {{ config.modules.singularity }}
 
@@ -373,7 +404,14 @@
     mkdir {{ config.workdir }}/counted-SIRVome
     cd {{ config.workdir }}/counted-SIRVome
 
-    singularity exec --bind /home,/scratch {{ config.sif.featureCounts }} featureCounts -T 10 -t exon -g gene_id -a {{ config.file_locations.annotationSIRV }} -L -o {{ sample }}_SIRVome.txt {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam
+    singularity exec --bind /home,/scratch {{ config.sif.featureCounts }} featureCounts \
+    -T 10 \
+    -t exon \
+    -g gene_id \
+    -a {{ config.file_locations.annotationSIRV }} \
+    -L \
+    -o {{ sample }}_SIRVome.txt \
+    {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam
 
 - name: minimapTranSIRV_{{ sample }}
   after: samtoolsSortSIRV_{{ sample }}
@@ -396,7 +434,13 @@
     mkdir -p {{ config.workdir }}/minimap2/{{ sample }}
     cd {{ config.workdir }}/minimap2/{{ sample }}
 
-    singularity exec --bind /scratch,/home {{ config.sif.minimap2 }} minimap2 -ax map-ont -t 10 -L -N 100 -p 1.0 {{ config.file_locations.transcriptomeSIRV }} {{ config.workdir }}/pychopper/{{ sample }}/pychopper_all.fq > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.TranscriptomeAlignedSIRVome.out.sam
+    singularity exec --bind /scratch,/home {{ config.sif.minimap2 }} minimap2 \
+    -ax map-ont \
+    -t 10 \
+    -L \
+    -N 100 \
+    -p 1.0 {{ config.file_locations.transcriptomeSIRV }} \
+    {{ config.workdir }}/pychopper/{{ sample }}/pychopper_all.fq > {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.TranscriptomeAlignedSIRVome.out.sam
 
 - name: salmonSIRV_{{ sample }}
   output: salmonSIRV_{{ sample }}_done
@@ -407,12 +451,16 @@
     #!/bin/bash
     #SBATCH -t 0-4:00
 
+    #note: this step performs salmon in alignment mode for transcript quantification of SIRV spike-ins
+    #input: SIRV aligned transcriptome bam
+    #output: quant.sf file with transcript quantification (tpms)
+
     module load {{ config.modules.singularity }}
 
     mkdir -p {{ config.workdir }}/quasimapped-SIRVome
     cd {{ config.workdir }}/quasimapped-SIRVome
 
-    singularity exec --bind /home,/scratch {{ config.sif.salmon }} salmon quant \
+    singularity exec --bind /scratch,/home {{ config.sif.salmon }} salmon quant \
       --no-version-check \
       --libType A \
       --output {{ sample }}_SIRVome \
@@ -432,6 +480,10 @@
   cmd: |
     #!/bin/bash
     #SBATCH -t 0-4:00
+
+    #note: this step performs flair for read correction, annotation, and quantification of SIRVs
+    #input: SIRV aligned genome bam
+    #output: isoforms.fa, quantification, gtf
 
     module load {{ config.modules.singularity }}
 
@@ -460,6 +512,10 @@
   cmd: |
     #!/bin/bash
     #SBATCH -t 0-4:00
+
+    #note: this step performs isoquant for read correction, annotation, and quantification for SIRV mapped reads
+    #input: SIRV aligned genome bam
+    #output: gene and transcript quantification, gtf
 
     mkdir {{ config.workdir }}/isoquant-SIRVome/{{ sample }}
     cd {{ config.workdir }}/isoquant-SIRVome/{{ sample }}
