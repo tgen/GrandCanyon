@@ -19,6 +19,7 @@ sif:
   pychopper: "/home/ehutchins/tools/pychopper_2.5.0--py_0.sif"
   samtools: "/home/tgenref/containers/grandcanyon/common_tools/samtools_1.17--hd87286a_1.sif"
   salmon: "/home/ehutchins/tools/salmon_1.10.2--hecfa306_0.sif"
+  featureCounts: "/home/ehutchins/tools/subread_2.0.6--he4a0461_0.sif"
 
 modules:
   singularity: "singularity/3.8.4"

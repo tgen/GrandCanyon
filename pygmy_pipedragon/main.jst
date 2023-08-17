@@ -185,12 +185,12 @@
     #!/bin/bash
     #SBATCH -t 0-2:00
 
-    module load {{ config.modules.featureCounts }}
+    module load {{ config.modules.singularity }}
 
     mkdir {{ config.workdir }}/counted
     cd {{ config.workdir }}/counted
 
-    featureCounts -T 10 -t exon -g gene_id -a {{ config.file_locations.annotation }} -L -o {{ sample }}.txt {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam
+    singularity exec --bind /home,/scratch {{ config.sif.featureCounts }} featureCounts -T 10 -t exon -g gene_id -a {{ config.file_locations.annotation }} -L -o {{ sample }}.txt {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam
 {% endif %}
 
 - name: minimapTran_{{ sample }}
@@ -345,7 +345,7 @@
     mkdir {{ config.workdir }}/counted-SIRVome
     cd {{ config.workdir }}/counted-SIRVome
 
-    featureCounts -T 10 -t exon -g gene_id -a {{ config.file_locations.annotationSIRV }} -L -o {{ sample }}_SIRVome.txt {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam
+    singularity exec --bind /home,/scratch {{ config.sif.featureCounts }} featureCounts -T 10 -t exon -g gene_id -a {{ config.file_locations.annotationSIRV }} -L -o {{ sample }}_SIRVome.txt {{ config.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam
 
 - name: minimapTranSIRV_{{ sample }}
   after: samtoolsSortSIRV_{{ sample }}
