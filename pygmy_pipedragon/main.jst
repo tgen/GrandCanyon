@@ -444,7 +444,7 @@
 
 - name: salmonSIRV_{{ sample }}
   output: salmonSIRV_{{ sample }}_done
-  after: minimapSIRV_{{ sample }}
+  after: minimapTranSIRV_{{ sample }}
   cpus: 10
   mem: 42G
   cmd: |
@@ -457,8 +457,8 @@
 
     module load {{ config.modules.singularity }}
 
-    mkdir -p {{ config.workdir }}/quasimapped-SIRVome
-    cd {{ config.workdir }}/quasimapped-SIRVome
+    mkdir -p {{ config.workdir }}/salmon-align-SIRVome
+    cd {{ config.workdir }}/salmon-align-SIRVome
 
     singularity exec --bind /scratch,/home {{ config.sif.salmon }} salmon quant \
       --no-version-check \
