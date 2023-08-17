@@ -1,5 +1,15 @@
 #!/bin/bash
 
+
+##################################################        Note       ################################################
+##  CytoCAD detects copy number events in long reads with low coverage                                             ##
+##  The results should be compared with hificnv on pacbio long reads                                               ##
+##  The sif container isn't under tgenref and I don't have write access                                            ##
+##  A test run was done using /scratch/bturner/grandcanyon/oxford_nano_data/KMS11/KMS11_JPN.sorted.ont.chm13.bam   ##
+##  The test results are in /scratch/jzhang/cytocad_test_output/                                                   ##
+##                                                                                                                 ##
+#####################################################################################################################
+
 print_help(){
     printf "
     Usage:
@@ -80,7 +90,7 @@ done
 # Load singularity
 module load singularity
 
-CYTOCAD="/labs/byron/bzhang/packages/cytocad.sif"
+CYTOCAD="/scratch/jzhang/grandcanyon_containers/cytocad.sif"
 
 # Preparing singularity binds and making the output directory if it does not exist
 INPUT_BIND=$(dirname $INPUT)
