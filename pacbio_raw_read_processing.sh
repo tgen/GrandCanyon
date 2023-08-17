@@ -82,4 +82,3 @@ singularity exec -B $INPUT_DIR -B $OUTPUT_DIR -B $REFERENCE_DIR ${SAMTOOLS_SIF} 
     -o ${OUTPUT_BASENAME}_uBAM_collated.bam \
     --output-fmt BAM \
     -
-    
