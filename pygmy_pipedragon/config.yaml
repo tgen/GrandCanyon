@@ -6,12 +6,12 @@ pygmy_path: "~/tools/pygmy-pipedragon"
 
 pipe_params:
   pychopper: TRUE
-  sirv: TRUE
+  sirv: FALSE
   minimap: TRUE
   fc: FALSE
-  flair: FALSE
-  salmon: FALSE
-  isoquant: FALSE
+  flair: TRUE
+  salmon: TRUE
+  isoquant: TRUE
 
 sif:
   minimap2: "/home/tgenref/containers/grandcanyon/alignment/minimap2_2.26--he4a0461_1.sif"
@@ -28,9 +28,8 @@ modules:
 
 file_locations:
   genome: "/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa"
-  annotation: "/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_06-genes.gtf.gz"
-  transcriptome: "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gencode.v40.lncipedia_v5_2_hc/gencode_v40.lncipedia_v5_2_hc.annotation.fa"
-  salmonIndexSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta/salmonIndex/"
+  annotation: "/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_06-genes.gtf"
+  transcriptome: "/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-cdna.fa"
   genomeSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta_20210507.fasta"
   annotationSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf"
   transcriptomeSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa"
