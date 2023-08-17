@@ -1,18 +1,12 @@
 # GrandCanyon
-Jetstream workflow to support the T2T Consortium CHM13 reference genome, through both long and short read sequencing data. This currently in very early 
-development stages, and contributions are greatly appreciated.
+Jetstream workflow to support the T2T Consortium CHM13 reference genome, through both long and short read sequencing data. This 
+currently in very early development stages, and contributions are greatly appreciated.
 
 ## Hackathon specifics
-On August 16th and 17th of 2023, a hackathon will be (or currently is being) held to rapidly integrate many of the core components of the pipeline. We 
-plan to utilize all of the contributions during and after this hackathon to build a Jetstream based workflow, as Jetstream is already heavily integrated 
-into the TGen compute infrastructure. But early development can be in any language the community sees fit. Most workflows will likely be a simple set of 
-shell commands, but we are happy to accept and are expecting submissions in other languages such as python, R, nextflow, snakemake. Whichever language you 
-are able to work in the most efficiently.
+On August 16th and 17th of 2023, a hackathon will be (or currently is being) held to rapidly integrate many of the core components of the pipeline. We plan to utilize all of the contributions during and after this hackathon to build a Jetstream based workflow, as Jetstream is already heavily integrated into the TGen compute infrastructure. But early development can be in any language the community sees fit. Most workflows will likely be a simple set of shell commands, but we are happy to accept and are expecting submissions in other languages such as python, R, nextflow, snakemake. Whichever language you are able to work in the most efficiently.
 
 ### Contribution Guidelines
-This is intended to be mashed together very quickly, as such, please create a fork of the repository, or create a new branch off of `development`. 
-Following this, please place your script in specific and likely uniquely
-named directory. For example, if you plan to work on structural variant calling, this is my recommended start up template:
+This is intended to be mashed together very quickly, as such, please create a fork of the repository, or create a new branch off of `development`. Following this, please place your script in specific and likely uniquely named directory. For example, if you plan to work on structural variant calling, this is my recommended start up template:
 ```bash
 cd /to/wherever/you/keep/git/repos
 git clone git@github.com:tgen/GrandCanyon.git # This clones via an ssh key, let me know if you need help setting one up
@@ -47,17 +41,12 @@ Switched to a new branch 'bturner-sv-calling'
 [bturner@gemini-login1:~/git_repos/GrandCanyon/bturner_sv_caller_sniffles]$ vim sniffles.sh
 ```
 
-From here I would be ready to run `git add bturner_sv_caller_sniffles/sniffles.sh` and then `git commit -m "created a sniffles sv caller script on 
-the first try"`, and finally `git push -u origin bturner-sv-calling`. Note that subsequent commits and pushes would only require `git push`, that 
-initial push is publishing the branch and setting your local git to use the origin as the upstream.
+From here I would be ready to run `git add bturner_sv_caller_sniffles/sniffles.sh` and then `git commit -m "created a sniffles sv caller script on the first try"`, and finally `git push -u origin bturner-sv-calling`. Note that subsequent commits and pushes would only require `git push`, that initial push is publishing the branch and setting your local git to use the origin as the upstream.
 
-It's also highly recommended for you to either ensure that comments are detailed enough that a Helios Scholar could pick up the script and use it 
-effectively, or create a readme.md within your uniquely named directory.
+It's also highly recommended for you to either ensure that comments are detailed enough that a Helios Scholar could pick up the script and use it effectively, or create a readme.md within your uniquely named directory.
 
 ### Resources
-To save time both computationally and for development, we have precompiled a set of likely resources. But feel free to create your own and detail to 
-us how you did it. We have placed these resources on both gemini and dback to make sure everyone has access to them and also to distribute some of the
-compute load that will be happening over these few days.
+To save time both computationally and for development, we have precompiled a set of likely resources. But feel free to create your own and detail to us how you did it. We have placed these resources on both gemini and dback to make sure everyone has access to them and also to distribute some of the compute load that will be happening over these few days.
 
 __Example data__
 - Oxford Nanopore
@@ -69,25 +58,22 @@ __Example data__
   - `/scratch/bturner/grandcanyon/oxford_nano_data/tumor_KMS11/KMS11_JPN.sorted.ont.chm13.bam`
 
 - PacBio
-  - COLO829 (~20X depth): `/scratch/bturner/grandcanyon/pacbio_revio_data/estimated_20X_depth/COLO829BL_ATCCJJK_p1_CL_C2_mm_rg_sort.cram`
+  - COLO829 (~20X depth, methylation data not retained): `/scratch/bturner/grandcanyon/pacbio_revio_data/estimated_20X_depth/COLO829BL_chm13.bam`
   - SRR9087600: `/scratch/bturner/grandcanyon/pacbio_revio_data/SRX5633451/SRR9087600.fastq.gz`
 
 CHM13 v2 resources:  
 The marbl/CHM13 repo has most if not all resources that could be needed for utilizing CHM13 https://github.com/marbl/CHM13
 
 __Paths to resources (on both dback and gemini)__  
-Reference fasta: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/chm13v2.0_maskedY_rCRS.fa`  
-Reference fasta index: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/chm13v2.0_maskedY_rCRS.fa.fai`  
-Reference dictionary: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/chm13v2.0_maskedY_rCRS.dict`  
+Reference fasta: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa`  
+Reference fasta index: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa.fai`  
+Reference dictionary: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.dict`  
 
 Ensembl rapid release gtf: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_06-genes.gtf.gz`  
 Ensembl vep cache: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/indexed_vep_cache`  
 
 ### Inspirations
-Here is a list of potential inspirations on how to run specific workflows - in other words, PacBio and ONT have some recommended workflows that are written
-in different formats. For example, PacBio has written a lot of workflows in wdl format and it looks like ONT has written workflows in Nextflow (Vince will 
-be happy to see these). I'd potentially take these workflows with a grain of salt though, as most will likely be biased to using their internal tools, while
-other open-source tools might be faster, more accurate, or feature rich.
+Here is a list of potential inspirations on how to run specific workflows - in other words, PacBio and ONT have some recommended workflows that are written in different formats. For example, PacBio has written a lot of workflows in wdl format and it looks like ONT has written workflows in Nextflow (Vince will be happy to see these). I'd potentially take these workflows with a grain of salt though, as most will likely be biased to using their internal tools, while other open-source tools might be faster, more accurate, or feature rich.
  - https://github.com/PacificBiosciences
  - https://github.com/PacificBiosciences/wdl-humanwgs
  - https://github.com/nanoporetech
@@ -98,10 +84,7 @@ other open-source tools might be faster, more accurate, or feature rich.
 
 
 ### Containers
-As we are limited to singularity on both clusters, we have prepared a set of container images that we expected people will need. They have all been placed 
-under `/home/tgenref/containers/grandcanyon/`. But if you can't find what you are looking for, it probably is available somewhere publically as a docker 
-image. I'd recommend checking out hub.docker.com or there is a great set of tools available on quay.io (Bryce's "pro" tip, bioconda has a fantastic set of 
-community built images and they have an easy to navigate index [here](https://bioconda.github.io/conda-package_index.html))
+As we are limited to singularity on both clusters, we have prepared a set of container images that we expected people will need. They have all been placed under `/home/tgenref/containers/grandcanyon/`. But if you can't find what you are looking for, it probably is available somewhere publically as a docker image. I'd recommend checking out hub.docker.com or there is a great set of tools available on quay.io (Bryce's "pro" tip, bioconda has a fantastic set of community built images and they have an easy to navigate index [here](https://bioconda.github.io/conda-package_index.html))
 
 __Paths to containers (on both dback and gemini)__
 | Tool Name | Path |
