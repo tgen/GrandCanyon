@@ -1,0 +1,31 @@
+{% macro create_ubam(file) %}
+
+- name: create_ubam_from_{{ file.basename | replace(".", "_") }}
+  {% if file.fileType == "bam" %}
+  input: temp/bams/{{ file.basename }}
+  {% elif file.fileType == "fastq" %}
+  input: temp/fastqs/{{ file.basename }}
+  {% endif %}
+  output: temp/ubams/{{ file.basename | basename }}.ubam
+  cpus: 1
+  mem: 2G
+  walltime: "1:00:00"
+  container: {{ constants.tools.samtools.container }}
+  digest: {{ constants.tools.samtools.digest }}
+  cmd: |
+    set -uev
+
+    mkdir -p temp/ubams/
+
+    {% if file.fileType == "bam" %}
+    {# We need to remove alignment information and retain tags #}
+    {# Should we allow input bams to jump straight into variant
+    calling processes and not care about RG output? Why not offer
+    both as a possibilty #}
+    {% elif file.fileType == "fastq" %}
+    samtools import temp/fastqs/{{ file.basename }} \
+      -o temp/ubams/{{ file.basename | basename }}.ubam
+    {% endif %}
+
+
+{% endmacro %}

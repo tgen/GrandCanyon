@@ -1,0 +1,11 @@
+{% from 'modules/dna_alignment/minimap2.jst' import minimap2 with context %}
+
+{% macro dna_alignment(samples) %}
+
+  {% for sample in samples.values() if sample.gltype in ['genome', 'exome'] %}
+    {# barebones for now, only using minimap2 #}
+    {{- minimap2(sample) }}
+  {% endfor %}
+
+{% endmacro %}
+

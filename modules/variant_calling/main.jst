@@ -1,0 +1,12 @@
+{%- macro constitutional_variant_calling(samples) %}
+
+{%- for sample in samples.values() if sample.gltype in ('exome', 'genome') %}
+
+    {%- if sample.subGroup|lower != 'tumor' %}
+      {{- deepvariant(sample) }}
+    {% endif %}
+
+{% endfor %}
+
+{% endmacro %}
+

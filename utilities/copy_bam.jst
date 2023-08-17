@@ -1,0 +1,18 @@
+{% macro copy_bam(bam) %}
+
+- name: copy_bams_{{ bam.basename | replace(".", "_") }}
+  input: {{ bam.path }}
+  output: temp/bams/{{ bam.basename }}
+  retry: 2
+  cpus: 6
+  walltime: "4:00:00"
+  queue_preset: "DATA-MOVER"
+  cmd: |
+    set -uev
+
+    mkdir -p temp/bams/
+
+    rsync "{{ bam.path }}" "temp/bams/"
+
+{% endmacro %}
+

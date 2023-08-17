@@ -1,0 +1,18 @@
+{% macro copy_ubam(ubam) %}
+
+- name: copy_ubams_{{ ubam.basename | replace(".", "_") }}
+  input: {{ ubam.path }}
+  output: temp/ubams/{{ ubam.basename }}
+  retry: 2
+  cpus: 6
+  walltime: "4:00:00"
+  queue_preset: "DATA-MOVER"
+  cmd: |
+    set -uev
+
+    mkdir -p temp/ubams/
+
+    rsync "{{ ubam.path }}" "temp/ubams/"
+
+{% endmacro %}
+
