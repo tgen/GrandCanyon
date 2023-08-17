@@ -1,0 +1,33 @@
+# This file should contain everything to configure the workflow on a global scale.
+
+workdir: "/scratch/ehutchins/gc-test/results-T2T/"
+
+pygmy_path: "~/tools/pygmy-pipedragon"
+
+pipe_params:
+  sirv: TRUE
+  fc: TRUE
+  flair: TRUE
+  salmon: TRUE
+  isoquant: TRUE
+
+sif:
+  minimap2: "/home/tgenref/containers/grandcanyon/alignment/minimap2_2.26--he4a0461_1.sif"
+  flair: "/home/ehutchins/tools/flair_2.0.0--pyhdfd78af_1.sif"
+  salmon: "/home/ehutchins/tools/salmon-1.9.0_linux_x86_64/bin/salmon"
+  isoquant: "/home/ehutchins/tools/isoquant_3.3.1--hdfd78af_0.sif"
+  pychopper: "/home/ehutchins/tools/pychopper_2.5.0--py_0.sif"
+  samtools: "/home/tgenref/containers/grandcanyon/common_tools/samtools_1.17--hd87286a_1.sif"
+  salmon: "/home/ehutchins/tools/salmon_1.10.2--hecfa306_0.sif"
+  featureCounts: "/home/ehutchins/tools/subread_2.0.6--he4a0461_0.sif"
+
+modules:
+  singularity: "singularity/3.8.4"
+
+file_locations:
+  genome: "/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa"
+  annotation: "/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_06-genes.gtf"
+  transcriptome: "/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-cdna.fa"
+  genomeSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta_20210507.fasta"
+  annotationSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf"
+  transcriptomeSIRV: "/home/ehutchins/SIRV-4/SIRV_Set4_Norm_Sequences_20210507/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa"
