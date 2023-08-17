@@ -1,19 +1,21 @@
 #!/bin/bash
 
 
-# Assemble HiFi data with Flye
+# Assemble HiFi data with HiCanu
+
+
 
 #help menu is modified from Bryce's
 print_help(){
     printf "
     Usage:
-        yh_flye.sh -i input.fastq.gz -d working/directory -t 20
+        yh_canu.sh -i input.fastq.gz -d working/directory -g 3.1g
 
     Available arguments:
         -h  | --help         - Print this help dialog
         -i  | --input        - Input fastq
         -d  | --directory    - Path of the input file
-        -t  | --threads      - Number of threads to use
+        -g  | --genome_size  - Genome size, required by canu
         -q  | --quiet        - Suppresses debug/processing info
     \n"
 
@@ -42,8 +44,8 @@ while [[ $num_args_rem -ne 0 ]] ; do
         -d|--directory)
             DIR="$2"
             shift 2 ;;
-        -t|--threads)
-            THREADS="$2"
+        -g|--genome_size)
+            GENOME_SIZE="$2"
             shift 2 ;;
         -q|--quiet)
             quiet="true"
@@ -56,12 +58,18 @@ done
 
 
 
+
 module load singularity
 
-FLYE="/home/tgenref/containers/grandcanyon/assembly_tools/flye_2.9.2--py310h2b6aa90_2.sif"
+CANU="/home/tgenref/containers/grandcanyon/assembly_tools/canu_2.2--ha47f30e_0.sif"
+
+PREFIX=${INPUT%.fastq.gz}
+
+#Using default settings for complete dataset with enough coverage (10)
+singularity exec -B $PWD -B $DIR $CANU sh -c "canu -p $PREFIX -d $DIR genomeSize=${GENOME_SIZE} -pacbio-hifi $INPUT"
+
+#For testing with downsized data
+#singularity exec -B $PWD -B $DIR $CANU sh -c "canu -p $PREFIX -d $DIR stopOnLowCoverage=0.1 minInputCoverage=0.1 genomeSize=${GENOME_SIZE} -pacbio-hifi $INPUT"
 
 
-
-
-singularity exec -B $PWD -B $DIR $FLYE sh -c "flye --pacbio-hifi $INPUT --out-dir $DIR --threads $THREADS"
 

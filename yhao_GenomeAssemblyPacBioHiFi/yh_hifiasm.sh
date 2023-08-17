@@ -12,7 +12,7 @@ print_help(){
         -h  | --help         - Print this help dialog
         -i  | --input        - Input fastq
         -d  | --directory    - Path of the input file
-        -t  | --threads      - Number of threads to use in minimap and samtools	
+        -t  | --threads      - Number of threads to use	
         -q  | --quiet        - Suppresses debug/processing info
     \n"
 

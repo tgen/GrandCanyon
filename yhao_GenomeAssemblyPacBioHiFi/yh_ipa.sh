@@ -1,19 +1,19 @@
 #!/bin/bash
 
-
-# Assemble HiFi data with Flye
+# Assemble HiFi data with IPA
 
 #help menu is modified from Bryce's
 print_help(){
     printf "
     Usage:
-        yh_flye.sh -i input.fastq.gz -d working/directory -t 20
+        yh_ipa.sh -i input.fastq.gz -d working/directory -t 20 -j 1
 
     Available arguments:
         -h  | --help         - Print this help dialog
         -i  | --input        - Input fastq
         -d  | --directory    - Path of the input file
         -t  | --threads      - Number of threads to use
+        -j  | --njobs        - Number of jobs
         -q  | --quiet        - Suppresses debug/processing info
     \n"
 
@@ -45,6 +45,9 @@ while [[ $num_args_rem -ne 0 ]] ; do
         -t|--threads)
             THREADS="$2"
             shift 2 ;;
+        -j|--njobs)
+            NJOBS="$2"
+            shift 2 ;;
         -q|--quiet)
             quiet="true"
             shift 1 ;;
@@ -58,10 +61,11 @@ done
 
 module load singularity
 
-FLYE="/home/tgenref/containers/grandcanyon/assembly_tools/flye_2.9.2--py310h2b6aa90_2.sif"
+PBIPA="/home/tgenref/containers/grandcanyon/pacbio/pbipa_1.8.0--h6ead514_2.sif"
 
 
+singularity exec -B $PWD -B $DIR $PBIPA sh -c "ipa local --nthreads $THREADS --njobs $NJOBS --run-dir $DIR -i $INPUT"
 
-
-singularity exec -B $PWD -B $DIR $FLYE sh -c "flye --pacbio-hifi $INPUT --out-dir $DIR --threads $THREADS"
+#resume run
+#singularity exec -B $PWD -B $DIR $PBIPA sh -c "ipa local --nthreads $THREADS --njobs $NJOBS --run-dir $DIR -i $INPUT --resume"
 

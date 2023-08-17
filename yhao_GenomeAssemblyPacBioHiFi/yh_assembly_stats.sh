@@ -71,6 +71,9 @@ then
 elif [[ $ASM == "flye" ]]
 then
 	singularity exec -B $PWD -B $DIR $ASMSTATS sh -c "assembly-stats -t assembly.fasta > ${INPUT}_assembly-stats.txt"
+elif [[ $ASM == "canu" ]]
+then
+	singularity exec -B $PWD -B $DIR $ASMSTATS sh -c "assembly-stats -t ${INPUT}.contigs.fasta > ${INPUT}_assembly-stats.txt"
 else
 	echo "Assembler not supported yet, please check back later."
 fi
