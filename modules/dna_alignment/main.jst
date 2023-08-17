@@ -1,0 +1,16 @@
+{% from 'modules/dna_alignment/bwa_mem2_samtools.jst' import bwa_mem2_samtools with context %}
+{% from 'modules/dna_alignment/fgbio_umi.jst' import fgbio_bwa_mem with context %}
+{% from 'modules/dna_alignment/pb_fq2bam.jst' import fq2bam with context %}
+{% from 'modules/dna_alignment/split_fastq.jst' import split_fastqs with context %}
+{% from 'modules/qc/main.jst' import bam_qc with context %}
+{% from 'utilities/remove_files.jst' import remove_files with context %}
+
+{% macro dna_alignment(samples) %}
+
+  {% for sample in samples.values() if sample.gltype in ['genome', 'exome'] %}
+    {# barebones for now, only using minimap2 #}
+    {{- minimap2(sample) }}
+  {% endfor %}
+
+{% endmacro %}
+
