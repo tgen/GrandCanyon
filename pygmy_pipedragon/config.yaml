@@ -1,14 +1,12 @@
 # This file should contain everything to configure the workflow on a global scale.
 
-workdir: "/scratch/ehutchins/gc-test/results/"
+workdir: "/scratch/ehutchins/gc-test/results-T2T/"
 
 pygmy_path: "~/tools/pygmy-pipedragon"
 
 pipe_params:
-  pychopper: TRUE
-  sirv: FALSE
-  minimap: TRUE
-  fc: FALSE
+  sirv: TRUE
+  fc: TRUE
   flair: TRUE
   salmon: TRUE
   isoquant: TRUE
