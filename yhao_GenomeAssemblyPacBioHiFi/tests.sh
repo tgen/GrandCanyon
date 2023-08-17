@@ -22,11 +22,11 @@ SCRIPT_DIR=/home/yhao/GrandCanyon/yhao_GenomeAssemblyPacBioHiFi
 
 DIR=/scratch/yhao/grandcanyon/hifiasm
 cd $DIR
-#$SCRIPT_DIR/yh_hifiasm.sh -i $FILE -d $DIR -t 4
+$SCRIPT_DIR/yh_hifiasm.sh -i $FILE -d $DIR -t 4
 
 #check assembly stats
 
-#$SCRIPT_DIR/yh_assembly_stats.sh -a hifiasm -i $PREFIX -d $DIR
+$SCRIPT_DIR/yh_assembly_stats.sh -a hifiasm -i $PREFIX -d $DIR
 
 
 
@@ -36,12 +36,12 @@ cd $DIR
 DIR=/scratch/yhao/grandcanyon/flye
 cd $DIR
 
-#$SCRIPT_DIR/yh_flye.sh -i $FILE -d $DIR -t 4
+$SCRIPT_DIR/yh_flye.sh -i $FILE -d $DIR -t 4
 
 
 #check assembly stats
 
-#$SCRIPT_DIR/yh_assembly_stats.sh -a flye -i $PREFIX -d $DIR
+$SCRIPT_DIR/yh_assembly_stats.sh -a flye -i $PREFIX -d $DIR
 
 
 
