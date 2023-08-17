@@ -3,19 +3,25 @@
 print_help(){
     printf "
     Usage:
-        margin_phasing.sh -b <ALIGN_BAM> -r <REFERENCE_FASTA> -v <VARIANT_VCF> -p <PARAMS> 
+        margin_phasing.sh -b <ALIGN_BAM> -r <REFERENCE_FASTA> -v <VARIANT_VCF> -p <PARAMS> -t <thread> -o <output_format>
 
     Available arguments:
         -h  | --help         - Print this help dialog
         -b  | --bam          - Input bam
         -r  | --reference    - Reference fasta file
         -v  | --vcf          - Variant vcf file
-        -p  | --param        - Parameter file that matches your read data 	
+        -p  | --param        - Parameter file that matches your read data
+                               to haplotag ONT data use allParams.haplotag.ont-r94g507.json
+                               to haplotag PacBio HiFi data use allParams.haplotag.pb-hifi.json
+                               to phase a VCF generated using ONT data use allParams.phase_vcf.ont.json
+                               to phase a VCF generated using PacBio-HiFi data use: allParams.phase_vcf.pb-hifi.json
         -t  | --thread       - Thread count
         -o  | --output       - Output prefix"
     exit 0
 }
 
+#Default Options
+REFERENCE="/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa"
 
 commands=$(echo "$(realpath $0)" $*)
 
@@ -59,20 +65,12 @@ done
 # Load singularity
 module load singularity
 
-PEPPER="/home/tgenref/containers/grandcanyon/variant_calling/pepper_deepvariant_r0.8.sif"
+#PEPPER="/home/tgenref/containers/grandcanyon/variant_calling/pepper_deepvariant_r0.8.sif"
+PEPPER="/scratch/jzhang/containers/pepper_deepvariant_r0.8.sif"
 
 # Preparing singularity binds and making the output directory if it does not exist
-INPUT_BIND=$(dirname $INPUT)
+INPUT_BIND=$(dirname $BAM)
 OUTPUT_BIND=$(dirname $OUTPUT)
 [[ -e $OUTPUT_BIND ]] || mkdir -p $OUTPUT_BIND
 
-echo input bind $INPUT_BIND
-echo output bind $OUTPUT_BIND
-echo BAM ${BAM}
-echo REF ${REFERENCE}
-echo VCF ${VCF}
-echo PARAM ${PARAM}
-echo THREAD ${THREAD}
-echo OUTPUT ${OUTPUT}
-
-singularity exec -B $PWD -B $INPUT_BIND -B $OUTPUT_BIND $PEPPER margin phase $BAM $REFERENCE $VCF $PARAM -t $THREAD -o $OUTPUT
+singularity exec -B $PWD -B $INPUT_BIND -B $OUTPUT_BIND $PEPPER margin phase $BAM $REFERENCE $VCF /opt/margin_dir/params/phase/$PARAM -t $THREAD -o $OUTPUT
