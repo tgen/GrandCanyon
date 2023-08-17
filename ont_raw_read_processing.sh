@@ -53,7 +53,7 @@ ubam_header=$(singularity exec -B ${INPUT_DIR} ${SAMTOOLS_SIF} samtools head ${I
 [[ $(echo "${ubam_header}" | wc -l) -ne "1" ]] && echo "More RG lines than expected" && exit 1
 
 # capture DS tag
-rg_ds=$(echo ${ubam_header} | grep -Po '(?<=DS:)\S*')
+rg_ds=$(echo ${ubam_header} | grep -Po '(?<=DS:)\S*?[" "]\S*')
 rg_ds=$(echo ${rg_ds} | sed 's/ /;/g')
 
 FULL_RG="@RG\tID:${rg_id}\tPL:${rg_pl}\tPM:${rg_pm}\tPU:${rg_pu}\tLB:${rg_lb}\tSM:${rg_sm}\tBC:${rg_bc}\tCN:${rg_cn}\tDS:${rg_ds}\tCM:${rg_cm}"
@@ -78,4 +78,3 @@ singularity exec -B $INPUT_DIR -B $OUTPUT_DIR -B $REFERENCE_DIR ${SAMTOOLS_SIF} 
     -o ${OUTPUT_BASENAME}_uBAM_collated.bam \
     --output-fmt BAM \
     -
-    
