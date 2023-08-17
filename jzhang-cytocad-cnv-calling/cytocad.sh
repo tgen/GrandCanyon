@@ -21,11 +21,11 @@ print_help(){
         -o  | --output       - Path and name of the output directory
         -b  | --build        - Genome build, Default hg38
         -f  | --format       - Output graph format	
-        -v  | --interval     - Spread between each point in a chromosome where " coverage is enquired, in bp. Minimum CNV sensitive detection size ~= interval x rolling, Default:50000
+        -v  | --interval     - Spread between each point in a chromosome where coverage is enquired, in bp. Minimum CNV sensitive detection size ~= interval x rolling, Default:50000
         -j  | --buffer       - Window size of each point, in bp,Default:10
         -r  | --rolling      - Rolling mean window size, Default:10
         -p  | --penalty      - Linear kernel penalty value for change point detection using Ruptures, Default:500
-        -s  | --scale        - Proportion of mean coverage to be used for buffering to call hetero- and homozygous CNVs, Default:0.25
+        -s  | --scale        - Proportion of mean coverage to be used for buffering to call hetero- and homozygous CNVs, Default:0.25"
 
     exit 0
 }
