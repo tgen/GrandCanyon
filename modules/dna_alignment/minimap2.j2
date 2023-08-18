@@ -42,7 +42,7 @@
   mem: 60G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
-  container: {{ constants.tools.minimap2_samtools.container }}
+  container: {{ constants.tools.minimap2.container }}
   cmd: |
     samtools fastq \
       --threads 10 \
@@ -69,7 +69,7 @@
   mem: 20G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
-  container: {{ constants.tools.fgbio_samtools.container }}
+  container: {{ constants.tools.fgbio.container }}
   cmd: |
 
     fgbio --tmp-dir ${TEMP} --compression 1 --async-io=true ZipperBams \

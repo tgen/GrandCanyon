@@ -104,21 +104,10 @@ __Paths to containers (on both dback and gemini)__
 |||
 | __PacBio Tools__ ||
 | pbbam | /home/tgenref/containers/grandcanyon/pacbio/pbbam_2.1.0--h8db2425_5.sif |
-| pbccs | /home/tgenref/containers/grandcanyon/pacbio/pbccs_6.4.0--h9ee0642_0.sif |
-| pbfusion | /home/tgenref/containers/grandcanyon/pacbio/pbfusion_0.3.0--hdfd78af_0.sif |
-| pbh5tools | /home/tgenref/containers/grandcanyon/pacbio/pbh5tools_0.8.0--py27h9801fc8_6.sif |
-| pbhoover | /home/tgenref/containers/grandcanyon/pacbio/pbhoover_1.1.0--pyhdfd78af_1.sif |
-| pbiotools | /home/tgenref/containers/grandcanyon/pacbio/pbiotools_4.0.1--pyh7cba7a3_1.sif |
 | pbipa | /home/tgenref/containers/grandcanyon/pacbio/pbipa_1.8.0--h6ead514_2.sif |
-| pbjasmine | /home/tgenref/containers/grandcanyon/pacbio/pbjasmine_2.0.0--h9ee0642_0.sif |
-| pbmarkdup | /home/tgenref/containers/grandcanyon/pacbio/pbmarkdup_1.0.3--h9ee0642_0.sif |
 | pbmm2 | /home/tgenref/containers/grandcanyon/pacbio/pbmm2_1.12.0--h9ee0642_0.sif |
-| pbpigeon | /home/tgenref/containers/grandcanyon/pacbio/pbpigeon_1.1.0--h4ac6f70_0.sif |
-| pbsim2 | /home/tgenref/containers/grandcanyon/pacbio/pbsim2_2.0.1--h4ac6f70_3.sif |
-| pbskera | /home/tgenref/containers/grandcanyon/pacbio/pbskera_1.1.0--hdfd78af_0.sif |
 | pbsv | /home/tgenref/containers/grandcanyon/pacbio/pbsv_2.9.0--h9ee0642_0.sif |
 | pbtk | /home/tgenref/containers/grandcanyon/pacbio/pbtk_3.1.0--h9ee0642_0.sif |
-| pbwt | /home/tgenref/containers/grandcanyon/pacbio/pbwt_3.0--h6141fd1_9.sif |
 |||
 | __Oxford Nanopore Tools__ ||
 | medaka | /home/tgenref/containers/grandcanyon/oxford_nanopore/medaka_1.8.0--py38hdaa7744_0.sif |
