@@ -1,7 +1,8 @@
-{% from 'utilities/copy_fastq.jst' import copy_fastq with context %}
-{% from 'utilities/copy_ubam.jst' import copy_ubam with context %}
-{% from 'utilities/copy_bam.jst' import copy_bam with context %}
-{# {% from 'utilities/check_bam_rg_tags.jst' %} #}
+{% from 'utilities/copy_fastq.j2' import copy_fastq with context %}
+{% from 'utilities/copy_ubam.j2' import copy_ubam with context %}
+{% from 'utilities/copy_bam.j2' import copy_bam with context %}
+{% from 'modules/dna_alignment/main.j2' import dna_alignment with context %}
+{# {% from 'utilities/check_bam_rg_tags.j2' %} #}
 
 {% set samples = {} %}
 
@@ -31,12 +32,8 @@
 
 {% for rgid, data_files in dataFiles | groupby('rgid') %}
     {% set rg = data_files|first %}
+    {% set name = rg.sampleName %}
 
-    {% if 'sampleMergeKey' in rg %}
-        {% set name = rg.sampleMergeKey %}
-    {% else %}
-        {% set name = rg.sampleName %}
-    {% endif %}
     {% if not 'read_groups' in samples[name] %}
         {% do samples[name].update({'read_groups': {}}) %}
     {% endif %}
@@ -64,9 +61,8 @@
 {% endfor %}
 
 {# Start of module calls
-{#
 {{- dna_alignment(samples) }}
-
+{#
 {{- constitutional_variant_calling(samples) }}
 
 {{- rna_quant_and_fusion_detection(samples) }}
