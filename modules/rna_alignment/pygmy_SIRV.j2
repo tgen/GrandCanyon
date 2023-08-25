@@ -1,0 +1,168 @@
+
+
+{% if constants.pipe_params.sirv | default(false) %}
+- name: samtoolsSortSIRV_{{ sample.name }}
+  output: samtoolsSortSIRV_{{ sample.name }}_done
+  after: minimapSIRV_{{ sample.name }}
+  cpus: 4
+  mem: 32G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+
+    cd {{ temp_dir }}/minimap2/{{ sample.name }}
+
+    samtools sort -@ 4 -m 6G -O bam -o {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sam
+    samtools index {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam
+
+    samtools view -F 4 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","SIRV4"}' > {{ sample.name }}_SIRVome_mapped_withSupp_readLength.txt &
+    samtools view -F 4 -F 2048 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","SIRV4"}' > {{ sample.name }}_SIRVome_mapped_noSupp_readLength.txt &
+    samtools view -f 4 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ sample.name }}_SIRVome_unmapped_readLength.txt
+
+
+- name: featureCountsSIRV_{{ sample.name }}
+  after: samtoolsSortSIRV_{{ sample.name }}
+  output: featureCountsSIRV_{{ sample.name }}_done
+  cpus: 10
+  mem: 40G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.featureCounts.container }}
+  cmd: |
+
+    mkdir {{ temp_dir }}/counted-SIRVome
+    cd {{ temp_dir }}/counted-SIRVome
+
+    featureCounts \
+      -T 10 \
+      -t exon \
+      -g gene_id \
+      -a {{ constants.grandcanyon.gtfSIRV }} \
+      -L \
+      -o {{ sample.name }}_SIRVome.txt \
+      {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam
+
+
+- name: minimapTranSIRV_{{ sample.name }}
+  after: samtoolsSortSIRV_{{ sample.name }}
+  output: minimapTranSIRV_{{ sample.name }}_done
+  cpus: 10
+  mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
+  cmd: |
+
+    {# note: this step aligns reads SIRV transcriptome #}
+    {# input: fq from pychopper #}
+    {# output: SIRV aligned transcriptome bam for salmon #}
+    {# parameters match nanopore workflow https://github.com/nanoporetech/pipeline-transcriptome-de/tree/master #}
+    {# -N 100 allows up to 100 secondary alignments (multiple isoforms) #}
+    {# -p 1.0 secondary score ratio, this is higher than the default of 0.8 since we are looking for transcriptome isoforms #}
+
+    mkdir -p {{ temp_dir }}/minimap2/{{ sample.name }}
+    cd {{ temp_dir }}/minimap2/{{ sample.name }}
+
+    minimap2 \
+    -ax map-ont \
+    -t 10 \
+    -L \
+    -N 100 \
+    -p 1.0 {{ constants.grandcanyon.transcriptomeSIRV }} \
+    {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq > {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAlignedSIRVome.out.sam
+
+
+- name: salmonSIRV_{{ sample.name }}
+  output: salmonSIRV_{{ sample.name }}_done
+  after: minimapTranSIRV_{{ sample.name }}
+  cpus: 10
+  mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.salmon.container }}
+  cmd: |
+
+    {# note: this step performs salmon in alignment mode for transcript quantification of SIRV spike-ins #}
+    {# input: SIRV aligned transcriptome bam #}
+    {# output: quant.sf file with transcript quantification (tpms) #}
+
+    mkdir -p {{ temp_dir }}/salmon-align-SIRVome
+    cd {{ temp_dir }}/salmon-align-SIRVome
+
+    salmon quant \
+      --no-version-check \
+      --libType A \
+      --output {{ sample.name }}_SIRVome \
+      --threads 10 \
+      --numBootstraps 100 \
+      --dumpEq \
+      --ont \
+      --alignments {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAlignedSIRVome.out.sam \
+      --targets {{ constants.grandcanyon.transcriptomeSIRV }}
+
+
+- name: flairSIRV_{{ sample.name }}
+  output: flairSIRV_{{ sample.name }}_done
+  after: samtoolsSortSIRV_{{ sample.name }}
+  cpus: 10
+  mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.flair.container }}
+  cmd: |
+
+    {# note: this step performs flair for read correction, annotation, and quantification of SIRVs #}
+    {# input: SIRV aligned genome bam #}
+    {# output: isoforms.fa, quantification, gtf #}
+
+    mkdir -p {{ temp_dir }}/flair-SIRVome/{{ sample.name }}
+    cd {{ temp_dir }}/flair-SIRVome/{{ sample.name }}
+
+    bam2Bed12 -i {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam > flair.aligned.bed
+    
+    flair correct -q flair.aligned.bed -g {{ constants.grandcanyon.reference_fastaSIRV }} -t 10 -f {{ constants.grandcanyon.gtfSIRV }}
+
+    flair collapse -g {{ constants.grandcanyon.reference_fastaSIRV }} -r {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq -f {{ constants.grandcanyon.gtfSIRV }} -q flair_all_corrected.bed -t 10
+
+    printf "{{ sample.name }}\t{{ sample.name }}\tbatch1\t{{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq" > reads_manifest.tsv.tmp
+    awk '{gsub("_","", $1)}1' reads_manifest.tsv.tmp | awk '{gsub("_","", $2)}1' | awk '{gsub("_","", $3)}1' > reads_manifest.tsv
+    sed -i 's/ /\t/g' reads_manifest.tsv
+
+    flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa
+
+    flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa --tpm
+
+
+- name: isoquantSIRV_{{ sample.name }}
+  cpus: 20
+  mem: 42G
+  after: samtoolsSortSIRV_{{ sample.name }}
+  output: isoquantSIRV_{{ sample.name }}_done
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.isoquant.container }}
+  cmd: |
+
+    {# note: this step performs isoquant for read correction, annotation, and quantification for SIRV mapped reads #}
+    {# input: SIRV aligned genome bam #}
+    {# output: gene and transcript quantification, gtf #}
+
+    mkdir {{ temp_dir }}/isoquant-SIRVome/{{ sample.name }}
+    cd {{ temp_dir }}/isoquant-SIRVome/{{ sample.name }}
+
+    isoquant.py --reference {{ constants.grandcanyon.reference_fastaSIRV }} \
+      -o {{ temp_dir }}/isoquant-SIRVome/{{ sample.name }}/ \
+      -d nanopore \
+      -g {{ constants.grandcanyon.gtfSIRV }} \
+      --complete_genedb \
+      --bam {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam \
+      --labels {{ sample.name }} \
+      -p {{ sample.name }} \
+      --sqanti_output \
+      --check_canonical \
+      -t 20 
+
+{% endif %}
+
+{% endfor %}
