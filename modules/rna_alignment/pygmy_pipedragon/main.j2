@@ -1,540 +1,446 @@
-{% for sample, uBAM_sets in ubams | groupby("sample") %}
+{% macro pygmy(sample) %}
 
-- name: bamtofastq_{{ sample }}
-  output: bamtofastq_{{ sample }}_done
+{% set temp_dir %}temp/{{ sample.gltype }}/pygmy/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/pygmy/{{ sample.name }}{% endset %}
+
+{% for rgid, rg in sample.read_groups.items() %}
+{% for ubam in rg.ubam_files %}
+
+- name: bamtofastq_{{ sample.name }}
+  input: temp/ubams/{{ ubam.basename }}
+  output: {{ temp_dir }}/fq/{{ sample.name }}/{{ sample.name }}.fq
   cpus: 2
   mem: 64G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step converts uBAM from dorado to fastq
-    #input: uBAM from dorado
-    #output: raw fastq
-    #uses -T dx option to add simplex/duplex dx flag from BAM to the fastq header
-    
-    module load {{ constants.modules.singularity }}
-    
-    mkdir -p {{ constants.workdir }}/fq/{{ sample }}
-    cd {{ constants.workdir }}/fq/{{ sample }}
+    {# note: this step converts uBAM from dorado to fastq #}
+    {# input: uBAM from dorado #}
+    {# output: raw fastq #}
+    {# uses -T dx option to add simplex/duplex dx flag from BAM to the fastq header #}
 
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools fastq -T dx {{ uBAM_sets | map(attribute='ubam') | join('') }} > {{ constants.workdir }}/fq/{{ sample }}/{{ sample }}.fq \
-    
-- name: pychopper_{{ sample }}
-  after: bamtofastq_{{ sample }}
-  output: pychopper_{{ sample }}_done
+    mkdir -p {{ temp_dir }}/fq/{{ sample.name }}
+
+    samtools fastq -T dx temp/ubams/{{ ubam.basename }} > {{ temp_dir }}/fq/{{ sample.name }}/{{ sample.name }}.fq
+
+
+- name: pychopper_{{ sample.name }}
+  input: {{ temp_dir }}/fq/{{ sample.name }}/{{ sample.name }}.fq
+  after: bamtofastq_{{ sample.name }}
   cpus: 10
   mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.pychopper.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step runs pychopper, which trims, orients, and rescues reads
-    #input: raw fastq
-    #output: pychopper chopped and rescued fastq
+    {# note: this step runs pychopper, which trims, orients, and rescues reads #}
+    {# input: raw fastq #}
+    {# output: pychopper chopped and rescued fastq #}
 
-    module load {{ constants.modules.singularity }}
+    mkdir -p {{ temp_dir }}/pychopper/{{ sample.name }}
 
-    mkdir -p {{ constants.workdir }}/pychopper/{{ sample }}
-    cd {{ constants.workdir }}/pychopper/{{ sample }}
-
-    singularity exec --bind /scratch,/home {{ constants.tools.pychopper }} cdna_cla.toolsier.py \
+    cdna_cla.toolsier.py \
     -m edlib \
     -t 10 \
-    -r report.pdf \
-    -A aln_hits.bed \
-    -S statistics.tsv \
-    -u uncla.toolsied.fq \
-    -w rescued.fq \
-    {{ constants.workdir }}/fq/{{ sample }}/{{ sample }}.fq full_length_output.fq
-    cat full_length_output.fq rescued.fq > pychopper_all.fq
+    -r {{ temp_dir }}/pychopper/{{ sample.name }}/report.pdf \
+    -A {{ temp_dir }}/pychopper/{{ sample.name }}/aln_hits.bed \
+    -S {{ temp_dir }}/pychopper/{{ sample.name }}/statistics.tsv \
+    -u {{ temp_dir }}/pychopper/{{ sample.name }}/uncla.toolsied.fq \
+    -w {{ temp_dir }}/pychopper/{{ sample.name }}/rescued.fq \
+    {{ temp_dir }}/fq/{{ sample.name }}/{{ sample.name }}.fq {{ temp_dir }}/pychopper/{{ sample.name }}/full_length_output.fq
 
-- name: minimapSIRV_{{ sample }}
-  after: pychopper_{{ sample }}
-  output: minimapSIRV_{{ sample }}_done
+    cat {{ temp_dir }}/pychopper/{{ sample.name }}/full_length_output.fq {{ temp_dir }}/pychopper/{{ sample.name }}/rescued.fq \
+    > {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq
+
+
+- name: minimap2_SIRV_{{ sample.name }}
+  after: pychopper_{{ sample.name }}
+  output: minimapSIRV_{{ sample.name }}_done
   cpus: 10
   mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step aligns reads to the SIRV spike-in reference. If skipped and sample has spike-ins, some SIRVs will align to the human genome.
-    #input: pychopper chopped and rescued fastq
-    #output: SIRVome mapped SAM
+    {# note: this step aligns reads to the SIRV spike-in reference. If skipped and sample has spike-ins, some SIRVs will align to the human genome. #}
+    {# input: pychopper chopped and rescued fastq #}
+    {# output: SIRVome mapped SAM #}
 
-    module load {{ constants.modules.singularity }}
+    mkdir -p {{ temp_dir }}/minimap2/{{ sample.name }}
 
-    mkdir -p {{ constants.workdir }}/minimap2/{{ sample }}
-    cd {{ constants.workdir }}/minimap2/{{ sample }}
-
-    singularity exec --bind /scratch,/home {{ constants.tools.minimap2 }} minimap2 \
+    minimap2 \
     -ax splice \
     --splice-flank=no \
     -t 10 \
     -L \
-    {{ constants.grandcanyon.genomeSIRV }} \
-    {{ constants.workdir }}/pychopper/{{ sample }}/pychopper_all.fq > {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sam 2> {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sam.log
+    {{ constants.grandcanyon.reference_fastaSIRV }} \
+    {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq |\
+    samtools view -bhu -f 4 \
+      -o {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.bam \
+      -U {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.bam
 
-- name: samtoolsfiltSIRV_{{ sample }}
-  output: samtoolsfiltSIRV_{{ sample }}_done
-  after: minimapSIRV_{{ sample }}
-  cpus: 2
-  mem: 32G
-  cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step makes a bam file with reads that are unmapped to SIRVs
-    #input: SIRVome mapped sam (includes unmapped)
-    #output: bam with reads unmapped to SIRVs
-
-    module load {{ constants.modules.singularity }}
-
-    cd {{ constants.workdir }}/minimap2/{{ sample }}
-
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools view -f 4 -bhu {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sam > {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.bam
-
-- name: samtoolsfastq_{{ sample }}
-  output: samtoolsfastq_{{ sample }}_done
-  after: samtoolsfiltSIRV_{{ sample }}
-  cpus: 4
-  mem: 32G
-  cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
-
-    #note: this step converts unmapped SIRV bam to fq
-    #input: bam with reads unmapped to SIRVs
-    #output: fq with reads unmapped to SIRVs
-
-    module load {{ constants.modules.singularity }}
-
-    cd {{ constants.workdir }}/minimap2/{{ sample }}
-
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools fastq -@ 4 {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.bam > {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.fq
-
-- name: minimap_{{ sample }}
-  after: samtoolsfastq_{{ sample }}
-  output: minimap_{{ sample }}_done
+- name: minimap2_{{ sample.name }}
+  output: samtoolsfastq_{{ sample.name }}_done
+  after: samtoolsfiltSIRV_{{ sample.name }}
   cpus: 10
   mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step aligns reads (unmapped to SIRVs) to the human genome
-    #input: fq with reads unmapped to SIRVs
-    #output: human aligned bam
+    {# note: this step converts unmapped SIRV bam to fq #}
+    {# input: bam with reads unmapped to SIRVs #}
+    {# output: fq with reads unmapped to SIRVs #}
 
-    module load {{ constants.modules.singularity }}
+    samtools fastq -@ 4 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.bam |\
+    minimap2 \
+      -ax map-ont \
+      -t 10 \
+      -L {{ constants.grandcanyon.reference_fasta }} \
+      {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq |\
+    samtools sort -@ 4 -m 6G --write-index -O bam -o {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam
 
-    mkdir -p {{ constants.workdir }}/minimap2/{{ sample }}
-    cd {{ constants.workdir }}/minimap2/{{ sample }}
+    samtools view -hb -F 256 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam > {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.noSecondary.bam
+    samtools index {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.noSecondary.bam
 
-    singularity exec --bind /scratch,/home {{ constants.tools.minimap2 }} minimap2 \
-    -ax map-ont \
-    -t 10 \
-    -L {{ constants.grandcanyon.reference_fasta }} \
-    {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.fq > {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sam
+    {#  read lengths: mapped reads only #}
+    samtools view -F 4 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.noSecondary.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ sample.name }}_mapped_withSupp_readLength.txt &
+    {#  read lengths: mapped reads only, no supplementary or secondary reads #}
+    samtools view -F 4 -F 2048 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.noSecondary.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ sample.name }}_mapped_noSupp_readLength.txt &
+    {#  read lengths: unmapped reads #}
+    samtools view -f 4 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.noSecondary.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ sample.name }}_unmapped_readLength.txt &
 
-- name: samtoolsIndex_{{ sample }}
-  output: samtoolsIndex_{{ sample }}_done
-  after: minimap_{{ sample }}
-  cpus: 4
-  mem: 32G
-  cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step sortes and indexes the bam file
-    #input: human aligned bam
-    #output: sorted human aligned bam and accompanying index
-
-    module load {{ constants.modules.singularity }}
-
-    cd {{ constants.workdir }}/minimap2/{{ sample }}
-
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools sort -@ 4 -m 6G -O bam -o {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sam
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools index {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam
-
-    rm *.sam
-
-- name: samtoolsParse_{{ sample }}
-  output: samtoolsParse_{{ sample }}_done
-  after: samtoolsIndex_{{ sample }}
-  cpus: 4
-  mem: 32G
-  cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
-
-    #note: this step parses the bam file and removes secondary reads
-    #input: human aligned bam
-    #output: human aligned bam without secondary reads and accompanying index
-
-    module load {{ constants.modules.singularity }}
-
-    cd {{ constants.workdir }}/minimap2/{{ sample }}
-
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools view -hb -F 256 {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam > {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.noSecondary.bam
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools index {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.noSecondary.bam
-
-- name: readLengths_{{ sample }}
-  output: readLengths_{{ sample }}_done
-  after: samtoolsIndex_{{ sample }}
-  cpus: 4
-  mem: 32G
-  cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
-
-    #note: this step creates a .txt file from the bam with read lengths for mapped and unmapped reads
-    #input: human aligned bam
-    #output: text files with read lengths of human mapped and unmapped reads
-
-    module load {{ constants.modules.singularity }}
-
-    cd {{ constants.workdir }}/minimap2/{{ sample }}
-
-    #note: see sam flags here:
-    #https://samtools.github.io/hts-specs/SAMv1.pdf
-
-    #read lengths: mapped reads only
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools view -F 4 {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.noSecondary.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ sample }}_mapped_withSupp_readLength.txt &
-    #read lengths: mapped reads only, no supplementary or secondary reads
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools view -F 4 -F 2048 {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.noSecondary.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ sample }}_mapped_noSupp_readLength.txt &
-    #read lengths: unmapped reads
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools view -f 4 {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.noSecondary.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ sample }}_unmapped_readLength.txt &
-
-{% if constants.pipe_params.fc %}
-- name: featureCounts_{{ sample }}
-  after: samtoolsIndex_{{ sample }}
-  output: featureCounts_{{ sample }}_done
+{% if constants.pipe_params.fc | default(false) %}
+- name: featureCounts_{{ sample.name }}
+  after: samtoolsIndex_{{ sample.name }}
+  output: featureCounts_{{ sample.name }}_done
   cpus: 10
   mem: 40G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.featureCounts.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-2:00
 
-    #note: this step performs gene level quantification from the human aligned bam
-    #input: human aligned bam
-    #output: gene counts
+    {# note: this step performs gene level quantification from the human aligned bam #}
+    {# input: human aligned bam #}
+    {# output: gene counts #}
 
-    module load {{ constants.modules.singularity }}
+    mkdir {{ temp_dir }}/counted
+    cd {{ temp_dir }}/counted
 
-    mkdir {{ constants.workdir }}/counted
-    cd {{ constants.workdir }}/counted
-
-    singularity exec --bind /home,/scratch {{ constants.tools.featureCounts }} featureCounts \
-    -T 10 \
-    -t exon \
-    -g gene_id \
-    -a {{ constants.grandcanyon.gtf }} \
-    -L \
-    -o {{ sample }}.txt {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam
+    featureCounts \
+      -T 10 \
+      -t exon \
+      -g gene_id \
+      -a {{ constants.grandcanyon.gtf }} \
+      -L \
+      -o {{ sample.name }}.txt {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam
 {% endif %}
 
-- name: minimapTran_{{ sample }}
-  after: samtoolsfastq_{{ sample }}
-  output: minimapTran_{{ sample }}_done
+
+- name: minimapTran_{{ sample.name }}
+  after: samtoolsfastq_{{ sample.name }}
+  output: minimapTran_{{ sample.name }}_done
   cpus: 10
   mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step aligns reads (unmapped to SIRVs) to the human transcriptome
-    #input: fq with reads unmapped to SIRVs
-    #output: human aligned transcriptome bam for salmon
-    #parameters match nanopore workflow https://github.com/nanoporetech/pipeline-transcriptome-de/tree/master
-    #-N 100 allows up to 100 secondary alignments (multiple isoforms)
-    #-p 1.0 secondary score ratio, this is higher than the default of 0.8 since we are looking for transcriptome isoforms
+    {# note: this step aligns reads (unmapped to SIRVs) to the human transcriptome #}
+    {# input: fq with reads unmapped to SIRVs #}
+    {# output: human aligned transcriptome bam for salmon #}
+    {# parameters match nanopore workflow https://github.com/nanoporetech/pipeline-transcriptome-de/tree/master #}
+    {# -N 100 allows up to 100 secondary alignments (multiple isoforms) #}
+    {# -p 1.0 secondary score ratio, this is higher than the default of 0.8 since we are looking for transcriptome isoforms #}
 
-    module load {{ constants.modules.singularity }}
+    mkdir -p {{ temp_dir }}/minimap2/{{ sample.name }}
 
-    mkdir -p {{ constants.workdir }}/minimap2/{{ sample }}
-    cd {{ constants.workdir }}/minimap2/{{ sample }}
+    minimap2 \
+      -ax map-ont \
+      -t 10 \
+      -L \
+      -N 100 \
+      -p 1.0 \
+      {{ constants.grandcanyon.transcriptome }} \
+      {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq > {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAligned.out.sam
 
-    singularity exec --bind /scratch,/home {{ constants.tools.minimap2 }} minimap2 \
-    -ax map-ont \
-    -t 10 \
-    -L \
-    -N 100 \
-    -p 1.0 \
-    {{ constants.grandcanyon.transcriptome }} \
-    {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.fq > {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.TranscriptomeAligned.out.sam
 
-{% if constants.pipe_params.salmon %}
-- name: salmon_{{ sample }}
-  after: minimapTran_{{ sample }}
+{% if constants.pipe_params.salmon | default(false) %}
+- name: salmon_{{ sample.name }}
+  after: minimapTran_{{ sample.name }}
   cpus: 10
   mem: 42G
-  output: salmon_{{ sample }}_done
+  output: salmon_{{ sample.name }}_done
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.salmon.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step performs salmon in alignment mode for transcript quantification
-    #input: human aligned transcriptome bam
-    #output: quant.sf file with transcript quantification (tpms)
+    {# note: this step performs salmon in alignment mode for transcript quantification #}
+    {# input: human aligned transcriptome bam #}
+    {# output: quant.sf file with transcript quantification (tpms) #}
 
-    module load {{ constants.modules.singularity }}
 
-    mkdir -p {{ constants.workdir }}/salmon-align
-    cd {{ constants.workdir }}/salmon-align
+    mkdir -p {{ temp_dir }}/salmon-align
+    cd {{ temp_dir }}/salmon-align
 
-    singularity exec --bind /scratch,/home {{ constants.tools.salmon }} salmon quant \
+    salmon quant \
       --no-version-check \
       --libType A \
-      --output {{ sample }} \
+      --output {{ sample.name }} \
       --threads 10 \
       --numBootstraps 100 \
       --dumpEq \
       --ont \
-      --alignments {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.TranscriptomeAligned.out.sam \
+      --alignments {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAligned.out.sam \
       --targets {{ constants.grandcanyon.transcriptome }}
 {% endif %}
 
-{% if constants.pipe_params.flair %}
-- name: flair_{{ sample }}
-  output: flair_{{ sample }}_done
-  after: samtoolsIndex_{{ sample }}
+
+{% if constants.pipe_params.flair | default(false) %}
+- name: flair_{{ sample.name }}
+  output: flair_{{ sample.name }}_done
+  after: samtoolsIndex_{{ sample.name }}
   cpus: 10
   mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.flair.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step performs flair for read correction, annotation, and quantification
-    #input: human aligned genome bam
-    #output: isoforms.fa, quantification, gtf
+    {# note: this step performs flair for read correction, annotation, and quantification #}
+    {# input: human aligned genome bam #}
+    {# output: isoforms.fa, quantification, gtf #}
 
-    module load {{ constants.modules.singularity }}
+    mkdir -p {{ temp_dir }}/flair/{{ sample.name }}
+    cd {{ temp_dir }}/flair/{{ sample.name }}
 
-    mkdir -p {{ constants.workdir }}/flair/{{ sample }}
-    cd {{ constants.workdir }}/flair/{{ sample }}
-    
-    #we already did alignment, skipping flair align step and converting bam to bed for flair correct
-    singularity exec --bind /scratch,/home {{ constants.tools.flair }} bam2Bed12 -i {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam > flair.aligned.bed
-    
-    singularity exec --bind /scratch,/home {{ constants.tools.flair }} flair correct -q flair.aligned.bed -g {{ constants.grandcanyon.reference_fasta }} -t 10 -f {{ constants.grandcanyon.gtf }}
+    {# we already did alignment, skipping flair align step and converting bam to bed for flair correct #}
+    bam2Bed12 -i {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam > flair.aligned.bed
 
-    singularity exec --bind /scratch,/home {{ constants.tools.flair }} flair collapse -g {{ constants.grandcanyon.reference_fasta }} -r {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_unmapped.fq -f {{ constants.grandcanyon.gtf }} -q flair_all_corrected.bed -t 10
+    flair correct -q flair.aligned.bed -g {{ constants.grandcanyon.reference_fasta }} -t 10 -f {{ constants.grandcanyon.gtf }}
 
-    #generate reads_mainfest.tsv file for flair quantify
-    printf "{{ sample }}\t{{ sample }}\tbatch1\t{{  uBAM_sets | map(attribute='ubam') | join('')  }}" > reads_manifest.tsv.tmp
+    flair collapse -g {{ constants.grandcanyon.reference_fasta }} -r {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq -f {{ constants.grandcanyon.gtf }} -q flair_all_corrected.bed -t 10
+
+    {# generate reads_mainfest.tsv file for flair quantify #}
+    printf "{{ sample.name }}\t{{ sample.name }}\tbatch1\t{{  uBAM_sets | map(attribute='ubam') | join('')  }}" > reads_manifest.tsv.tmp
     awk '{gsub("_","", $1)}1' reads_manifest.tsv.tmp | awk '{gsub("_","", $2)}1' | awk '{gsub("_","", $3)}1' > reads_manifest.tsv.tmp2
     sed -i 's/ /\t/g' reads_manifest.tsv.tmp2
     ( printf "\xff\xfe" ; iconv -f utf-8 -t utf-16le reads_manifest.tsv.tmp2 ) > reads_manifest.tsv
 
-    singularity exec --bind /scratch,/home {{ constants.tools.flair }} flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa
+    flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa
 
-    singularity exec --bind /scratch,/home {{ constants.tools.flair }} flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa --tpm
+    flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa --tpm
 
-    #generate file with the 10 longest isoforms
-    awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' flair.collapse.isoforms.fa | awk '{printf("%d\t%s\t%s\t%s\n",length($2),$1,$1,$2);}'  | sort -t $'\t'  -k1,1nr  | cut -f 1,2 | head > {{ sample }}_flair_top10.txt
+    {# generate file with the 10 longest isoforms #}
+    awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' flair.collapse.isoforms.fa | awk '{printf("%d\t%s\t%s\t%s\n",length($2),$1,$1,$2);}'  | sort -t $'\t'  -k1,1nr  | cut -f 1,2 | head > {{ sample.name }}_flair_top10.txt
 {% endif %}
 
 
-{% if constants.pipe_params.isoquant %}
-- name: isoquant_{{ sample }}
+{% if constants.pipe_params.isoquant | default(false) %}
+- name: isoquant_{{ sample.name }}
   cpus: 20
   mem: 42G
-  after: samtoolsIndex_{{ sample }}
-  output: isoquant_{{ sample }}_done
+  after: samtoolsIndex_{{ sample.name }}
+  output: isoquant_{{ sample.name }}_done
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.isoquant.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-8:00
 
-    #note: this step performs isoquant for read correction, annotation, and quantification
-    #input: human aligned genome bam
-    #output: gene and transcript quantification, gtf
+    {# note: this step performs isoquant for read correction, annotation, and quantification #}
+    {# input: human aligned genome bam #}
+    {# output: gene and transcript quantification, gtf #}
 
-    module load {{ constants.modules.singularity }}
+    mkdir {{ temp_dir }}/isoquant/{{ sample.name }}
+    cd {{ temp_dir }}/isoquant/{{ sample.name }}
 
-    mkdir {{ constants.workdir }}/isoquant/{{ sample }}
-    cd {{ constants.workdir }}/isoquant/{{ sample }}
-
-    singularity exec --bind /scratch,/home {{ constants.tools.isoquant }} isoquant.py --reference {{ constants.grandcanyon.reference_fasta }} \
-    -o {{ constants.workdir }}/isoquant/{{ sample }}/ \
-    -g {{ constants.grandcanyon.gtf }} \
-    -d nanopore \
-    --complete_genedb \
-    --bam {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.Aligned.out.sorted.bam \
-    --labels {{ sample }} \
-    -p {{ sample }} \
-    --sqanti_output \
-    --check_canonical \
-    -t 20 
+    isoquant.py --reference {{ constants.grandcanyon.reference_fasta }} \
+      -o {{ temp_dir }}/isoquant/{{ sample.name }}/ \
+      -g {{ constants.grandcanyon.gtf }} \
+      -d nanopore \
+      --complete_genedb \
+      --bam {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam \
+      --labels {{ sample.name }} \
+      -p {{ sample.name }} \
+      --sqanti_output \
+      --check_canonical \
+      -t 20 
 {% endif %}
 
 
-{% if constants.pipe_params.sirv %}
-- name: samtoolsSortSIRV_{{ sample }}
-  output: samtoolsSortSIRV_{{ sample }}_done
-  after: minimapSIRV_{{ sample }}
+{% if constants.pipe_params.sirv | default(false) %}
+- name: samtoolsSortSIRV_{{ sample.name }}
+  output: samtoolsSortSIRV_{{ sample.name }}_done
+  after: minimapSIRV_{{ sample.name }}
   cpus: 4
   mem: 32G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    module load {{ constants.modules.singularity }}
+    cd {{ temp_dir }}/minimap2/{{ sample.name }}
 
-    cd {{ constants.workdir }}/minimap2/{{ sample }}
+    samtools sort -@ 4 -m 6G -O bam -o {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sam
+    samtools index {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam
 
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools sort -@ 4 -m 6G -O bam -o {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sam
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools index {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam
+    samtools view -F 4 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","SIRV4"}' > {{ sample.name }}_SIRVome_mapped_withSupp_readLength.txt &
+    samtools view -F 4 -F 2048 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","SIRV4"}' > {{ sample.name }}_SIRVome_mapped_noSupp_readLength.txt &
+    samtools view -f 4 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ sample.name }}_SIRVome_unmapped_readLength.txt
 
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools view -F 4 {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","SIRV4"}' > {{ sample }}_SIRVome_mapped_withSupp_readLength.txt &
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools view -F 4 -F 2048 {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","SIRV4"}' > {{ sample }}_SIRVome_mapped_noSupp_readLength.txt &
-    singularity exec --bind /scratch,/home {{ constants.tools.samtools }} samtools view -f 4 {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ sample }}_SIRVome_unmapped_readLength.txt
 
-- name: featureCountsSIRV_{{ sample }}
-  after: samtoolsSortSIRV_{{ sample }}
-  output: featureCountsSIRV_{{ sample }}_done
+- name: featureCountsSIRV_{{ sample.name }}
+  after: samtoolsSortSIRV_{{ sample.name }}
+  output: featureCountsSIRV_{{ sample.name }}_done
   cpus: 10
   mem: 40G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.featureCounts.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-2:00
 
-    module load {{ constants.modules.singularity }}
+    mkdir {{ temp_dir }}/counted-SIRVome
+    cd {{ temp_dir }}/counted-SIRVome
 
-    mkdir {{ constants.workdir }}/counted-SIRVome
-    cd {{ constants.workdir }}/counted-SIRVome
+    featureCounts \
+      -T 10 \
+      -t exon \
+      -g gene_id \
+      -a {{ constants.grandcanyon.gtfSIRV }} \
+      -L \
+      -o {{ sample.name }}_SIRVome.txt \
+      {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam
 
-    singularity exec --bind /home,/scratch {{ constants.tools.featureCounts }} featureCounts \
-    -T 10 \
-    -t exon \
-    -g gene_id \
-    -a {{ constants.grandcanyon.annotationSIRV }} \
-    -L \
-    -o {{ sample }}_SIRVome.txt \
-    {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam
 
-- name: minimapTranSIRV_{{ sample }}
-  after: samtoolsSortSIRV_{{ sample }}
-  output: minimapTranSIRV_{{ sample }}_done
+- name: minimapTranSIRV_{{ sample.name }}
+  after: samtoolsSortSIRV_{{ sample.name }}
+  output: minimapTranSIRV_{{ sample.name }}_done
   cpus: 10
   mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step aligns reads SIRV transcriptome
-    #input: fq from pychopper
-    #output: SIRV aligned transcriptome bam for salmon
-    #parameters match nanopore workflow https://github.com/nanoporetech/pipeline-transcriptome-de/tree/master
-    #-N 100 allows up to 100 secondary alignments (multiple isoforms)
-    #-p 1.0 secondary score ratio, this is higher than the default of 0.8 since we are looking for transcriptome isoforms
+    {# note: this step aligns reads SIRV transcriptome #}
+    {# input: fq from pychopper #}
+    {# output: SIRV aligned transcriptome bam for salmon #}
+    {# parameters match nanopore workflow https://github.com/nanoporetech/pipeline-transcriptome-de/tree/master #}
+    {# -N 100 allows up to 100 secondary alignments (multiple isoforms) #}
+    {# -p 1.0 secondary score ratio, this is higher than the default of 0.8 since we are looking for transcriptome isoforms #}
 
-    module load {{ constants.modules.singularity }}
+    mkdir -p {{ temp_dir }}/minimap2/{{ sample.name }}
+    cd {{ temp_dir }}/minimap2/{{ sample.name }}
 
-    mkdir -p {{ constants.workdir }}/minimap2/{{ sample }}
-    cd {{ constants.workdir }}/minimap2/{{ sample }}
-
-    singularity exec --bind /scratch,/home {{ constants.tools.minimap2 }} minimap2 \
+    minimap2 \
     -ax map-ont \
     -t 10 \
     -L \
     -N 100 \
     -p 1.0 {{ constants.grandcanyon.transcriptomeSIRV }} \
-    {{ constants.workdir }}/pychopper/{{ sample }}/pychopper_all.fq > {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.TranscriptomeAlignedSIRVome.out.sam
+    {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq > {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAlignedSIRVome.out.sam
 
-- name: salmonSIRV_{{ sample }}
-  output: salmonSIRV_{{ sample }}_done
-  after: minimapTranSIRV_{{ sample }}
+
+- name: salmonSIRV_{{ sample.name }}
+  output: salmonSIRV_{{ sample.name }}_done
+  after: minimapTranSIRV_{{ sample.name }}
   cpus: 10
   mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.salmon.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step performs salmon in alignment mode for transcript quantification of SIRV spike-ins
-    #input: SIRV aligned transcriptome bam
-    #output: quant.sf file with transcript quantification (tpms)
+    {# note: this step performs salmon in alignment mode for transcript quantification of SIRV spike-ins #}
+    {# input: SIRV aligned transcriptome bam #}
+    {# output: quant.sf file with transcript quantification (tpms) #}
 
-    module load {{ constants.modules.singularity }}
+    mkdir -p {{ temp_dir }}/salmon-align-SIRVome
+    cd {{ temp_dir }}/salmon-align-SIRVome
 
-    mkdir -p {{ constants.workdir }}/salmon-align-SIRVome
-    cd {{ constants.workdir }}/salmon-align-SIRVome
-
-    singularity exec --bind /scratch,/home {{ constants.tools.salmon }} salmon quant \
+    salmon quant \
       --no-version-check \
       --libType A \
-      --output {{ sample }}_SIRVome \
+      --output {{ sample.name }}_SIRVome \
       --threads 10 \
       --numBootstraps 100 \
       --dumpEq \
       --ont \
-      --alignments {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}.TranscriptomeAlignedSIRVome.out.sam \
+      --alignments {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAlignedSIRVome.out.sam \
       --targets {{ constants.grandcanyon.transcriptomeSIRV }}
 
 
-- name: flairSIRV_{{ sample }}
-  output: flairSIRV_{{ sample }}_done
-  after: samtoolsSortSIRV_{{ sample }}
+- name: flairSIRV_{{ sample.name }}
+  output: flairSIRV_{{ sample.name }}_done
+  after: samtoolsSortSIRV_{{ sample.name }}
   cpus: 10
   mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.flair.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step performs flair for read correction, annotation, and quantification of SIRVs
-    #input: SIRV aligned genome bam
-    #output: isoforms.fa, quantification, gtf
+    {# note: this step performs flair for read correction, annotation, and quantification of SIRVs #}
+    {# input: SIRV aligned genome bam #}
+    {# output: isoforms.fa, quantification, gtf #}
 
-    module load {{ constants.modules.singularity }}
+    mkdir -p {{ temp_dir }}/flair-SIRVome/{{ sample.name }}
+    cd {{ temp_dir }}/flair-SIRVome/{{ sample.name }}
 
-    mkdir -p {{ constants.workdir }}/flair-SIRVome/{{ sample }}
-    cd {{ constants.workdir }}/flair-SIRVome/{{ sample }}
-
-    singularity exec --bind /scratch,/home {{ constants.tools.flair }} bam2Bed12 -i {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam > flair.aligned.bed
+    bam2Bed12 -i {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam > flair.aligned.bed
     
-    singularity exec --bind /scratch,/home {{ constants.tools.flair }} flair correct -q flair.aligned.bed -g {{ constants.grandcanyon.genomeSIRV }} -t 10 -f {{ constants.grandcanyon.annotationSIRV }}
+    flair correct -q flair.aligned.bed -g {{ constants.grandcanyon.reference_fastaSIRV }} -t 10 -f {{ constants.grandcanyon.gtfSIRV }}
 
-    singularity exec --bind /scratch,/home {{ constants.tools.flair }} flair collapse -g {{ constants.grandcanyon.genomeSIRV }} -r {{ constants.workdir }}/pychopper/{{ sample }}/pychopper_all.fq -f {{ constants.grandcanyon.annotationSIRV }} -q flair_all_corrected.bed -t 10
+    flair collapse -g {{ constants.grandcanyon.reference_fastaSIRV }} -r {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq -f {{ constants.grandcanyon.gtfSIRV }} -q flair_all_corrected.bed -t 10
 
-    printf "{{ sample }}\t{{ sample }}\tbatch1\t{{ constants.workdir }}/pychopper/{{ sample }}/pychopper_all.fq" > reads_manifest.tsv.tmp
+    printf "{{ sample.name }}\t{{ sample.name }}\tbatch1\t{{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq" > reads_manifest.tsv.tmp
     awk '{gsub("_","", $1)}1' reads_manifest.tsv.tmp | awk '{gsub("_","", $2)}1' | awk '{gsub("_","", $3)}1' > reads_manifest.tsv
     sed -i 's/ /\t/g' reads_manifest.tsv
 
-    singularity exec --bind /scratch,/home {{ constants.tools.flair }} flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa
+    flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa
 
-    singularity exec --bind /scratch,/home {{ constants.tools.flair }} flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa --tpm
+    flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa --tpm
 
-- name: isoquantSIRV_{{ sample }}
+
+- name: isoquantSIRV_{{ sample.name }}
   cpus: 20
   mem: 42G
-  after: samtoolsSortSIRV_{{ sample }}
-  output: isoquantSIRV_{{ sample }}_done
+  after: samtoolsSortSIRV_{{ sample.name }}
+  output: isoquantSIRV_{{ sample.name }}_done
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.isoquant.container }}
   cmd: |
-    #!/bin/bash
-    #SBATCH -t 0-4:00
 
-    #note: this step performs isoquant for read correction, annotation, and quantification for SIRV mapped reads
-    #input: SIRV aligned genome bam
-    #output: gene and transcript quantification, gtf
+    {# note: this step performs isoquant for read correction, annotation, and quantification for SIRV mapped reads #}
+    {# input: SIRV aligned genome bam #}
+    {# output: gene and transcript quantification, gtf #}
 
-    mkdir {{ constants.workdir }}/isoquant-SIRVome/{{ sample }}
-    cd {{ constants.workdir }}/isoquant-SIRVome/{{ sample }}
+    mkdir {{ temp_dir }}/isoquant-SIRVome/{{ sample.name }}
+    cd {{ temp_dir }}/isoquant-SIRVome/{{ sample.name }}
 
-    module load {{ constants.modules.singularity }}
-
-    singularity exec --bind /scratch,/home {{ constants.tools.isoquant }} isoquant.py --reference {{ constants.grandcanyon.genomeSIRV }} \
-    -o {{ constants.workdir }}/isoquant-SIRVome/{{ sample }}/ \
-    -d nanopore \
-    -g {{ constants.grandcanyon.annotationSIRV }} \
-    --complete_genedb \
-    --bam {{ constants.workdir }}/minimap2/{{ sample }}/{{ sample }}_SIRVome_mapped.sorted.bam \
-    --labels {{ sample }} \
-    -p {{ sample }} \
-    --sqanti_output \
-    --check_canonical \
-    -t 20 
+    isoquant.py --reference {{ constants.grandcanyon.reference_fastaSIRV }} \
+      -o {{ temp_dir }}/isoquant-SIRVome/{{ sample.name }}/ \
+      -d nanopore \
+      -g {{ constants.grandcanyon.gtfSIRV }} \
+      --complete_genedb \
+      --bam {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam \
+      --labels {{ sample.name }} \
+      -p {{ sample.name }} \
+      --sqanti_output \
+      --check_canonical \
+      -t 20 
 
 {% endif %}
-
 
 {% endfor %}
