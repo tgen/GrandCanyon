@@ -1,4 +1,10 @@
+{% from 'modules/rna_alignment/pygmy.j2' import pygmy with context %}
 
+{% macro rna_alignment(samples) %}
 
-{% for sample, uBAM_sets in ubams | groupby("sample") %}
+  {% for sample in samples.values() if sample.gltype in ['rna'] %}
+    {{- pygmy(sample) }}
+  {% endfor %}
+
+{% endmacro %}
 

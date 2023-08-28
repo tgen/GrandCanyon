@@ -10,7 +10,7 @@
   input: temp/ubams/{{ ubam.basename }}
   output: {{ temp_dir }}/fq/{{ sample.name }}/{{ sample.name }}.fq
   cpus: 2
-  mem: 64G
+  mem: 32G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.samtools.container }}
@@ -30,7 +30,7 @@
   input: {{ temp_dir }}/fq/{{ sample.name }}/{{ sample.name }}.fq
   output: {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq
   cpus: 10
-  mem: 42G
+  mem: 32G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.pychopper.container }}
@@ -62,7 +62,7 @@
     - {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.bam
     - {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.bam
   cpus: 10
-  mem: 42G
+  mem: 32G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.minimap2.container }}
@@ -95,7 +95,7 @@
     - {{ sample.name }}_mapped_noSupp_readLength.txt
     - {{ sample.name }}_unmapped_readLength.txt
   cpus: 10
-  mem: 42G
+  mem: 32G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.minimap2.container }}
@@ -128,7 +128,7 @@
   input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq
   output:{{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAligned.out.bam
   cpus: 10
-  mem: 42G
+  mem: 32G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.minimap2.container }}
@@ -159,7 +159,7 @@
   input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam
   output: {{ temp_dir }}/counted/{{ sample.name }}.txt
   cpus: 10
-  mem: 40G
+  mem: 32G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.featureCounts.container }}
@@ -188,7 +188,7 @@
   input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAligned.out.bam
   output: {{ temp_dir }}/salmon-align/{{ sample.name }}
   cpus: 10
-  mem: 42G
+  mem: 32G
   output: salmon_{{ sample.name }}_done
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
@@ -223,7 +223,7 @@
     - {{ temp_dir }}/flair/{{ sample.name }}/flair.collapse.isoforms.fa
     - {{ temp_dir }}/flair/{{ sample.name }}/{{ sample.name }}_flair_top10.txt
   cpus: 10
-  mem: 42G
+  mem: 32G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.flair.container }}
@@ -262,7 +262,7 @@
   input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam
   output: {{ temp_dir }}/isoquant/{{ sample.name }}
   cpus: 20
-  mem: 42G
+  mem: 32G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.isoquant.container }}

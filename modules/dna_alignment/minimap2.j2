@@ -1,8 +1,5 @@
 {% macro minimap2(sample) %}
 
-{% for rgid, rg in sample.read_groups.items() %}
-{% set ubam = rg.ubam_files|first %}
-
 {#
 # Create fastq from PacBio uBAM, pipe directly to minimap and convert to bam via samtools collate to prep for zipperBam
 # Need to review the PacBio settings particulary -Y
