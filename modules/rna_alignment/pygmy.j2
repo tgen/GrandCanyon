@@ -122,8 +122,8 @@
 
 
 - name: minimap2_transcriptome_{{ sample.name }}
-  input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq
-  output:{{ results_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAligned.out.bam
+  input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.bam
+  output: {{ results_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAligned.out.bam
   cpus: 10
   mem: 32G
   walltime: "4:00:00"
@@ -140,6 +140,7 @@
 
     mkdir -p {{ temp_dir }}/minimap2/{{ sample.name }}
 
+    samtools fastq -@ 4 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.bam |\
     minimap2 \
       -ax map-ont \
       -t 10 \
@@ -188,7 +189,6 @@
   output: {{ temp_dir }}/salmon-align/{{ sample.name }}
   cpus: 10
   mem: 32G
-  output: salmon_{{ sample.name }}_done
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.salmon.container }}

@@ -1,3 +1,8 @@
+{# Tasks contains switches for toggling many of the features #}
+{% if tasks is not defined %}
+    {% set tasks = {} %}
+{% endif %}
+
 {% from 'utilities/copy_fastq.j2' import copy_fastq with context %}
 {% from 'utilities/copy_ubam.j2' import copy_ubam with context %}
 {% from 'utilities/copy_bam.j2' import copy_bam with context %}
