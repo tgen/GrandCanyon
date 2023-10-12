@@ -1,0 +1,31 @@
+{% macro pygmy_salmon(temp_dir, result_dir, sample, sample_bam, transcriptome, SIRV=false) %}
+
+- name: salmon_{{ sample.name }}
+  input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAligned.out.bam
+  output: {{ temp_dir }}/salmon-align/{{ sample.name }}
+  cpus: 10
+  mem: 32G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.salmon.container }}
+  cmd: |
+
+    {# note: this step performs salmon in alignment mode for transcript quantification #}
+    {# input: human aligned transcriptome bam #}
+    {# output: quant.sf file with transcript quantification (tpms) #}
+
+    mkdir -p {{ temp_dir }}/salmon-align
+    cd {{ temp_dir }}/salmon-align
+
+    salmon quant \
+      --no-version-check \
+      --libType A \
+      --output {{ sample.name }} \
+      --threads 10 \
+      --numBootstraps 100 \
+      --dumpEq \
+      --ont \
+      --alignments {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAligned.out.bam \
+      --targets {{ constants.grandcanyon.transcriptome }}
+
+{% endmacro %}

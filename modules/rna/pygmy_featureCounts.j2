@@ -1,0 +1,33 @@
+{% macro pygmy_featurecounts(temp_dir, result_dir, sample, sample_bam, gtf, SIRV=false) %}
+
+{% if SIRV %}
+- name: featureCounts_SIRV_{{ sample.name }}
+{% else %}
+- name: featureCounts_{{ sample.name }}
+{% endif %}
+  input: {{ sample_bam }}
+  output: {{ temp_dir }}/{{ sample.name }}.txt
+  cpus: 10
+  mem: 32G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.featureCounts.container }}
+  cmd: |
+
+    {# note: this step performs gene level quantification from the human aligned bam #}
+    {# input: human aligned bam #}
+    {# output: gene counts #}
+
+    mkdir {{ temp_dir }}
+    cd {{ temp_dir }}
+
+    featureCounts \
+      -T 10 \
+      -t exon \
+      -g gene_id \
+      -a {{ gtf }} \
+      -L \
+      -o {{ sample.name }}.txt \
+      {{ sample_bam }}
+
+{% endmacro %}

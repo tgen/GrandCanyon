@@ -1,26 +1,4 @@
-
-
-{% if constants.pipe_params.sirv | default(false) %}
-- name: samtoolsSortSIRV_{{ sample.name }}
-  output: samtoolsSortSIRV_{{ sample.name }}_done
-  after: minimapSIRV_{{ sample.name }}
-  cpus: 4
-  mem: 32G
-  walltime: "4:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.samtools.container }}
-  cmd: |
-
-    cd {{ temp_dir }}/minimap2/{{ sample.name }}
-
-    samtools sort -@ 4 -m 6G -O bam -o {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sam
-    samtools index {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam
-
-    samtools view -F 4 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","SIRV4"}' > {{ sample.name }}_SIRVome_mapped_withSupp_readLength.txt &
-    samtools view -F 4 -F 2048 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","SIRV4"}' > {{ sample.name }}_SIRVome_mapped_noSupp_readLength.txt &
-    samtools view -f 4 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ sample.name }}_SIRVome_unmapped_readLength.txt
-
-
+{% if tasks.RNA_transcriptome_quantify_expression_featureCounts|default(false) %}
 - name: featureCountsSIRV_{{ sample.name }}
   after: samtoolsSortSIRV_{{ sample.name }}
   output: featureCountsSIRV_{{ sample.name }}_done

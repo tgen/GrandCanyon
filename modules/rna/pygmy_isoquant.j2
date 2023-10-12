@@ -1,0 +1,32 @@
+{% macro pygmy_isoquant(temp_dir, result_dir, sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
+
+- name: isoquant_{{ sample.name }}
+  input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam
+  output: {{ temp_dir }}/isoquant/{{ sample.name }}
+  cpus: 20
+  mem: 32G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.isoquant.container }}
+  cmd: |
+
+    {# note: this step performs isoquant for read correction, annotation, and quantification #}
+    {# input: human aligned genome bam #}
+    {# output: gene and transcript quantification, gtf #}
+
+    mkdir {{ temp_dir }}/isoquant/{{ sample.name }}
+    cd {{ temp_dir }}/isoquant/{{ sample.name }}
+
+    isoquant.py --reference {{ constants.grandcanyon.reference_fasta }} \
+      -o {{ temp_dir }}/isoquant/{{ sample.name }}/ \
+      -g {{ constants.grandcanyon.gtf }} \
+      -d nanopore \
+      --complete_genedb \
+      --bam {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam \
+      --labels {{ sample.name }} \
+      -p {{ sample.name }} \
+      --sqanti_output \
+      --check_canonical \
+      -t 20
+
+{% endmacro %}
