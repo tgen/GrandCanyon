@@ -1,4 +1,6 @@
-{% macro pygmy_alignment(sample) %}
+{% from 'modules/rna/pygmy_featurecounts.j2' import pygmy_featurecounts with context %}
+
+{% macro pygmy(sample) %}
 
 {% set temp_dir %}temp/{{ sample.gltype }}/pygmy_alignment/{{ sample.name }}{% endset %}
 {% set results_dir %}{{ sample.gltype }}/pygmy_alignment/{{ sample.name }}{% endset %}
