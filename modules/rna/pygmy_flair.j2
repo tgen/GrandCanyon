@@ -1,7 +1,23 @@
 {% macro pygmy_flair(temp_dir, result_dir, sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
 
+{% if SIRV %}
+  {% set temp_dir %}{{ temp_dir }}/flair_SIRV{% endset %}
+  {% set results_dir %}{{ result_dir }}/flair_SIRV{% endset %}
+{% else %}
+  {% set temp_dir %}{{ temp_dir }}/flair{% endset %}
+  {% set results_dir %}{{ result_dir }}/flair{% endset %}
+{% endif %}
+
+{% if SIRV %}
+- name: flair_SIRV_{{ sample.name }}
+{% else %}
 - name: flair_{{ sample.name }}
-  input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam
+{% endif %}
+  input:
+    - {{ reference_fasta }}
+    - {{ gtf }}
+    - {{ sample_bam }}
+    - {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq
   output:
     - {{ temp_dir }}/flair/{{ sample.name }}/flair.collapse.isoforms.fa
     - {{ temp_dir }}/flair/{{ sample.name }}/{{ sample.name }}_flair_top10.txt
@@ -16,22 +32,40 @@
     {# input: human aligned genome bam #}
     {# output: isoforms.fa, quantification, gtf #}
 
+    ROOT=${PWD}
+
     mkdir -p {{ temp_dir }}/flair/{{ sample.name }}
     cd {{ temp_dir }}/flair/{{ sample.name }}
 
     {# we already did alignment, skipping flair align step and converting bam to bed for flair correct #}
-    bam2Bed12 -i {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam > flair.aligned.bed
-    flair correct -q flair.aligned.bed -g {{ constants.grandcanyon.reference_fasta }} -t 10 -f {{ constants.grandcanyon.gtf }}
-    flair collapse -g {{ constants.grandcanyon.reference_fasta }} -r {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq -f {{ constants.grandcanyon.gtf }} -q flair_all_corrected.bed -t 10
+    bam2Bed12 \
+      -i ${ROOT}/{{ sample_bam }} \
+      > flair.aligned.bed
+    flair correct \
+      -q flair.aligned.bed \
+      -g {{ reference_fasta }} \
+      -t 10 \
+      -f {{ gtf }}
+    flair collapse \
+      -g {{ reference_fasta }} \
+      -r ${ROOT}/{{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq \
+      -f {{ gtf }} \
+      -q flair_all_corrected.bed \
+      -t 10
 
     {# generate reads_mainfest.tsv file for flair quantify #}
-    printf "{{ sample.name }}\t{{ sample.name }}\tbatch1\t{{ ubam }}" > reads_manifest.tsv.tmp
+    printf "{{ sample.name }}\t{{ sample.name }}\tbatch1\t{{ sample_bam }}" > reads_manifest.tsv.tmp
     awk '{gsub("_","", $1)}1' reads_manifest.tsv.tmp | awk '{gsub("_","", $2)}1' | awk '{gsub("_","", $3)}1' > reads_manifest.tsv.tmp2
     sed -i 's/ /\t/g' reads_manifest.tsv.tmp2
     ( printf "\xff\xfe" ; iconv -f utf-8 -t utf-16le reads_manifest.tsv.tmp2 ) > reads_manifest.tsv
 
-    flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa
-    flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa --tpm
+    flair quantify \
+      -r reads_manifest.tsv \
+      -i flair.collapse.isoforms.fa
+    flair quantify \
+      -r reads_manifest.tsv \
+      -i flair.collapse.isoforms.fa \
+      --tpm
 
     {# generate file with the 10 longest isoforms #}
     awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' flair.collapse.isoforms.fa |\
@@ -39,3 +73,34 @@
     sort -t $'\t' -k1,1nr | cut -f 1,2 | head > {{ sample.name }}_flair_top10.txt
 
 {% endmacro %}
+
+- name: flairSIRV_{{ sample.name }}
+  output: flairSIRV_{{ sample.name }}_done
+  after: samtoolsSortSIRV_{{ sample.name }}
+  cpus: 10
+  mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.flair.container }}
+  cmd: |
+
+    {# note: this step performs flair for read correction, annotation, and quantification of SIRVs #}
+    {# input: SIRV aligned genome bam #}
+    {# output: isoforms.fa, quantification, gtf #}
+
+    mkdir -p {{ temp_dir }}/flair-SIRVome/{{ sample.name }}
+    cd {{ temp_dir }}/flair-SIRVome/{{ sample.name }}
+
+    bam2Bed12 -i {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam > flair.aligned.bed
+    
+    flair correct -q flair.aligned.bed -g {{ constants.grandcanyon.reference_fastaSIRV }} -t 10 -f {{ constants.grandcanyon.gtfSIRV }}
+
+    flair collapse -g {{ constants.grandcanyon.reference_fastaSIRV }} -r {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq -f {{ constants.grandcanyon.gtfSIRV }} -q flair_all_corrected.bed -t 10
+
+    printf "{{ sample.name }}\t{{ sample.name }}\tbatch1\t{{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq" > reads_manifest.tsv.tmp
+    awk '{gsub("_","", $1)}1' reads_manifest.tsv.tmp | awk '{gsub("_","", $2)}1' | awk '{gsub("_","", $3)}1' > reads_manifest.tsv
+    sed -i 's/ /\t/g' reads_manifest.tsv
+
+    flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa
+
+    flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa --tpm

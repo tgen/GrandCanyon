@@ -1,6 +1,18 @@
 {% macro pygmy_salmon(temp_dir, result_dir, sample, sample_bam, transcriptome, SIRV=false) %}
 
+{% if SIRV %}
+  {% set temp_dir %}{{ temp_dir }}/salmon_SIRV{% endset %}
+  {% set results_dir %}{{ result_dir }}/salmon_SIRV{% endset %}
+{% else %}
+  {% set temp_dir %}{{ temp_dir }}/salmon{% endset %}
+  {% set results_dir %}{{ result_dir }}/salmon{% endset %}
+{% endif %}
+
+{% if SIRV %}
+- name: salmon_SIRV_{{ sample.name }}
+{% else %}
 - name: salmon_{{ sample.name }}
+{% endif %}
   input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAligned.out.bam
   output: {{ temp_dir }}/salmon-align/{{ sample.name }}
   cpus: 10
@@ -29,3 +41,31 @@
       --targets {{ constants.grandcanyon.transcriptome }}
 
 {% endmacro %}
+
+- name: salmonSIRV_{{ sample.name }}
+  output: salmonSIRV_{{ sample.name }}_done
+  after: minimapTranSIRV_{{ sample.name }}
+  cpus: 10
+  mem: 42G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.salmon.container }}
+  cmd: |
+
+    {# note: this step performs salmon in alignment mode for transcript quantification of SIRV spike-ins #}
+    {# input: SIRV aligned transcriptome bam #}
+    {# output: quant.sf file with transcript quantification (tpms) #}
+
+    mkdir -p {{ temp_dir }}/salmon-align-SIRVome
+    cd {{ temp_dir }}/salmon-align-SIRVome
+
+    salmon quant \
+      --no-version-check \
+      --libType A \
+      --output {{ sample.name }}_SIRVome \
+      --threads 10 \
+      --numBootstraps 100 \
+      --dumpEq \
+      --ont \
+      --alignments {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAlignedSIRVome.out.sam \
+      --targets {{ constants.grandcanyon.transcriptomeSIRV }}

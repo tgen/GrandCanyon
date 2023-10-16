@@ -1,6 +1,18 @@
 {% macro pygmy_isoquant(temp_dir, result_dir, sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
 
+{% if SIRV %}
+  {% set temp_dir %}{{ temp_dir }}/isoquant_SIRV{% endset %}
+  {% set results_dir %}{{ result_dir }}/isoquant_SIRV{% endset %}
+{% else %}
+  {% set temp_dir %}{{ temp_dir }}/isoquant{% endset %}
+  {% set results_dir %}{{ result_dir }}/isoquant{% endset %}
+{% endif %}
+
+{% if SIRV %}
+- name: isoquant_SIRV_{{ sample.name }}
+{% else %}
 - name: isoquant_{{ sample.name }}
+{% endif %}
   input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam
   output: {{ temp_dir }}/isoquant/{{ sample.name }}
   cpus: 20
@@ -30,3 +42,32 @@
       -t 20
 
 {% endmacro %}
+
+- name: isoquantSIRV_{{ sample.name }}
+  cpus: 20
+  mem: 42G
+  after: samtoolsSortSIRV_{{ sample.name }}
+  output: isoquantSIRV_{{ sample.name }}_done
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.isoquant.container }}
+  cmd: |
+
+    {# note: this step performs isoquant for read correction, annotation, and quantification for SIRV mapped reads #}
+    {# input: SIRV aligned genome bam #}
+    {# output: gene and transcript quantification, gtf #}
+
+    mkdir {{ temp_dir }}/isoquant-SIRVome/{{ sample.name }}
+    cd {{ temp_dir }}/isoquant-SIRVome/{{ sample.name }}
+
+    isoquant.py --reference {{ constants.grandcanyon.reference_fastaSIRV }} \
+      -o {{ temp_dir }}/isoquant-SIRVome/{{ sample.name }}/ \
+      -d nanopore \
+      -g {{ constants.grandcanyon.gtfSIRV }} \
+      --complete_genedb \
+      --bam {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam \
+      --labels {{ sample.name }} \
+      -p {{ sample.name }} \
+      --sqanti_output \
+      --check_canonical \
+      -t 20

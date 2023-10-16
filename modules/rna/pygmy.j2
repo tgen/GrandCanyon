@@ -1,9 +1,9 @@
-{% from 'modules/rna/pygmy_featurecounts.j2' import pygmy_featurecounts with context %}
+{% from 'modules/rna/pygmy_featureCounts.j2' import pygmy_featurecounts with context %}
 
 {% macro pygmy(sample) %}
 
-{% set temp_dir %}temp/{{ sample.gltype }}/pygmy_alignment/{{ sample.name }}{% endset %}
-{% set results_dir %}{{ sample.gltype }}/pygmy_alignment/{{ sample.name }}{% endset %}
+{% set temp_dir %}temp/{{ sample.gltype }}/pygmy/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/pygmy/{{ sample.name }}{% endset %}
 
 {% for rgid, rg in sample.read_groups.items() %}
 {% for ubam in rg.ubam_files %}
@@ -107,7 +107,7 @@
     - {{ constants.grandcanyon.reference_fasta }}
     - {{ temp_dir }}/minimap2/{{ sample.name }}_SIRVome_unmapped.bam
   output:
-    - {{ results_dir }}/minimap2/{{ sample.name }}.Aligned.out.sorted.bam
+    - {{ results_dir }}/minimap2/{{ sample.name }}.sorted.bam
     - {{ results_dir }}/minimap2/{{ sample.name }}_mapped_withSupp_readLength.txt
     - {{ results_dir }}/minimap2/{{ sample.name }}_mapped_noSupp_readLength.txt
     - {{ results_dir }}/minimap2/{{ sample.name }}_unmapped_readLength.txt
@@ -129,44 +129,77 @@
       -t 10 \
       -L {{ constants.grandcanyon.reference_fasta }} \
       {{ temp_dir }}/minimap2/{{ sample.name }}_SIRVome_unmapped.fq |\
-    samtools sort -@ 4 -m 6G --write-index -O bam -o {{ results_dir }}/minimap2/{{ sample.name }}.Aligned.out.sorted.bam
+    samtools sort -@ 4 -m 6G --write-index -O bam -o {{ results_dir }}/minimap2/{{ sample.name }}.sorted.bam
 
     {#  read lengths: mapped reads only #}
-    samtools view -F 4 {{ results_dir }}/minimap2/{{ sample.name }}.Aligned.out.sorted.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ results_dir }}/minimap2/{{ sample.name }}_mapped_withSupp_readLength.txt &
+    samtools view -F 4 {{ results_dir }}/minimap2/{{ sample.name }}.sorted.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ results_dir }}/minimap2/{{ sample.name }}_mapped_withSupp_readLength.txt &
     {#  read lengths: mapped reads only, no supplementary or secondary reads #}
-    samtools view -F 4 -F 256 -F 2048 {{ results_dir }}/minimap2/{{ sample.name }}.Aligned.out.sorted.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ results_dir }}/minimap2/{{ sample.name }}_mapped_noSupp_readLength.txt &
+    samtools view -F 4 -F 256 -F 2048 {{ results_dir }}/minimap2/{{ sample.name }}.sorted.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ results_dir }}/minimap2/{{ sample.name }}_mapped_noSupp_readLength.txt &
     {#  read lengths: unmapped reads #}
-    samtools view -f 4 {{ results_dir }}/minimap2/{{ sample.name }}.Aligned.out.sorted.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ results_dir }}/minimap2/{{ sample.name }}_unmapped_readLength.txt
+    samtools view -f 4 {{ results_dir }}/minimap2/{{ sample.name }}.sorted.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ results_dir }}/minimap2/{{ sample.name }}_unmapped_readLength.txt
 
 {% endfor %}
 {% endfor %}
 
-{% set temp_dir %}temp/{{ sample.gltype }}/pygmy/{{ sample.name }}{% endset %}
-{% set results_dir %}{{ sample.gltype }}/pygmy/{{ sample.name }}{% endset %}
 {% if tasks.RNA_transcriptome_quantify_expression_featureCounts|default(true) %}
-  {% set temp_dir %}temp/{{ sample.gltype }}/pygmy/{{ sample.name }}/featureCounts{% endset %}
-  {% set results_dir %}{{ sample.gltype }}/pygmy/{{ sample.name }}/featureCounts{% endset %}
-  {% set sample_bam %}{{ results_dir }}/minimap2/{{ sample.name }}.Aligned.out.sorted.bam
+  {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}.sorted.bam{% endset %}
   {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
   {{- pygmy_featurecounts(temp_dir, results_dir, sample, sample_bam, gtf, SIRV=false) }}
   {% if tasks.process_SIRVome | default(true) %}
-    {% set temp_dir %}temp/{{ sample.gltype }}/pygmy/{{ sample.name }}/featureCounts_SIRV{% endset %}
-    {% set results_dir %}{{ sample.gltype }}/pygmy/{{ sample.name }}/featureCounts_SIRV{% endset %}
-    {% set sample_bam %}{{ results_dir }}/minimap2/{{ sample.name }}_SIRVome_mapped.bam
+    {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}_SIRVome_mapped.bam{% endset %}
     {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
     {{- pygmy_featurecounts(temp_dir, results_dir, sample, sample_bam, gtf, SIRV=true) }}
   {% endif %}
 {% endif %}
 
 {% if tasks.RNA_transcriptome_quantify_expression_salmon|default(false) %}
+  {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}.sorted.bam{% endset %}
+  {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
   {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, transcriptome, SIRV=false) }}
+  {% if tasks.process_SIRVome | default(true) %}
+    {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}_SIRVome_mapped.bam{% endset %}
+    {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
+    {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, transcriptome, SIRV=true) }}
+  {% endif %}
+  
 {% endif %}
 
 {% if tasks.RNA_transcriptome_quantify_expression_flair|default(false) %}
+  {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}.sorted.bam{% endset %}
+  {% set reference_fasta %}{{ constants.grandcanyon.reference_fasta }}{% endset %}
+  {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
   {{- pygmy_flair(temp_dir, results_dir, sample, sample_bam, reference_fasta, gtf, SIRV=false) }}
+  {% if tasks.process_SIRVome | default(true) %}
+    {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}_SIRVome_mapped.bam{% endset %}
+    {% set reference_fasta %}{{ constants.grandcanyon.reference_fastaSIRV }}{% endset %}
+    {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
+    {{- pygmy_flair(temp_dir, results_dir, sample, sample_bam, reference_fasta, gtf, SIRV=true) }}
+  {% endif %}
 {% endif %}
 
 {% if tasks.RNA_transcriptome_quantify_expression_isoquant|default(false) %}
-{% endif %}
+  {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}.sorted.bam{% endset %}
+  {% set reference_fasta %}{{ constants.grandcanyon.reference_fasta }}{% endset %}
+  {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
   {{- pygmy_isoquant(temp_dir, results_dir, sample, sample_bam, reference_fasta, gtf, SIRV=false) }}
+  {% if tasks.process_SIRVome | default(true) %}
+    {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}_SIRVome_mapped.bam{% endset %}
+    {% set reference_fasta %}{{ constants.grandcanyon.reference_fastaSIRV }}{% endset %}
+    {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
+    {{- pygmy_isoquant(temp_dir, results_dir, sample, sample_bam, reference_fasta, gtf, SIRV=true) }}
+  {% endif %}
+  
+{% endif %}
+
+{% if tasks.RNA_SIRVsuite|default(false) %}
+  {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}.sorted.bam{% endset %}
+  {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
+  {{- pygmy_featurecounts(temp_dir, results_dir, sample, sample_bam, gtf, SIRV=false) }}
+  {% if tasks.process_SIRVome | default(true) %}
+    {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}_SIRVome_mapped.bam{% endset %}
+    {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
+    {{- pygmy_featurecounts(temp_dir, results_dir, sample, sample_bam, gtf, SIRV=true) }}
+  {% endif %}
+{% endif %}
+
 {% endmacro %}
