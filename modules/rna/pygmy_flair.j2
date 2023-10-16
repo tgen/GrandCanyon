@@ -74,6 +74,7 @@
 
 {% endmacro %}
 
+{#
 - name: flairSIRV_{{ sample.name }}
   output: flairSIRV_{{ sample.name }}_done
   after: samtoolsSortSIRV_{{ sample.name }}
@@ -104,3 +105,4 @@
     flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa
 
     flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa --tpm
+#}

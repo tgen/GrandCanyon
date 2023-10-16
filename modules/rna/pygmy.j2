@@ -161,7 +161,6 @@
     {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
     {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, transcriptome, SIRV=true) }}
   {% endif %}
-  
 {% endif %}
 
 {% if tasks.RNA_transcriptome_quantify_expression_flair|default(false) %}
@@ -188,7 +187,6 @@
     {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
     {{- pygmy_isoquant(temp_dir, results_dir, sample, sample_bam, reference_fasta, gtf, SIRV=true) }}
   {% endif %}
-  
 {% endif %}
 
 {% if tasks.RNA_SIRVsuite|default(false) %}

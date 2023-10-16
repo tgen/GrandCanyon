@@ -44,6 +44,7 @@
 
 {% endmacro %}
 
+{#
 - name: featureCountsSIRV_{{ sample.name }}
   after: samtoolsSortSIRV_{{ sample.name }}
   output: featureCountsSIRV_{{ sample.name }}_done
@@ -65,3 +66,4 @@
       -L \
       -o {{ sample.name }}_SIRVome.txt \
       {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam
+#}

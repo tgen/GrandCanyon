@@ -42,6 +42,7 @@
 
 {% endmacro %}
 
+{#
 - name: salmonSIRV_{{ sample.name }}
   output: salmonSIRV_{{ sample.name }}_done
   after: minimapTranSIRV_{{ sample.name }}
@@ -69,3 +70,4 @@
       --ont \
       --alignments {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAlignedSIRVome.out.sam \
       --targets {{ constants.grandcanyon.transcriptomeSIRV }}
+#}
