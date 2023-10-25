@@ -3,9 +3,11 @@
 {% if SIRV %}
   {% set temp_dir %}{{ temp_dir }}/flair_SIRV{% endset %}
   {% set results_dir %}{{ result_dir }}/flair_SIRV{% endset %}
+  {% set input_fq %}temp/{{ sample.gltype }}/pygmy/{{ sample.name }}/pychopper/{{ sample.name }}/pychopper_all.fq{% endset %}
 {% else %}
   {% set temp_dir %}{{ temp_dir }}/flair{% endset %}
   {% set results_dir %}{{ result_dir }}/flair{% endset %}
+  {% set input_fq %}temp/{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}_SIRVome_unmapped.fq{% endset %}
 {% endif %}
 
 {% if SIRV %}
@@ -17,10 +19,10 @@
     - {{ reference_fasta }}
     - {{ gtf }}
     - {{ sample_bam }}
-    - {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq
+    - {{ input_fq }}
   output:
-    - {{ temp_dir }}/flair/{{ sample.name }}/flair.collapse.isoforms.fa
-    - {{ temp_dir }}/flair/{{ sample.name }}/{{ sample.name }}_flair_top10.txt
+    - {{ temp_dir }}/flair.collapse.isoforms.fa
+    - {{ temp_dir }}/{{ sample.name }}_flair_top10.txt
   cpus: 10
   mem: 32G
   walltime: "4:00:00"
@@ -32,25 +34,22 @@
     {# input: human aligned genome bam #}
     {# output: isoforms.fa, quantification, gtf #}
 
-    ROOT=${PWD}
-
-    mkdir -p {{ temp_dir }}/flair/{{ sample.name }}
-    cd {{ temp_dir }}/flair/{{ sample.name }}
+    mkdir -p {{ temp_dir }}
 
     {# we already did alignment, skipping flair align step and converting bam to bed for flair correct #}
     bam2Bed12 \
-      -i ${ROOT}/{{ sample_bam }} \
-      > flair.aligned.bed
+      -i {{ sample_bam }} \
+      > {{ temp_dir }}/flair.aligned.bed
     flair correct \
-      -q flair.aligned.bed \
+      -q {{ temp_dir }}/flair.aligned.bed \
       -g {{ reference_fasta }} \
       -t 10 \
       -f {{ gtf }}
     flair collapse \
       -g {{ reference_fasta }} \
-      -r ${ROOT}/{{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq \
+      -r {{ input_fq }} \
       -f {{ gtf }} \
-      -q flair_all_corrected.bed \
+      -q {{ temp_dir }}/flair_all_corrected.bed \
       -t 10
 
     {# generate reads_mainfest.tsv file for flair quantify #}

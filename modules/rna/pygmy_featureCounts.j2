@@ -31,7 +31,6 @@
     ROOT=${PWD}
 
     mkdir -p {{ temp_dir }}
-    cd {{ temp_dir }}
 
     featureCounts \
       -T 10 \
@@ -39,8 +38,8 @@
       -g gene_id \
       -a {{ gtf }} \
       -L \
-      -o {{ sample.name }}.txt \
-      ${ROOT}/{{ sample_bam }}
+      -o {{ temp_dir }}/{{ sample.name }}.txt \
+      {{ sample_bam }}
 
 {% endmacro %}
 

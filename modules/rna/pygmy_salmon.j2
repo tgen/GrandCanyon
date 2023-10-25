@@ -26,18 +26,17 @@
     {# input: human aligned transcriptome bam #}
     {# output: quant.sf file with transcript quantification (tpms) #}
 
-    mkdir -p {{ temp_dir }}/salmon-align
-    cd {{ temp_dir }}/salmon-align
+    mkdir -p {{ temp_dir }}
 
     salmon quant \
       --no-version-check \
       --libType A \
-      --output {{ sample.name }} \
+      --output {{ temp_dir }}/{{ sample.name }} \
       --threads 10 \
       --numBootstraps 100 \
       --dumpEq \
       --ont \
-      --alignments {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAligned.out.bam \
+      --alignments {{ sample_bam }} \
       --targets {{ constants.grandcanyon.transcriptome }}
 
 {% endmacro %}

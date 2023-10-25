@@ -111,6 +111,7 @@
     - {{ results_dir }}/minimap2/{{ sample.name }}_mapped_withSupp_readLength.txt
     - {{ results_dir }}/minimap2/{{ sample.name }}_mapped_noSupp_readLength.txt
     - {{ results_dir }}/minimap2/{{ sample.name }}_unmapped_readLength.txt
+    - {{ temp_dir }}/minimap2/{{ sample.name }}_SIRVome_unmapped.fq
   cpus: 10
   mem: 32G
   walltime: "4:00:00"
@@ -122,12 +123,14 @@
     {# input: bam with reads unmapped to SIRVs #}
     {# output: fq with reads unmapped to SIRVs #}
 
-    samtools fastq -@ 4 {{ temp_dir }}/minimap2/{{ sample.name }}_SIRVome_unmapped.bam |\
+    samtools fastq -@ 4 {{ temp_dir }}/minimap2/{{ sample.name }}_SIRVome_unmapped.bam > {{ temp_dir }}/minimap2/{{ sample.name }}_SIRVome_unmapped.fq
+
     minimap2 \
       -ax map-ont \
       --secondary=no \
       -t 10 \
-      -L {{ constants.grandcanyon.reference_fasta }} \
+      -L \
+      {{ constants.grandcanyon.reference_fasta }} \
       {{ temp_dir }}/minimap2/{{ sample.name }}_SIRVome_unmapped.fq |\
     samtools sort -@ 4 -m 6G --write-index -O bam -o {{ results_dir }}/minimap2/{{ sample.name }}.sorted.bam
 
@@ -152,7 +155,7 @@
   {% endif %}
 {% endif %}
 
-{% if tasks.RNA_transcriptome_quantify_expression_salmon|default(false) %}
+{% if tasks.RNA_transcriptome_quantify_expression_salmon|default(true) %}
   {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}.sorted.bam{% endset %}
   {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
   {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, transcriptome, SIRV=false) }}
@@ -163,7 +166,7 @@
   {% endif %}
 {% endif %}
 
-{% if tasks.RNA_transcriptome_quantify_expression_flair|default(false) %}
+{% if tasks.RNA_transcriptome_quantify_expression_flair|default(true) %}
   {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}.sorted.bam{% endset %}
   {% set reference_fasta %}{{ constants.grandcanyon.reference_fasta }}{% endset %}
   {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
@@ -176,7 +179,7 @@
   {% endif %}
 {% endif %}
 
-{% if tasks.RNA_transcriptome_quantify_expression_isoquant|default(false) %}
+{% if tasks.RNA_transcriptome_quantify_expression_isoquant|default(true) %}
   {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}.sorted.bam{% endset %}
   {% set reference_fasta %}{{ constants.grandcanyon.reference_fasta }}{% endset %}
   {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
