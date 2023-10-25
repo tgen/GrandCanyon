@@ -53,10 +53,6 @@
   container: {{ constants.tools.isoquant.container }}
   cmd: |
 
-    {# note: this step performs isoquant for read correction, annotation, and quantification for SIRV mapped reads #}
-    {# input: SIRV aligned genome bam #}
-    {# output: gene and transcript quantification, gtf #}
-
     mkdir {{ temp_dir }}/isoquant-SIRVome/{{ sample.name }}
     cd {{ temp_dir }}/isoquant-SIRVome/{{ sample.name }}
 

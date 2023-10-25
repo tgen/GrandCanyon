@@ -84,15 +84,11 @@
   container: {{ constants.tools.flair.container }}
   cmd: |
 
-    {# note: this step performs flair for read correction, annotation, and quantification of SIRVs #}
-    {# input: SIRV aligned genome bam #}
-    {# output: isoforms.fa, quantification, gtf #}
-
     mkdir -p {{ temp_dir }}/flair-SIRVome/{{ sample.name }}
     cd {{ temp_dir }}/flair-SIRVome/{{ sample.name }}
 
     bam2Bed12 -i {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam > flair.aligned.bed
-    
+
     flair correct -q flair.aligned.bed -g {{ constants.grandcanyon.reference_fastaSIRV }} -t 10 -f {{ constants.grandcanyon.gtfSIRV }}
 
     flair collapse -g {{ constants.grandcanyon.reference_fastaSIRV }} -r {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq -f {{ constants.grandcanyon.gtfSIRV }} -q flair_all_corrected.bed -t 10

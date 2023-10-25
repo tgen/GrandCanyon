@@ -52,10 +52,6 @@
   container: {{ constants.tools.salmon.container }}
   cmd: |
 
-    {# note: this step performs salmon in alignment mode for transcript quantification of SIRV spike-ins #}
-    {# input: SIRV aligned transcriptome bam #}
-    {# output: quant.sf file with transcript quantification (tpms) #}
-
     mkdir -p {{ temp_dir }}/salmon-align-SIRVome
     cd {{ temp_dir }}/salmon-align-SIRVome
 
