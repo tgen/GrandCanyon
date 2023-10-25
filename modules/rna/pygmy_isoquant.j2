@@ -13,9 +13,11 @@
 {% else %}
 - name: isoquant_{{ sample.name }}
 {% endif %}
-  input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.Aligned.out.sorted.bam
-  output: {{ temp_dir }}/isoquant/{{ sample.name }}
-  cpus: 20
+  input:
+    - {{ sample_bam }}
+    - {{ gtf }}
+  output: {{ temp_dir }}/{{ sample.name }}
+  cpus: 10
   mem: 32G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
@@ -30,7 +32,7 @@
 
     isoquant.py --reference {{ constants.grandcanyon.reference_fasta }} \
       -o {{ temp_dir }}/isoquant/{{ sample.name }}/ \
-      -g {{ constants.grandcanyon.gtf }} \
+      -g {{ gtf }} \
       -d nanopore \
       --complete_genedb \
       --bam {{ sample_bam }} \
@@ -38,7 +40,7 @@
       -p {{ sample.name }} \
       --sqanti_output \
       --check_canonical \
-      -t 20
+      -t 10
 
 {% endmacro %}
 

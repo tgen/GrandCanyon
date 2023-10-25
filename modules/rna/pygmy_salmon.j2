@@ -1,4 +1,4 @@
-{% macro pygmy_salmon(temp_dir, result_dir, sample, sample_bam, transcriptome, SIRV=false) %}
+{% macro pygmy_salmon(temp_dir, result_dir, sample, sample_bam, SIRV=false) %}
 
 {% if SIRV %}
   {% set temp_dir %}{{ temp_dir }}/salmon_SIRV{% endset %}
@@ -13,8 +13,10 @@
 {% else %}
 - name: salmon_{{ sample.name }}
 {% endif %}
-  input: {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAligned.out.bam
-  output: {{ temp_dir }}/salmon-align/{{ sample.name }}
+  input:
+    - {{ sample_bam }}
+    - {{ constants.grandcanyon.transcriptome }}
+  output: {{ temp_dir }}/{{ sample.name }}
   cpus: 10
   mem: 32G
   walltime: "4:00:00"

@@ -160,12 +160,10 @@
 
 {% if tasks.RNA_transcriptome_quantify_expression_salmon|default(true) %}
   {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}.sorted.bam{% endset %}
-  {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
-  {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, transcriptome, SIRV=false) }}
+  {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, SIRV=false) }}
   {% if tasks.process_SIRVome | default(true) %}
     {% set sample_bam %}{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}_SIRVome_mapped.bam{% endset %}
-    {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
-    {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, transcriptome, SIRV=true) }}
+    {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, SIRV=true) }}
   {% endif %}
 {% endif %}
 
