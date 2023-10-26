@@ -16,6 +16,7 @@
   input:
     - {{ sample_bam }}
     - {{ gtf }}
+    - {{ reference_fasta }}
   output: {{ temp_dir }}/{{ sample.name }}
   cpus: 10
   mem: 32G
@@ -30,7 +31,8 @@
 
     mkdir {{ temp_dir }}
 
-    isoquant.py --reference {{ constants.grandcanyon.reference_fasta }} \
+    isoquant.py \
+      --reference {{ reference_fasta }} \
       -o {{ temp_dir }}/isoquant/{{ sample.name }}/ \
       -g {{ gtf }} \
       -d nanopore \

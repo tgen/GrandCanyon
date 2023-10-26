@@ -1,4 +1,4 @@
-{% macro pygmy_salmon(temp_dir, result_dir, sample, sample_bam, SIRV=false) %}
+{% macro pygmy_salmon(temp_dir, result_dir, sample, sample_bam, transcriptome, SIRV=false) %}
 
 {% if SIRV %}
   {% set temp_dir %}{{ temp_dir }}/salmon_SIRV{% endset %}
@@ -15,7 +15,7 @@
 {% endif %}
   input:
     - {{ sample_bam }}
-    - {{ constants.grandcanyon.transcriptome }}
+    - {{ transcriptome }}
   output: {{ temp_dir }}/{{ sample.name }}
   cpus: 10
   mem: 32G
@@ -39,7 +39,7 @@
       --dumpEq \
       --ont \
       --alignments {{ sample_bam }} \
-      --targets {{ constants.grandcanyon.transcriptome }}
+      --targets {{ transcriptome }}
 
 {% endmacro %}
 
