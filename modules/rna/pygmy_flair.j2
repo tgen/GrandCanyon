@@ -34,26 +34,29 @@
     {# input: human aligned genome bam #}
     {# output: isoforms.fa, quantification, gtf #}
 
+    ROOT=${PWD}
+
     mkdir -p {{ temp_dir }}
+    cd {{ temp_dir }}
 
     {# we already did alignment, skipping flair align step and converting bam to bed for flair correct #}
     bam2Bed12 \
-      -i {{ sample_bam }} \
-      > {{ temp_dir }}/flair.aligned.bed
+      -i ${ROOT}/{{ sample_bam }} \
+      > flair.aligned.bed
     flair correct \
-      -q {{ temp_dir }}/flair.aligned.bed \
+      -q flair.aligned.bed \
       -g {{ reference_fasta }} \
       -t 10 \
       -f {{ gtf }}
     flair collapse \
       -g {{ reference_fasta }} \
-      -r {{ input_fq }} \
+      -r ${ROOT}/{{ input_fq }} \
       -f {{ gtf }} \
-      -q {{ temp_dir }}/flair_all_corrected.bed \
+      -q flair_all_corrected.bed \
       -t 10
 
     {# generate reads_mainfest.tsv file for flair quantify #}
-    printf "{{ sample.name }}\t{{ sample.name }}\tbatch1\t{{ sample_bam }}" > reads_manifest.tsv.tmp
+    printf "{{ sample.name }}\t{{ sample.name }}\tbatch1\t${ROOT}/{{ sample_bam }}" > reads_manifest.tsv.tmp
     awk '{gsub("_","", $1)}1' reads_manifest.tsv.tmp | awk '{gsub("_","", $2)}1' | awk '{gsub("_","", $3)}1' > reads_manifest.tsv.tmp2
     sed -i 's/ /\t/g' reads_manifest.tsv.tmp2
     ( printf "\xff\xfe" ; iconv -f utf-8 -t utf-16le reads_manifest.tsv.tmp2 ) > reads_manifest.tsv
