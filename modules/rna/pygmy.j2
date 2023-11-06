@@ -128,10 +128,11 @@
     mkdir -p {{ temp_dir }}/minimap2
 
     minimap2 \
-      -ax splice \
-      --splice-flank=no \
+      -ax map-ont \
       -t 10 \
       -L \
+      -N 100 \
+      -p 1.0 \
       {{ constants.grandcanyon.transcriptomeSIRV }} \
       {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq |\
     samtools view -b -o {{ results_dir }}/minimap2/{{ sample.name }}_SIRVome_mapped.transcriptome.bam
@@ -181,9 +182,9 @@
 
 - name: minimap2_transcriptome_{{ sample.name }}
   input:
-    - {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.bam
     - {{ constants.grandcanyon.transcriptome }}
-  output: {{ results_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.transcriptome.bam
+    - {{ temp_dir }}/minimap2/{{ sample.name }}_SIRVome_unmapped.bam
+  output: {{ results_dir }}/minimap2/{{ sample.name }}.transcriptome.bam
   cpus: 10
   mem: 32G
   walltime: "4:00:00"
@@ -209,7 +210,7 @@
       -p 1.0 \
       {{ constants.grandcanyon.transcriptome }} \
       /dev/stdin |\
-    samtools view -b -o {{ results_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.transcriptome.bam
+    samtools view -b -o {{ results_dir }}/minimap2/{{ sample.name }}.transcriptome.bam
 
 {% endif %}
 
@@ -229,7 +230,7 @@
 
 {% if tasks.RNA_transcriptome_quantify_expression_salmon|default(true) %}
   {% set transcriptome %}{{ constants.grandcanyon.transcriptome }}{% endset %}
-  {% set sample_bam %}{{ results_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.transcriptome.bam{% endset %}
+  {% set sample_bam %}{{ results_dir }}/minimap2/{{ sample.name }}.transcriptome.bam{% endset %}
   {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, transcriptome, SIRV=false) }}
   {% if tasks.process_SIRVome | default(true) %}
     {% set transcriptome %}{{ constants.grandcanyon.transcriptomeSIRV }}{% endset %}
