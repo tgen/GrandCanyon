@@ -55,7 +55,9 @@
 {% for rgid, rg in sample.read_groups.items() %}
 {% for ubam in rg.ubam_files %}
 - name: minimap2_{{ sample.name }}_{{ ubam.rgid }}
-  input: temp/ubams/{{ ubam.basename }}
+  input:
+    - {{ constants.grandcanyon.reference_fasta }}
+    - temp/ubams/{{ ubam.basename }}
   {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
   output: {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
   {% else %}
