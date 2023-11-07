@@ -1,36 +1,31 @@
-#!/bin/bash 
+{% macro sniffles(sample, aligner) %}
 
+{%- set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.sniffles.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.sniffles.pass.vcf.gz{% endset %}
 
-function help {
+- name: sniffles_{{ sample.name }}_{{ aligner }}
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon.reference_fasta }}
+  output:
+    - {{ all_vcf }}
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.sniffles.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
 
-	echo ""
-	echo "------------------------------------------------------------------------------------------------------------------------------------------------------------------"
-	echo "Sniffles"
-	echo "------------------------------------------------------------------------------------------------------------------------------------------------------------------"
-	echo 'Usage: <sorted.bam> <reference.fa> <output.vcf> <threads>'
-	echo ""
+    sniffles \
+      --threads 8 \
+      -i {{ bam }} \
+      --reference {{ constants.grandcanyon.reference_fasta }} \
+      -v {{ all_vcf }}
 
-}
-
-
-function sniffles {
-
-	module load singularity 
-
-	bam=$1 # path to .bam file
-	ref=$2 # path to reference file
-	out=$3 # output path and filename
-	threads=$4 # number of threads
-
-	#Run sniffles with container
-	singularity exec -B $PWD -B /scratch -B /home sniffles_2.2--pyhdfd78af_0.sif \
-	sniffles -i $bam --reference $ref -v $out --threads $threads
-
-}
-
-
-
-
-
-
-
+{% endmacro %}

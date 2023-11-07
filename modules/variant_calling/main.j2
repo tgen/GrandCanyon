@@ -1,4 +1,7 @@
 {% from 'modules/variant_calling/deepvariant.j2' import deepvariant with context %}
+{% from 'modules/variant_calling/cutesv.j2' import cutesv with context %}
+{% from 'modules/variant_calling/longshot.j2' import longshot with context %}
+{% from 'modules/variant_calling/sniffles.j2' import sniffles with context %}
 
 {%- macro constitutional_variant_calling(samples) %}
 
@@ -7,6 +10,9 @@
   {% for aligner in sample.aligners %}
     {%- if sample.subGroup|lower != 'tumor' %}
       {{- deepvariant(sample, aligner) }}
+      {{- cutesv(sample, aligner) }}
+      {{- longshot(sample, aligner) }}
+      {{- sniffles(sample, aligner) }}
     {% endif %}
   {% endfor %}
 
