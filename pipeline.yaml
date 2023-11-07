@@ -15,6 +15,8 @@ constants:
       container: quay.io/biocontainers/canu:2.2--ha47f30e_0
     cutesv:
       container: quay.io/biocontainers/cutesv:2.0.3--pyhdfd78af_0
+    cytocad:
+      container: quay.io/biocontainers/cytocad:1.0.3--py310h4b81fae_2
     deepvariant:
       container: google/deepvariant:1.6.0-gpu
     dysgu:
