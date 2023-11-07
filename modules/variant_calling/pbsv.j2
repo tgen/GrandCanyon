@@ -1,11 +1,39 @@
+{% macro pbsv(sample, aligner) %}
 
-module load singularity
+{%- set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/pbsv/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/pbsv/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.pbsv.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.pbsv.pass.vcf.gz{% endset %}
 
+- name: pbsv_{{ sample.name }}_{{ aligner }}
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon.reference_fasta }}
+  output:
+    - {{ all_vcf }}
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.pbsv.container }}
+  cmd: |
 
-# Reserving a full node just for testing
+    pbsv discover \
+      {{ bam }} \
+      {{ results_dir }}/{{ sample.name }}.svsig.gz
 
-#srun --nodes=1 --cpus-per-task=40 --pty bash
+    tabix -c '#' -s 3 -b 4 -e 4 {{ results_dir }}/{{ sample.name }}.svsig.gz
 
+    pbsv call \
+      {{ constants.grandcanyon.reference_fasta }} \
+      {{ results_dir }}/{{ sample.name }}.svsig.gz \
+      {{ all_vcf }}
+
+{% endmacro %}
+
+{#
 # Input is a Pacbio aligned bam, with the sample name stored in the SM tag of the read groups.
 INPUT=$1 
 INPUT_DIR=$(dirname ${INPUT})
@@ -39,4 +67,4 @@ singularity exec -B ${OUTPUT_DIR} $SAMTOOLS \
 
 echo "pbsv call structural variants"
 singularity exec -B $PWD -B ${REF_DIR} -B ${OUTPUT_DIR} $PBSV pbsv call ${REFERENCE} ${PBSV_DISCOVER_FILE} ${OUTPUT}
-
+#}

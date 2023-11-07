@@ -2,6 +2,8 @@
 {% from 'modules/variant_calling/cutesv.j2' import cutesv with context %}
 {% from 'modules/variant_calling/longshot.j2' import longshot with context %}
 {% from 'modules/variant_calling/sniffles.j2' import sniffles with context %}
+{% from 'modules/variant_calling/pbsv.j2' import pbsv with context %}
+{% from 'modules/variant_calling/severus.j2' import severus with context %}
 
 {%- macro constitutional_variant_calling(samples) %}
 
@@ -13,6 +15,10 @@
       {{- cutesv(sample, aligner) }}
       {{- longshot(sample, aligner) }}
       {{- sniffles(sample, aligner) }}
+      {{- severus(sample, aligner) }}
+      {% if sample.rgpl in ('hifi', 'ccs', 'clr') %}
+        {{- pbsv(sample, aligner) }}
+      {% endif %}
     {% endif %}
   {% endfor %}
 
