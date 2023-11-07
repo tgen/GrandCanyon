@@ -6,65 +6,57 @@ __pipeline__:
 constants:
   tools:
     assembly-stats:
-      container: /home/tgenref/containers/grandcanyon/assembly_tools/assembly-stats_1.0.1--h4ac6f70_7.sif
+      container: quay.io/biocontainers/assembly-stats:1.0.1--h4ac6f70_7
     bcftools:
-      container: /home/tgenref/containers/grandcanyon/common_tools/bcftools_1.17--h3cc50cf_1.sif
+      container: quay.io/biocontainers/bcftools:1.18--h8b25389_0
     busco:
-      container: /home/tgenref/containers/grandcanyon/assembly_tools/busco_5.5.0--pyhdfd78af_0.sif
+      container: quay.io/biocontainers/busco:5.5.0--pyhdfd78af_0
     canu:
-      container: /home/tgenref/containers/grandcanyon/assembly_tools/canu_2.2--ha47f30e_0.sif
+      container: quay.io/biocontainers/canu:2.2--ha47f30e_0
     cutesv:
-      container: /home/tgenref/containers/grandcanyon/structural_variant_calling/cutesv_2.0.3--pyhdfd78af_0.sif
+      container: quay.io/biocontainers/cutesv:2.0.3--pyhdfd78af_0
     deepvariant:
-      container: /home/tgenref/containers/grandcanyon/variant_calling/deepvariant_1.5.0-gpu.sif
-    dorado:
-      container: /home/tgenref/containers/grandcanyon/oxford_nanopore/dorado_0.3.4.sif
+      container: google/deepvariant:1.6.0-gpu
     dysgu:
-      container: /home/tgenref/containers/grandcanyon/structural_variant_calling/dysgu_1.5.0--py310h770aed0_1.sif
-    featureCounts:
-      container: /home/ehutchins/tools/subread_2.0.6--he4a0461_0.sif
-    fgbio:
-      container: pbc-art-prd01.ad.tgen.org/hpc-virtual-containers/external/fgbio:2.0.2-v1
+      container: quay.io/biocontainers/dysgu:1.6.2--py310h770aed0_0
     flair:
-      container: /home/tgenref/containers/grandcanyon/rna_tools/flair_2.0.0--pyhdfd78af_1.sif
+      container: quay.io/biocontainers/flair:2.0.0--pyhdfd78af_1
     flye:
-      container: /home/tgenref/containers/grandcanyon/assembly_tools/flye_2.9.2--py310h2b6aa90_2.sif
+      container: quay.io/biocontainers/flye:2.9.2--py310h2b6aa90_2
     gatk:
-      container: /home/tgenref/containers/grandcanyon/common_tools/gatk_4.4.0.0.sif
+      container: broadinstitute/gatk:4.4.0.0
     hifiasm:
-      container: /home/tgenref/containers/grandcanyon/assembly_tools/hifiasm_0.19.5--h43eeafb_2.sif
+      container: quay.io/biocontainers/hifiasm:0.19.8--h43eeafb_0
     hificnv:
-      container: /home/tgenref/containers/grandcanyon/copy_number/hificnv_0.1.6b--h9ee0642_0.sif
+      container: quay.io/biocontainers/hificnv:0.1.7--h9ee0642_0
     isoquant:
-      container: /home/ehutchins/tools/isoquant_3.3.1--hdfd78af_0.sif
-    isoseq3:
-      container: /home/tgenref/containers/grandcanyon/rna_tools/isoseq3_4.0.0--h9ee0642_0.sif
+      container: quay.io/biocontainers/isoquant:3.3.1--hdfd78af_0
+    longshot:
+      container: quay.io/biocontainers/longshot:0.4.5--hd175d40_2
+    lorax:
+      container: quay.io/biocontainers/lorax:0.3.8--hb7e2ac5_0
     medaka:
-      container: /home/tgenref/containers/grandcanyon/oxford_nanopore/medaka_1.8.0--py38hdaa7744_0.sif
+      container: quay.io/biocontainers/medaka:1.11.1--py310h87e71ce_0
     minimap2:
       container: pbc-art-prd01.ad.tgen.org/hpc-virtual-containers/minimap2-samtools:2.24-v1
-    pbbam:
-      container: /home/tgenref/containers/grandcanyon/pacbio/pbbam_2.1.0--h8db2425_5.sif
-    pbipa:
-      container: /home/tgenref/containers/grandcanyon/pacbio/pbipa_1.8.0--h6ead514_2.sif
-    pbmm2:
-      container: /home/tgenref/containers/grandcanyon/pacbio/pbmm2_1.12.0--h9ee0642_0.sif
     pbsv:
-      container: /home/tgenref/containers/grandcanyon/pacbio/pbsv_2.9.0--h9ee0642_0.sif
-    pbtk:
-      container: /home/tgenref/containers/grandcanyon/pacbio/pbtk_3.1.0--h9ee0642_0.sif
+      container: quay.io/biocontainers/pbsv:2.9.0--h9ee0642_0
     pychopper:
-      container: /home/ehutchins/tools/pychopper_2.5.0--py_0.sif
+      container: quay.io/biocontainers/pychopper:2.5.0--py_0
     salmon:
-      container: /home/ehutchins/tools/salmon_1.10.2--hecfa306_0.sif
+      container: quay.io/biocontainers/salmon:1.10.2--hecfa306_0
     samtools:
-      container: /home/tgenref/containers/grandcanyon/common_tools/samtools_1.17--hd87286a_1.sif
+      container: quay.io/biocontainers/samtools:1.18--h50ea8bc_1
+    severus:
+      container: quay.io/biocontainers/severus:0.1.1--pyhdfd78af_0
     shasta:
-      container: /home/tgenref/containers/grandcanyon/assembly_tools/shasta_0.11.1--h4ac6f70_2.sif
+      container: quay.io/biocontainers/shasta:0.11.1--h4ac6f70_2
     sniffles:
-      container: /home/tgenref/containers/grandcanyon/structural_variant_calling/sniffles_2.2--pyhdfd78af_0.sif
+      container: quay.io/biocontainers/sniffles:2.2--pyhdfd78af_0
+    subread:
+      container: quay.io/biocontainers/subread:2.0.6--he4a0461_0
     verkko:
-      container: /home/tgenref/containers/grandcanyon/assembly_tools/verkko_1.4.1--h48217b1_0.sif
+      container: quay.io/biocontainers/verkko:1.4.1--h48217b1_0
   grandcanyon:
     species: Homo sapiens
     genome_build: t2t_chm13

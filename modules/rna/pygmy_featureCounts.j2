@@ -21,7 +21,7 @@
   mem: 32G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
-  container: {{ constants.tools.featureCounts.container }}
+  container: {{ constants.tools.subread.container }}
   cmd: |
 
     {# note: this step performs gene level quantification from the human aligned bam #}
