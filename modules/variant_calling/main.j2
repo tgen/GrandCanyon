@@ -1,10 +1,14 @@
+{% from 'modules/variant_calling/deepvariant.j2' import deepvariant with context %}
+
 {%- macro constitutional_variant_calling(samples) %}
 
-{%- for sample in samples.values() if sample.gltype in ('exome', 'genome') %}
+{%- for sample in samples.values() if sample.gltype in ('exome', 'genome', 'genomephased') %}
 
+  {% for aligner in sample.aligners %}
     {%- if sample.subGroup|lower != 'tumor' %}
-      {{- deepvariant(sample) }}
+      {{- deepvariant(sample, aligner) }}
     {% endif %}
+  {% endfor %}
 
 {% endfor %}
 

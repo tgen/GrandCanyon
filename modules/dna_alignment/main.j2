@@ -3,7 +3,7 @@
 {% macro dna_alignment(samples) %}
 
   {% for sample in samples.values() if sample.gltype in ['genome', 'exome'] %}
-    {{- minimap2(sample) }}
+    {{- minimap2(sample, aligner='minimap2') }}
   {% endfor %}
 
 {% endmacro %}

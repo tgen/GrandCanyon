@@ -1,4 +1,4 @@
-{% macro minimap2(sample) %}
+{% macro minimap2(sample, aligner) %}
 
 {#
 # Create fastq from PacBio uBAM, pipe directly to minimap and convert to bam via samtools collate to prep for zipperBam
@@ -49,7 +49,8 @@
 #}
 
 
-{% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ sample.name }}{% endset %}
+{% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
 
 {% for rgid, rg in sample.read_groups.items() %}
 {% for ubam in rg.ubam_files %}
@@ -58,7 +59,7 @@
   {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
   output: {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
   {% else %}
-  output: {{ sample.gltype }}/alignment/{{ sample.name }}.cram
+  output: {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
   {% endif %}
   cpus: 20
   mem: 60G
@@ -97,7 +98,7 @@
       {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
       -o {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
       {% else %}
-      -o {{ sample.gltype }}/alignment/{{ sample.name }}.cram
+      -o {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
       {% endif %}
       --output-fmt CRAM \
       --write-index \
@@ -114,7 +115,7 @@
   {% for rgid, rg in sample.read_groups.items() %}
     - {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
   {% endfor %}
-  output: {{ sample.gltype }}/alignment/{{ sample.name }}.cram
+  output: {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
   walltime: "24:00:00"
   cpus: 4
   mem: 8G
@@ -134,7 +135,7 @@
       -c \
       -f \
       --write-index \
-      {{ sample.gltype }}/alignment/{{ sample.name }}.cram \
+      {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
       {% for rgid, rg in sample.read_groups.items() %}
       {% if not loop.last %}
       {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram \
@@ -142,5 +143,7 @@
       {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
       {% endif %}
       {% endfor %}
+
+{% endif %}
 
 {% endmacro %}

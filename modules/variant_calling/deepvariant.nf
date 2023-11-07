@@ -1,112 +1,163 @@
-include { METADATA } from '../metadata'
+{%- macro deepvariant(sample, aligner='bwa', taskPrefix='Genome') %}
 
-workflow PACBIO_DEEPVARIANT {
+{%- set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/deepvariant/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/deepvariant/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.pass.vcf.gz{% endset %}
 
-    take:
-        bam
-        bamIndex
+{%- set nshards=40 %}
+{% for i in range(nshards) %}
 
-    main:
-        bam = METADATA(bam)
-        make_examples(bam, bamIndex, params.reference, params.referenceIndex, Channel.of(0..params.make_examplesInstances - 1))
-        call_variants(bam, make_examples.out.collect())
-        postprocess_variants(bam, make_examples.out.collect(), call_variants.out, params.reference, params.referenceIndex)
-}
+{% set iteration = ('00000' + i|string)|reverse|truncate(5, True, '', 0)|reverse %}
+{% set stop = ('00000' + nshards|string)|reverse|truncate(5, True, '', 0)|reverse %}
 
-process make_examples {
+- name: deepvariant_make_examples_{{ sample.name }}_{{ aligner }}_shard{{ i }}
+  tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
+  input: 
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon.reference_fasta }}
+  output:
+    - {{ temp_dir }}/{{ sample.name }}.ex.tfrecord-{{ iteration }}-of-{{ stop }}.gz
+    - {{ temp_dir }}/{{ sample.name }}.gvcf.tfrecord-{{ iteration }}-of-{{ stop }}.gz
+  cpus: 1
+  mem: 4G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.deepvariant.container }}
+  digest: {{ constants.tools.deepvariant.digest }}
+  cmd: |
+    set -eu
+    set -o pipefail
 
-    input:
-        tuple val(meta), path(bam)
-        path bamIndex
-        val ref
-        val refIndex
-        each instance
+    PROJECT_ROOT=$PWD
 
-    output:
-        path "*.gz"
+    mkdir -p "{{ temp_dir }}"
 
-    cpus 1
-    memory '3GB'
-    time '2h'
-    container params.dvContainer
-    
-    script:
-    """
-    /opt/deepvariant/bin/make_examples \
-        --norealign_reads \
-        --vsc_min_fraction_indels 0.12 \
-        --pileup_image_width 199 \
-        --track_ref_reads \
-        --phase_reads \
-        --partition_size=25000 \
-        --max_reads_per_partition=600 \
-        --alt_aligned_pileup=diff_channels \
-        --add_hp_channel \
-        --sort_by_haplotypes \
-        --parse_sam_aux_fields \
-        --min_mapping_quality=1 \
-        --mode calling \
-        --ref ${ref} \
-        --reads ${bam} \
-        --examples ${meta.id}.examples.tfrecord@${params.make_examplesInstances}.gz \
-        --task ${instance}
-    """
-}
+    cd "{{ temp_dir }}"
 
-process call_variants {
+    make_examples \
+      --norealign_reads \
+      --vsc_min_fraction_indels 0.12 \
+      --pileup_image_width 199 \
+      --track_ref_reads \
+      --phase_reads \
+      --partition_size=25000 \
+      --max_reads_per_partition=600 \
+      --alt_aligned_pileup=diff_channels \
+      --add_hp_channel \
+      --sort_by_haplotypes \
+      --parse_sam_aux_fields \
+      --min_mapping_quality=1 \
+      --mode calling \
+      --task {{ i }} \
+      --ref "{{ constants.grandcanyon.reference_fasta }}" \
+      --reads "${PROJECT_ROOT}/{{ bam }}" \
+      --examples "${PROJECT_ROOT}/{{ temp_dir }}/{{ sample.name }}.ex.tfrecord@{{ nshards }}.gz" \
+      --gvcf "${PROJECT_ROOT}/{{ temp_dir }}/{{ sample.name }}.gvcf.tfrecord@{{ nshards }}.gz"
 
-    input:
-        tuple val(meta), path(bam)
-        path exampleFiles
+{% endfor %}
 
-    output:
-        file "*.gz"
+- name: deepvariant_call_variants_{{ sample.name }}_{{ aligner }}
+  tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
+  reset: predecessors
+  input:
+    {% for i in range(nshards) %}
+    {% set iteration = ('00000' + i|string)|reverse|truncate(5, True, '', 0)|reverse %}
+    {% set stop = ('00000' + nshards|string)|reverse|truncate(5, True, '', 0)|reverse %}
+    - {{ temp_dir }}/{{ sample.name }}.ex.tfrecord-{{ iteration }}-of-{{ stop }}.gz
+    - {{ temp_dir }}/{{ sample.name }}.gvcf.tfrecord-{{ iteration }}-of-{{ stop }}.gz
+    {% endfor %}
+  output: {{ temp_dir }}/{{ sample.name }}.cvo.tfrecord.gz
+  cpus: 8
+  mem: 40G
+  walltime: "24:00:00"
+  queue_preset: "DEEPVARIANT"
+  container: {{ constants.tools.deepvariant.container }}
+  digest: {{ constants.tools.deepvariant.digest }}
+  cmd: |
+    set -eu
+    set -o pipefail
 
+    PROJECT_ROOT=$PWD
 
-    cpus 8
-    queue 'gpu-scavenge'
-    time '4h'
-    memory '200GB'
-    clusterOptions '--gres gpu:1 -N 1 --tasks-per-node 1'
-    container params.dvContainer
+    cd "{{ temp_dir }}"
 
-    script:
-    println(meta)
-    """
-    /opt/deepvariant/bin/call_variants \
-        --outfile ${meta.id}.cvo.tfrecord.gz \
-        --examples "${meta.id}.examples.tfrecord@${params.make_examplesInstances}.gz" \
-        --checkpoint "${params.deepvariantModel}"
-    """
-}
+    call_variants \
+      {% if sample.gltype == 'exome' %}
+      --checkpoint /opt/models/wes/model.ckpt \
+      {% else %}
+      --checkpoint /opt/models/wgs/model.ckpt \
+      {% endif %}
+      --examples "{{ sample.name }}.ex.tfrecord@{{ nshards }}.gz" \
+      --outfile "{{ sample.name }}.cvo.tfrecord.gz"
 
 
-process postprocess_variants {
+- name: deepvariant_postprocess_variants_{{ sample.name }}_{{ aligner }}
+  tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
+  reset: predecessors
+  input:
+    - {{ temp_dir }}/{{ sample.name }}.cvo.tfrecord.gz
+    - {{ constants.grandcanyon.reference_fasta }}
+  output:
+    - {{ all_vcf }}
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz
+  cpus: 1
+  mem: 48G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.deepvariant.container }}
+  digest: {{ constants.tools.deepvariant.digest }}
+  cmd: |
+    set -eu
+    set -o pipefail
 
-    input:
-        tuple val(meta), path(bam)
-        path exampleFiles
-        path variantFile
-        val ref
-        val refIndex
+    PROJECT_ROOT=$PWD
 
-    output:
-        file "*.gz"
+    mkdir -p "{{ results_dir }}"
 
-    cpus 1
-    queue 'cpu-scavenge'
-    time '4h'
-    memory '20GB'
-    container params.dvContainer
+    cd "{{ temp_dir }}"
 
-    script:
-    println(meta)
-    """
-    /opt/deepvariant/bin/postprocess_variants \
-        --vcf_stats_report=false \
-        --ref ${ref} \
-        --infile ${variantFile} \
-        --outfile ${meta.id}_deepvariant.vcf.gz
-    """
+    postprocess_variants \
+        --ref "{{ constants.grandcanyon.reference_fasta }}" \
+        --infile "{{ sample.name }}.cvo.tfrecord.gz" \
+        --outfile "${PROJECT_ROOT}/{{ all_vcf }}" \
+        --novcf_stats_report \
+        --nonvariant_site_tfrecord_path "${PROJECT_ROOT}/{{ temp_dir }}/{{ sample.name }}.gvcf.tfrecord@{{ nshards }}.gz" \
+        --gvcf_outfile "${PROJECT_ROOT}/{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz"
 
-}
+
+- name: deepvariant_filter_variants_{{ sample.name }}_{{ aligner }}
+  tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
+  input:
+    - {{ all_vcf }}
+    {% if sample.gltype == 'exome' %}
+    - {{ sample.capture_kit.extended_bed }}
+    {% endif %}
+  output:
+    - {{ all_vcf }}.tbi
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  digest: {{ constants.tools.bcftools.digest }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    bcftools index --tbi --force "{{ all_vcf }}"
+
+    {# Then filter out the PASS variants to a separate file #}
+    bcftools filter \
+      --output-type z \
+      --include 'FILTER == "PASS"' \
+      "{{ all_vcf }}" \
+      > "{{ pass_vcf }}"
+
+    bcftools index --tbi --force "{{ pass_vcf }}"
+
+{% endmacro %}
