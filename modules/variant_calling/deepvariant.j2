@@ -83,10 +83,10 @@
     cd "{{ temp_dir }}"
 
     call_variants \
-      {% if sample.gltype == 'exome' %}
-      --checkpoint /opt/models/wes/model.ckpt \
-      {% else %}
-      --checkpoint /opt/models/wgs/model.ckpt \
+      {% if sample.rgpl == 'ont' %}
+      --checkpoint /opt/models/ont_r104/saved_model.pb \
+      {% elif sample.rgpl in 'hifi' %}
+      --checkpoint /opt/models/pacbio/saved_model.pb \
       {% endif %}
       --examples "{{ sample.name }}.ex.tfrecord@{{ nshards }}.gz" \
       --outfile "{{ sample.name }}.cvo.tfrecord.gz"
