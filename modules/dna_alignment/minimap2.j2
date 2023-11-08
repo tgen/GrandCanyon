@@ -102,7 +102,8 @@
       {% else %}
       -o {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
       {% endif %}
-      -O CRAM \
+      --output-fmt CRAM,version=3.1 \
+      --output-fmt-option embed_ref \
       --write-index \
       -
 
