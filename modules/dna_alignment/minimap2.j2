@@ -58,11 +58,13 @@
   input:
     - {{ constants.grandcanyon.reference_fasta }}
     - temp/ubams/{{ ubam.basename }}
-  {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
-  output: {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
-  {% else %}
-  output: {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
-  {% endif %}
+  output:
+    - {{ temp_dir }}/st_sort_temp/{{ ubam.rgid }}
+    {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
+    - {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
+    {% else %}
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    {% endif %}
   cpus: 20
   mem: 60G
   walltime: "4:00:00"
@@ -71,6 +73,10 @@
   cmd: |
     set -eu
     set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
 
     samtools fastq \
       --threads 10 \
@@ -97,6 +103,7 @@
     samtools sort \
       --threads 20 \
       --reference {{ constants.grandcanyon.reference_fasta }} \
+      -T {{ temp_dir }}/st_sort_temp/{{ ubam.rgid }} \
       {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
       -o {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram \
       {% else %}
