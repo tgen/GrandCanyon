@@ -74,8 +74,8 @@
     set -eu
     set -o pipefail
 
-    rm -r {{ temp_dir }} || true
-    mkdir -p {{ temp_dir }}
+    rm -r {{ temp_dir }}/st_sort_temp/{{ ubam.rgid }} || true
+    mkdir -p {{ temp_dir }}/st_sort_temp/{{ ubam.rgid }}
     mkdir -p {{ results_dir }}
 
     samtools fastq \
