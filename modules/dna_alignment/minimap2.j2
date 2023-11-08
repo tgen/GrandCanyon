@@ -98,9 +98,9 @@
       --threads 20 \
       --reference {{ constants.grandcanyon.reference_fasta }} \
       {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
-      -o {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
+      -o {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram \
       {% else %}
-      -o {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+      -o {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
       {% endif %}
       -O CRAM \
       --write-index \
