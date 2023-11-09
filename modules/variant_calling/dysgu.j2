@@ -36,7 +36,7 @@
       --mq 1 \
       --min-size 30 \
       --max-cov 200 \
-      --procs 16 \
+      --procs 8 \
       --overwrite \
       --pfix "_tempf_" \
       {% if sample.rgpl|lower in ('ont') %}
@@ -112,7 +112,7 @@
       --mq 1 \
       --min-size 30 \
       --max-cov 200 \
-      --procs 4 \
+      --procs 8 \
       --overwrite \
       {{ constants.grandcanyon.reference_fasta }} \
       {{ temp_dir }} \
@@ -270,3 +270,5 @@
 #                                to ignore  [default: -1]
 #  --help                        Show this message and exit.
 #}
+
+{% endmacro %}
