@@ -125,12 +125,12 @@ Advanced:
       {{ constants.grandcanyon.reference_fasta }} \
       {{ all_vcf }} \
       {{ temp_dir }} \
-      {% if sample.rgpl == 'ont' %}
+      {% if sample.rgpl|lower in ('ont') %}
       --max_cluster_bias_INS 100 \
       --diff_ratio_merging_INS 0.3 \
       --max_cluster_bias_DEL 100 \
       --diff_ratio_merging_DEL 0.3 \
-      {% elif sample.rgpl == 'hifi' %}
+      {% elif sample.rgpl|lower in ('hifi', 'ccs', 'clr') %}
       --max_cluster_bias_INS 1000 \
       --diff_ratio_merging_INS 0.9 \
       --max_cluster_bias_DEL 1000 \

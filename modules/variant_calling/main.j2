@@ -16,7 +16,7 @@
       {{- longshot(sample, aligner) }}
       {{- sniffles(sample, aligner) }}
       {{- severus(sample, aligner) }}
-      {% if sample.rgpl in ('hifi', 'ccs', 'clr') %}
+      {% if sample.rgpl|lower in ('hifi', 'ccs', 'clr') %}
         {{- pbsv(sample, aligner) }}
       {% endif %}
     {% endif %}
