@@ -4,6 +4,9 @@
 {% from 'modules/variant_calling/sniffles.j2' import sniffles with context %}
 {% from 'modules/variant_calling/pbsv.j2' import pbsv with context %}
 {% from 'modules/variant_calling/severus.j2' import severus with context %}
+{% from 'modules/variant_calling/dysgu.j2' import dysgu with context %}
+{% from 'modules/variant_calling/cytocad.j2' import cytocad with context %}
+{% from 'modules/variant_calling/hifi_cnv.j2' import hifi_cnv with context %}
 
 {%- macro constitutional_variant_calling(samples) %}
 
@@ -16,8 +19,11 @@
       {{- longshot(sample, aligner) }}
       {{- sniffles(sample, aligner) }}
       {{- severus(sample, aligner) }}
+      {{- dysgu(sample, aligner) }}
+      {{- cytocad(sample, aligner) }}
       {% if sample.rgpl|lower in ('hifi', 'ccs', 'clr') %}
         {{- pbsv(sample, aligner) }}
+        {{- hifi_cnv(sample, aligner) }}
       {% endif %}
     {% endif %}
   {% endfor %}
