@@ -9,6 +9,7 @@
 {% from 'modules/dna_alignment/main.j2' import dna_alignment with context %}
 {% from 'modules/rna/main.j2' import rna_alignment with context %}
 {% from 'modules/variant_calling/main.j2' import constitutional_variant_calling with context %}
+{% from 'modules/assembly/main.j2' import assembly with context %}
 {# {% from 'utilities/check_bam_rg_tags.j2' %} #}
 
 {% set samples = {} %}
@@ -90,4 +91,6 @@
 {{- rna_alignment(samples) }}
 
 {{- constitutional_variant_calling(samples) }}
+
+{{- assembly(samples) }}
 

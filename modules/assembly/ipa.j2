@@ -1,21 +1,17 @@
-#!/bin/bash
-
-
-# Assemble HiFi data with HiCanu
-
-
+# Assemble HiFi data with IPA
 
 #help menu is modified from Bryce's
 print_help(){
     printf "
     Usage:
-        yh_canu.sh -i input.fastq.gz -d working/directory -g 3.1g
+        yh_ipa.sh -i input.fastq.gz -d working/directory -t 20 -j 1
 
     Available arguments:
         -h  | --help         - Print this help dialog
         -i  | --input        - Input fastq
         -d  | --directory    - Path of the input file
-        -g  | --genome_size  - Genome size, required by canu
+        -t  | --threads      - Number of threads to use
+        -j  | --njobs        - Number of jobs
         -q  | --quiet        - Suppresses debug/processing info
     \n"
 
@@ -44,8 +40,11 @@ while [[ $num_args_rem -ne 0 ]] ; do
         -d|--directory)
             DIR="$2"
             shift 2 ;;
-        -g|--genome_size)
-            GENOME_SIZE="$2"
+        -t|--threads)
+            THREADS="$2"
+            shift 2 ;;
+        -j|--njobs)
+            NJOBS="$2"
             shift 2 ;;
         -q|--quiet)
             quiet="true"
@@ -58,18 +57,13 @@ done
 
 
 
-
 module load singularity
 
-CANU="/home/tgenref/containers/grandcanyon/assembly_tools/canu_2.2--ha47f30e_0.sif"
-
-PREFIX=${INPUT%.fastq.gz}
-
-#Using default settings for complete dataset with enough coverage (10)
-singularity exec -B $PWD -B $DIR $CANU sh -c "canu -p $PREFIX -d $DIR genomeSize=${GENOME_SIZE} -pacbio-hifi $INPUT"
-
-#For testing with downsized data
-#singularity exec -B $PWD -B $DIR $CANU sh -c "canu -p $PREFIX -d $DIR stopOnLowCoverage=0.1 minInputCoverage=0.1 genomeSize=${GENOME_SIZE} -pacbio-hifi $INPUT"
+PBIPA="/home/tgenref/containers/grandcanyon/pacbio/pbipa_1.8.0--h6ead514_2.sif"
 
 
+singularity exec -B $PWD -B $DIR $PBIPA sh -c "ipa local --nthreads $THREADS --njobs $NJOBS --run-dir $DIR -i $INPUT"
+
+#resume run
+#singularity exec -B $PWD -B $DIR $PBIPA sh -c "ipa local --nthreads $THREADS --njobs $NJOBS --run-dir $DIR -i $INPUT --resume"
 
