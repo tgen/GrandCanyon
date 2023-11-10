@@ -102,10 +102,10 @@
       --out-format vcf \
       --pfix "_tempf_" \
       {% if sample.rgpl|lower in ('ont') %}
-      --mode 'nanopore'
+      --mode 'nanopore' \
       --pl 'nanopore' \
       {% elif sample.rgpl|lower in ('hifi', 'ccs', 'clr') %}
-      --mode 'nanopore' \
+      --mode 'pacbio' \
       --pl 'pacbio' \
       {% endif %}
       --clip-length 15 \
