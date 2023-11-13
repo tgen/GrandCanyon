@@ -29,7 +29,7 @@
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
-    /opt/deepvariant/bin/run_deepvariant \
+    run_deepvariant \
       {% if sample.rgpl|lower in ('ont') %}
       --model_type ONT_R104 \
       {% elif sample.rgpl|lower in ('hifi', 'ccs', 'clr') %}

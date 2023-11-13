@@ -107,7 +107,7 @@
   output:
     - {{ all_vcf }}
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz
-  cpus: 1
+  cpus: 8
   mem: 48G
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
@@ -123,12 +123,13 @@
     cd "{{ temp_dir }}"
 
     postprocess_variants \
-        --ref "{{ constants.grandcanyon.reference_fasta }}" \
-        --infile "{{ sample.name }}.cvo.tfrecord.gz" \
-        --outfile "${PROJECT_ROOT}/{{ all_vcf }}" \
-        --novcf_stats_report \
-        --nonvariant_site_tfrecord_path "${PROJECT_ROOT}/{{ temp_dir }}/{{ sample.name }}.gvcf.tfrecord@{{ nshards }}.gz" \
-        --gvcf_outfile "${PROJECT_ROOT}/{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz"
+      --cpus 8 \
+      --ref "{{ constants.grandcanyon.reference_fasta }}" \
+      --infile "{{ sample.name }}.cvo.tfrecord.gz" \
+      --outfile "${PROJECT_ROOT}/{{ all_vcf }}" \
+      --novcf_stats_report \
+      --nonvariant_site_tfrecord_path "${PROJECT_ROOT}/{{ temp_dir }}/{{ sample.name }}.gvcf.tfrecord@{{ nshards }}.gz" \
+      --gvcf_outfile "${PROJECT_ROOT}/{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz"
 
 
 - name: deepvariant_filter_variants_{{ sample.name }}_{{ aligner }}
