@@ -18,6 +18,8 @@ constants:
     cytocad:
       container: quay.io/biocontainers/cytocad:1.0.3--py310h4b81fae_2
     deepvariant:
+      container: google/deepvariant:1.6.0
+    deepvariant-gpu:
       container: google/deepvariant:1.6.0-gpu
     dysgu:
       container: quay.io/biocontainers/dysgu:1.6.2--py310h770aed0_0

@@ -79,7 +79,7 @@
   mem: 40G
   walltime: "24:00:00"
   queue_preset: "DEEPVARIANT"
-  container: {{ constants.tools.deepvariant.container }}
+  container: {{ constants.tools.deepvariant-gpu.container }}
   cmd: |
     set -eu
     set -o pipefail
