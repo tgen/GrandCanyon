@@ -15,13 +15,14 @@
 {% set samples = {} %}
 
 {% for file in dataFiles %}
-    {% set bn = file.path | basename %}
+    {% set bn = file.fastqPath | basename %}
     {% set name = file.sampleName %}
 
     {% do file.update({'name': name}) %}
     {% do file.update({'basename': bn}) %}
     {% do file.update({'gltype': file.glType.lower()}) %}
     {% do file.update({'glprep': file.glPrep.lower()}) %}
+    {% do file.update({'path': file.fastqPath}) %}
 
     {% if 'subGroup' not in file %}
         {% do file.update({'subGroup': 'constitutional'}) %}
