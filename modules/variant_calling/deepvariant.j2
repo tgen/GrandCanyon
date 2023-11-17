@@ -1,10 +1,10 @@
-{%- macro deepvariant(sample, aligner='bwa', taskPrefix='Genome') %}
+{%- macro deepvariant(sample, taskPrefix='Genome') %}
 
-{%- set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/deepvariant/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/deepvariant/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.all.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.pass.vcf.gz{% endset %}
+{%- set bam %}{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.cram{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/deepvariant/{{ sample.name }}_minimap2{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/deepvariant/{{ sample.name }}_minimap2{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.pass.vcf.gz{% endset %}
 
 {%- set nshards=40 %}
 {% for i in range(nshards) %}
@@ -12,7 +12,7 @@
 {% set iteration = ('00000' + i|string)|reverse|truncate(5, True, '', 0)|reverse %}
 {% set stop = ('00000' + nshards|string)|reverse|truncate(5, True, '', 0)|reverse %}
 
-- name: deepvariant_make_examples_{{ sample.name }}_{{ aligner }}_shard{{ i }}
+- name: deepvariant_make_examples_{{ sample.name }}_minimap2_shard{{ i }}
   tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
   input:
     - {{ bam }}
@@ -65,7 +65,7 @@
 
 {% endfor %}
 
-- name: deepvariant_call_variants_{{ sample.name }}_{{ aligner }}
+- name: deepvariant_call_variants_{{ sample.name }}_minimap2
   tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
   reset: predecessors
   input:
@@ -99,7 +99,7 @@
       --outfile "{{ sample.name }}.cvo.tfrecord.gz"
 
 
-- name: deepvariant_postprocess_variants_{{ sample.name }}_{{ aligner }}
+- name: deepvariant_postprocess_variants_{{ sample.name }}_minimap2
   tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
   reset: predecessors
   input:
@@ -107,7 +107,7 @@
     - {{ constants.grandcanyon.reference_fasta }}
   output:
     - {{ all_vcf }}
-    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz
+    - {{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.all.g.vcf.gz
   cpus: 20
   mem: 120G
   walltime: "24:00:00"
@@ -130,10 +130,10 @@
       --outfile "${PROJECT_ROOT}/{{ all_vcf }}" \
       --novcf_stats_report \
       --nonvariant_site_tfrecord_path "${PROJECT_ROOT}/{{ temp_dir }}/{{ sample.name }}.gvcf.tfrecord@{{ nshards }}.gz" \
-      --gvcf_outfile "${PROJECT_ROOT}/{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz"
+      --gvcf_outfile "${PROJECT_ROOT}/{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.all.g.vcf.gz"
 
 
-- name: deepvariant_filter_variants_{{ sample.name }}_{{ aligner }}
+- name: deepvariant_filter_variants_{{ sample.name }}_minimap2
   tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
   input:
     - {{ all_vcf }}

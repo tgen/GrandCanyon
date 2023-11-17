@@ -1,12 +1,12 @@
-{% macro longshot(sample, aligner) %}
+{% macro longshot(sample) %}
 
-{%- set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/longshot/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/longshot/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.longshot.all.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.longshot.pass.vcf.gz{% endset %}
+{%- set bam %}{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.cram{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/longshot/{{ sample.name }}_minimap2{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/longshot/{{ sample.name }}_minimap2{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.longshot.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.longshot.pass.vcf.gz{% endset %}
 
-- name: longshot_{{ sample.name }}_{{ aligner }}
+- name: longshot_{{ sample.name }}_minimap2
   input:
     - {{ bam }}
     - {{ bam }}.bai

@@ -58,23 +58,6 @@
     {% do samples[name]['read_groups'][rgid].update({'bam_files': bam_files}) %}
 {% endfor %}
 
-{% for sample in samples.values() %}
-    {% do sample.update({'aligners': []}) %}
-
-    {% if sample.gltype in ['genome', 'exome'] %}
-        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_bwa"]|default(true) %}
-            {% do sample.aligners.append('minimap2') %}
-        {% endif %}
-    {% endif %}
-
-    {% if sample.gltype in 'rna' %}
-        {# default to adding star as aligner until we have more than one aligner #}
-        {% if tasks.RNA_alignment_rna_alignment_STAR|default(true) %}
-            {% do sample.aligners.append('minimap2') %}
-        {% endif %}
-    {% endif %}
-{% endfor %}
-
 {# Copy fastqs to project dir #}
 {% for file in dataFiles %}
   {% if file.fileType == "fastq" %}

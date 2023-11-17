@@ -1,13 +1,13 @@
-{% macro dysgu(sample, aligner) %}
+{% macro dysgu(sample) %}
 
-{%- set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/dysgu/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/dysgu/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set discordant_bam %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.discordant.bam{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.dysgu.all.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.dysgu.pass.vcf.gz{% endset %}
+{%- set bam %}{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.cram{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/dysgu/{{ sample.name }}_minimap2{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/dysgu/{{ sample.name }}_minimap2{% endset %}
+{%- set discordant_bam %}{{ results_dir }}/{{ sample.name }}.minimap2.discordant.bam{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.dysgu.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.dysgu.pass.vcf.gz{% endset %}
 
-- name: dysgu_fetch_{{ sample.name }}_{{ aligner }}
+- name: dysgu_fetch_{{ sample.name }}_minimap2
   input:
     - {{ bam }}
     - {{ bam }}.bai
@@ -79,7 +79,7 @@
 #  --help                     Show this message and exit.
 #}
 
-- name: dysgu_call_{{ sample.name }}_{{ aligner }}
+- name: dysgu_call_{{ sample.name }}_minimap2
   input:
     - {{ bam }}
     - {{ bam }}.bai
@@ -217,7 +217,7 @@
 #  --help                          Show this message and exit.
 #}
 
-- name: dysgu_filter_{{ sample.name }}_{{ aligner }}
+- name: dysgu_filter_{{ sample.name }}_minimap2
   input:
     - {{ all_vcf }}
   output:

@@ -91,15 +91,15 @@ Advanced:
                         The ratio of reads remained in cluster. Set lower when the alignment data have high quality but recommand over 0.5.[1.0]
 #}
 
-{% macro cutesv(sample, aligner) %}
+{% macro cutesv(sample) %}
 
-{%- set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/cutesv/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/cutesv/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cutesv.all.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cutesv.pass.vcf.gz{% endset %}
+{%- set bam %}{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.cram{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/cutesv/{{ sample.name }}_minimap2{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/cutesv/{{ sample.name }}_minimap2{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.cutesv.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.cutesv.pass.vcf.gz{% endset %}
 
-- name: cutesv_{{ sample.name }}_{{ aligner }}
+- name: cutesv_{{ sample.name }}_minimap2
   input:
     - {{ bam }}
     - {{ bam }}.bai

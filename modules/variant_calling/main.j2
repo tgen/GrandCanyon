@@ -12,21 +12,19 @@
 
 {%- for sample in samples.values() if sample.gltype in ('exome', 'genome', 'genomephased') %}
 
-  {% for aligner in sample.aligners %}
-    {%- if sample.subGroup|lower != 'tumor' %}
-      {{- deepvariant(sample, aligner) }}
-      {{- cutesv(sample, aligner) }}
-      {{- longshot(sample, aligner) }}
-      {{- sniffles(sample, aligner) }}
-      {{- severus(sample, aligner) }}
-      {{- dysgu(sample, aligner) }}
-      {{- cytocad(sample, aligner) }}
-      {% if sample.rgpl in ('PACBIO') %}
-        {{- pbsv(sample, aligner) }}
-        {{- hifi_cnv(sample, aligner) }}
-      {% endif %}
+  {%- if sample.subGroup|lower != 'tumor' %}
+    {{- deepvariant(sample) }}
+    {{- cutesv(sample) }}
+    {{- longshot(sample) }}
+    {{- sniffles(sample) }}
+    {{- severus(sample) }}
+    {{- dysgu(sample) }}
+    {{- cytocad(sample) }}
+    {% if sample.rgpl in ('PACBIO') %}
+      {{- pbsv(sample) }}
+      {{- hifi_cnv(sample) }}
     {% endif %}
-  {% endfor %}
+  {% endif %}
 
 {% endfor %}
 
