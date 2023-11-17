@@ -30,9 +30,9 @@
     mkdir -p {{ results_dir }}
 
     run_deepvariant \
-      {% if sample.rgpl|lower in ('ont') %}
+      {% if sample.rgpl in ('ONT') %}
       --model_type ONT_R104 \
-      {% elif sample.rgpl|lower in ('hifi', 'ccs', 'clr') %}
+      {% elif sample.rgpl in ('PACBIO') %}
       --model_type PACBIO \
       {% endif %}
       --ref {{ constants.grandcanyon.reference_fasta }} \

@@ -11,11 +11,11 @@
     {% for sample in group %}
       {% set log_msg %}Parsing {{ sample.name }}{% endset %}
       {{ log(log_msg, level='WARNING') }}
-      {% if sample.rgpl|lower in ('ont') %}
+      {% if sample.rgpl in ('ONT') %}
         {% do pair.ont.append(sample) %}
         {% set log_msg %}{{ sample.name }} was added to ont list{% endset %}
         {{ log(log_msg, level='WARNING') }}
-      {% elif sample.rgpl|lower in ('hifi', 'ccs', 'clr') %}
+      {% elif sample.rgpl in ('PACBIO') %}
         {% do pair.pacbio.append(sample) %}
         {% set log_msg %}{{ sample.name }} was added to pacbio list{% endset %}
         {{ log(log_msg, level='WARNING') }}

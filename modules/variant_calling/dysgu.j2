@@ -39,9 +39,9 @@
       --procs 8 \
       --overwrite \
       --pfix "_tempf_" \
-      {% if sample.rgpl|lower in ('ont') %}
+      {% if sample.rgpl in ('ONT') %}
       --pl 'nanopore' \
-      {% elif sample.rgpl|lower in ('hifi', 'ccs', 'clr') %}
+      {% elif sample.rgpl in ('PACBIO') %}
       --pl 'pacbio' \
       {% endif %}
       {{ temp_dir }} {{ bam }}
@@ -101,10 +101,10 @@
       --svs-out {{ all_vcf }} \
       --out-format vcf \
       --pfix "_tempf_" \
-      {% if sample.rgpl|lower in ('ont') %}
+      {% if sample.rgpl in ('ONT') %}
       --mode 'nanopore' \
       --pl 'nanopore' \
-      {% elif sample.rgpl|lower in ('hifi', 'ccs', 'clr') %}
+      {% elif sample.rgpl in ('PACBIO') %}
       --mode 'pacbio' \
       --pl 'pacbio' \
       {% endif %}

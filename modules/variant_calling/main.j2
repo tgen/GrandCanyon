@@ -23,7 +23,7 @@
       {{- severus(sample, aligner) }}
       {{- dysgu(sample, aligner) }}
       {{- cytocad(sample, aligner) }}
-      {% if sample.rgpl|lower in ('hifi', 'ccs', 'clr') %}
+      {% if sample.rgpl in ('PACBIO') %}
         {{- pbsv(sample, aligner) }}
         {{- hifi_cnv(sample, aligner) }}
       {% endif %}
