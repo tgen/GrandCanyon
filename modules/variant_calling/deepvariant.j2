@@ -23,7 +23,7 @@
     - {{ temp_dir }}/{{ sample.name }}.gvcf.tfrecord-{{ iteration }}-of-{{ stop }}.gz
   cpus: 1
   mem: 4G
-  walltime: "24:00:00"
+  walltime: "6:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.deepvariant.container }}
   cmd: |
@@ -80,7 +80,7 @@
   mem: 40G
   walltime: "24:00:00"
   queue_preset: "DEEPVARIANT"
-  container: {{ constants.tools.deepvariant-gpu.container }}
+  container: {{ constants.tools.deepvariant.container }}
   cmd: |
     set -eu
     set -o pipefail
@@ -108,8 +108,8 @@
   output:
     - {{ all_vcf }}
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz
-  cpus: 8
-  mem: 48G
+  cpus: 20
+  mem: 120G
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.deepvariant.container }}
@@ -124,7 +124,7 @@
     cd {{ temp_dir }}
 
     postprocess_variants \
-      --cpus 8 \
+      --cpus 20 \
       --ref "{{ constants.grandcanyon.reference_fasta }}" \
       --infile "{{ sample.name }}.cvo.tfrecord.gz" \
       --outfile "${PROJECT_ROOT}/{{ all_vcf }}" \
