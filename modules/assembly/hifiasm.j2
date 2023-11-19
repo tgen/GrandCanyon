@@ -40,12 +40,12 @@
 
     hifiasm \
       -t 20 \
-      -o {{ results_dir }}/{{ pair.rgsm }}.asm \
       {% if ontfqlist | length > 0 %}
       --ul "{{ ontfqlist | join(',') }}" \
       {% endif %}
       {% if pacbiofqlist | length > 0 %}
       "{{ pacbiofqlist | join(',') }}" \
       {% endif %}
+      -o {{ results_dir }}/{{ pair.rgsm }}.asm
 
 {% endmacro %}
