@@ -53,18 +53,19 @@
 {% set results_dir %}{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}{% endset %}
 
 {% for rgid, rg in sample.read_groups.items() %}
-- name: minimap2_{{ sample.name }}_{{ ubam.rgid }}
+- name: minimap2_{{ sample.name }}_{{ rgid }}
   input:
     - {{ constants.grandcanyon.reference_fasta }}
     {% for file in rg.data_files %}
     - temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz
     {% endfor %}
   output:
-    - {{ temp_dir }}/st_sort_temp/{{ ubam.rgid }}
+    - {{ temp_dir }}/st_sort_temp/{{ rgid }}
     {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
-    - {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
+    - {{ temp_dir }}/{{ rg.rgid }}/{{ sample.name }}_{{ rgid }}.cram
     {% else %}
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram.crai
     {% endif %}
   cpus: 20
   mem: 60G
@@ -75,20 +76,20 @@
     set -eu
     set -o pipefail
 
-    rm -r {{ temp_dir }}/st_sort_temp/{{ ubam.rgid }} || true
-    mkdir -p {{ temp_dir }}/st_sort_temp/{{ ubam.rgid }}
+    rm -r {{ temp_dir }}/st_sort_temp/{{ rgid }} || true
+    mkdir -p {{ temp_dir }}/st_sort_temp/{{ rgid }}
     mkdir -p {{ results_dir }}
 
     minimap2 \
       -t 20 \
-      {% if ubam.rgpl == 'PACBIO' %}
+      {% if rg.rgpl == 'PACBIO' %}
       {% if tasks.minimap2_alignment_pacbio_maphifi|default(true) %}
       -x map-hifi \
       {% elif tasks.minimap2_alignment_pacbio_pbmm2|default(false) %}
       -k 19 -w 19 -u -o 6 -O 26 -e 2 -E 1 -A 1 -B 4 -z 400 -Z 50 -r 2000 -g 5000 \
       --eqx \
       {% endif %}
-      {% elif ubam.rgpl == 'ONT' %}
+      {% elif rg.rgpl == 'ONT' %}
       -x map-ont \
       {% else %}
       -x sr \
@@ -104,9 +105,9 @@
     | samtools sort \
       --threads 20 \
       --reference {{ constants.grandcanyon.reference_fasta }} \
-      -T {{ temp_dir }}/st_sort_temp/{{ ubam.rgid }} \
+      -T {{ temp_dir }}/st_sort_temp/{{ rg.rgid }} \
       {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
-      -o {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram \
+      -o {{ temp_dir }}/{{ rg.rgid }}/{{ sample.name }}_{{ rgid }}.cram \
       {% else %}
       -o {{ results_dir }}/{{ sample.name }}.minimap2.cram \
       {% endif %}
@@ -124,7 +125,9 @@
   {% for rgid, rg in sample.read_groups.items() %}
     - {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
   {% endfor %}
-  output: {{ results_dir }}/{{ sample.name }}.minimap2.cram
+  output: 
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram.crai
   walltime: "24:00:00"
   cpus: 4
   mem: 8G
@@ -155,6 +158,27 @@
 
 {% endif %}
 
-- name: 
+- name: minimap2_samtools_create_temp_bam_{{ sample.name }}
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
+  input: {{ results_dir }}/{{ sample.name }}.minimap2.cram
+  output: 
+    - {{ temp_dir }}/{{ sample.name }}.minimap2.bam
+    - {{ temp_dir }}/{{ sample.name }}.minimap2.bam.bai
+  walltime: "24:00:00"
+  cpus: 8
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
+  digest: {{ constants.tools.minimap2.digest }}
+  cmd: |
+
+    samtools view \
+      -@ 8 \
+      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --no-PG \
+      -o {{ temp_dir }}/{{ sample.name }}.minimap2.bam \
+      --write-index \
+      {{ results_dir }}/{{ sample.name }}.minimap2.cram
+
 
 {% endmacro %}

@@ -93,13 +93,14 @@ Advanced:
 
 {% macro cutesv(sample) %}
 
-{%- set bam %}{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.cram{% endset %}
+{%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
 {%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/cutesv/{{ sample.name }}_minimap2{% endset %}
 {%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/cutesv/{{ sample.name }}_minimap2{% endset %}
 {%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.cutesv.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.cutesv.pass.vcf.gz{% endset %}
 
 - name: cutesv_{{ sample.name }}_minimap2
+  reset: predecessors
   input:
     - {{ bam }}
     - {{ bam }}.bai
