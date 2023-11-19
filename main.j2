@@ -10,13 +10,16 @@
 {% from 'modules/rna/main.j2' import rna_alignment with context %}
 {% from 'modules/variant_calling/main.j2' import constitutional_variant_calling with context %}
 {% from 'modules/assembly/main.j2' import assembly with context %}
-{# {% from 'utilities/check_bam_rg_tags.j2' %} #}
 
 {% set samples = {} %}
 
 {% for file in dataFiles %}
     {% set bn = file.fastqPath | basename %}
-    {% set name = file.sampleName %}
+    {% if 'sampleMergeKey' in file %}
+        {% set name = file.sampleMergeKey %}
+    {% else %}
+        {% set name = file.sampleName %}
+    {% endif %}
 
     {% do file.update({'name': name}) %}
     {% do file.update({'basename': bn}) %}
@@ -34,28 +37,23 @@
         {% do samples[name].update({"name": name}) %}
     {% endif %}
 
-    {% if file.fileType == "bam" %}
-      {{ check_bam_rg_tags(file) }}
-    {% endif %}
 {% endfor %}
 
 {% for rgid, data_files in dataFiles | groupby('rgid') %}
     {% set rg = data_files|first %}
-    {% set name = rg.sampleName %}
+    {% if 'sampleMergeKey' in rg %}
+        {% set name = rg.sampleMergeKey %}
+    {% else %}
+        {% set name = rg.sampleName %}
+    {% endif %}
 
     {% if not 'read_groups' in samples[name] %}
         {% do samples[name].update({'read_groups': {}}) %}
     {% endif %}
 
-    {% set fastq_files = data_files|selectattr('fileType', 'eq', 'fastq') %}
-    {% set ubam_files = data_files|selectattr('fileType', 'eq', 'ubam') %}
-    {% set bam_files = data_files|selectattr('fileType', 'eq', 'bam') %}
-
     {% do samples[name]['read_groups'].update({rgid: {}}) %}
     {% do samples[name]['read_groups'][rgid].update(rg) %}
-    {% do samples[name]['read_groups'][rgid].update({'fastq_files': fastq_files}) %}
-    {% do samples[name]['read_groups'][rgid].update({'ubam_files': ubam_files}) %}
-    {% do samples[name]['read_groups'][rgid].update({'bam_files': bam_files}) %}
+    {% do samples[name]['read_groups'][rgid].update({'data_files': data_files}) %}
 {% endfor %}
 
 {# Copy fastqs to project dir #}
