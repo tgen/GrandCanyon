@@ -53,11 +53,12 @@
 {% set results_dir %}{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}{% endset %}
 
 {% for rgid, rg in sample.read_groups.items() %}
-{% for ubam in rg.ubam_files %}
 - name: minimap2_{{ sample.name }}_{{ ubam.rgid }}
   input:
     - {{ constants.grandcanyon.reference_fasta }}
-    - temp/ubams/{{ ubam.basename }}
+    {% for file in rg.data_files %}
+    - temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz
+    {% endfor %}
   output:
     - {{ temp_dir }}/st_sort_temp/{{ ubam.rgid }}
     {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
@@ -78,29 +79,29 @@
     mkdir -p {{ temp_dir }}/st_sort_temp/{{ ubam.rgid }}
     mkdir -p {{ results_dir }}
 
-    samtools fastq \
-      --threads 10 \
-      -T '*' \
-      temp/ubams/{{ ubam.basename }} |\
     minimap2 \
       -t 20 \
-      {% if ubam.rgpl|lower == 'hifi' %}
+      {% if ubam.rgpl == 'PACBIO' %}
+      {% if tasks.minimap2_alignment_pacbio_maphifi|default(true) %}
       -x map-hifi \
-      {% elif ubam.rgpl|lower == 'pbmm2' %}
+      {% elif tasks.minimap2_alignment_pacbio_pbmm2|default(false) %}
       -k 19 -w 19 -u -o 6 -O 26 -e 2 -E 1 -A 1 -B 4 -z 400 -Z 50 -r 2000 -g 5000 \
       --eqx \
-      {% elif ubam.rgpl|lower == 'ont' %}
+      {% endif %}
+      {% elif ubam.rgpl == 'ONT' %}
       -x map-ont \
       {% else %}
-      -x map-ont \
+      -x sr \
       {% endif %}
       -a \
       -Y \
       -L \
       --secondary=no \
       {{ constants.grandcanyon.reference_fasta }} \
-      /dev/stdin |\
-    samtools sort \
+      {% for file in rg.data_files %}
+      temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz \
+      {% endfor %}
+    | samtools sort \
       --threads 20 \
       --reference {{ constants.grandcanyon.reference_fasta }} \
       -T {{ temp_dir }}/st_sort_temp/{{ ubam.rgid }} \
@@ -109,16 +110,14 @@
       {% else %}
       -o {{ results_dir }}/{{ sample.name }}.minimap2.cram \
       {% endif %}
-      --output-fmt CRAM,version=3.1 \
-      --output-fmt-option embed_ref \
+      --output-fmt CRAM \
       --write-index \
       -
 
 {% endfor %}
-{% endfor %}
 
 {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
-- name: chunked_samtools_merge_crams_{{ sample.name }}
+- name: minimap2_samtools_merge_rgids_{{ sample.name }}
   tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
   reset: predecessors
   input:
@@ -155,5 +154,7 @@
       {% endfor %}
 
 {% endif %}
+
+- name: 
 
 {% endmacro %}

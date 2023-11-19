@@ -2,17 +2,22 @@
 
 - name: copy_ubams_{{ ubam.basename | replace(".", "_") }}
   input: {{ ubam.path }}
-  output: temp/ubams/{{ ubam.basename }}
+  output: temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
   retry: 2
   cpus: 6
   walltime: "4:00:00"
   queue_preset: "DATA-MOVER"
+  container: {{ constants.tools.samtools.container }}
   cmd: |
     set -uev
 
-    mkdir -p temp/ubams/
+    mkdir -p temp/fastqs/
 
-    rsync "{{ ubam.path }}" "temp/ubams/"
+    samtools fastq \
+      --threads 6 \
+      -T '*' \
+      {{ ubam.path }} \
+      > temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
 
 {% endmacro %}
 
