@@ -1,3 +1,5 @@
+{% from 'utilities/read_group_line.j2' import read_group_line with context %}
+
 {% macro minimap2(sample) %}
 
 {#
@@ -98,6 +100,7 @@
       -Y \
       -L \
       --secondary=no \
+      -R "{{ read_group_line(rg, format='minimap2') }}" \
       {{ constants.grandcanyon.reference_fasta }} \
       {% for file in rg.data_files %}
       temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz \
@@ -133,7 +136,6 @@
   mem: 8G
   queue_preset: "DEFAULT"
   container: {{ constants.tools.minimap2.container }}
-  digest: {{ constants.tools.minimap2.digest }}
   cmd: |
     set -eu
     set -o pipefail
@@ -169,7 +171,6 @@
   mem: 8G
   queue_preset: "DEFAULT"
   container: {{ constants.tools.minimap2.container }}
-  digest: {{ constants.tools.minimap2.digest }}
   cmd: |
 
     samtools view \

@@ -13,11 +13,12 @@
 
     mkdir -p temp/fastqs/
 
+    {# we currently expect ont style input, which isn't paired so we output to -0 #}
     samtools fastq \
       --threads 6 \
       -T '*' \
       {{ ubam.path }} \
-      > temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
+      -0 temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
 
 {% endmacro %}
 
