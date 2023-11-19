@@ -1,8 +1,12 @@
+{% from 'modules/assembly/flye.j2' import flye with context %}
+{% from 'modules/assembly/hifiasm.j2' import hifiasm with context %}
+
 {%- macro assembly(samples) %}
 
   {% set pairs = [] %}
   {% for rgsm, group in samples.values() | groupby('rgsm') %}
     {% set pair = {'rgsm': rgsm} %}
+    {% do pair.update({'gltype': 'genome'}) %}
     {% do pair.update({'ont': []}) %}
     {% do pair.update({'pacbio': []}) %}
     {% do pair.update({'short': []}) %}
@@ -12,20 +16,25 @@
       {% set log_msg %}Parsing {{ sample.name }}{% endset %}
       {{ log(log_msg, level='WARNING') }}
       {% if sample.rgpl in ('ONT') %}
-        {% do pair.ont.append(sample) %}
+        {% do pair.ont.append(sample.read_groups.values()) %}
         {% set log_msg %}{{ sample.name }} was added to ont list{% endset %}
         {{ log(log_msg, level='WARNING') }}
       {% elif sample.rgpl in ('PACBIO') %}
-        {% do pair.pacbio.append(sample) %}
+        {% do pair.pacbio.append(sample.read_groups.values()) %}
         {% set log_msg %}{{ sample.name }} was added to pacbio list{% endset %}
         {{ log(log_msg, level='WARNING') }}
       {% else %}
-        {% do pair.short.append(sample) %}
+        {% do pair.short.append(sample.read_groups.values()) %}
         {% set log_msg %}{{ sample.name }} did not match ont or pacbio patterns, so it is assumed to be short read data{% endset %}
         {{ log(log_msg, level='WARNING') }}
       {% endif %}
     {% endfor %}
     {% do pairs.append(pair) %}
+  {% endfor %}
+
+  {% for pair in pairs %}
+    {{- flye(pair) }}
+    {{- hifiasm(pair) }}
   {% endfor %}
 
 {% endmacro %}
