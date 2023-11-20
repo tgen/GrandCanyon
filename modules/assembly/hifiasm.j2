@@ -20,6 +20,7 @@
   {% endfor %}
 {% endfor %}
 
+{% if pacbiofqlist | length > 0 %}
 - name: hifiasm_{{ pair.rgsm }}
   input:
     {% for ontfq in ontfqlist %}
@@ -40,12 +41,16 @@
 
     hifiasm \
       -t 20 \
+      -o {{ results_dir }}/{{ pair.rgsm }}.asm \
       {% if ontfqlist | length > 0 %}
       --ul "{{ ontfqlist | join(',') }}" \
       {% endif %}
       {% if pacbiofqlist | length > 0 %}
-      "{{ pacbiofqlist | join(',') }}" \
+      "{{ pacbiofqlist | join(',') }}"
       {% endif %}
-      -o {{ results_dir }}/{{ pair.rgsm }}.asm
 
+{% else %}
+  {% set log_msg %}hifiasm was enabled, but no pacbio data was found. Hifiasm requires pacbio input data, so this task was skipped{% endset %}
+  {{ log(log_msg, level='WARNING') }}
+{% endif %}
 {% endmacro %}
