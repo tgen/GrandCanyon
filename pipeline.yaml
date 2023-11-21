@@ -37,6 +37,8 @@ constants:
       container: quay.io/biocontainers/longshot:0.4.5--hd175d40_2
     lorax:
       container: quay.io/biocontainers/lorax:0.3.8--hb7e2ac5_0
+    margin:
+      container: /home/tgenref/containers/margin_latest.sif
     medaka:
       container: quay.io/biocontainers/medaka:1.11.1--py310h87e71ce_0
     minimap2:

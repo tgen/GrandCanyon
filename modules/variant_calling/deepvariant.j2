@@ -1,4 +1,5 @@
 {% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
+{% from 'modules/variant_calling/margin_phasing.j2' import margin with context %}
 
 {%- macro deepvariant(sample, taskPrefix='Genome') %}
 
@@ -165,7 +166,7 @@
 
     bcftools index --tbi --force "{{ pass_vcf }}"
 
-
+{{- margin(sample, pass_vcf) }}
 {{- annotate_vcfs(sample, temp_dir, results_dir, pass_vcf, taskPrefix, 'minimap2', 'deepvariant', 'constitutional') }}
 
 {% endmacro %}
