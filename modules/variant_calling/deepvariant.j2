@@ -166,6 +166,6 @@
     bcftools index --tbi --force "{{ pass_vcf }}"
 
 
-{{- annotate_vcfs(sample, temp_dir, results_dir, pass_vcf, taskPrefix, aligner, 'deepvariant', 'constitutional') }}
+{{- annotate_vcfs(sample, temp_dir, results_dir, pass_vcf, taskPrefix, 'minimap2', 'deepvariant', 'constitutional') }}
 
 {% endmacro %}

@@ -1,5 +1,3 @@
-{% from 'modules/qc/split_bam.j2' import split_bam with context %}
-
 {% from 'modules/qc/bam_qc_all.j2' import bam_qc_samtools_stats with context %}
 
 {% macro bam_qc(sample, aligner='minimap2') %}
@@ -7,6 +5,14 @@
     {% set sample_lbs = sample.read_groups.values()|groupby('rglb') %}
     {% set libraryCount = sample_lbs|length %}
     {% set sample_lb = sample_lbs[0][0] %}
+
+    {% if sample.gltype == 'rna' %}
+      {% set taskPrefix = 'RNA' %}
+    {% elif sample.gltype == 'exome' %}
+      {% set taskPrefix = 'Exome' %}
+    {% elif sample.gltype == 'genome' %}
+      {% set taskPrefix = 'Genome' %}
+    {% endif %}
 
     {# Tasks performed on all bams #}
     {{- bam_qc_samtools_stats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner) }}
