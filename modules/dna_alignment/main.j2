@@ -1,9 +1,11 @@
 {% from 'modules/dna_alignment/minimap2.j2' import minimap2 with context %}
+{% from 'modules/qc/main.j2' import bam_qc with context %}
 
 {% macro dna_alignment(samples) %}
 
   {% for sample in samples.values() if sample.gltype in ['genome', 'genomephased', 'exome'] %}
     {{- minimap2(sample) }}
+    {{- bam_qc(sample, aligner='minimap2')}}
   {% endfor %}
 
 {% endmacro %}

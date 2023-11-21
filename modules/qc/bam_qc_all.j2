@@ -1,0 +1,75 @@
+# These macros are run on bams from the dna_alignment and the star_quant modules.
+# A cram is made for each bam followed by running BAM qc steps with samtools and gatk.
+# Currently supports any sample.
+
+{% macro bam_qc_samtools_stats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner='minimap2', bam_level=true) %}
+{% if tasks[taskPrefix+"_quality_control_stats_samtools_stats"]|default(true) %}
+
+  {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+
+  {% if bam_level is sameas false %}
+    {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
+    {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
+    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam{% endset %}
+  {% else %}
+    {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
+    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+  {% endif %}
+
+- name: samtools_stats_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, stats, samtools_stats, {{ sample.name }}]
+  methods: Quality control metrics for {{ sample.name }} ({{ aligner }}) were generated with samtools stats.
+  input: 
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon.reference_fasta }}
+    {% endif %}
+  output:
+    - {{ results_dir }}/{{ bam|basename }}.bamstats.txt
+    {% if libraryCount == 1 %}
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.bamstats.txt
+    {% endif %}
+  {% if bam_level is sameas false %}
+  reset: predecessors
+  {% endif %}
+  walltime: "4:00:00"
+  cpus: 4
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  digest: {{ constants.tools.samtools.digest }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ results_dir }}"
+
+    {#
+      samtools view
+        -q INT   only include reads with mapping quality >= INT [0]
+        -h       include header in SAM output
+
+      samtools stats
+       --filtering-flag 256
+            not primary alignment (0x100)
+       --coverage <int>,<int>,<int>    Coverage distribution min,max,step [1,1000,1]
+    #}
+    samtools view \
+      --threads 4 \
+      -q 10 \
+      -h \
+      --reference {{ constants.grandcanyon.reference_fasta }} \
+      "{{ bam }}" \
+      | \
+    samtools stats \
+      --GC-depth 100 \
+      --filtering-flag 256 \
+      --coverage 1,2500,1 \
+      --reference "{{ constants.grandcanyon.reference_fasta }}" \
+      > "{{ results_dir }}/{{ bam|basename }}.bamstats.txt"
+
+    {% if libraryCount == 1 %}
+      cp {{ results_dir }}/{{ bam|basename }}.bamstats.txt {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.bamstats.txt
+    {% endif %}
+
+{% endmacro %}
