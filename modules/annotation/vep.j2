@@ -1,6 +1,6 @@
-{% macro vep(sample_or_pair, results_dir, input_vcf, variant_caller, final_vcf_prefix, analysis_type) %}
+{% macro vep(sample_or_pair, results_dir, input_vcf, variant_caller, final_vcf_prefix, aligner, analysis_type) %}
 
-- name: vep_all_{{ variant_caller }}_{{ sample_or_pair.name }}_minimap2
+- name: vep_all_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ analysis_type }}, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
     - {{ input_vcf }}
@@ -46,7 +46,7 @@
         --flag_pick_allele_gene \
         --pick_order mane,canonical,appris,tsl,biotype,ccds,rank,length
 
-- name: vep_all_bcftools_compress_{{ variant_caller }}_{{ sample_or_pair.name }}_minimap2
+- name: vep_all_bcftools_compress_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ analysis_type }}, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
     - {{ final_vcf_prefix }}.vep.full.vcf
@@ -73,7 +73,7 @@
 
     bcftools index --threads 4 --force --tbi "{{ final_vcf_prefix }}.vep.full.vcf.gz"
 
-- name: vep_con_{{ variant_caller }}_{{ sample_or_pair.name }}_minimap2
+- name: vep_con_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ analysis_type }}, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
     - {{ input_vcf }}
@@ -119,7 +119,7 @@
         --pick_allele_gene \
         --pick_order mane,canonical,appris,tsl,biotype,ccds,rank,length
 
-- name: vep_con_bcftools_compress_{{ variant_caller }}_{{ sample_or_pair.name }}_minimap2
+- name: vep_con_bcftools_compress_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ analysis_type }}, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
     - {{ final_vcf_prefix }}.vep.pick.vcf
