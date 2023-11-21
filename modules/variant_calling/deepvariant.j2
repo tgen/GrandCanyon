@@ -1,3 +1,5 @@
+{% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
+
 {%- macro deepvariant(sample, taskPrefix='Genome') %}
 
 {%- set bam %}{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.cram{% endset %}
@@ -162,5 +164,8 @@
       > "{{ pass_vcf }}"
 
     bcftools index --tbi --force "{{ pass_vcf }}"
+
+
+{{- annotate_vcfs(sample, temp_dir, results_dir, pass_vcf, taskPrefix, aligner, 'deepvariant', 'constitutional') }}
 
 {% endmacro %}

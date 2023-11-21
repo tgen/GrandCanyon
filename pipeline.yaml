@@ -57,14 +57,16 @@ constants:
       container: quay.io/biocontainers/sniffles:2.2--pyhdfd78af_0
     subread:
       container: quay.io/biocontainers/subread:2.0.6--he4a0461_0
+    vep:
+      container: ensemblorg/ensembl-vep:release_107.0
     verkko:
       container: quay.io/biocontainers/verkko:1.4.1--h48217b1_0
   grandcanyon:
     species: Homo sapiens
     genome_build: t2t_chm13
     genome_subversion_name: chm13v2
-    gene_model_name: ensembl_v110
-    gene_model_version: 110
+    gene_model_name: ensembl_v107
+    gene_model_version: 107
     reference_fasta: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa
     reference_fai: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fai
     reference_fastaSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa
@@ -74,3 +76,4 @@ constants:
     gtfSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/gene_model/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf
     transcriptome: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-cdna.fa
     transcriptomeSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/transcriptome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa
+    vep_data: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/indexed_vep_data
