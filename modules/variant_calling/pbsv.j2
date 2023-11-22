@@ -1,6 +1,6 @@
 {% macro pbsv(sample) %}
 
-{%- set bam %}{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.cram{% endset %}
+{%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
 {%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/pbsv/{{ sample.name }}_minimap2{% endset %}
 {%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/pbsv/{{ sample.name }}_minimap2{% endset %}
 {%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.pbsv.all.vcf.gz{% endset %}
@@ -23,8 +23,6 @@
     pbsv discover \
       {{ bam }} \
       {{ results_dir }}/{{ sample.name }}.svsig.gz
-
-    tabix -c '#' -s 3 -b 4 -e 4 {{ results_dir }}/{{ sample.name }}.svsig.gz
 
     pbsv call \
       {{ constants.grandcanyon.reference_fasta }} \
