@@ -5,11 +5,9 @@
   to phase a VCF generated using PacBio-HiFi data use: allParams.phase_vcf.pb-hifi.json
 #}
 
-{% macro margin(sample, input_vcf) %}
+{% macro margin(sample, input_vcf, temp_dir, results_dir, output_prefix) %}
 
 {%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/margin/{{ sample.name }}_minimap2{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/margin/{{ sample.name }}_minimap2{% endset %}
 
 - name: margin_deepvariant_{{ sample.name }}_minimap2
   input:
@@ -18,7 +16,12 @@
     - {{ bam }}.bai
     - {{ constants.grandcanyon.reference_fasta }}
   output:
-    - {{ all_vcf }}
+    - {{ results_dir }}/{{ output_prefix }}.chunks.csv
+    - {{ results_dir }}/{{ output_prefix }}.phased.vcf
+    - {{ results_dir }}/{{ output_prefix }}.phaseset.bed
+    {% if tasks.margin_phase_keep_phased_bam | default(true) %}
+    - {{ results_dir }}/{{ output_prefix }}.haplotagged.bam
+    {% endif %}
   cpus: 8
   mem: 32G
   walltime: "24:00:00"
@@ -41,6 +44,35 @@
       /opt/margin/params/phase/allParams.phase_vcf.pb-hifi.json \
       {% endif %}
       -t 8 \
-      -o {{ results_dir }}
+      {% if not tasks.margin_phase_keep_phased_bam | default(true) %}
+      --skipHaplotypeBAM \
+      {% endif %}
+      -o {{ results_dir }}/{{ output_prefix }}
+
+
+- name: margin_deepvariant_bcftools_compress_{{ sample.name }}_minimap2
+  input:
+    - {{ results_dir }}/{{ output_prefix }}.phased.vcf
+  output:
+    - {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
+    - {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz.tbi
+  walltime: "8:00:00"
+  cpus: 4
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# Convert to compressed VCF #}
+    bcftools view \
+        --threads 4 \
+        --output-type z \
+        --output-file {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz \
+        --write-index \
+        {{ results_dir }}/{{ output_prefix }}.phased.vcf
+
+    rm {{ results_dir }}/{{ output_prefix }}.phased.vcf
 
 {% endmacro %}

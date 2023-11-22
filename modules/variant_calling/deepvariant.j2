@@ -166,7 +166,9 @@
 
     bcftools index --tbi --force "{{ pass_vcf }}"
 
-{{- margin(sample, pass_vcf) }}
-{{- annotate_vcfs(sample, temp_dir, results_dir, pass_vcf, taskPrefix, 'minimap2', 'deepvariant', 'constitutional') }}
+{% set output_prefix %}{{ sample.name }}.minimap2.deepvariant{% endset %}
+{% set margin_output %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.phased.vcf.gz{% endset %}
+{{- margin(sample, pass_vcf, temp_dir, results_dir, output_prefix) }}
+{{- annotate_vcfs(sample, temp_dir, results_dir, margin_output, taskPrefix, 'minimap2', 'deepvariant', 'constitutional') }}
 
 {% endmacro %}
