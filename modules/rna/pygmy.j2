@@ -9,30 +9,12 @@
 {% set results_dir %}{{ sample.gltype }}/pygmy/{{ sample.name }}{% endset %}
 
 {% for rgid, rg in sample.read_groups.items() %}
-{% for ubam in rg.ubam_files %}
+{% for file in rg.data_files %}
 
-- name: bamtofastq_{{ sample.name }}
-  input: temp/ubams/{{ ubam.basename }}
-  output: {{ temp_dir }}/fq/{{ sample.name }}/{{ sample.name }}.fq
-  cpus: 2
-  mem: 32G
-  walltime: "4:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.samtools.container }}
-  cmd: |
-
-    {# note: this step converts uBAM from dorado to fastq #}
-    {# input: uBAM from dorado #}
-    {# output: raw fastq #}
-    {# uses -T dx option to add simplex/duplex dx flag from BAM to the fastq header #}
-
-    mkdir -p {{ temp_dir }}/fq/{{ sample.name }}
-
-    samtools fastq -T dx temp/ubams/{{ ubam.basename }} > {{ temp_dir }}/fq/{{ sample.name }}/{{ sample.name }}.fq
-
+{% set input_fastq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
 
 - name: pychopper_{{ sample.name }}
-  input: {{ temp_dir }}/fq/{{ sample.name }}/{{ sample.name }}.fq
+  input: {{ input_fastq }}
   output: {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq
   cpus: 10
   mem: 32G
@@ -55,7 +37,7 @@
       -S {{ temp_dir }}/pychopper/{{ sample.name }}/statistics.tsv \
       -u {{ temp_dir }}/pychopper/{{ sample.name }}/unclassified.fq \
       -w {{ temp_dir }}/pychopper/{{ sample.name }}/rescued.fq \
-      {{ temp_dir }}/fq/{{ sample.name }}/{{ sample.name }}.fq {{ temp_dir }}/pychopper/{{ sample.name }}/full_length_output.fq
+      {{ input_fastq }} {{ temp_dir }}/pychopper/{{ sample.name }}/full_length_output.fq
 
     cat {{ temp_dir }}/pychopper/{{ sample.name }}/full_length_output.fq {{ temp_dir }}/pychopper/{{ sample.name }}/rescued.fq \
       > {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq
