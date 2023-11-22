@@ -1,7 +1,7 @@
 {% macro hifiasm(pair) %}
 
-{%- set temp_dir %}temp/{{ pair.gltype }}/assembly/hifiasm/{{ pair.rgsm }}{% endset %}
-{%- set results_dir %}{{ pair.gltype }}/assembly/hifiasm/{{ pair.rgsm }}{% endset %}
+{%- set temp_dir %}temp/{{ pair.gltype }}/assembly/hifiasm/{{ pair.project }}{% endset %}
+{%- set results_dir %}{{ pair.gltype }}/assembly/hifiasm/{{ pair.project }}{% endset %}
 
 {% set ontfqlist = [] %}
 {% set pacbiofqlist = [] %}
@@ -21,7 +21,7 @@
 {% endfor %}
 
 {% if pacbiofqlist | length > 0 %}
-- name: hifiasm_{{ pair.rgsm }}
+- name: hifiasm_{{ pair.project }}
   input:
     {% for ontfq in ontfqlist %}
     - {{ ontfq }}
@@ -41,7 +41,7 @@
 
     hifiasm \
       -t 20 \
-      -o {{ results_dir }}/{{ pair.rgsm }}.asm \
+      -o {{ results_dir }}/{{ pair.project }}.asm \
       {% if ontfqlist | length > 0 %}
       --ul "{{ ontfqlist | join(',') }}" \
       {% endif %}
