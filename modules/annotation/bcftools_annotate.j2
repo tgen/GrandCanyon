@@ -1,20 +1,20 @@
-{% macro bcftools_annotate(sample_or_pair, temp_dir, input_vcf, taskPrefix, variant_caller, analysis_type, output_vcf, aligner='minimap2') %}
+{% macro bcftools_annotate(sample_or_pair, temp_dir, input_vcf, taskPrefix, variant_caller, output_vcf, aligner='minimap2') %}
 
 {% set output_bcf %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.{{ variant_caller }}.db.bcf{% endset %}
 
 - name: bcftools_annotate_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
-  tags: [{{ sample_or_pair.gltype }}, {{ analysis_type }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
+  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input: {{ input_vcf }}
   output:
     - {{ output_vcf }}
     - {{ output_vcf }}.tbi
-    {% if tasks[taskPrefix+"_"+analysis_type+"_annotate_vcfs_bcftools_dbsnp"]|default(false) %}
+    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_dbsnp"]|default(false) %}
     - {{ constants.grandcanyon.dbsnp }}
     {% endif %}
-    {% if tasks[taskPrefix+"_"+analysis_type+"_annotate_vcfs_bcftools_gnomad_exome"]|default(false) %}
+    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad_exome"]|default(false) %}
     - {{ constants.grandcanyon.gnomad_exome }}
     {% endif %}
-    {% if tasks[taskPrefix+"_"+analysis_type+"_annotate_vcfs_bcftools_gnomad_genome"]|default(false) %}
+    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad_genome"]|default(false) %}
     - {{ constants.grandcanyon.gnomad_genome }}
     {% endif %}
   walltime: "8:00:00"
@@ -40,7 +40,7 @@
 
     bcftools index --threads 4 --force "{{ output_bcf }}"
 
-    {% if tasks[taskPrefix+"_"+analysis_type+"_annotate_vcfs_bcftools_dbsnp"]|default(false) %}
+    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_dbsnp"]|default(false) %}
     {# annotate with dbsnp #}
     bcftools annotate \
       --threads 4 \
@@ -57,7 +57,7 @@
     bcftools index --threads 4 --force "{{ output_bcf }}"
     {% endif %}
 
-    {% if tasks[taskPrefix+"_"+analysis_type+"_annotate_vcfs_bcftools_gnomad_exome"]|default(false) %}
+    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad_exome"]|default(false) %}
     {# annotate with gnomad exome #}
     bcftools annotate \
       --threads 4 \
@@ -74,7 +74,7 @@
     bcftools index --threads 4 --force "{{ output_bcf }}"
     {% endif %}
 
-    {% if tasks[taskPrefix+"_"+analysis_type+"_annotate_vcfs_bcftools_gnomad_genome"]|default(false) %}
+    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad_genome"]|default(false) %}
     {# annotate with gnomad genome #}
     bcftools annotate \
       --threads 4 \

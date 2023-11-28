@@ -31,8 +31,12 @@
   {% endfor %}
 
   {% for pair in pairs %}
-    {{- flye(pair) }}
-    {{- hifiasm(pair) }}
+    {% if tasks[taskPrefix+"_assembly_flye"]|default(true) %}
+      {{- flye(pair) }}
+    {% endif %}
+    {% if tasks[taskPrefix+"_assembly_hifiasm"]|default(true) %}
+      {{- hifiasm(pair) }}
+    {% endif %}
   {% endfor %}
 
 {% endmacro %}

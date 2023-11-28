@@ -86,7 +86,7 @@
     samtools view -f 4 {{ results_dir }}/minimap2/{{ sample.name }}_SIRVome_mapped.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ results_dir }}/minimap2/{{ sample.name }}_SIRVome_unmapped_readLength.txt
 
 
-{% if tasks.process_SIRVome|default(true) and tasks.RNA_transcriptome_quantify_expression_salmon|default(true) %}
+{% if tasks['RNA_sirvome_enable_processing_sirvome']|default(true) and tasks['RNA_transcriptome_quantify_expression_salmon']|default(true) %}
 
 - name: minimap2_SIRV_transcriptome_{{ sample.name }}
   input:
@@ -160,7 +160,7 @@
     {#  read lengths: unmapped reads #}
     samtools view -f 4 {{ results_dir }}/minimap2/{{ sample.name }}.sorted.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ results_dir }}/minimap2/{{ sample.name }}_unmapped_readLength.txt
 
-{% if tasks.RNA_transcriptome_quantify_expression_salmon|default(true) %}
+{% if tasks['RNA_transcriptome_quantify_expression_salmon']|default(true) %}
 
 - name: minimap2_transcriptome_{{ sample.name }}
   input:
@@ -199,34 +199,34 @@
 {% endfor %}
 {% endfor %}
 
-{% if tasks.RNA_transcriptome_quantify_expression_featureCounts|default(true) %}
+{% if tasks['RNA_transcriptome_quantify_expression_featureCounts']|default(true) %}
   {% set sample_bam %}{{ results_dir }}/minimap2/{{ sample.name }}.sorted.bam{% endset %}
   {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
   {{- pygmy_featurecounts(temp_dir, results_dir, sample, sample_bam, gtf, SIRV=false) }}
-  {% if tasks.process_SIRVome | default(true) %}
+  {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set sample_bam %}{{ results_dir }}/minimap2/{{ sample.name }}_SIRVome_mapped.bam{% endset %}
     {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
     {{- pygmy_featurecounts(temp_dir, results_dir, sample, sample_bam, gtf, SIRV=true) }}
   {% endif %}
 {% endif %}
 
-{% if tasks.RNA_transcriptome_quantify_expression_salmon|default(true) %}
+{% if tasks['RNA_transcriptome_quantify_expression_salmon']|default(true) %}
   {% set transcriptome %}{{ constants.grandcanyon.transcriptome }}{% endset %}
   {% set sample_bam %}{{ results_dir }}/minimap2/{{ sample.name }}.transcriptome.bam{% endset %}
   {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, transcriptome, SIRV=false) }}
-  {% if tasks.process_SIRVome | default(true) %}
+  {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set transcriptome %}{{ constants.grandcanyon.transcriptomeSIRV }}{% endset %}
     {% set sample_bam %}{{ results_dir }}/minimap2/{{ sample.name }}_SIRVome_mapped.transcriptome.bam{% endset %}
     {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, transcriptome, SIRV=true) }}
   {% endif %}
 {% endif %}
 
-{% if tasks.RNA_transcriptome_quantify_expression_flair|default(true) %}
+{% if tasks['RNA_transcriptome_quantify_expression_flair']|default(true) %}
   {% set sample_bam %}{{ results_dir }}/minimap2/{{ sample.name }}.sorted.bam{% endset %}
   {% set reference_fasta %}{{ constants.grandcanyon.reference_fasta }}{% endset %}
   {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
   {{- pygmy_flair(temp_dir, results_dir, sample, sample_bam, reference_fasta, gtf, SIRV=false) }}
-  {% if tasks.process_SIRVome | default(true) %}
+  {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set sample_bam %}{{ results_dir }}/minimap2/{{ sample.name }}_SIRVome_mapped.bam{% endset %}
     {% set reference_fasta %}{{ constants.grandcanyon.reference_fastaSIRV }}{% endset %}
     {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
@@ -234,12 +234,12 @@
   {% endif %}
 {% endif %}
 
-{% if tasks.RNA_transcriptome_quantify_expression_isoquant|default(true) %}
+{% if tasks['RNA_transcriptome_quantify_expression_isoquant']|default(true) %}
   {% set sample_bam %}{{ results_dir }}/minimap2/{{ sample.name }}.sorted.bam{% endset %}
   {% set reference_fasta %}{{ constants.grandcanyon.reference_fasta }}{% endset %}
   {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
   {{- pygmy_isoquant(temp_dir, results_dir, sample, sample_bam, reference_fasta, gtf, SIRV=false) }}
-  {% if tasks.process_SIRVome | default(true) %}
+  {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set sample_bam %}{{ results_dir }}/minimap2/{{ sample.name }}_SIRVome_mapped.bam{% endset %}
     {% set reference_fasta %}{{ constants.grandcanyon.reference_fastaSIRV }}{% endset %}
     {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}

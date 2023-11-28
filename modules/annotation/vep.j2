@@ -1,7 +1,7 @@
-{% macro vep(sample_or_pair, results_dir, input_vcf, variant_caller, final_vcf_prefix, aligner, analysis_type) %}
+{% macro vep(sample_or_pair, results_dir, input_vcf, variant_caller, final_vcf_prefix, aligner) %}
 
 - name: vep_all_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
-  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ analysis_type }}, {{ variant_caller }}, {{ sample_or_pair.name }}]
+  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
     - {{ input_vcf }}
     - {{ constants.grandcanyon.vep_data }}
@@ -45,7 +45,7 @@
         --pick_order mane,canonical,appris,tsl,biotype,ccds,rank,length
 
 - name: vep_all_bcftools_compress_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
-  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ analysis_type }}, {{ variant_caller }}, {{ sample_or_pair.name }}]
+  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
     - {{ final_vcf_prefix }}.vep.full.vcf
   output:
@@ -72,7 +72,7 @@
     bcftools index --threads 4 --force --tbi "{{ final_vcf_prefix }}.vep.full.vcf.gz"
 
 - name: vep_con_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
-  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ analysis_type }}, {{ variant_caller }}, {{ sample_or_pair.name }}]
+  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
     - {{ input_vcf }}
     - {{ constants.grandcanyon.vep_data }}
@@ -116,7 +116,7 @@
         --pick_order mane,canonical,appris,tsl,biotype,ccds,rank,length
 
 - name: vep_con_bcftools_compress_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
-  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ analysis_type }}, {{ variant_caller }}, {{ sample_or_pair.name }}]
+  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
     - {{ final_vcf_prefix }}.vep.pick.vcf
   output:

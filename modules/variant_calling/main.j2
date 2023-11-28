@@ -13,16 +13,48 @@
 {%- for sample in samples.values() if sample.gltype in ('exome', 'genome', 'genomephased') %}
 
   {%- if sample.subGroup|lower != 'tumor' %}
-    {{- deepvariant(sample) }}
-    {{- cutesv(sample) }}
-    {{- longshot(sample) }}
-    {{- sniffles(sample) }}
-    {{- severus(sample) }}
-    {{- dysgu(sample) }}
-    {{- cytocad(sample) }}
+    {% if sample.gltype in 'exome' %}
+        {% set taskPrefix = 'Exome' %}
+    {% elif sample.gltype in 'genome' %}
+        {% set taskPrefix = 'Genome' %}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(true) %}
+      {{- deepvariant(sample) }}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_longshot"]|default(false) %}
+      {{- longshot(sample) }}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_cutesv"]|default(true) %}
+      {{- cutesv(sample) }}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
+      {{- sniffles(sample) }}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(true) %}
+      {{- severus(sample) }}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(true) %}
+      {{- dysgu(sample) }}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_cna_caller_cytocad"]|default(true) %}
+      {{- cytocad(sample) }}
+    {% endif %}
+
     {% if sample.rgpl in ('PACBIO') %}
-      {{- pbsv(sample) }}
-      {{- hifi_cnv(sample) }}
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_pbsv"]|default(false) %}
+        {{- pbsv(sample) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_hificnv"]|default(true) %}
+        {{- hifi_cnv(sample) }}
+      {% endif %}
     {% endif %}
   {% endif %}
 

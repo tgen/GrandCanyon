@@ -1,7 +1,7 @@
 {% from 'modules/annotation/bcftools_annotate.j2' import bcftools_annotate with context %}
 {% from 'modules/annotation/vep.j2' import vep with context %}
 
-{% macro annotate_vcfs(sample_or_pair, temp_dir, results_dir, input_vcf, taskPrefix, aligner, variant_caller, analysis_type) %}
+{% macro annotate_vcfs(sample_or_pair, temp_dir, results_dir, input_vcf, taskPrefix, aligner, variant_caller) %}
 
 {% if input_vcf.endswith('.vcf') %}
   {% set vcf_prefix = input_vcf.split('.')[:-1]|join('.') %}
@@ -11,7 +11,7 @@
   {{ raise('{} does not appear to be a vcf!'.format(input_vcf)) }}
 {% endif %}
 
-{% set annotate_task_prefix = taskPrefix+'_'+analysis_type+'_annotate_vcfs_bcftools_' %}
+{% set annotate_task_prefix = taskPrefix+'_variant_calling_annotate_vcfs_bcftools_' %}
 
 {% set flags = namespace({ 'bcftools': none, 'vep': none }) %}
 
@@ -27,10 +27,10 @@
   {% endfor %}
 
   {% if flags.bcftools is none %}
-    {% set flags.bcftools = true %}
+    {% set flags.bcftools = false %}
   {% endif %}
 
-  {% if tasks[taskPrefix+"_"+analysis_type+"_annotate_vcfs_vep"]|default(true) %}
+  {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_vep"]|default(true) %}
     {% set flags.vep = true %}
   {% endif %}
 {% else %}
@@ -41,17 +41,17 @@
 {% if flags.bcftools %}
 
   {% set bcftools_output %}{{ vcf_prefix }}.db.vcf.gz{% endset %}
-  {{- bcftools_annotate(sample_or_pair, temp_dir, input_vcf, taskPrefix, variant_caller, analysis_type, bcftools_output, aligner) }}
+  {{- bcftools_annotate(sample_or_pair, temp_dir, input_vcf, taskPrefix, variant_caller, bcftools_output, aligner) }}
 
   {% set vep_output %}{{ vcf_prefix }}.db.vep.pick.vcf.gz{% endset %}
   {% if flags.vep %}
-    {{- vep(sample_or_pair, results_dir, bcftools_output, variant_caller, vcf_prefix+'.db', aligner, analysis_type) }}
+    {{- vep(sample_or_pair, results_dir, bcftools_output, variant_caller, vcf_prefix+'.db', aligner) }}
   {% endif %}
 
 {% else %}
 
   {% if flags.vep %}
-    {{- vep(sample_or_pair, results_dir, input_vcf, variant_caller, vcf_prefix, aligner, analysis_type) }}
+    {{- vep(sample_or_pair, results_dir, input_vcf, variant_caller, vcf_prefix, aligner) }}
   {% endif %}
 
 {% endif %}
