@@ -12,6 +12,7 @@
 {% for file in rg.data_files %}
 
 {% set input_fastq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+{% set decompressed_fastq %}{{ temp_dir }}/pychopper/{{ sample.name }}/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq{% endset %}
 
 - name: pychopper_{{ sample.name }}
   input: {{ input_fastq }}
@@ -29,6 +30,8 @@
 
     mkdir -p {{ temp_dir }}/pychopper/{{ sample.name }}
 
+    zcat {{ input_fastq }} > {{ decompressed_fastq }}
+
     cdna_classifier.py \
       -m edlib \
       -t 10 \
@@ -37,7 +40,7 @@
       -S {{ temp_dir }}/pychopper/{{ sample.name }}/statistics.tsv \
       -u {{ temp_dir }}/pychopper/{{ sample.name }}/unclassified.fq \
       -w {{ temp_dir }}/pychopper/{{ sample.name }}/rescued.fq \
-      {{ input_fastq }} {{ temp_dir }}/pychopper/{{ sample.name }}/full_length_output.fq
+      {{ decompressed_fastq }} {{ temp_dir }}/pychopper/{{ sample.name }}/full_length_output.fq
 
     cat {{ temp_dir }}/pychopper/{{ sample.name }}/full_length_output.fq {{ temp_dir }}/pychopper/{{ sample.name }}/rescued.fq \
       > {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq
@@ -165,7 +168,7 @@
 - name: minimap2_transcriptome_{{ sample.name }}
   input:
     - {{ constants.grandcanyon.transcriptome }}
-    - {{ temp_dir }}/minimap2/{{ sample.name }}_SIRVome_unmapped.bam
+    - {{ temp_dir }}/minimap2/{{ sample.name }}_SIRVome_unmapped.fq
   output: {{ results_dir }}/minimap2/{{ sample.name }}.transcriptome.bam
   cpus: 10
   mem: 32G
@@ -181,9 +184,6 @@
     {# -N 100 allows up to 100 secondary alignments (multiple isoforms) #}
     {# -p 1.0 secondary score ratio, this is higher than the default of 0.8 since we are looking for transcriptome isoforms #}
 
-    mkdir -p {{ temp_dir }}/minimap2/{{ sample.name }}
-
-    samtools fastq -@ 4 {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.bam |\
     minimap2 \
       -ax map-ont \
       -t 10 \
@@ -191,7 +191,7 @@
       -N 100 \
       -p 1.0 \
       {{ constants.grandcanyon.transcriptome }} \
-      /dev/stdin |\
+      {{ temp_dir }}/minimap2/{{ sample.name }}_SIRVome_unmapped.fq |\
     samtools view -b -o {{ results_dir }}/minimap2/{{ sample.name }}.transcriptome.bam
 
 {% endif %}
