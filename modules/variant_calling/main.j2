@@ -14,9 +14,9 @@
 
   {%- if sample.subGroup|lower != 'tumor' %}
     {% if sample.gltype in 'exome' %}
-        {% set taskPrefix = 'Exome' %}
-    {% elif sample.gltype in 'genome' %}
-        {% set taskPrefix = 'Genome' %}
+      {% set taskPrefix = 'Exome' %}
+    {% elif sample.gltype in ['genome','genomephased'] %}
+      {% set taskPrefix = 'Genome' %}
     {% endif %}
 
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(true) %}
