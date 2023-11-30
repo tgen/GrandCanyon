@@ -1,13 +1,13 @@
 {% macro pygmy_flair(temp_dir, result_dir, sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
 
 {% if SIRV %}
-  {% set temp_dir %}{{ temp_dir }}/flair_SIRV{% endset %}
-  {% set results_dir %}{{ result_dir }}/flair_SIRV{% endset %}
-  {% set input_fq %}temp/{{ sample.gltype }}/pygmy/{{ sample.name }}/pychopper/{{ sample.name }}/pychopper_all.fq{% endset %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/quant/flair_SIRV/{{ sample.name }}{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/quant/flair_SIRV/{{ sample.name }}{% endset %}
+  {% set input_fq %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/pychopper/{{ sample.name }}/pychopper_all.fq{% endset %}
 {% else %}
-  {% set temp_dir %}{{ temp_dir }}/flair{% endset %}
-  {% set results_dir %}{{ result_dir }}/flair{% endset %}
-  {% set input_fq %}temp/{{ sample.gltype }}/pygmy/{{ sample.name }}/minimap2/{{ sample.name }}_SIRVome_unmapped.fq{% endset %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/quant/flair/{{ sample.name }}{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/quant/flair/{{ sample.name }}{% endset %}
+  {% set input_fq %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq{% endset %}
 {% endif %}
 
 {% if SIRV %}
@@ -76,31 +76,3 @@
 
 {% endmacro %}
 
-{#
-- name: flairSIRV_{{ sample.name }}
-  output: flairSIRV_{{ sample.name }}_done
-  after: samtoolsSortSIRV_{{ sample.name }}
-  cpus: 10
-  mem: 42G
-  walltime: "4:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.flair.container }}
-  cmd: |
-
-    mkdir -p {{ temp_dir }}/flair-SIRVome/{{ sample.name }}
-    cd {{ temp_dir }}/flair-SIRVome/{{ sample.name }}
-
-    bam2Bed12 -i {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam > flair.aligned.bed
-
-    flair correct -q flair.aligned.bed -g {{ constants.grandcanyon.reference_fastaSIRV }} -t 10 -f {{ constants.grandcanyon.gtfSIRV }}
-
-    flair collapse -g {{ constants.grandcanyon.reference_fastaSIRV }} -r {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq -f {{ constants.grandcanyon.gtfSIRV }} -q flair_all_corrected.bed -t 10
-
-    printf "{{ sample.name }}\t{{ sample.name }}\tbatch1\t{{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq" > reads_manifest.tsv.tmp
-    awk '{gsub("_","", $1)}1' reads_manifest.tsv.tmp | awk '{gsub("_","", $2)}1' | awk '{gsub("_","", $3)}1' > reads_manifest.tsv
-    sed -i 's/ /\t/g' reads_manifest.tsv
-
-    flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa
-
-    flair quantify -r reads_manifest.tsv -i flair.collapse.isoforms.fa --tpm
-#}

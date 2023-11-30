@@ -1,11 +1,9 @@
 {% macro pygmy_salmon(temp_dir, result_dir, sample, sample_bam, transcriptome, SIRV=false) %}
 
 {% if SIRV %}
-  {% set temp_dir %}{{ temp_dir }}/salmon_SIRV{% endset %}
-  {% set results_dir %}{{ result_dir }}/salmon_SIRV{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/quant/salmon_SIRV/{{ sample.name }}{% endset %}
 {% else %}
-  {% set temp_dir %}{{ temp_dir }}/salmon{% endset %}
-  {% set results_dir %}{{ result_dir }}/salmon{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/quant/salmon/{{ sample.name }}{% endset %}
 {% endif %}
 
 {% if SIRV %}
@@ -16,7 +14,7 @@
   input:
     - {{ sample_bam }}
     - {{ transcriptome }}
-  output: {{ temp_dir }}/{{ sample.name }}
+  output: {{ results_dir }}/{{ sample.name }}
   cpus: 10
   mem: 32G
   walltime: "4:00:00"
@@ -28,12 +26,12 @@
     {# input: human aligned transcriptome bam #}
     {# output: quant.sf file with transcript quantification (tpms) #}
 
-    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
 
     salmon quant \
       --no-version-check \
       --libType A \
-      --output {{ temp_dir }}/{{ sample.name }} \
+      --output {{ results_dir }}/{{ sample.name }} \
       --threads 10 \
       --numBootstraps 100 \
       --dumpEq \
@@ -43,28 +41,3 @@
 
 {% endmacro %}
 
-{#
-- name: salmonSIRV_{{ sample.name }}
-  output: salmonSIRV_{{ sample.name }}_done
-  after: minimapTranSIRV_{{ sample.name }}
-  cpus: 10
-  mem: 42G
-  walltime: "4:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.salmon.container }}
-  cmd: |
-
-    mkdir -p {{ temp_dir }}/salmon-align-SIRVome
-    cd {{ temp_dir }}/salmon-align-SIRVome
-
-    salmon quant \
-      --no-version-check \
-      --libType A \
-      --output {{ sample.name }}_SIRVome \
-      --threads 10 \
-      --numBootstraps 100 \
-      --dumpEq \
-      --ont \
-      --alignments {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}.TranscriptomeAlignedSIRVome.out.sam \
-      --targets {{ constants.grandcanyon.transcriptomeSIRV }}
-#}

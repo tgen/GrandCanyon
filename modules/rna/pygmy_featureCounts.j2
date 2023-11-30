@@ -1,11 +1,9 @@
 {% macro pygmy_featurecounts(temp_dir, result_dir, sample, sample_bam, gtf, SIRV=false) %}
 
 {% if SIRV %}
-  {% set temp_dir %}{{ temp_dir }}/featureCounts_SIRV{% endset %}
-  {% set results_dir %}{{ result_dir }}/featureCounts_SIRV{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/quant/featureCounts_SIRV/{{ sample.name }}{% endset %}
 {% else %}
-  {% set temp_dir %}{{ temp_dir }}/featureCounts{% endset %}
-  {% set results_dir %}{{ result_dir }}/featureCounts{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/quant/featureCounts/{{ sample.name }}{% endset %}
 {% endif %}
 
 {% if SIRV %}
@@ -16,7 +14,7 @@
   input:
     - {{ gtf }}
     - {{ sample_bam }}
-  output: {{ temp_dir }}/{{ sample.name }}.txt
+  output: {{ results_dir }}/{{ sample.name }}.counts.txt
   cpus: 10
   mem: 32G
   walltime: "4:00:00"
@@ -28,7 +26,7 @@
     {# input: human aligned bam #}
     {# output: gene counts #}
 
-    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
 
     featureCounts \
       -T 10 \
@@ -36,31 +34,8 @@
       -g gene_id \
       -a {{ gtf }} \
       -L \
-      -o {{ temp_dir }}/{{ sample.name }}.txt \
+      -o {{ results_dir }}/{{ sample.name }}.counts.txt \
       {{ sample_bam }}
 
 {% endmacro %}
 
-{#
-- name: featureCountsSIRV_{{ sample.name }}
-  after: samtoolsSortSIRV_{{ sample.name }}
-  output: featureCountsSIRV_{{ sample.name }}_done
-  cpus: 10
-  mem: 40G
-  walltime: "4:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.featureCounts.container }}
-  cmd: |
-
-    mkdir {{ temp_dir }}/counted-SIRVome
-    cd {{ temp_dir }}/counted-SIRVome
-
-    featureCounts \
-      -T 10 \
-      -t exon \
-      -g gene_id \
-      -a {{ constants.grandcanyon.gtfSIRV }} \
-      -L \
-      -o {{ sample.name }}_SIRVome.txt \
-      {{ temp_dir }}/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_mapped.sorted.bam
-#}
