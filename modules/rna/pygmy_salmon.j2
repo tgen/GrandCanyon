@@ -1,8 +1,10 @@
-{% macro pygmy_salmon(temp_dir, result_dir, sample, sample_bam, transcriptome, SIRV=false) %}
+{% macro pygmy_salmon(sample, sample_bam, transcriptome, SIRV=false) %}
 
 {% if SIRV %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/quant/salmon_SIRV/{{ sample.name }}{% endset %}
   {% set results_dir %}{{ sample.gltype }}/quant/salmon_SIRV/{{ sample.name }}{% endset %}
 {% else %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/quant/salmon/{{ sample.name }}{% endset %}
   {% set results_dir %}{{ sample.gltype }}/quant/salmon/{{ sample.name }}{% endset %}
 {% endif %}
 
@@ -14,7 +16,7 @@
   input:
     - {{ sample_bam }}
     - {{ transcriptome }}
-  output: {{ results_dir }}/{{ sample.name }}
+  output: {{ results_dir }}/{{ sample.name }}.quant.sf
   cpus: 10
   mem: 32G
   walltime: "4:00:00"
@@ -26,18 +28,21 @@
     {# input: human aligned transcriptome bam #}
     {# output: quant.sf file with transcript quantification (tpms) #}
 
+    mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
     salmon quant \
       --no-version-check \
       --libType A \
-      --output {{ results_dir }}/{{ sample.name }} \
+      --output {{ results_dir }} \
       --threads 10 \
       --numBootstraps 100 \
       --dumpEq \
       --ont \
       --alignments {{ sample_bam }} \
       --targets {{ transcriptome }}
+
+    mv {{ temp_dir }}/quant.sf {{ results_dir }}/{{ sample.name }}.quant.sf
 
 {% endmacro %}
 

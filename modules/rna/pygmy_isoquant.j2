@@ -1,9 +1,11 @@
-{% macro pygmy_isoquant(temp_dir, result_dir, sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
+{% macro pygmy_isoquant(sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
 
 {% if SIRV %}
-  {% set results_dir %}{{ sample.gltype }}/quant/isoquant_SIRV{% endset %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/quant/isoquant_SIRV{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/quant/isoquant_SIRV/{{ sample.name }}{% endset %}
 {% else %}
-  {% set results_dir %}{{ sample.gltype }}/quant/isoquant{% endset %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/quant/isoquant{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/quant/isoquant/{{ sample.name }}{% endset %}
 {% endif %}
 
 {% if SIRV %}
@@ -15,7 +17,7 @@
     - {{ sample_bam }}
     - {{ gtf }}
     - {{ reference_fasta }}
-  output: {{ results_dir }}/{{ sample.name }}
+  output: {{ results_dir }}
   cpus: 10
   mem: 32G
   walltime: "4:00:00"
@@ -27,11 +29,12 @@
     {# input: human aligned genome bam #}
     {# output: gene and transcript quantification, gtf #}
 
-    mkdir {{ results_dir }}
+    mkdir -p {{ results_dir }}
+    mkdir -p {{ temp_dir }}
 
     isoquant.py \
       --reference {{ reference_fasta }} \
-      -o {{ results_dir }}/ \
+      -o {{ temp_dir }}/ \
       -g {{ gtf }} \
       -d nanopore \
       --complete_genedb \
@@ -41,6 +44,8 @@
       --sqanti_output \
       --check_canonical \
       -t 10
+
+    mv {{ temp_dir }}/{{ sample.name }}/{{ sample.name }}.* {{ results_dir }}/
 
 {% endmacro %}
 

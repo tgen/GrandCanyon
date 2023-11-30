@@ -1,4 +1,4 @@
-{% macro pygmy_featurecounts(temp_dir, result_dir, sample, sample_bam, gtf, SIRV=false) %}
+{% macro pygmy_featurecounts(sample, sample_bam, gtf, SIRV=false) %}
 
 {% if SIRV %}
   {% set results_dir %}{{ sample.gltype }}/quant/featureCounts_SIRV/{{ sample.name }}{% endset %}

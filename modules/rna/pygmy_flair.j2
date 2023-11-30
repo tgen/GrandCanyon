@@ -1,4 +1,4 @@
-{% macro pygmy_flair(temp_dir, result_dir, sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
+{% macro pygmy_flair(sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
 
 {% if SIRV %}
   {% set temp_dir %}temp/{{ sample.gltype }}/quant/flair_SIRV/{{ sample.name }}{% endset %}

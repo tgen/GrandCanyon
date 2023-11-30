@@ -205,22 +205,22 @@
 {% if tasks['RNA_transcriptome_quantify_expression_featureCounts']|default(true) %}
   {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.sorted.bam{% endset %}
   {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
-  {{- pygmy_featurecounts(temp_dir, results_dir, sample, sample_bam, gtf, SIRV=false) }}
+  {{- pygmy_featurecounts(sample, sample_bam, gtf, SIRV=false) }}
   {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set sample_bam %}{{ results_dir }}/{{ sample.name }}_SIRVome_mapped.bam{% endset %}
     {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
-    {{- pygmy_featurecounts(temp_dir, results_dir, sample, sample_bam, gtf, SIRV=true) }}
+    {{- pygmy_featurecounts(sample, sample_bam, gtf, SIRV=true) }}
   {% endif %}
 {% endif %}
 
 {% if tasks['RNA_transcriptome_quantify_expression_salmon']|default(true) %}
   {% set transcriptome %}{{ constants.grandcanyon.transcriptome }}{% endset %}
   {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.transcriptome.bam{% endset %}
-  {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, transcriptome, SIRV=false) }}
+  {{- pygmy_salmon(sample, sample_bam, transcriptome, SIRV=false) }}
   {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set transcriptome %}{{ constants.grandcanyon.transcriptomeSIRV }}{% endset %}
     {% set sample_bam %}{{ results_dir }}/{{ sample.name }}_SIRVome_mapped.transcriptome.bam{% endset %}
-    {{- pygmy_salmon(temp_dir, results_dir, sample, sample_bam, transcriptome, SIRV=true) }}
+    {{- pygmy_salmon(sample, sample_bam, transcriptome, SIRV=true) }}
   {% endif %}
 {% endif %}
 
@@ -228,12 +228,12 @@
   {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.sorted.bam{% endset %}
   {% set reference_fasta %}{{ constants.grandcanyon.reference_fasta }}{% endset %}
   {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
-  {{- pygmy_flair(temp_dir, results_dir, sample, sample_bam, reference_fasta, gtf, SIRV=false) }}
+  {{- pygmy_flair(sample, sample_bam, reference_fasta, gtf, SIRV=false) }}
   {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set sample_bam %}{{ results_dir }}/{{ sample.name }}_SIRVome_mapped.bam{% endset %}
     {% set reference_fasta %}{{ constants.grandcanyon.reference_fastaSIRV }}{% endset %}
     {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
-    {{- pygmy_flair(temp_dir, results_dir, sample, sample_bam, reference_fasta, gtf, SIRV=true) }}
+    {{- pygmy_flair(sample, sample_bam, reference_fasta, gtf, SIRV=true) }}
   {% endif %}
 {% endif %}
 
@@ -241,12 +241,12 @@
   {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.sorted.bam{% endset %}
   {% set reference_fasta %}{{ constants.grandcanyon.reference_fasta }}{% endset %}
   {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
-  {{- pygmy_isoquant(temp_dir, results_dir, sample, sample_bam, reference_fasta, gtf, SIRV=false) }}
+  {{- pygmy_isoquant(sample, sample_bam, reference_fasta, gtf, SIRV=false) }}
   {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set sample_bam %}{{ results_dir }}/{{ sample.name }}_SIRVome_mapped.bam{% endset %}
     {% set reference_fasta %}{{ constants.grandcanyon.reference_fastaSIRV }}{% endset %}
     {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
-    {{- pygmy_isoquant(temp_dir, results_dir, sample, sample_bam, reference_fasta, gtf, SIRV=true) }}
+    {{- pygmy_isoquant(sample, sample_bam, reference_fasta, gtf, SIRV=true) }}
   {% endif %}
 {% endif %}
 
