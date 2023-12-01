@@ -51,7 +51,7 @@
     - {{ constants.grandcanyon.reference_fastaSIRV }}
     - {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq
   output:
-    - {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.bam
+    - {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.fq
     - {{ results_dir }}/{{ sample.name }}_SIRVome_mapped.bam
     - {{ results_dir }}/stats/{{ sample.name }}_SIRVome_mapped_withSupp_readLength.txt
     - {{ results_dir }}/stats/{{ sample.name }}_SIRVome_mapped_noSupp_readLength.txt
@@ -77,17 +77,20 @@
       -L \
       {{ constants.grandcanyon.reference_fastaSIRV }} \
       {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq |\
-    samtools view -b -F 4 \
+    samtools view -@ 10 -b -F 4 \
       -o - \
       -U {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.bam |\
-    samtools sort -@ 4 -m 6G --write-index -O bam -o {{ results_dir }}/{{ sample.name }}_SIRVome_mapped.bam
+    samtools sort -@ 10 -m 6G --write-index -O bam -o {{ results_dir }}/{{ sample.name }}_SIRVome_mapped.bam
+
+    samtools fastq -@ 10 {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.bam > {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.fq
 
     {# read lengths: mapped reads only #}
     samtools view -F 4 {{ results_dir }}/{{ sample.name }}_SIRVome_mapped.bam | awk '{print $1,"\t",length($10),"\t","SIRV4"}' > {{ results_dir }}/stats/{{ sample.name }}_SIRVome_mapped_withSupp_readLength.txt &
     {#  read lengths: mapped reads only, no supplementary or secondary reads #}
     samtools view -F 4 -F 256 -F 2048 {{ results_dir }}/{{ sample.name }}_SIRVome_mapped.bam | awk '{print $1,"\t",length($10),"\t","SIRV4"}' > {{ results_dir }}/stats/{{ sample.name }}_SIRVome_mapped_noSupp_readLength.txt &
     {#  read lengths: unmapped reads #}
-    samtools view -f 4 {{ results_dir }}/{{ sample.name }}_SIRVome_mapped.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ results_dir }}/stats/{{ sample.name }}_SIRVome_unmapped_readLength.txt
+    samtools view {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ results_dir }}/stats/{{ sample.name }}_SIRVome_unmapped_readLength.txt &
+    wait
 
 
 {% if tasks['RNA_sirvome_enable_processing_sirvome']|default(true) and tasks['RNA_transcriptome_quantify_expression_salmon']|default(true) %}
@@ -129,15 +132,14 @@
 - name: minimap2_{{ sample.name }}
   input:
     - {{ constants.grandcanyon.reference_fasta }}
-    - {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.bam
+    - {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.fq
   output:
     - {{ results_dir }}/{{ sample.name }}.sorted.bam
     - {{ results_dir }}/stats/{{ sample.name }}_mapped_withSupp_readLength.txt
     - {{ results_dir }}/stats/{{ sample.name }}_mapped_noSupp_readLength.txt
     - {{ results_dir }}/stats/{{ sample.name }}_unmapped_readLength.txt
-    - {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.fq
-  cpus: 10
-  mem: 32G
+  cpus: 20
+  mem: 60G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.minimap2.container }}
@@ -149,22 +151,21 @@
 
     mkdir -p {{ results_dir }}/stats
 
-    samtools fastq -@ 4 {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.bam > {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.fq
-
     minimap2 \
       -ax map-ont \
-      -t 10 \
+      -t 20 \
       -L \
       {{ constants.grandcanyon.reference_fasta }} \
       {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.fq |\
-    samtools sort -@ 4 -m 6G --write-index -O bam -o {{ results_dir }}/{{ sample.name }}.sorted.bam
+    samtools sort -@ 20 -m 6G --write-index -O bam -o {{ results_dir }}/{{ sample.name }}.sorted.bam
 
     {#  read lengths: mapped reads only #}
-    samtools view -F 4 {{ results_dir }}/{{ sample.name }}.sorted.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ results_dir }}/stats/{{ sample.name }}_mapped_withSupp_readLength.txt &
+    samtools view -@ 4 -F 4 {{ results_dir }}/{{ sample.name }}.sorted.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ results_dir }}/stats/{{ sample.name }}_mapped_withSupp_readLength.txt &
     {#  read lengths: mapped reads only, no supplementary or secondary reads #}
-    samtools view -F 4 -F 256 -F 2048 {{ results_dir }}/{{ sample.name }}.sorted.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ results_dir }}/stats/{{ sample.name }}_mapped_noSupp_readLength.txt &
+    samtools view -@ 4 -F 4 -F 256 -F 2048 {{ results_dir }}/{{ sample.name }}.sorted.bam | awk '{print $1,"\t",length($10),"\t","Human"}' > {{ results_dir }}/stats/{{ sample.name }}_mapped_noSupp_readLength.txt &
     {#  read lengths: unmapped reads #}
-    samtools view -f 4 {{ results_dir }}/{{ sample.name }}.sorted.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ results_dir }}/stats/{{ sample.name }}_unmapped_readLength.txt
+    samtools view -@ 4 -f 4 {{ results_dir }}/{{ sample.name }}.sorted.bam | awk '{print $1,"\t",length($10),"\t","Unmapped"}' > {{ results_dir }}/stats/{{ sample.name }}_unmapped_readLength.txt &
+    wait
 
 {% if tasks['RNA_transcriptome_quantify_expression_salmon']|default(true) %}
 
