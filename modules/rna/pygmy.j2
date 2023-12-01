@@ -77,7 +77,7 @@
       -L \
       {{ constants.grandcanyon.reference_fastaSIRV }} \
       {{ temp_dir }}/pychopper/{{ sample.name }}/pychopper_all.fq |\
-    samtools view -bhu -f 4 \
+    samtools view -b -F 4 \
       -o - \
       -U {{ temp_dir }}/{{ sample.name }}_SIRVome_unmapped.bam |\
     samtools sort -@ 4 -m 6G --write-index -O bam -o {{ results_dir }}/{{ sample.name }}_SIRVome_mapped.bam
