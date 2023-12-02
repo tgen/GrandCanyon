@@ -22,7 +22,9 @@
     - {{ input_fq }}
   output:
     - {{ temp_dir }}/flair.collapse.isoforms.fa
-    - {{ temp_dir }}/{{ sample.name }}_flair_top10.txt
+    - {{ results_dir }}/{{ sample.name }}.quantify.isoforms.fa
+    - {{ results_dir }}/{{ sample.name }}.quantify.tpm.tsv
+    - {{ results_dir }}/{{ sample.name }}_flair_top10.txt
   cpus: 10
   mem: 32G
   walltime: "4:00:00"
@@ -31,46 +33,43 @@
   cmd: |
     set -e
 
-    ROOT=${PWD}
-
     mkdir -p {{ temp_dir }}
-    cd {{ temp_dir }}
+    mkdir -p {{ results_dir }}
 
     {# we already did alignment, skipping flair align step and converting bam to bed for flair correct #}
     bam2Bed12 \
-      -i ${ROOT}/{{ sample_bam }} \
-      > flair.aligned.bed
+      -i {{ sample_bam }} \
+      > {{ temp_dir }}/flair.aligned.bed
     flair correct \
-      --query flair.aligned.bed \
-      --genome {{ reference_fasta }} \
       --threads 10 \
-      --gtf {{ gtf }}
-    flair collapse \
-      --query flair_all_corrected.bed \
+      --query {{ temp_dir }}/flair.aligned.bed \
       --genome {{ reference_fasta }} \
-      --reads ${ROOT}/{{ input_fq }} \
       --gtf {{ gtf }} \
-      --threads 10
+      --output {{ temp_dir }}/{{ sample.name }}
+    flair collapse \
+      --threads 10 \
+      --query {{ temp_dir }}/{{ sample.name }}_all_corrected.bed \
+      --genome {{ reference_fasta }} \
+      --reads {{ input_fq }} \
+      --gtf {{ gtf }} \
+      --output {{ temp_dir }}/{{ sample.name }}.collapse
 
     {# generate reads_manifest.tsv file for flair quantify #}
-    printf "{{ sample.name }}\tcondition1\tbatch1\t${ROOT}/{{ sample_bam }}" > reads_manifest.tsv
+    printf "{{ sample.name }}\tcondition1\tbatch1\t${ROOT}/{{ input_fq }}\n" > {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv
 
     flair quantify \
-      --reads_manifest reads_manifest.tsv \
-      --sample_id_only \
       --threads 10 \
-      --isoforms flair.collapse.isoforms.fa
-    flair quantify \
-      --reads_manifest reads_manifest.tsv \
+      --temp_dir {{ temp_dir }} \
+      --reads_manifest {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv \
       --sample_id_only \
-      --threads 10 \
-      --isoforms flair.collapse.isoforms.fa \
-      --tpm
+      --isoforms {{ temp_dir }}/{{ sample.name }}.collapse.isoforms.fa \
+      --tpm \
+      --output {{ results_dir }}/{{ sample.name }}.quantify
 
     {# generate file with the 10 longest isoforms #}
-    awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' flair.collapse.isoforms.fa |\
+    awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' {{ results_dir }}/{{ sample.name }}.quantify.isoforms.fa |\
     awk '{printf("%d\t%s\t%s\t%s\n",length($2),$1,$1,$2);}' |\
-    sort -t $'\t' -k1,1nr | cut -f 1,2 | head > {{ sample.name }}_flair_top10.txt
+    sort -t $'\t' -k1,1nr | cut -f 1,2 | head > {{ results_dir }}/{{ sample.name }}_flair_top10.txt
 
 {% endmacro %}
 
