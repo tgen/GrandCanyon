@@ -51,12 +51,21 @@
       --query {{ temp_dir }}/{{ sample.name }}_all_corrected.bed \
       --genome {{ reference_fasta }} \
       --reads {{ input_fq }} \
+      {% if not SIRV %}
       --gtf {{ gtf }} \
+      {% endif %}
       --output {{ temp_dir }}/{{ sample.name }}.collapse
 
     {# generate reads_manifest.tsv file for flair quantify #}
-    printf "{{ sample.name }}\tcondition1\tbatch1\t${ROOT}/{{ input_fq }}\n" > {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv
+    printf "{{ sample.name }}\tcondition1\tbatch1\t{{ input_fq }}\n" > {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv
 
+    flair quantify \
+      --threads 10 \
+      --temp_dir {{ temp_dir }} \
+      --reads_manifest {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv \
+      --sample_id_only \
+      --isoforms {{ temp_dir }}/{{ sample.name }}.collapse.isoforms.fa \
+      --output {{ results_dir }}/{{ sample.name }}.quantify
     flair quantify \
       --threads 10 \
       --temp_dir {{ temp_dir }} \
