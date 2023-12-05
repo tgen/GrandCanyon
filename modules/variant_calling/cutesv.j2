@@ -139,4 +139,30 @@ Advanced:
       {% endif %}
       --threads 8
 
+
+- name: cutesv_filter_variants_{{ sample.name }}_minimap2
+  input:
+    - {{ all_vcf }}
+  output:
+    - {{ all_vcf }}.tbi
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+
+    bcftools index --tbi --force {{ all_vcf }}
+
+    bcftools filter \
+      --include 'FILTER == "PASS"' \
+      --output-type z \
+      --output {{ pass_vcf }} \
+      --write-index \
+      {{ all_vcf }}
+
+
 {% endmacro %}

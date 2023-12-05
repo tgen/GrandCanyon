@@ -39,9 +39,9 @@
     - {{ bam }}.bai
     - {{ constants.grandcanyon.reference_fasta }}
   output:
-    - {{ results_dir }}/{{ sample.name }}.copynum.bedgraph
-    - {{ results_dir }}/{{ sample.name }}.depth.bw
-    - {{ results_dir }}/{{ sample.name }}.vcf.gz
+    - {{ results_dir }}/{{ sample.name }}.hificnv.copynum.bedgraph
+    - {{ results_dir }}/{{ sample.name }}.hificnv.depth.bw
+    - {{ results_dir }}/{{ sample.name }}.hificnv.vcf.gz
   cpus: 16
   mem: 32G
   walltime: "24:00:00"
@@ -55,6 +55,10 @@
       --threads 8 \
       --ref {{ constants.grandcanyon.reference_fasta }} \
       --bam {{ bam }} \
-      --output-prefix {{ results_dir }}/
+      --output-prefix {{ results_dir }}/{{ sample.name }}
+
+    mv {{ results_dir }}/{{ sample.name }}.{{ sample.name }}.copynum.bedgraph {{ results_dir }}/{{ sample.name }}.hificnv.copynum.bedgraph
+    mv {{ results_dir }}/{{ sample.name }}.{{ sample.name }}.depth.bw {{ results_dir }}/{{ sample.name }}.hificnv.depth.bw
+    mv {{ results_dir }}/{{ sample.name }}.{{ sample.name }}.vcf.gz {{ results_dir }}/{{ sample.name }}.hificnv.vcf.gz
 
 {% endmacro %}

@@ -14,6 +14,7 @@
     - {{ constants.grandcanyon.reference_fasta }}
   output:
     - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
   cpus: 8
   mem: 32G
   walltime: "24:00:00"
@@ -29,6 +30,30 @@
       --reference {{ constants.grandcanyon.reference_fasta }} \
       -v {{ all_vcf }} \
       --allow-overwrite
+
+
+- name: sniffles_filter_variants_{{ sample.name }}_minimap2
+  input:
+    - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
+  output:
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+
+    bcftools filter \
+      --include 'FILTER == "PASS"' \
+      --output-type z \
+      --output {{ pass_vcf }} \
+      --write-index \
+      {{ all_vcf }}
+
 
 {% endmacro %}
 
