@@ -1,128 +1,210 @@
+
+![TGEN](images/TGen_Color_LOGO_medium.png)
+
 # GrandCanyon
+
 Jetstream workflow to support the T2T Consortium CHM13 reference genome, through both long and short read sequencing data. This 
 currently in very early development stages, and contributions are greatly appreciated.
 
-## Hackathon specifics
-On August 16th and 17th of 2023, a hackathon will be (or currently is being) held to rapidly integrate many of the core components of the pipeline. We plan to utilize all of the contributions during and after this hackathon to build a Jetstream based workflow, as Jetstream is already heavily integrated into the TGen compute infrastructure. But early development can be in any language the community sees fit. Most workflows will likely be a simple set of shell commands, but we are happy to accept and are expecting submissions in other languages such as python, R, nextflow, snakemake. Whichever language you are able to work in the most efficiently.
 
-### Contribution Guidelines
-This is intended to be mashed together very quickly, as such, please create a fork of the repository, or create a new branch off of `development`. Following this, please place your script in specific and likely uniquely named directory. For example, if you plan to work on structural variant calling, this is my recommended start up template:
-```bash
-cd /to/wherever/you/keep/git/repos
-git clone git@github.com:tgen/GrandCanyon.git # This clones via an ssh key, let me know if you need help setting one up
-cd GrandCanyon
-git checkout development # We want to branch off of development (I will likely set the default branch to development to avoid issues)
-git checkout -b bturner-sv-calling # This creates a new branch from the branch you are currently on (development) and checks you into it immediately
-mkdir bturner_sv_caller_sniffles # Example of unique directory path
-cd bturner_sv_caller_sniffles
-# Start creating your workflow
-vim sniffles.sh
+## Current Workflow Overview
+
+![GrandCanyon](images/GrandCanyonOverview.png)
+
+
+## Output Folder Structure
+
+All final output files are placed in a standardized folder structure that generally reflects the relationship of files or
+the processing order.
+```
+Project
+|--GeneralLibaryType
+|  |--AnalysisType
+|  |  |--Tool
+|  |  |  |--SampleName
+|  |  |     |--ResultFiles
+|  |  |--Tool
+|  |--AnalysisType
+|--GeneralLibaryType
 ```
 
-Here is an example on gemini:
-```console
-[bturner@gemini-login1:~]$ cd git_repos/
-[bturner@gemini-login1:~/git_repos]$ git clone git@github.com:tgen/GrandCanyon.git
-Cloning into 'GrandCanyon'...
-remote: Enumerating objects: 7, done.
-remote: Total 7 (delta 0), reused 0 (delta 0), pack-reused 7
-Receiving objects: 100% (7/7), done.
-Resolving deltas: 100% (1/1), done.
-[bturner@gemini-login1:~/git_repos]$ cd GrandCanyon/
-[bturner@gemini-login1:~/git_repos/GrandCanyon]$ git branch
-* main
-[bturner@gemini-login1:~/git_repos/GrandCanyon]$ git checkout development
-Branch 'development' set up to track remote branch 'development' from 'origin'.
-Switched to a new branch 'development'
-[bturner@gemini-login1:~/git_repos/GrandCanyon]$ git checkout -b bturner-sv-calling
-Switched to a new branch 'bturner-sv-calling'
-[bturner@gemini-login1:~/git_repos/GrandCanyon]$ mkdir bturner_sv_caller_sniffles
-[bturner@gemini-login1:~/git_repos/GrandCanyon]$ cd bturner_sv_caller_sniffles/
-[bturner@gemini-login1:~/git_repos/GrandCanyon/bturner_sv_caller_sniffles]$ vim sniffles.sh
+<details>
+  <summary><b>Project Folder Example</b></summary>
+
+```
+# Only Directories are Shown
+COLO829
+├── genome
+│   ├── alignment
+│   │   └── minimap2
+│   │       ├── COLO829BL_ATCCJJK_p27_CL_1_C3_OUL14
+│   │       │   └── stats
+│   │       └── COLO829BL_ATCCJJK_p27_CL_1_C3_PSB3G
+│   │           └── stats
+│   ├── constitutional_variant_calls
+│   │   ├── cutesv
+│   │   │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_OUL14_minimap2
+│   │   │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_PSB3G_minimap2
+│   │   ├── deepvariant
+│   │   │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_OUL14_minimap2
+│   │   │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_PSB3G_minimap2
+│   │   ├── dysgu
+│   │   │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_OUL14_minimap2
+│   │   │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_PSB3G_minimap2
+│   │   ├── severus
+│   │   │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_OUL14_minimap2
+│   │   │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_PSB3G_minimap2
+│   │   └── sniffles
+│   │       └── COLO829BL_ATCCJJK_p27_CL_1_C3_OUL14_minimap2
+│   │       └── COLO829BL_ATCCJJK_p27_CL_1_C3_PSB3G_minimap2
+│   ├── constitutional_copy_number
+│   │   ├── cytocad
+│   │   │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_OUL14_minimap2
+│   │   │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_PSB3G_minimap2
+│   │   └── hifi_cnv
+│   │       └── COLO829BL_ATCCJJK_p27_CL_1_C3_PSB3G_minimap2
+│   ├── history
+│   └── logs
+└── rna
+    ├── alignment
+    │   └── minimap2
+    │       └── COLO829BL_ATCCJJK_p27_CL_1_C3_ORPC9
+    │           └── stats
+    └── quant
+        ├── featureCounts
+        │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_ORPC9
+        ├── flair
+        │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_ORPC9
+        ├── isoquant
+        │   └── COLO829BL_ATCCJJK_p27_CL_1_C3_ORPC9
+        └── salmon
+            └── COLO829BL_ATCCJJK_p27_CL_1_C3_ORPC9
 ```
 
-From here I would be ready to run `git add bturner_sv_caller_sniffles/sniffles.sh` and then `git commit -m "created a sniffles sv caller script on the first try"`, and finally `git push -u origin bturner-sv-calling`. Note that subsequent commits and pushes would only require `git push`, that initial push is publishing the branch and setting your local git to use the origin as the upstream.
+</details>
 
-It's also highly recommended for you to either ensure that comments are detailed enough that a Helios Scholar could pick up the script and use it effectively, or create a readme.md within your uniquely named directory.
+## Required Configuration Variables
 
-### Resources
-To save time both computationally and for development, we have precompiled a set of likely resources. But feel free to create your own and detail to us how you did it. We have placed these resources on both gemini and dback to make sure everyone has access to them and also to distribute some of the compute load that will be happening over these few days.
+For each of our data files/fastqs we have some required data, many of which are self explained,
+but we will explain the more unique variables. Here is an example:
 
-__Example data__
-- Oxford Nanopore
-  - Public CHM13 (120X depth): `/scratch/bturner/grandcanyon/oxford_nano_data/rel3.fastq.gz`
-  - HG002 NA24385(~30X depth?): `/scratch/bturner/grandcanyon/oxford_nano_data/ultra-long-ont.fastq.gz`
-  - `/scratch/bturner/grandcanyon/oxford_nano_data/tumor_KMS11/KMS11_JCRBsus_p19_CL_Whole_T1_OGL14_L72205.fastq`
-  - `/scratch/bturner/grandcanyon/oxford_nano_data/tumor_KMS11/duplex_updated.ubam`
-  - `/scratch/bturner/grandcanyon/oxford_nano_data/tumor_KMS11/KMS11_JPN.FGFR3_Read_short.fa.sorted.bam`
-  - `/scratch/bturner/grandcanyon/oxford_nano_data/tumor_KMS11/KMS11_JPN.sorted.ont.chm13.bam`
+```json
+"dataFiles": [
+                {
+                        "assayCode" : "OUL14",
+                        "dnaRnaMergeKey" : "COLO829BL_ATCCJJK_p27_CL_1",
+                        "fastqCode" : "duplex",
+                        "fastqPath" : "/path/to/COLO829BL_ATCCJJK_p27_CL_1_C3_OUL14_L81167_PAO93303_NNNNNNNN_L001.duplex.u.bam",
+                        "fileType" : "ubam",
+                        "fraction" : "1",
+                        "glPrep" : "LongRead",
+                        "glType" : "GenomePhased",
+                        "rgbc" : "NNNNNNNN",
+                        "rgcn" : "TGen",
+                        "rgid" : "PAO93303_1_NNNNNNNN-NNNNNNNN",
+                        "rglb" : "L81167",
+                        "rgpl" : "ONT",
+                        "rgpm" : "PromethION",
+                        "rgpu" : "PAO93303_1",
+                        "rgsm" : "COLO829BL_ATCCJJK_p27_CL_1_C3",
+                        "rnaStrandDirection" : "NotApplicable",
+                        "rnaStrandType" : "NotApplicable",
+                        "sampleMergeKey" : "COLO829BL_ATCCJJK_p27_CL_1_C3_OUL14",
+                        "sampleName" : "COLO829BL_ATCCJJK_p27_CL_1_C3_OUL14_L81167",
+                        "subGroup" : "Constitutional"
+                },
+                {
+                        "assayCode" : "PSB3G",
+                        "dnaRnaMergeKey" : "COLO829BL_ATCCJJK_p27_CL_1",
+                        "fastqCode" : "hifi",
+                        "fastqPath" : "/path/to/COLO829BL_ATCCJJK_p27_CL_1_C3_PSB3G_L82718_a484042d_ACGCACGTA_L001.hifi.u.bam",
+                        "fileType" : "ubam",
+                        "fraction" : "1",
+                        "glPrep" : "LongRead",
+                        "glType" : "GenomePhased",
+                        "rgbc" : "ACGCACGTACGAGTAT",
+                        "rgcn" : "TGen",
+                        "rgid" : "a484042d_1_ACGCACGTAAAGGTT",
+                        "rglb" : "L82718",
+                        "rgpl" : "PACBIO",
+                        "rgpm" : "REVIO",
+                        "rgpu" : "a484042d_1",
+                        "rgsm" : "COLO829BL_ATCCJJK_p27_CL_1_C3",
+                        "rnaStrandDirection" : "NotApplicable",
+                        "rnaStrandType" : "NotApplicable",
+                        "sampleMergeKey" : "COLO829BL_ATCCJJK_p27_CL_1_C3_PSB3G",
+                        "sampleName" : "COLO829BL_ATCCJJK_p27_CL_1_C3_PSB3G_L82718",
+                        "subGroup" : "Constitutional"
+                }
+```
 
-- PacBio
-  - COLO829 (~20X depth, methylation data not retained): `/scratch/bturner/grandcanyon/pacbio_revio_data/estimated_20X_depth/COLO829BL_chm13.bam`
-  - SRR9087600: `/scratch/bturner/grandcanyon/pacbio_revio_data/SRX5633451/SRR9087600.fastq.gz`
 
-CHM13 v2 resources:  
-The marbl/CHM13 repo has most if not all resources that could be needed for utilizing CHM13 https://github.com/marbl/CHM13
+## Data file attributes
 
-__Paths to resources (on both dback and gemini)__  
-Reference fasta: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa`  
-Reference fasta index: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa.fai`  
-Reference dictionary: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.dict`  
+There are restrictions on what some of these variables can be assigned to, these will be denoted in the [ ]'s.
+If the attribute isn't strictly required then it is not included in this list.
 
-Ensembl rapid release gtf: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_06-genes.gtf.gz`  
-Ensembl vep cache: `/home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/indexed_vep_cache`  
+  - *assayCode*  
+    Used for determining if the sample is DNA/RNA/etc. and adding the corresponding
+    tasks to the final workflow. Each sample discovered will take this attribute from
+    the first file encountered for that sample in the config file.
 
-### Inspirations
-Here is a list of potential inspirations on how to run specific workflows - in other words, PacBio and ONT have some recommended workflows that are written in different formats. For example, PacBio has written a lot of workflows in wdl format and it looks like ONT has written workflows in Nextflow (Vince will be happy to see these). I'd potentially take these workflows with a grain of salt though, as most will likely be biased to using their internal tools, while other open-source tools might be faster, more accurate, or feature rich.
- - https://github.com/PacificBiosciences
- - https://github.com/PacificBiosciences/wdl-humanwgs
- - https://github.com/nanoporetech
- - https://github.com/epi2me-labs
- - https://github.com/epi2me-labs/wf-human-variation
- - https://nf-co.re/nanoseq/3.1.0
- - https://github.com/nf-core/nanoseq
+  - *fastqCode* [simplex,duplex,hifi]  
+    Assigns the format/code for the input data.
+
+  - *fastqPath*   
+    Assigns the path to the fastq.
+
+  - *fileType*  
+    Assigns the file type.
+
+  - *glPrep* [genome|capture|rna]  
+    Used for determining the prep used to create the sample and then modifying how the
+    pipeline runs depending on the prep. This is used to configure single cell.
+
+  - *glType* [genome|genomephased|exome|rna]  
+    Used for determining if the sample is DNA/RNA/etc. and adding the corresponding
+    tasks to the final workflow. Each sample discovered will take this attribute from
+    the first file encountered for that sample in the config file.
+
+  - *rg values*  
+    These are standards set in the [SAM/BAM Format Specification](https://samtools.github.io/hts-specs/SAMv1.pdf):  
+    rgcn - Name of sequencing center producing the read  
+    rgid - Read group identifier.  
+    rgbc - Barcode sequence identifying the sample or library.  
+    rglb - Unique identifier for the library.  
+    rgpl - Platform/technology used to produce the reads.  
+    rgpm - Platform model. Used to configure platform duplicate marking thresholds. Free-form text providing further details of the platform/technology used.  
+    rgpu - Platform unit (e.g., flowcell-barcode.lane for Illumina or slide for SOLiD). Unique identifier.  
+    rgsm - Sample. Use pool name where a pool is being sequenced.  
+
+  - *fraction*  
+    Relevant to the TGen naming scheme. See TGen Naming Convention.
+
+  - *sampleMergeKey*   
+    This is the expected BAM filename and is used to merge data from multiple sequencing
+    lanes or flowcells for data from the same specimen (rgsm) tested with the same assay
+
+  - *sampleName*  
+    This is the expected base FASTQ filename.
+
+  - *subGroup*   
+    Sets where the data file is for tumour or constitutional, changes the analysis of the data file as well as sets
+    the distinction of files during somatic analysis.
 
 
-### Containers
-As we are limited to singularity on both clusters, we have prepared a set of container images that we expected people will need. They have all been placed under `/home/tgenref/containers/grandcanyon/`. But if you can't find what you are looking for, it probably is available somewhere publically as a docker image. I'd recommend checking out hub.docker.com or there is a great set of tools available on quay.io (Bryce's "pro" tip, bioconda has a fantastic set of community built images and they have an easy to navigate index [here](https://bioconda.github.io/conda-package_index.html))
+## TGen Naming Convention
+Many of the naming structures used are defined by the standardize naming structure used at TGen that ensures all files
+have a unique but descriptive name. It is designed to support serial collection and multiple collections from
+difference sources on a single day.  Furthermore, sample processing methods can be encoded.
 
-__Paths to containers (on both dback and gemini)__
-| Tool Name | Path |
-| --- | --- |
-| __Common Tools__ ||
-| bcftools | /home/tgenref/containers/grandcanyon/common_tools/bcftools_1.17--h3cc50cf_1.sif |
-| samtools | /home/tgenref/containers/grandcanyon/common_tools/samtools_1.17--hd87286a_1.sif |
-| gatk | /home/tgenref/containers/grandcanyon/common_tools/gatk_4.4.0.0.sif |
-| __Assembly Tools__ ||
-| canu | /home/tgenref/containers/grandcanyon/assembly_tools/canu_2.2--ha47f30e_0.sif |
-| flye | /home/tgenref/containers/grandcanyon/assembly_tools/flye_2.9.2--py310h2b6aa90_2.sif |
-| hifiasm | /home/tgenref/containers/grandcanyon/assembly_tools/hifiasm_0.19.5--h43eeafb_2.sif |
-| shasta | /home/tgenref/containers/grandcanyon/assembly_tools/shasta_0.11.1--h4ac6f70_2.sif |
-| verkko | /home/tgenref/containers/grandcanyon/assembly_tools/verkko_1.4.1--h48217b1_0.sif |
-| __Alignment Tools__ | _also check the platform specific directories_ |
-| minimap2 | /home/tgenref/containers/grandcanyon/alignment/minimap2_2.26--he4a0461_1.sif |
-|||
-| __PacBio Tools__ ||
-| pbbam | /home/tgenref/containers/grandcanyon/pacbio/pbbam_2.1.0--h8db2425_5.sif |
-| pbipa | /home/tgenref/containers/grandcanyon/pacbio/pbipa_1.8.0--h6ead514_2.sif |
-| pbmm2 | /home/tgenref/containers/grandcanyon/pacbio/pbmm2_1.12.0--h9ee0642_0.sif |
-| pbsv | /home/tgenref/containers/grandcanyon/pacbio/pbsv_2.9.0--h9ee0642_0.sif |
-| pbtk | /home/tgenref/containers/grandcanyon/pacbio/pbtk_3.1.0--h9ee0642_0.sif |
-|||
-| __Oxford Nanopore Tools__ ||
-| medaka | /home/tgenref/containers/grandcanyon/oxford_nanopore/medaka_1.8.0--py38hdaa7744_0.sif |
-| dorado | /home/tgenref/containers/grandcanyon/oxford_nanopore/dorado_0.3.4.sif |
-|||
-| __Copy Number Tools__ ||
-| hificnv | /home/tgenref/containers/grandcanyon/copy_number/hificnv_0.1.6b--h9ee0642_0.sif |
-| RNA tools | _I'm sure there's more to add here @Elizabeth_ |
-| flair | /home/tgenref/containers/grandcanyon/rna_tools/flair_2.0.0--pyhdfd78af_1.sif |
-| isoseq3 | /home/tgenref/containers/grandcanyon/rna_tools/isoseq3_4.0.0--h9ee0642_0.sif |
-|||
-| __Structural Variant Callers__ ||
-| cuteSV | /home/tgenref/containers/grandcanyon/structural_variant_calling/cutesv_2.0.3--pyhdfd78af_0.sif |
-| dysgu | /home/tgenref/containers/grandcanyon/structural_variant_calling/dysgu_1.5.0--py310h770aed0_1.sif |
-| sniffles | /home/tgenref/containers/grandcanyon/structural_variant_calling/sniffles_2.2--pyhdfd78af_0.sif |
-|||
-| __SNV Calling Tools__ ||
-| deepvariant | /home/tgenref/containers/grandcanyon/variant_calling/deepvariant_1.5.0-gpu.sif |
+STUDY_PATIENT_VISIT_SOURCE_FRACTION_SubgroupIncrement_ASSAY_LIBRARY
+
+Patient_ID = STUDY_PATIENT<br/>
+Visit_ID = STUDY_PATIENT_VISIT<br/>
+Specimen_ID = STUDY_PATIENT_VISIT_SOURCE<br/>
+Sample_ID = STUDY_PATIENT_VISIT_SOURCE_FRACTION<br/>
+RG.SM = STUDY_PATIENT_VISIT_SOURCE_FRACTION_SubgroupIncrement (VCF file genotype column header)<br/>
+sampleMergeKey = STUDY_PATIENT_VISIT_SOURCE_FRACTION_SubgroupIncrement_ASSAY (BAM filename, ensures different assays are not merged together)<br/>
+
+
