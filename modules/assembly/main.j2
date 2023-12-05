@@ -31,10 +31,10 @@
   {% endfor %}
 
   {% for pair in pairs %}
-    {% if tasks[taskPrefix+"_assembly_flye"]|default(true) %}
+    {% if tasks[taskPrefix+"_assembly_flye"]|default(false) %}
       {{- flye(pair) }}
     {% endif %}
-    {% if tasks[taskPrefix+"_assembly_hifiasm"]|default(true) %}
+    {% if tasks[taskPrefix+"_assembly_hifiasm"]|default(false) %}
       {{- hifiasm(pair) }}
     {% endif %}
   {% endfor %}
