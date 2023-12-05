@@ -107,8 +107,7 @@ Advanced:
     - {{ bam }}.bai
     - {{ constants.grandcanyon.reference_fasta }}
   output:
-    - {{ all_vcf }}
-    - {{ temp_dir }}
+    - {{ temp_vcf }}
   cpus: 8
   mem: 32G
   walltime: "24:00:00"
@@ -120,7 +119,6 @@ Advanced:
 
     rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
-    mkdir -p {{ results_dir }}
 
     cuteSV \
       {{ bam }} \
@@ -156,6 +154,8 @@ Advanced:
   container: {{ constants.tools.bcftools.container }}
   cmd: |
     set -eu
+
+    mkdir -p {{ results_dir }}
 
     bcftools view \
       --output-type z \
