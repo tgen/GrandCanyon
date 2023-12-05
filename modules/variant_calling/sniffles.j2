@@ -27,7 +27,8 @@
       --threads 8 \
       -i {{ bam }} \
       --reference {{ constants.grandcanyon.reference_fasta }} \
-      -v {{ all_vcf }}
+      -v {{ all_vcf }} \
+      --allow-overwrite
 
 {% endmacro %}
 

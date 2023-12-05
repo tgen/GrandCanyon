@@ -3,8 +3,6 @@
 {%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
 {%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_copy_number/cytocad/{{ sample.name }}_minimap2{% endset %}
 {%- set results_dir %}{{ sample.gltype }}/constitutional_copy_number/cytocad/{{ sample.name }}_minimap2{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.cytocad.all.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.cytocad.pass.vcf.gz{% endset %}
 
 - name: cytocad_{{ sample.name }}_minimap2
   input:
@@ -12,7 +10,10 @@
     - {{ bam }}.bai
     - {{ constants.grandcanyon.reference_fasta }}
   output:
-    - {{ all_vcf }}
+    - {{ results_dir }}/{{ sample.name }}.minimap2.CNV.bed
+    - {{ results_dir }}/{{ sample.name }}.minimap2.ideo.png
+    - {{ results_dir }}/{{ sample.name }}.minimap2.ideo.svg
+    - {{ results_dir }}/{{ sample.name }}.minimap2.tagore.bed
   cpus: 16
   mem: 32G
   walltime: "24:00:00"
