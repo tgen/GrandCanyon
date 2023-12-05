@@ -57,8 +57,8 @@
       --bam {{ bam }} \
       --output-prefix {{ results_dir }}/{{ sample.name }}
 
-    mv {{ results_dir }}/{{ sample.name }}.{{ sample.name }}.copynum.bedgraph {{ results_dir }}/{{ sample.name }}.hificnv.copynum.bedgraph
-    mv {{ results_dir }}/{{ sample.name }}.{{ sample.name }}.depth.bw {{ results_dir }}/{{ sample.name }}.hificnv.depth.bw
-    mv {{ results_dir }}/{{ sample.name }}.{{ sample.name }}.vcf.gz {{ results_dir }}/{{ sample.name }}.hificnv.vcf.gz
+    mv {{ results_dir }}/{{ sample.name }}.{{ sample.rgsm }}.copynum.bedgraph {{ results_dir }}/{{ sample.name }}.hificnv.copynum.bedgraph
+    mv {{ results_dir }}/{{ sample.name }}.{{ sample.rgsm }}.depth.bw {{ results_dir }}/{{ sample.name }}.hificnv.depth.bw
+    mv {{ results_dir }}/{{ sample.name }}.{{ sample.rgsm }}.vcf.gz {{ results_dir }}/{{ sample.name }}.hificnv.vcf.gz
 
 {% endmacro %}
