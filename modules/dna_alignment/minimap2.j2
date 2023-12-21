@@ -129,7 +129,7 @@
   input:
     - {{ constants.grandcanyon.reference_fasta }}
   {% for rgid, rg in sample.read_groups.items() %}
-    - {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
+    - {{ temp_dir }}/{{ rg.rgid }}/{{ sample.name }}_{{ rgid }}.cram
   {% endfor %}
   output: 
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram
@@ -156,9 +156,9 @@
       {{ results_dir }}/{{ sample.name }}.minimap2.cram \
       {% for rgid, rg in sample.read_groups.items() %}
       {% if not loop.last %}
-      {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram \
+      {{ temp_dir }}/{{ rg.rgid }}/{{ sample.name }}_{{ rgid }}.cram \
       {% else %}
-      {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
+      {{ temp_dir }}/{{ rg.rgid }}/{{ sample.name }}_{{ rgid }}.cram
       {% endif %}
       {% endfor %}
 
