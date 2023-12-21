@@ -18,8 +18,9 @@
 
 ## Minimap options added
 # -a	Generate CIGAR and output alignments in the SAM format. Minimap2 outputs in PAF by default.
-# -Y	In SAM output, use soft clipping for supplementary alignments.
 # -L	Write CIGAR with >65535 operators at the CG tag. Older tools are unable to convert alignments with >65535 CIGAR ops to BAM. This option makes minimap2 SAM compatible with older tools. Newer tools recognizes this tag and reconstruct the real CIGAR in memory.
+# -y	Copy input FASTA/Q comments to output.
+# -Y	In SAM output, use soft clipping for supplementary alignments.
 
 # Commonly modified values per default
 # -k INT	Minimizer k-mer length [15]
@@ -97,8 +98,9 @@
       -x sr \
       {% endif %}
       -a \
-      -Y \
       -L \
+      -y \
+      -Y \
       --secondary=no \
       -R "{{ read_group_line(rg, format='minimap2') }}" \
       {{ constants.grandcanyon.reference_fasta }} \
@@ -125,6 +127,7 @@
   tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
   reset: predecessors
   input:
+    - {{ constants.grandcanyon.reference_fasta }}
   {% for rgid, rg in sample.read_groups.items() %}
     - {{ temp_dir }}/{{ rgid.rgid }}/{{ sample.name }}_{{ rgid }}.cram
   {% endfor %}
@@ -146,6 +149,7 @@
     #}
     samtools merge \
       --threads 4 \
+      --reference {{ constants.grandcanyon.reference_fasta }} \
       -c \
       -f \
       --write-index \
