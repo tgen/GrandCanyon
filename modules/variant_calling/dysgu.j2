@@ -3,7 +3,10 @@
 {%- set bam %}{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.cram{% endset %}
 {%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/dysgu/{{ sample.name }}_minimap2{% endset %}
 {%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/dysgu/{{ sample.name }}_minimap2{% endset %}
-{%- set discordant_bam %}{{ results_dir }}/{{ sample.name }}.minimap2.discordant.bam{% endset %}
+{%- set discordant_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.discordant.bam{% endset %}
+{%- set discordant_cram %}{{ results_dir }}/{{ sample.name }}.minimap2.discordant.cram{% endset %}
+{%- set temp_all_vcf %}{{ temp_dir }}/{{ sample.name }}.minimap2.dysgu.all.vcf{% endset %}
+{%- set temp_pass_vcf %}{{ temp_dir }}/{{ sample.name }}.minimap2.dysgu.pass.vcf{% endset %}
 {%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.dysgu.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.dysgu.pass.vcf.gz{% endset %}
 
@@ -98,7 +101,7 @@
 
     dysgu call \
       --ibam {{ bam }} \
-      --svs-out {{ all_vcf }} \
+      --svs-out {{ temp_all_vcf }} \
       --out-format vcf \
       --pfix "_tempf_" \
       {% if sample.rgpl in ('ONT') %}
@@ -219,9 +222,9 @@
 
 - name: dysgu_filter_{{ sample.name }}_minimap2
   input:
-    - {{ all_vcf }}
+    - {{ temp_all_vcf }}
   output:
-    - {{ pass_vcf }}
+    - {{ temp_pass_vcf }}
   cpus: 8
   mem: 32G
   walltime: "24:00:00"
@@ -235,8 +238,8 @@
       --min-prob 0.2 \
       --support-fraction 0.15 \
       --pass-prob 0.3 \
-      {{ all_vcf }} \
-      > {{ pass_vcf }}
+      {{ temp_all_vcf }} \
+      > {{ temp_pass_vcf }}
 
 {#
 #Usage: dysgu filter [OPTIONS] INPUT_VCF [NORMAL_BAMS]...
@@ -270,5 +273,62 @@
 #                                to ignore  [default: -1]
 #  --help                        Show this message and exit.
 #}
+
+- name: dysgu_samtools_compress_{{ sample.name }}_minimap2
+  input:
+    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ discordant_bam }}
+  output:
+    - {{ discordant_cram }}
+    - {{ discordant_cram }}.crai
+  walltime: "8:00:00"
+  cpus: 8
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# Convert to compressed VCF #}
+    samtools view \
+      -@ 8 \
+      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --no-PG \
+      -o {{ discordant_cram }} \
+      --write-index \
+      {{ discordant_bam }}
+
+- name: dysgu_bcftools_compress_{{ sample.name }}_minimap2
+  input:
+    - {{ temp_all_vcf }}
+    - {{ temp_pass_vcf }}
+  output:
+    - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  walltime: "4:00:00"
+  cpus: 4
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    bcftools view \
+        --threads 4 \
+        --output-type z \
+        --output-file {{ all_vcf }} \
+        --write-index \
+        {{ temp_all_vcf }}
+
+    bcftools view \
+        --threads 4 \
+        --output-type z \
+        --output-file {{ pass_vcf }} \
+        --write-index \
+        {{ temp_pass_vcf }}
 
 {% endmacro %}
