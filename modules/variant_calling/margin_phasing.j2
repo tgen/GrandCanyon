@@ -20,7 +20,7 @@
     - {{ results_dir }}/{{ output_prefix }}.phased.vcf
     - {{ results_dir }}/{{ output_prefix }}.phaseset.bed
     {% if tasks.margin_phase_keep_phased_bam | default(true) %}
-    - {{ results_dir }}/{{ output_prefix }}.haplotagged.bam
+    - {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam
     {% endif %}
   cpus: 8
   mem: 32G
@@ -47,8 +47,40 @@
       {% if not tasks.margin_phase_keep_phased_bam | default(true) %}
       --skipHaplotypeBAM \
       {% endif %}
-      -o {{ results_dir }}/{{ output_prefix }}
+      -o {{ temp_dir }}/{{ output_prefix }}
 
+    mv {{ temp_dir }}/{{ output_prefix }}.chunks.csv {{ results_dir }}/
+    mv {{ temp_dir }}/{{ output_prefix }}.phased.vcf {{ results_dir }}/
+    mv {{ temp_dir }}/{{ output_prefix }}.phaseset.bed {{ results_dir }}/
+
+
+{% if not tasks.margin_phase_keep_phased_bam | default(true) %}
+- name: margin_deepvariant_samtools_compress_{{ sample.name }}_minimap2
+  input:
+    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam
+  output:
+    - {{ results_dir }}/{{ output_prefix }}.haplotagged.cram
+    - {{ results_dir }}/{{ output_prefix }}.haplotagged.cram.crai
+  walltime: "8:00:00"
+  cpus: 8
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# Convert to compressed VCF #}
+    samtools view \
+      -@ 8 \
+      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --no-PG \
+      -o {{ results_dir }}/{{ output_prefix }}.haplotagged.cram \
+      --write-index \
+      {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam
+
+{% endif %}
 
 - name: margin_deepvariant_bcftools_compress_{{ sample.name }}_minimap2
   input:
