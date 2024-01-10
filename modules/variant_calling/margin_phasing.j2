@@ -54,7 +54,7 @@
     mv {{ temp_dir }}/{{ output_prefix }}.phaseset.bed {{ results_dir }}/
 
 
-{% if not tasks.margin_phase_keep_phased_bam | default(true) %}
+{% if tasks.margin_phase_keep_phased_bam | default(true) %}
 - name: margin_deepvariant_samtools_compress_{{ sample.name }}_minimap2
   input:
     - {{ constants.grandcanyon.reference_fasta }}
@@ -88,7 +88,7 @@
   output:
     - {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
     - {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz.tbi
-  walltime: "8:00:00"
+  walltime: "4:00:00"
   cpus: 4
   mem: 8G
   queue_preset: "DEFAULT"
