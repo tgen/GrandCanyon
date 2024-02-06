@@ -1,0 +1,62 @@
+
+{% macro whatshap_haplotag(sample, input_vcf, input_bam, temp_dir, results_dir, output_prefix) %}
+
+- name: whatshap_haplotag_{{ variant_caller }}_{{ sample.name }}_minimap2
+  input:
+    - {{ input_vcf }}
+    - {{ input_bam }}
+    - {{ input_bam }}.bai
+    - {{ constants.grandcanyon.reference_fasta }}
+  output:
+    - {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.whatshap.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ temp_dir }}
+
+    whatshap haplotag \
+      --reference {{ constants.grandcanyon.reference_fasta }} \
+      -o {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam \
+      --ignore-read-groups \
+      --tag-supplementary \
+      --skip-missing-contigs \
+      --output-threads=4 \
+      {{ input_vcf }} \
+      {{ input_bam }}
+
+
+- name: whatshap_haplotag_{{ variant_caller }}_samtools_compress_{{ sample.name }}_minimap2
+  input:
+    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam
+  output:
+    - {{ results_dir }}/{{ output_prefix }}.haplotagged.cram
+    - {{ results_dir }}/{{ output_prefix }}.haplotagged.cram.crai
+  walltime: "8:00:00"
+  cpus: 8
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    {# Convert to compressed VCF #}
+    samtools view \
+      -@ 8 \
+      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --no-PG \
+      -o {{ results_dir }}/{{ output_prefix }}.haplotagged.cram \
+      --write-index \
+      {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam
+
+
+{% endmacro %}

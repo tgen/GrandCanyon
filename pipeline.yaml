@@ -63,6 +63,8 @@ constants:
       container: ensemblorg/ensembl-vep:release_107.0
     verkko:
       container: quay.io/biocontainers/verkko:1.4.1--h48217b1_0
+    whatshap:
+      container: quay.io/biocontainers/whatshap:2.2--py310h0dbaff4_0
   grandcanyon:
     species: Homo sapiens
     genome_build: t2t_chm13

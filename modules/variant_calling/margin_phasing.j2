@@ -5,15 +5,13 @@
   to phase a VCF generated using PacBio-HiFi data use: allParams.phase_vcf.pb-hifi.json
 #}
 
-{% macro margin(sample, input_vcf, temp_dir, results_dir, output_prefix) %}
-
-{%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
+{% macro margin(sample, input_vcf, input_bam, temp_dir, results_dir, output_prefix) %}
 
 - name: margin_deepvariant_{{ sample.name }}_minimap2
   input:
     - {{ input_vcf }}
-    - {{ bam }}
-    - {{ bam }}.bai
+    - {{ input_bam }}
+    - {{ input_bam }}.bai
     - {{ constants.grandcanyon.reference_fasta }}
   output:
     - {{ results_dir }}/{{ output_prefix }}.chunks.csv
@@ -35,7 +33,7 @@
     mkdir -p {{ results_dir }}
 
     margin phase \
-      {{ bam }} \
+      {{ input_bam }} \
       {{ constants.grandcanyon.reference_fasta }} \
       {{ input_vcf }} \
       {% if sample.rgpl == 'ONT' %}

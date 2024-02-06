@@ -1,5 +1,6 @@
 {% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
 {% from 'modules/variant_calling/margin_phasing.j2' import margin with context %}
+{% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
 
 {%- macro deepvariant(sample, taskPrefix='Genome') %}
 
@@ -7,6 +8,7 @@
 {%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/deepvariant/{{ sample.name }}_minimap2{% endset %}
 {%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/deepvariant/{{ sample.name }}_minimap2{% endset %}
 {%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.all.vcf.gz{% endset %}
+{%- set all_gvcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.all.g.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.pass.vcf.gz{% endset %}
 
 {%- set nshards=40 %}
@@ -109,9 +111,9 @@
     - {{ constants.grandcanyon.reference_fasta }}
   output:
     - {{ all_vcf }}
-    - {{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.all.g.vcf.gz
+    - {{ all_gvcf }}
   cpus: 20
-  mem: 120G
+  mem: 160G
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.deepvariant.container }}
@@ -166,9 +168,12 @@
 
     bcftools index --tbi --force "{{ pass_vcf }}"
 
+{% set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
 {% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.margin{% endset %}
 {% set margin_output %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.margin.phased.vcf.gz{% endset %}
-{{- margin(sample, pass_vcf, temp_dir, results_dir, output_prefix) }}
+{{- margin(sample, pass_vcf, bam, temp_dir, results_dir, output_prefix) }}
 {{- annotate_vcfs(sample, temp_dir, results_dir, margin_output, taskPrefix, 'minimap2', 'deepvariant') }}
+{% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.whatshap{% endset %}
+{{- whatshap_haplotag(sample, margin_output, bam, temp_dir, results_dir, output_prefix) }}
 
 {% endmacro %}
