@@ -279,6 +279,6 @@
 {% set margin_phased_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.margin.phased.vcf.gz{% endset %}
 {{- annotate_vcfs(sample, temp_dir, results_dir, margin_phased_vcf, taskPrefix, 'minimap2', 'deepvariant') }}
 {% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.whatshap{% endset %}
-{{- whatshap_haplotag(sample, margin_phased_vcf, bam, temp_dir, results_dir, output_prefix) }}
+{{- whatshap_haplotag(sample, margin_phased_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant') }}
 
 {% endmacro %}

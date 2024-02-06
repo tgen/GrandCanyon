@@ -1,5 +1,5 @@
 
-{% macro whatshap_haplotag(sample, input_vcf, input_bam, temp_dir, results_dir, output_prefix) %}
+{% macro whatshap_haplotag(sample, input_vcf, input_bam, temp_dir, results_dir, output_prefix, variant_caller) %}
 
 - name: whatshap_haplotag_{{ variant_caller }}_{{ sample.name }}_minimap2
   input:
