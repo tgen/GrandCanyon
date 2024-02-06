@@ -251,7 +251,7 @@
 
 {% endif %}
 
-- name: margin_deepvariant_bcftools_compress_{{ sample.name }}_minimap2
+- name: deepvariant_margin_bcftools_compress_{{ sample.name }}_minimap2
   input:
     - {{ results_dir }}/{{ output_prefix }}.phased.vcf
   output:
