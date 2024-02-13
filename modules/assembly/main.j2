@@ -1,4 +1,5 @@
 {% from 'modules/assembly/flye.j2' import flye with context %}
+{% from 'modules/assembly/verkko.j2' import verkko with context %}
 {% from 'modules/assembly/hifiasm.j2' import hifiasm with context %}
 
 {%- macro assembly(samples) %}
@@ -41,6 +42,9 @@
     {% endif %}
     {% if tasks[taskPrefix+"_assembly_hifiasm"]|default(false) %}
       {{- hifiasm(pair) }}
+    {% endif %}
+    {% if tasks[taskPrefix+"_assembly_verkko"]|default(false) %}
+      {{- verkko(pair) }}
     {% endif %}
   {% endfor %}
 

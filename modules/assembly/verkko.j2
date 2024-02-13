@@ -1,9 +1,7 @@
-{% from 'modules/assembly/assembly_stats.j2' import assembly_stats with context %}
+{% macro verkko(pair) %}
 
-{% macro flye(pair) %}
-
-{%- set temp_dir %}temp/{{ pair.gltype }}/assembly/flye/{{ pair.project }}{% endset %}
-{%- set results_dir %}{{ pair.gltype }}/assembly/flye/{{ pair.project }}{% endset %}
+{%- set temp_dir %}temp/{{ pair.gltype }}/assembly/verkko/{{ pair.project }}{% endset %}
+{%- set results_dir %}{{ pair.gltype }}/assembly/verkko/{{ pair.project }}{% endset %}
 
 {% set ontfqlist = [] %}
 {% set pacbiofqlist = [] %}
@@ -22,7 +20,7 @@
   {% endfor %}
 {% endfor %}
 
-- name: flye_{{ pair.project }}
+- name: verkko_{{ pair.project }}
   input:
     {% for ontfq in ontfqlist %}
     - {{ ontfq }}
@@ -30,31 +28,26 @@
     {% for pacbiofq in pacbiofqlist %}
     - {{ pacbiofq }}
     {% endfor %}
-  output:
-    - {{ results_dir }}/assembly.fasta
-    - {{ results_dir }}/assembly_graph.gfa
-    - {{ results_dir }}/assembly_graph.gv
-    - {{ results_dir }}/assembly_info.txt
+  output: {{ results_dir }}
   cpus: 20
   mem: 200G
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
-  container: {{ constants.tools.flye.container }}
+  container: {{ constants.tools.verkko.container }}
   cmd: |
     set -eu
     set -o pipefail
 
-    flye \
-      --threads 20 \
+    verkko \
+      --local-cpus 20 \
+      --local-memory 200 \
       {% if pacbiofqlist | length > 0 %}
-      --pacbio-hifi "{{ pacbiofqlist | join('" "') }}" \
+      --hifi "{{ pacbiofqlist | join('" "') }}" \
       {% endif %}
       {% if ontfqlist | length > 0 %}
-      --nano-hq "{{ ontfqlist | join('" "') }}" \
+      --nano "{{ ontfqlist | join('" "') }}" \
       {% endif %}
-      --out-dir {{ results_dir }}
-
-{% input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
-{{- assembly_stats(pair, input_assembly, 'flye') }}
+      -d {{ results_dir }}
 
 {% endmacro %}
+
