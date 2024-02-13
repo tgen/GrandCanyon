@@ -62,3 +62,30 @@
 
 {% endmacro %}
 
+{% macro somatic_variant_calling(samples) %}
+
+{% set pairs = [] %}
+{% for tumor in samples.values() if tumor.subGroup|lower == 'tumor' and tumor.gltype in ('exome', 'genome') %}
+  {% for normal in samples.values() if normal.subGroup|lower == 'constitutional' and normal.gltype == tumor.gltype and normal.assayCode == tumor.assayCode %}
+    {% set pair_name = normal.name + '-' + tumor.name %}
+    {% do pairs.append({'name': pair_name, 'gltype': normal.gltype, 'normal': normal, 'tumor': tumor}) %}
+  {% endfor %}
+{% endfor %}
+
+{# Start of the macro calls that will actually add the tasks to the workflow #}
+{% for pair in pairs %}
+  {% if sample.gltype in 'exome' %}
+    {% set taskPrefix = 'Exome' %}
+  {% elif sample.gltype in ['genome','genomephased'] %}
+    {% set taskPrefix = 'Genome' %}
+  {% endif %}
+
+  {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(true) %}
+    {{- deepsomatic(pair) }}
+  {% endif %}
+
+{% endfor %}
+
+{% endmacro %}
+
+

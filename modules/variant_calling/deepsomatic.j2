@@ -1,0 +1,79 @@
+{%- macro deepsomatic(pair, taskPrefix='Genome') %}
+
+{%- set normal_bam %}{{ pair.normal.gltype }}/alignment/minimap2/{{ pair.normal.name }}/{{ pair.normal.name }}.minimap2.cram{% endset %}
+{%- set tumor_bam %}{{ pair.tumor.gltype }}/alignment/minimap2/{{ pair.tumor.name }}/{{ pair.tumor.name }}.minimap2.cram{% endset %}
+{%- set temp_dir %}temp/{{ pair.gltype }}/somatic_variant_calls/deepsomatic/{{ pair.name }}_minimap2{% endset %}
+{%- set results_dir %}{{ pair.gltype }}/somatic_variant_calls/deepsomatic/{{ pair.name }}_minimap2{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ pair.name }}.minimap2.deepsomatic.all.vcf.gz{% endset %}
+{%- set all_gvcf %}{{ results_dir }}/{{ pair.name }}.minimap2.deepsomatic.all.g.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ pair.name }}.minimap2.deepsomatic.pass.vcf.gz{% endset %}
+
+- name: deepsomatic_{{ pair.name }}_minimap2
+  tags: [{{ pair.gltype }}, somatic, snp_indel_caller, deepsomatic, {{ pair.name }}]
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon.reference_fasta }}
+  output:
+    - {{ all_vcf }}
+    - {{ all_gvcf }}
+  cpus: 20
+  mem: 120G
+  walltime: "24:00:00"
+  queue_preset: "DEEPVARIANT"
+  container: {{ constants.tools.deepsomatic.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    run_deepsomatic \
+      {% if sample.rgpl in ('ONT') %}
+      --model_type ONT_R104 \
+      {% elif sample.rgpl in ('PACBIO') %}
+      --model_type PACBIO \
+      {% endif %}
+      --ref {{ constants.grandcanyon.reference_fasta }} \
+      --reads_tumor {{ tumor_bam }} \
+      --reads_normal {{ normal_bam }} \
+      --output_vcf {{ all_vcf }} \
+      --output_gvcf {{ all_gvcf }} \
+      --pair_name_tumor {{ pair.tumor.name }} \
+      --pair_name_normal {{ pair.normal.name }} \
+      --num_shards 20 \
+      --logging_dir {{ temp_dir }}/logs \
+      --intermediate_results_dir {{ temp_dir }}/intermediate_results_dir
+
+
+- name: deepsomatic_filter_variants_{{ pair.name }}_minimap2
+  tags: [{{ pair.gltype }}, somatic, snp_indel_caller, deepsomatic, {{ pair.name }}]
+  input:
+    - {{ all_vcf }}
+  output:
+    - {{ all_vcf }}.tbi
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    bcftools index --tbi --force "{{ all_vcf }}"
+
+    {# Then filter out the PASS variants to a separate file #}
+    bcftools filter \
+      --output-type z \
+      --include 'FILTER == "PASS"' \
+      "{{ all_vcf }}" \
+      > "{{ pass_vcf }}"
+
+    bcftools index --tbi --force "{{ pass_vcf }}"
+
+{% endmacro %}
