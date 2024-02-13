@@ -2,7 +2,7 @@
 # Some qc steps only report stats at the bam level and spliting the bam allows for collecting those same
 # stats at the library level.
 
-{% macro split_bam(sample, sample_lb, sample_rgs, aligner='bwa') %}
+{% macro split_bam(sample, sample_lb, sample_rgs, aligner='minimap2') %}
 {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
 {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
 {% set temp_lb_bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam{% endset %}
