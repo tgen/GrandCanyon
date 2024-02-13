@@ -92,14 +92,15 @@
       -k 19 -w 19 -u -o 6 -O 26 -e 2 -E 1 -A 1 -B 4 -z 400 -Z 50 -r 2000 -g 5000 \
       --eqx \
       {% endif %}
+      -y \
       {% elif rg.rgpl == 'ONT' %}
       -x map-ont \
+      -y \
       {% else %}
       -x sr \
       {% endif %}
       -a \
       -L \
-      -y \
       -Y \
       --secondary=no \
       -R "{{ read_group_line(rg, format='minimap2') }}" \
