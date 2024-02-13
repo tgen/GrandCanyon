@@ -1,0 +1,73 @@
+# These macros are run on rna bams from the star_quant module.
+
+{% from 'modules/qc/stats2json.j2' import stats2json with context %}
+
+{% macro bam_qc_gatk_collectrnaseqmetrics(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner='star', bam_level=true) %}
+{% if tasks[taskPrefix+"_quality_control_stats_gatk_CollectRnaSeqMetrics"]|default(false) %}
+
+  {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+
+  {% if bam_level is sameas false %}
+    {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
+    {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
+    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam{% endset %}
+  {% else %}
+    {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
+    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+  {% endif %}
+
+  {% set rna_metrics %}{{ results_dir }}/{{ bam|basename }}.rna_metrics{% endset %}
+  {% set rna_metrics_json %}{{ rna_metrics }}.json{% endset %}
+
+- name: gatk_collectrnaseqmetrics_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, stats, gatk_CollectRnaSeqMetrics, {{ sample.name }}]
+  input: 
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon.ref_flat }}
+    - {{ constants.grandcanyon.ribo_locations }}
+  output:
+    - {{ rna_metrics }}
+    - {{ rna_metrics }}.pdf
+    {% if libraryCount == 1 %}
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.rna_metrics.pdf
+    {% endif %}
+  {% if bam_level is sameas false %}
+  reset: predecessors
+  {% endif %}
+  walltime: "12:00:00"
+  cpus: 2
+  mem: 16G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.gatk.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ results_dir }}"
+
+    gatk CollectRnaSeqMetrics \
+      --java-options "-Xmx14G" \
+      --IGNORE_SEQUENCE chrEBV \
+      --STRAND_SPECIFICITY {{ constants.grandcanyon.strandedness_options[sample.strandedness].collectrnaseqmetrics }} \
+      --VALIDATION_STRINGENCY LENIENT \
+      --REF_FLAT "{{ constants.grandcanyon.ref_flat }}" \
+      --RIBOSOMAL_INTERVALS "{{ constants.grandcanyon.ribo_locations }}" \
+      --METRIC_ACCUMULATION_LEVEL ALL_READS \
+      --METRIC_ACCUMULATION_LEVEL SAMPLE \
+      --METRIC_ACCUMULATION_LEVEL LIBRARY \
+      --INPUT "{{ bam }}" \
+      --CHART_OUTPUT "{{ rna_metrics }}.pdf" \
+      --OUTPUT "{{ rna_metrics }}"
+
+    {% if libraryCount == 1 %}
+    if [ -f "{{ rna_metrics }}.pdf" ]; then
+      cp {{ rna_metrics }}.pdf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.rna_metrics.pdf
+    fi
+    {% endif %}
+
+  {% if bam_level is sameas true %}
+    {{- stats2json(sample.gltype, sample.name, task, rna_metrics, rna_metrics_json, "picard_rna_metrics") }}
+  {% endif %}
+{% endif %}
+{% endmacro %}

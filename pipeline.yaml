@@ -3,6 +3,7 @@ __pipeline__:
   main: main.j2
   description: Human CHM13 genomics suite
   version: 0.0.1.dev1
+  bin: required_scripts/
 constants:
   tools:
     assembly-stats:
@@ -17,6 +18,8 @@ constants:
       container: quay.io/biocontainers/cutesv:2.0.3--pyhdfd78af_0
     cytocad:
       container: quay.io/biocontainers/cytocad:1.0.3--py310h4b81fae_2
+    deepsomatic:
+      container: google/deepsomatic:1.6.0-gpu
     deepvariant:
       container: google/deepvariant:1.6.0-gpu
     dysgu:
@@ -47,12 +50,18 @@ constants:
       container: quay.io/biocontainers/pbsv:2.9.0--h9ee0642_0
     pychopper:
       container: quay.io/biocontainers/pychopper:2.5.0--py_0
+    python3:
+      container: python:3.7.16-slim-bullseye
+    python3_with_modules:
+      container: ghcr.io/tgen/jetstream_containers/python:3.7.2-v1-with_modules
+    R:
+      container: ghcr.io/tgen/containers/r_with_modules:4.1.2-23080815
     salmon:
       container: quay.io/biocontainers/salmon:1.10.2--hecfa306_0
     samtools:
       container: quay.io/biocontainers/samtools:1.18--h50ea8bc_1
     severus:
-      container: quay.io/biocontainers/severus:0.1.1--pyhdfd78af_0
+      container: quay.io/biocontainers/severus:0.1.2--pyhdfd78af_0
     shasta:
       container: quay.io/biocontainers/shasta:0.11.1--h4ac6f70_2
     sniffles:
@@ -62,7 +71,7 @@ constants:
     vep:
       container: ensemblorg/ensembl-vep:release_107.0
     verkko:
-      container: quay.io/biocontainers/verkko:1.4.1--h48217b1_0
+      container: quay.io/biocontainers/verkko:2.0--h45dadce_0
     whatshap:
       container: quay.io/biocontainers/whatshap:2.2--py310h0dbaff4_0
   grandcanyon:
@@ -81,3 +90,41 @@ constants:
     transcriptome: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-cdna.fa
     transcriptomeSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/transcriptome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa
     vep_data: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/indexed_vep_data
+    ref_flat: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.refFlat.txt
+    ribo_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.ribo.interval_list
+    required_scripts:
+      plotSamStats_Rscript: summarize_samstats.R
+      stats2json: samStats2json.py
+      stats2lims: uploadStats2Lims.py
+    lims_contigs: "chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,
+      chrY,
+      chrM,
+      chrUn_GL000220v1,
+      chr22_KI270733v1_random,
+      chrUn_KN707925v1_decoy,
+      chr14_KI270726v1_random,
+      chrUn_JTFH01000119v1_decoy,
+      chrUn_JTFH01000204v1_decoy,
+      chrUn_JTFH01000678v1_decoy,
+      chrUn_JTFH01000497v1_decoy,
+      chrUn_KN707927v1_decoy,
+      chrUn_JTFH01000562v1_decoy,
+      chrUn_JTFH01000659v1_decoy,
+      chrUn_JTFH01001134v1_decoy,
+      chrUn_JTFH01000888v1_decoy,
+      chrUn_JTFH01000695v1_decoy,
+      chrUn_JTFH01000697v1_decoy"
+    strandedness_options:
+      inward-unstranded-notapplicable:
+        salmon: "IU"
+        featurecounts: "0"
+        collectrnaseqmetrics: "NONE"
+      inward-stranded-forward:
+        salmon: "ISF"
+        featurecounts: "1"
+        collectrnaseqmetrics: "FIRST_READ_TRANSCRIPTION_STRAND"
+      inward-stranded-reverse:
+        salmon: "ISR"
+        featurecounts: "2"
+        collectrnaseqmetrics: "SECOND_READ_TRANSCRIPTION_STRAND"
+

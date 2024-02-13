@@ -1,4 +1,19 @@
+# Splits a bam if the sample has more than one library
+{% from 'modules/qc/split_bam.j2' import split_bam with context %}
+
+# Performed on all bams
 {% from 'modules/qc/bam_qc_all.j2' import bam_qc_samtools_stats with context %}
+{% from 'modules/qc/bam_qc_all.j2' import bam_qc_samtools_idxstats with context %}
+{% from 'modules/qc/bam_qc_all.j2' import bam_qc_gatk_collectmultiplemetrics with context %}
+
+# Performed on genomes
+
+# Performed on exomes
+
+# Performed on rna
+{% from 'modules/qc/bam_qc_rna.j2' import bam_qc_gatk_collectrnaseqmetrics with context %}
+
+# Performed on constitutional dna
 
 {% macro bam_qc(sample, aligner='minimap2') %}
 
@@ -14,16 +29,34 @@
       {% set taskPrefix = 'Genome' %}
     {% endif %}
 
+    {% if sample.gltype == 'rna' %}
+      {% set taskPrefix = 'RNA' %}
+      {{- bam_qc_gatk_collectrnaseqmetrics(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner) }}
+    {% elif sample.gltype == 'exome' %}
+      {% set taskPrefix = 'Exome' %}
+    {% elif sample.gltype == 'genome' %}
+      {% set taskPrefix = 'Genome' %}
+    {% endif %}
+
     {# Tasks performed on all bams #}
     {{- bam_qc_samtools_stats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner) }}
+    {{- bam_qc_samtools_idxstats(sample, librarycount, sample_lb, taskprefix=taskprefix, aligner=aligner) }}
+    {{- bam_qc_gatk_collectmultiplemetrics(sample, librarycount, sample_lb, taskprefix=taskprefix, aligner=aligner) }}
 
     {% if libraryCount > 1 %}
       {% for sample_lb, sample_rgs in sample.read_groups.values()|groupby('rglb') %}
 
         {{- split_bam(sample, sample_lb, sample_rgs, aligner=aligner) }}
 
+        {% if sample.gltype == 'rna' %}
+          {{- bam_qc_gatk_collectrnaseqmetrics(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=false) }}
+        {% elif sample.gltype == 'genome' %}
+        {% endif %}
+
         {# Tasks performed on all bams #}
         {{- bam_qc_samtools_stats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=false) }}
+        {{- bam_qc_samtools_idxstats(sample, librarycount, sample_lb, taskprefix=taskprefix, aligner=aligner, bam_level=false) }}
+        {{- bam_qc_gatk_collectmultiplemetrics(sample, librarycount, sample_lb, taskprefix=taskprefix, aligner=aligner, bam_level=false) }}
       {% endfor %}
     {% endif %}
 {% endmacro %}

@@ -3,6 +3,13 @@
     {% set tasks = {} %}
 {% endif %}
 
+{% set required_scripts = {} %}
+{% for name, value in constants.grandcanyon.required_scripts.items() %}
+    {% set path = '${JS_PIPELINE_PATH}/' ~ __pipeline__.bin ~ value %}
+    {% do required_scripts.update({name: {}}) %}
+    {% do required_scripts[name].update({"path": path}) %}
+{% endfor %}
+
 {% from 'utilities/copy_fastq.j2' import copy_fastq with context %}
 {% from 'utilities/copy_ubam.j2' import copy_ubam with context %}
 {% from 'utilities/copy_bam.j2' import copy_bam with context %}
@@ -65,6 +72,14 @@
       {% endif %}
     {% endfor %}
   {% endfor %}
+{% endfor %}
+
+{% for sample in samples.values() if sample.gltype == 'rna' %}
+    {% set readOrientation=sample.readOrientation|default('inward')|lower %}
+    {% set rnaStrandType=sample.rnaStrandType|default('unstranded')|lower %}
+    {% set rnaStrandDirection=sample.rnaStrandDirection|default('notapplicable')|lower %}
+    {% set strandedness %}{{ readOrientation }}-{{ rnaStrandType }}-{{ rnaStrandDirection }}{% endset %}
+    {% do sample.update({'strandedness': strandedness}) %}
 {% endfor %}
 
 {# Copy fastqs to project dir #}
