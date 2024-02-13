@@ -6,14 +6,6 @@
 
 {% macro stats2json(tag1, tag2, task, input_file, output_file, file_type, sample=none, sample_name=none, library_name=none, read_group_name=none, lims_upload=true ) %}
 
-{% if sample is not none %}
-  {% if sample.aligners | length > 1 %}
-    {% if 'bwa' not in task %}
-      {% set lims_upload=false %}
-    {% endif %}
-  {% endif %}
-{% endif %}
-
 - name: stats2json_{{ task }}_{{ file_type }}
   tags: [{{ tag1 }}, quality_control, stats, stats2json, {{ tag2 }}]
   input: {{ input_file }}

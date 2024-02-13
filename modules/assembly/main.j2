@@ -4,7 +4,7 @@
 {%- macro assembly(samples) %}
 
   {% set pairs = [] %}
-  {% for sample in samples.values()|selectattr('subGroup', 'eq', 'Constitutional')|selectattr('glType', 'eq', 'Genome') %}
+  {% for sample in samples.values()|selectattr('subGroup', 'eq', 'Constitutional')|selectattr('gltype', 'in', ['genome','genomephased']) %}
     {% set pair = {'project': project} %}
     {% do pair.update({'gltype': 'genome'}) %}
     {% do pair.update({'ont': []}) %}
@@ -31,6 +31,11 @@
   {% endfor %}
 
   {% for pair in pairs %}
+    {% if pair.gltype in 'exome' %}
+      {% set taskPrefix = 'Exome' %}
+    {% elif pair.gltype in ['genome','genomephased'] %}
+      {% set taskPrefix = 'Genome' %}
+    {% endif %}
     {% if tasks[taskPrefix+"_assembly_flye"]|default(false) %}
       {{- flye(pair) }}
     {% endif %}

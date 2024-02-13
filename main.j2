@@ -10,6 +10,11 @@
     {% do required_scripts[name].update({"path": path}) %}
 {% endfor %}
 
+{# submissionSource toggles specific tasks based on how they were submitted #}
+{% if submissionSource is not defined %}
+    {% set submissionSource = "unknown" %}
+{% endif %}
+
 {% from 'utilities/copy_fastq.j2' import copy_fastq with context %}
 {% from 'utilities/copy_ubam.j2' import copy_ubam with context %}
 {% from 'utilities/copy_bam.j2' import copy_bam with context %}
