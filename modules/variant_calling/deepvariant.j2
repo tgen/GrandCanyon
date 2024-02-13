@@ -271,8 +271,9 @@
         --threads 4 \
         --output-type z \
         --output-file {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz \
-        --write-index \
         {{ results_dir }}/{{ output_prefix }}.phased.vcf
+
+    bcftools index --tbi --force {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
 
     rm {{ results_dir }}/{{ output_prefix }}.phased.vcf
 
