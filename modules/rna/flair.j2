@@ -1,13 +1,11 @@
-{% macro flair(sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
+{% macro flair(sample, sample_bam, input_fq, reference_fasta, gtf, SIRV=false) %}
 
 {% if SIRV %}
   {% set temp_dir %}temp/{{ sample.gltype }}/quant/flair_SIRV/{{ sample.name }}{% endset %}
   {% set results_dir %}{{ sample.gltype }}/quant/flair_SIRV/{{ sample.name }}{% endset %}
-  {% set input_fq %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/pychopper/{{ sample.name }}/pychopper_all.fq{% endset %}
 {% else %}
   {% set temp_dir %}temp/{{ sample.gltype }}/quant/flair/{{ sample.name }}{% endset %}
   {% set results_dir %}{{ sample.gltype }}/quant/flair/{{ sample.name }}{% endset %}
-  {% set input_fq %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq{% endset %}
 {% endif %}
 
 {% if SIRV %}

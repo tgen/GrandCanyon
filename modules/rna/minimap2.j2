@@ -232,14 +232,16 @@
 
 {% if tasks['RNA_transcriptome_quantify_expression_flair']|default(true) %}
   {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.minimap2.bam{% endset %}
+  {% set input_fastq %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}_SIRVome_unmapped.fq{% endset %}
   {% set reference_fasta %}{{ constants.grandcanyon.reference_fasta }}{% endset %}
   {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
-  {{- flair(sample, sample_bam, reference_fasta, gtf, SIRV=false) }}
+  {{- flair(sample, sample_bam, input_fastq, reference_fasta, gtf, SIRV=false) }}
   {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.minimap2.sirv.bam{% endset %}
+    {% set input_fastq %}{{ prepped_fastq }}{% endset %}
     {% set reference_fasta %}{{ constants.grandcanyon.reference_fastaSIRV }}{% endset %}
     {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
-    {{- flair(sample, sample_bam, reference_fasta, gtf, SIRV=true) }}
+    {{- flair(sample, sample_bam, input_fastq, reference_fasta, gtf, SIRV=true) }}
   {% endif %}
 {% endif %}
 
