@@ -2,7 +2,7 @@
 
 {% from 'modules/qc/stats2json.j2' import stats2json with context %}
 
-{% macro bam_qc_gatk_collectrnaseqmetrics(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner='star', bam_level=true) %}
+{% macro bam_qc_gatk_collectrnaseqmetrics(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner='minimap2', bam_level=true) %}
 {% if tasks[taskPrefix+"_quality_control_stats_gatk_CollectRnaSeqMetrics"]|default(true) %}
 
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
@@ -21,7 +21,7 @@
 
 - name: gatk_collectrnaseqmetrics_{{ task }}
   tags: [{{ sample.gltype }}, quality_control, stats, gatk_CollectRnaSeqMetrics, {{ sample.name }}]
-  input: 
+  input:
     - {{ bam }}
     - {{ bam }}.bai
     - {{ constants.grandcanyon.ref_flat }}
