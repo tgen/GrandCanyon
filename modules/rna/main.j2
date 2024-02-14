@@ -1,9 +1,11 @@
-{% from 'modules/rna/pygmy.j2' import pygmy with context %}
+{% from 'modules/rna/minimap2.j2' import minimap2_rna with context %}
+{% from 'modules/qc/main.j2' import bam_qc with context %}
 
 {% macro rna_alignment(samples) %}
 
   {% for sample in samples.values() if sample.gltype in ['rna'] %}
-    {{- pygmy(sample) }}
+    {{- minimap2_rna(sample) }}
+    {{- bam_qc(sample, aligner='minimap2')}}
   {% endfor %}
 
 {% endmacro %}
