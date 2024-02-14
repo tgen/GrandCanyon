@@ -1,4 +1,4 @@
-{% macro pygmy_isoquant(sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
+{% macro isoquant(sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
 
 {% if SIRV %}
   {% set temp_dir %}temp/{{ sample.gltype }}/quant/isoquant_SIRV{% endset %}

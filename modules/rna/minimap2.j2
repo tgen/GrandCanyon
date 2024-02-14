@@ -1,4 +1,4 @@
-{% from 'modules/rna/featureCounts.j2' import featurecounts with context %}
+{% from 'modules/rna/featureCounts.j2' import featureCounts with context %}
 {% from 'modules/rna/flair.j2' import flair with context %}
 {% from 'modules/rna/isoquant.j2' import isoquant with context %}
 {% from 'modules/rna/salmon.j2' import salmon with context %}
@@ -48,7 +48,7 @@
       > {{ prepped_fastq }}
 
 {% else %}
-{% set prepped_fastq == input_fastq %}
+{% set prepped_fastq = input_fastq %}
 {% endif %}
 
 - name: minimap2_SIRV_{{ sample.name }}
@@ -211,11 +211,11 @@
 {% if tasks['RNA_transcriptome_quantify_expression_featureCounts']|default(true) %}
   {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.minimap2.bam{% endset %}
   {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
-  {{- featurecounts(sample, sample_bam, gtf, SIRV=false) }}
+  {{- featureCounts(sample, sample_bam, gtf, SIRV=false) }}
   {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.minimap2.sirv.bam{% endset %}
     {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
-    {{- featurecounts(sample, sample_bam, gtf, SIRV=true) }}
+    {{- featureCounts(sample, sample_bam, gtf, SIRV=true) }}
   {% endif %}
 {% endif %}
 
