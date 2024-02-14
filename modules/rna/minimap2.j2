@@ -144,7 +144,7 @@
     - {{ results_dir }}/stats/{{ sample.name }}_mapped_noSupp_readLength.txt
     - {{ results_dir }}/stats/{{ sample.name }}_unmapped_readLength.txt
   cpus: 20
-  mem: 60G
+  mem: 80G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.minimap2.container }}

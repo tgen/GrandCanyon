@@ -71,7 +71,7 @@
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram.crai
     {% endif %}
   cpus: 20
-  mem: 60G
+  mem: 80G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.minimap2.container }}
@@ -132,7 +132,7 @@
   {% for rgid, rg in sample.read_groups.items() %}
     - {{ temp_dir }}/{{ rg.rgid }}/{{ sample.name }}_{{ rgid }}.cram
   {% endfor %}
-  output: 
+  output:
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram.crai
   walltime: "24:00:00"
@@ -170,7 +170,7 @@
   input:
     - {{ constants.grandcanyon.reference_fasta }}
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram
-  output: 
+  output:
     - {{ temp_dir }}/{{ sample.name }}.minimap2.bam
     - {{ temp_dir }}/{{ sample.name }}.minimap2.bam.bai
   walltime: "24:00:00"
