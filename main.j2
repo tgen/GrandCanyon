@@ -43,10 +43,14 @@
         {% do file.update({'subGroup': 'constitutional'}) %}
     {% endif %}
 
+    {% if long_read_only is defined and long_read_only and file.rgpl not in ['ONT', 'PACBIO'] %}
+
+    {% else %}
     {% if name not in samples %}
         {% do samples.update({name: {}}) %}
         {% do samples[name].update(file) %}
         {% do samples[name].update({"name": name}) %}
+    {% endif %}
     {% endif %}
 
 {% endfor %}
@@ -59,6 +63,7 @@
         {% set name = rg.sampleName %}
     {% endif %}
 
+    {% if name in samples %}
     {% if not 'read_groups' in samples[name] %}
         {% do samples[name].update({'read_groups': {}}) %}
     {% endif %}
@@ -66,6 +71,18 @@
     {% do samples[name]['read_groups'].update({rgid: {}}) %}
     {% do samples[name]['read_groups'][rgid].update(rg) %}
     {% do samples[name]['read_groups'][rgid].update({'data_files': data_files}) %}
+
+    {% for file in data_files %}
+      {% if file.fileType == "fastq" %}
+        {{- copy_fastq(file) }}
+      {% elif file.fileType == "ubam" %}
+        {{- copy_ubam(file) }}
+      {% elif file.fileType == "bam" %}
+        {{- copy_bam(file) }}
+      {% endif %}
+    {% endfor %}
+
+    {% endif %}
 {% endfor %}
 
 {% for sample in samples.values() %}
@@ -85,17 +102,6 @@
     {% set rnaStrandDirection=sample.rnaStrandDirection|default('notapplicable')|lower %}
     {% set strandedness %}{{ readOrientation }}-{{ rnaStrandType }}-{{ rnaStrandDirection }}{% endset %}
     {% do sample.update({'strandedness': strandedness}) %}
-{% endfor %}
-
-{# Copy fastqs to project dir #}
-{% for file in dataFiles %}
-  {% if file.fileType == "fastq" %}
-    {{- copy_fastq(file) }}
-  {% elif file.fileType == "ubam" %}
-    {{- copy_ubam(file) }}
-  {% elif file.fileType == "bam" %}
-    {{- copy_bam(file) }}
-  {% endif %}
 {% endfor %}
 
 {# Start of module calls #}
