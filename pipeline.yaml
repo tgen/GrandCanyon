@@ -6,7 +6,7 @@ __pipeline__:
   bin: required_scripts/
 constants:
   tools:
-    assembly-stats:
+    assembly_stats:
       container: quay.io/biocontainers/assembly-stats:1.0.1--h4ac6f70_7
     bcftools:
       container: quay.io/biocontainers/bcftools:1.18--h8b25389_0

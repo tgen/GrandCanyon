@@ -54,7 +54,7 @@
       {% endif %}
       --out-dir {{ results_dir }}
 
-{% input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
+{% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
 {{- assembly_stats(pair, input_assembly, 'flye') }}
 
 {% endmacro %}
