@@ -15,8 +15,8 @@
 
 {% for rg in pair.ont %}
   {% for file in rg.data_files|selectattr('fastqCode', 'eq', 'duplex')|list %}
-    {% set hifi %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do hififqlist.append(ontfq) %}
+    {% set hififq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do hififqlist.append(hififq) %}
   {% endfor %}
 {% endfor %}
 
