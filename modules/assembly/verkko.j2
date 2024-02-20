@@ -4,29 +4,37 @@
 {%- set results_dir %}{{ pair.gltype }}/assembly/verkko/{{ pair.project }}{% endset %}
 
 {% set ontfqlist = [] %}
-{% set pacbiofqlist = [] %}
+{% set hififqlist = [] %}
 
 {% for rg in pair.pacbio %}
   {% for file in rg.data_files %}
     {% set pacbiofq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do pacbiofqlist.append(pacbiofq) %}
+    {% do hififqlist.append(pacbiofq) %}
   {% endfor %}
 {% endfor %}
 
 {% for rg in pair.ont %}
-  {% for file in rg.data_files %}
+  {% for file in rg.data_files|selectattr('fastqCode', 'eq', 'duplex')|list %}
+    {% set hifi %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do hififqlist.append(ontfq) %}
+  {% endfor %}
+{% endfor %}
+
+{% for rg in pair.ont %}
+  {% for file in rg.data_files|selectattr('fastqCode', 'eq', 'simplex')|list %}
     {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do ontfqlist.append(ontfq) %}
   {% endfor %}
 {% endfor %}
 
+{% if hififqlist | length > 0 %}
 - name: verkko_{{ pair.project }}
   input:
     {% for ontfq in ontfqlist %}
     - {{ ontfq }}
     {% endfor %}
-    {% for pacbiofq in pacbiofqlist %}
-    - {{ pacbiofq }}
+    {% for hififq in hififqlist %}
+    - {{ hififq }}
     {% endfor %}
   output: {{ results_dir }}
   cpus: 20
@@ -41,13 +49,20 @@
     verkko \
       --local-cpus 20 \
       --local-memory 200 \
-      {% if pacbiofqlist | length > 0 %}
-      --hifi "{{ pacbiofqlist | join('" "') }}" \
+      {% if hififqlist | length > 0 %}
+      --hifi "{{ hififqlist | join('" "') }}" \
       {% endif %}
       {% if ontfqlist | length > 0 %}
       --nano "{{ ontfqlist | join('" "') }}" \
+      {% else %}
+      --no-nano \
       {% endif %}
+      --screen human \
       -d {{ results_dir }}
 
+{% else %}
+  {% set log_msg %}verkko was enabled, but no pacbio or ont duplex data was found. Verkko requires pacbio or ont duplex input data, so this task was skipped{% endset %}
+  {{ log(log_msg, level='WARNING') }}
+{% endif %}
 {% endmacro %}
 
