@@ -10,10 +10,12 @@
   {% if bam_level is sameas false %}
     {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
     {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
-    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam{% endset %}
+    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram{% endset %}
+    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.crai{% endset %}
   {% else %}
     {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
-    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
   {% endif %}
 
   {% set rna_metrics %}{{ results_dir }}/{{ bam|basename }}.rna_metrics{% endset %}
@@ -23,14 +25,14 @@
   tags: [{{ sample.gltype }}, quality_control, stats, gatk_CollectRnaSeqMetrics, {{ sample.name }}]
   input:
     - {{ bam }}
-    - {{ bam }}.bai
+    - {{ bam_index }}
     - {{ constants.grandcanyon.ref_flat }}
     - {{ constants.grandcanyon.ribo_locations }}
   output:
     - {{ rna_metrics }}
     - {{ rna_metrics }}.pdf
     {% if libraryCount == 1 %}
-    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.rna_metrics.pdf
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.rna_metrics.pdf
     {% endif %}
   {% if bam_level is sameas false %}
   reset: predecessors
@@ -62,7 +64,7 @@
 
     {% if libraryCount == 1 %}
     if [ -f "{{ rna_metrics }}.pdf" ]; then
-      cp {{ rna_metrics }}.pdf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.rna_metrics.pdf
+      cp {{ rna_metrics }}.pdf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.rna_metrics.pdf
     fi
     {% endif %}
 
