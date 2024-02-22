@@ -1,5 +1,7 @@
 {% from 'modules/assembly/flye.j2' import flye with context %}
+{% from 'modules/assembly/canu.j2' import canu with context %}
 {% from 'modules/assembly/verkko.j2' import verkko with context %}
+{% from 'modules/assembly/shasta.j2' import shasta with context %}
 {% from 'modules/assembly/hifiasm.j2' import hifiasm with context %}
 
 {%- macro assembly(samples) %}
@@ -40,11 +42,17 @@
     {% if tasks[taskPrefix+"_assembly_flye"]|default(false) %}
       {{- flye(pair) }}
     {% endif %}
+    {% if tasks[taskPrefix+"_assembly_canu"]|default(false) %}
+      {{- canu(pair) }}
+    {% endif %}
     {% if tasks[taskPrefix+"_assembly_hifiasm"]|default(false) %}
       {{- hifiasm(pair) }}
     {% endif %}
     {% if tasks[taskPrefix+"_assembly_verkko"]|default(false) %}
       {{- verkko(pair) }}
+    {% endif %}
+    {% if tasks[taskPrefix+"_assembly_shasta"]|default(false) %}
+      {{- shasta(pair) }}
     {% endif %}
   {% endfor %}
 

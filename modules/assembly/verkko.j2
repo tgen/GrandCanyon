@@ -1,3 +1,5 @@
+{% from 'modules/assembly/assembly_stats.j2' import assembly_stats with context %}
+
 {% macro verkko(pair) %}
 
 {%- set temp_dir %}temp/{{ pair.gltype }}/assembly/verkko/{{ pair.project }}{% endset %}
@@ -59,6 +61,9 @@
       {% endif %}
       --screen human \
       -d {{ results_dir }}
+
+{% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
+{{- assembly_stats(pair, input_assembly, 'flye') }}
 
 {% else %}
   {% set log_msg %}verkko was enabled, but no pacbio or ont duplex data was found. Verkko requires pacbio or ont duplex input data, so this task was skipped{% endset %}

@@ -1,0 +1,57 @@
+{% from 'modules/assembly/assembly_stats.j2' import assembly_stats with context %}
+
+{% macro shasta(pair) %}
+
+{%- set temp_dir %}temp/{{ pair.gltype }}/assembly/shasta/{{ pair.project }}{% endset %}
+{%- set results_dir %}{{ pair.gltype }}/assembly/shasta/{{ pair.project }}{% endset %}
+
+{% set ontfqlist = [] %}
+{% set pacbiofqlist = [] %}
+
+{% for rg in pair.pacbio %}
+  {% for file in rg.data_files %}
+    {% set pacbiofq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do pacbiofqlist.append(pacbiofq) %}
+  {% endfor %}
+{% endfor %}
+
+{% for rg in pair.ont %}
+  {% for file in rg.data_files %}
+    {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do ontfqlist.append(ontfq) %}
+  {% endfor %}
+{% endfor %}
+
+- name: shasta_{{ pair.project }}
+  input:
+    {% for ontfq in ontfqlist %}
+    - {{ ontfq }}
+    {% endfor %}
+    {% for pacbiofq in pacbiofqlist %}
+    - {{ pacbiofq }}
+    {% endfor %}
+  output:
+    - {{ results_dir }}/assembly.fasta
+  cpus: 20
+  mem: 200G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.shasta.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {% for fastq in ontfqlist %}
+    gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.basename.split('.fastq.gz')[0] }}.fasta
+    {% endfor %}
+    {% for fastq in pacbiofqlist %}
+    gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.basename.split('.fastq.gz')[0] }}.fasta
+    {% endfor %}
+
+    shasta \
+      --threads 20 \
+      --input {{ temp_dir }}/*.fasta \
+      --config Nanopore-Phased-R10-Fast-Nov2022 \
+      --assemblyDirectory {{ results_dir }}
+
+{% endmacro %}
