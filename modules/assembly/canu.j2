@@ -55,7 +55,8 @@
       -nanopore "{{ ontfqlist | join('" "') }}" \
       {% endif %}
       -p {{ pair.project }} \
-      -d {{ results_dir }}
+      -d {{ results_dir }} \
+      genomeSize=3.2g
 
 
 {% endmacro %}

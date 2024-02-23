@@ -41,17 +41,20 @@
     set -eu
     set -o pipefail
 
+    mkdir -p {{ temp_dir }}
+
     {% for fastq in ontfqlist %}
-    gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.basename.split('.fastq.gz')[0] }}.fasta
+    gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.split('.fastq.gz')[0] | basename }}.fasta
     {% endfor %}
     {% for fastq in pacbiofqlist %}
-    gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.basename.split('.fastq.gz')[0] }}.fasta
+    gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.split('.fastq.gz')[0] | basename }}.fasta
     {% endfor %}
 
     shasta \
       --threads 20 \
       --input {{ temp_dir }}/*.fasta \
       --config Nanopore-Phased-R10-Fast-Nov2022 \
+      --Reads.minReadLength 500 \
       --assemblyDirectory {{ results_dir }}
 
 {% endmacro %}
