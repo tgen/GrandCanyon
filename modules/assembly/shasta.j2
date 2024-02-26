@@ -41,7 +41,9 @@
     set -eu
     set -o pipefail
 
+    rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
 
     {% for fastq in ontfqlist %}
     gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.split('.fastq.gz')[0] | basename }}.fasta
@@ -55,6 +57,6 @@
       --input {{ temp_dir }}/*.fasta \
       --config Nanopore-Phased-R10-Fast-Nov2022 \
       --Reads.minReadLength 500 \
-      --assemblyDirectory {{ results_dir }}
+      --assemblyDirectory {{ temp_dir }}
 
 {% endmacro %}

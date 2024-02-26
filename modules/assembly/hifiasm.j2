@@ -39,9 +39,13 @@
     set -eu
     set -o pipefail
 
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
     hifiasm \
       -t 20 \
-      -o {{ results_dir }}/{{ pair.project }}.asm \
+      -o {{ temp_dir }}/{{ pair.project }}.asm \
       {% if ontfqlist | length > 0 %}
       --ul "{{ ontfqlist | join(',') }}" \
       {% endif %}

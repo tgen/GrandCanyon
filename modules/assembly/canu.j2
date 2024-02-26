@@ -37,7 +37,7 @@
     - {{ pacbiofq }}
     {% endfor %}
   output:
-    - {{ results_dir }}/assembly.fasta
+    - {{ temp_dir }}/assembly.fasta
   cpus: 20
   mem: 200G
   walltime: "24:00:00"
@@ -47,6 +47,10 @@
     set -eu
     set -o pipefail
 
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
     canu \
       {% if pacbiofqlist | length > 0 %}
       -pacbio-hifi "{{ pacbiofqlist | join('" "') }}" \
@@ -55,7 +59,7 @@
       -nanopore "{{ ontfqlist | join('" "') }}" \
       {% endif %}
       -p {{ pair.project }} \
-      -d {{ results_dir }} \
+      -d {{ temp_dir }} \
       genomeSize=3.2g
 
 

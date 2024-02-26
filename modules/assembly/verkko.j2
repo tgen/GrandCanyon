@@ -38,7 +38,7 @@
     {% for hififq in hififqlist %}
     - {{ hififq }}
     {% endfor %}
-  output: {{ results_dir }}
+  output: {{ results_dir }}/assembly.fasta
   cpus: 20
   mem: 200G
   walltime: "24:00:00"
@@ -47,6 +47,10 @@
   cmd: |
     set -eu
     set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
 
     verkko \
       --local-cpus 20 \
@@ -60,7 +64,9 @@
       --no-nano \
       {% endif %}
       --screen human \
-      -d {{ results_dir }}
+      -d {{ temp_dir }}
+
+    mv {{ temp_dir }}/assembly* {{ results_dir }}
 
 {% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
 {{- assembly_stats(pair, input_assembly, 'flye') }}

@@ -44,6 +44,10 @@
     set -eu
     set -o pipefail
 
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
     flye \
       --threads 20 \
       {% if pacbiofqlist | length > 0 %}
@@ -52,7 +56,13 @@
       {% if ontfqlist | length > 0 %}
       --nano-hq "{{ ontfqlist | join('" "') }}" \
       {% endif %}
-      --out-dir {{ results_dir }}
+      --out-dir {{ temp_dir }}
+
+    mv {{ temp_dir }}/assembly.fasta {{ results_dir }}
+    mv {{ temp_dir }}/assembly_graph.gfa {{ results_dir }}
+    mv {{ temp_dir }}/assembly_graph.gv {{ results_dir }}
+    mv {{ temp_dir }}/assembly_info.txt {{ results_dir }}
+
 
 {% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
 {{- assembly_stats(pair, input_assembly, 'flye') }}
