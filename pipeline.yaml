@@ -96,6 +96,9 @@ constants:
     vep_data: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/indexed_vep_data
     ref_flat: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.refFlat.txt
     ribo_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.ribo.interval_list
+    tool_resources:
+      severus:
+        vntrs: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/severus/chm13.bed
     required_scripts:
       plotSamStats_Rscript: summarize_samstats.R
       stats2json: samStats2json.py
