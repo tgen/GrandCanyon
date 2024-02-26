@@ -15,53 +15,55 @@
 
 {%- for sample in samples.values() if sample.gltype in ('exome', 'genome', 'genomephased') %}
 
-  {%- if sample.subGroup|lower != 'tumor' %}
-    {% if sample.gltype in 'exome' %}
-      {% set taskPrefix = 'Exome' %}
-    {% elif sample.gltype in ['genome','genomephased'] %}
-      {% set taskPrefix = 'Genome' %}
-    {% endif %}
+  {% if sample.gltype in 'exome' %}
+    {% set taskPrefix = 'Exome' %}
+  {% elif sample.gltype in ['genome','genomephased'] %}
+    {% set taskPrefix = 'Genome' %}
+  {% endif %}
 
+  {%- if sample.subGroup|lower == 'constitutional' %}
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(true) %}
       {{- deepvariant(sample) }}
-    {% endif %}
-
-    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_longshot"]|default(false) %}
-      {{- longshot(sample) }}
     {% endif %}
 
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clair3"]|default(false) %}
       {{- clair3(sample) }}
     {% endif %}
+  {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_structural_caller_cutesv"]|default(true) %}
-      {{- cutesv(sample) }}
-    {% endif %}
-
-    {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
-      {{- sniffles(sample) }}
-    {% endif %}
-
+  {%- if sample.subGroup|lower == 'tumor' %}
     {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(true) %}
       {{- severus(sample) }}
     {% endif %}
+  {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(true) %}
-      {{- dysgu(sample) }}
+  {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_longshot"]|default(false) %}
+    {{- longshot(sample) }}
+  {% endif %}
+
+  {% if tasks[taskPrefix+"_variant_calling_structural_caller_cutesv"]|default(true) %}
+    {{- cutesv(sample) }}
+  {% endif %}
+
+  {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
+    {{- sniffles(sample) }}
+  {% endif %}
+
+  {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(true) %}
+    {{- dysgu(sample) }}
+  {% endif %}
+
+  {% if tasks[taskPrefix+"_variant_calling_cna_caller_cytocad"]|default(true) %}
+    {{- cytocad(sample) }}
+  {% endif %}
+
+  {% if sample.rgpl in ('PACBIO') %}
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_pbsv"]|default(false) %}
+      {{- pbsv(sample) }}
     {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_cna_caller_cytocad"]|default(true) %}
-      {{- cytocad(sample) }}
-    {% endif %}
-
-    {% if sample.rgpl in ('PACBIO') %}
-      {% if tasks[taskPrefix+"_variant_calling_structural_caller_pbsv"]|default(false) %}
-        {{- pbsv(sample) }}
-      {% endif %}
-
-      {% if tasks[taskPrefix+"_variant_calling_cna_caller_hificnv"]|default(true) %}
-        {{- hifi_cnv(sample) }}
-      {% endif %}
+    {% if tasks[taskPrefix+"_variant_calling_cna_caller_hificnv"]|default(true) %}
+      {{- hifi_cnv(sample) }}
     {% endif %}
   {% endif %}
 
@@ -72,7 +74,7 @@
 {% macro somatic_variant_calling(samples) %}
 
 {% set pairs = [] %}
-{% for tumor in samples.values() if tumor.subGroup|lower == 'tumor' and tumor.gltype in ('exome', 'genome') %}
+{% for tumor in samples.values() if tumor.subGroup|lower == 'tumor' and tumor.gltype in ('exome', 'genome', 'genomephased') %}
   {% for normal in samples.values() if normal.subGroup|lower == 'constitutional' and normal.gltype == tumor.gltype and normal.assayCode == tumor.assayCode %}
     {% set pair_name = normal.name + '-' + tumor.name %}
     {% do pairs.append({'name': pair_name, 'gltype': normal.gltype, 'normal': normal, 'tumor': tumor}) %}
@@ -81,9 +83,9 @@
 
 {# Start of the macro calls that will actually add the tasks to the workflow #}
 {% for pair in pairs %}
-  {% if sample.gltype in 'exome' %}
+  {% if pair.gltype in 'exome' %}
     {% set taskPrefix = 'Exome' %}
-  {% elif sample.gltype in ['genome','genomephased'] %}
+  {% elif pair.gltype in ['genome','genomephased'] %}
     {% set taskPrefix = 'Genome' %}
   {% endif %}
 
