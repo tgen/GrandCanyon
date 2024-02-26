@@ -30,6 +30,10 @@
       {{- longshot(sample) }}
     {% endif %}
 
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clair3"]|default(false) %}
+      {{- clair3(sample) }}
+    {% endif %}
+
     {% if tasks[taskPrefix+"_variant_calling_structural_caller_cutesv"]|default(true) %}
       {{- cutesv(sample) }}
     {% endif %}
@@ -85,6 +89,10 @@
 
   {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(true) %}
     {{- deepsomatic(pair) }}
+  {% endif %}
+
+  {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clairs"]|default(true) %}
+    {{- clairs(pair) }}
   {% endif %}
 
   {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(true) %}
