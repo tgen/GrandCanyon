@@ -14,6 +14,10 @@ constants:
       container: quay.io/biocontainers/busco:5.5.0--pyhdfd78af_0
     canu:
       container: quay.io/biocontainers/canu:2.2--ha47f30e_0
+    clair3:
+      container: hkubal/clair3:v1.0.5
+    clairs:
+      container: hkubal/clairs:v0.1.7
     cutesv:
       container: quay.io/biocontainers/cutesv:2.0.3--pyhdfd78af_0
     cytocad:
@@ -127,4 +131,15 @@ constants:
         salmon: "ISR"
         featurecounts: "2"
         collectrnaseqmetrics: "SECOND_READ_TRANSCRIPTION_STRAND"
-
+      singleend-unstranded-notapplicable:
+        salmon: "IU"
+        featurecounts: "0"
+        collectrnaseqmetrics: "NONE"
+      singleend-stranded-forward:
+        salmon: "ISF"
+        featurecounts: "1"
+        collectrnaseqmetrics: "FIRST_READ_TRANSCRIPTION_STRAND"
+      singleend-stranded-reverse:
+        salmon: "ISR"
+        featurecounts: "2"
+        collectrnaseqmetrics: "SECOND_READ_TRANSCRIPTION_STRAND"
