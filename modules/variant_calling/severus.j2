@@ -44,15 +44,22 @@ options:
   --tra-to-ins          converts insertions to translocations if mapping is known
 #}
 
-{% macro severus(sample) %}
+{% macro severus(sample_or_pair) %}
 
-{%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/severus/{{ sample.name }}_minimap2{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/severus/{{ sample.name }}_minimap2{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.severus.all.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.severus.pass.vcf.gz{% endset %}
+{% if sample_or_pair.normal is defined %}
+{%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/minimap2/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.minimap2.bam{% endset %}
+{%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/minimap2/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.minimap2.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_minimap2{% endset %}
+{%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_minimap2{% endset %}
+{% else %}
+{%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/minimap2/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.minimap2.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_variant_calls/severus/{{ sample_or_pair.name }}_minimap2{% endset %}
+{%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/severus/{{ sample_or_pair.name }}_minimap2{% endset %}
+{% endif %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.minimap2.severus.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.minimap2.severus.pass.vcf.gz{% endset %}
 
-- name: severus_{{ sample.name }}_minimap2
+- name: severus_{{ sample_or_pair.name }}_minimap2
   reset: predecessors
   input:
     - {{ bam }}
@@ -61,7 +68,7 @@ options:
   output:
     - {{ all_vcf }}
   cpus: 16
-  mem: 32G
+  mem: 64G
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.severus.container }}
@@ -69,6 +76,19 @@ options:
     set -eu
     set -o pipefail
 
-    severus --target-bam {{ bam }} --out-dir {{ results_dir }} -t 16
+    {% if sample_or_pair.normal is defined %}
+    severus \
+      --threads 16 \
+      --target-bam {{ tumor_bam }} \
+      --control-bam {{ normal_bam }} \
+      --out-dir {{ results_dir }} \
+      --phasing-vcf {{ phased_vcf }} \
+      --vntr-bed /severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed
+    {% else %}
+    severus \
+      --threads 16 \
+      --target-bam {{ bam }} \
+      --out-dir {{ results_dir }}
+    {% endif %}
 
 {% endmacro %}

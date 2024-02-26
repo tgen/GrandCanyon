@@ -1,0 +1,44 @@
+{% macro clairs(pair) %}
+
+{%- set normal_bam %}temp/{{ pair.gltype }}/alignment/minimap2/{{ pair.normal.name }}/{{ pair.normal.name }}.minimap2.bam{% endset %}
+{%- set tumor_bam %}temp/{{ pair.gltype }}/alignment/minimap2/{{ pair.tumor.name }}/{{ pair.tumor.name }}.minimap2.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/somatic_variant_calls/clairs/{{ sample.name }}_minimap2{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/somatic_variant_calls/clairs/{{ sample.name }}_minimap2{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.clairs.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.clairs.pass.vcf.gz{% endset %}
+
+- name: clairs_{{ sample.name }}_minimap2
+  reset: predecessors
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon.reference_fasta }}
+  output:
+    - {{ all_vcf }}
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.clairs.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    /opt/bin/run_clairs \
+      --tumor_bam_fn {{ tumor_bam }} \
+      --normal_bam_fn {{ normal_bam }} \
+      --ref_fn {{ constants.grandcanyon.reference_fasta }} \
+      --threads 8 \
+      {% if sample.rgpl == "ONT" %}
+      --platform "ont" \
+      --model_path "/opt/models/r1041_e82_400bps_sup_v420" \
+      {% elif sample.rgpl == "PACBIO" %}
+      --platform "hifi" \
+      --model_path "/opt/models/hifi_revio" \
+      {% else %}
+      --platform "ilmn" \
+      --model_path "/opt/models/ilmn" \
+      {% endif %}
+      --output {{ results_dir }}
+
+{% endmacro %}

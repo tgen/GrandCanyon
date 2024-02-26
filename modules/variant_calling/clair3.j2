@@ -1,0 +1,42 @@
+{% macro clair3(sample) %}
+
+{%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/clair3/{{ sample.name }}_minimap2{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/clair3/{{ sample.name }}_minimap2{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.clair3.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.clair3.pass.vcf.gz{% endset %}
+
+- name: clair3_{{ sample.name }}_minimap2
+  reset: predecessors
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon.reference_fasta }}
+  output:
+    - {{ all_vcf }}
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.clair3.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    /opt/bin/run_clair3.sh \
+      --bam_fn={{ bam }} \
+      --ref_fn={{ constants.grandcanyon.reference_fasta }} \
+      --threads=8 \
+      {% if sample.rgpl == "ONT" %}
+      --platform="ont" \
+      --model_path="/opt/models/r1041_e82_400bps_sup_v420" \
+      {% elif sample.rgpl == "PACBIO" %}
+      --platform="hifi" \
+      --model_path="/opt/models/hifi_revio" \
+      {% else %}
+      --platform="ilmn" \
+      --model_path="/opt/models/ilmn" \
+      {% endif %}
+      --output={{ results_dir }}
+
+{% endmacro %}

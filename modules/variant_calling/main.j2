@@ -1,4 +1,7 @@
 {% from 'modules/variant_calling/deepvariant.j2' import deepvariant with context %}
+{% from 'modules/variant_calling/deepsomatic.j2' import deepsomatic with context %}
+{% from 'modules/variant_calling/clair3.j2' import clair3 with context %}
+{% from 'modules/variant_calling/clairs.j2' import clairs with context %}
 {% from 'modules/variant_calling/cutesv.j2' import cutesv with context %}
 {% from 'modules/variant_calling/longshot.j2' import longshot with context %}
 {% from 'modules/variant_calling/sniffles.j2' import sniffles with context %}
@@ -82,6 +85,10 @@
 
   {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(true) %}
     {{- deepsomatic(pair) }}
+  {% endif %}
+
+  {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(true) %}
+    {{- severus(pair) }}
   {% endif %}
 
 {% endfor %}
