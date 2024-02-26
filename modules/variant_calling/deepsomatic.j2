@@ -11,8 +11,10 @@
 - name: deepsomatic_{{ pair.name }}_minimap2
   tags: [{{ pair.gltype }}, somatic, snp_indel_caller, deepsomatic, {{ pair.name }}]
   input:
-    - {{ bam }}
-    - {{ bam }}.bai
+    - {{ tumor_bam }}
+    - {{ tumor_bam }}.bai
+    - {{ normal_bam }}
+    - {{ normal_bam }}.bai
     - {{ constants.grandcanyon.reference_fasta }}
   output:
     - {{ all_vcf }}
@@ -31,9 +33,9 @@
     mkdir -p {{ results_dir }}
 
     run_deepsomatic \
-      {% if sample.rgpl in ('ONT') %}
+      {% if pair.tumor.rgpl in ('ONT') %}
       --model_type ONT_R104 \
-      {% elif sample.rgpl in ('PACBIO') %}
+      {% elif pair.tumor.rgpl in ('PACBIO') %}
       --model_type PACBIO \
       {% endif %}
       --ref {{ constants.grandcanyon.reference_fasta }} \
@@ -41,8 +43,8 @@
       --reads_normal {{ normal_bam }} \
       --output_vcf {{ all_vcf }} \
       --output_gvcf {{ all_gvcf }} \
-      --pair_name_tumor {{ pair.tumor.name }} \
-      --pair_name_normal {{ pair.normal.name }} \
+      --sample_name_tumor {{ pair.tumor.name }} \
+      --sample_name_normal {{ pair.normal.name }} \
       --num_shards 20 \
       --logging_dir {{ temp_dir }}/logs \
       --intermediate_results_dir {{ temp_dir }}/intermediate_results_dir
