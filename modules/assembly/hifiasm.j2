@@ -4,30 +4,37 @@
 {%- set results_dir %}{{ pair.gltype }}/assembly/hifiasm/{{ pair.project }}{% endset %}
 
 {% set ontfqlist = [] %}
-{% set pacbiofqlist = [] %}
+{% set hififqlist = [] %}
 
 {% for rg in pair.pacbio %}
   {% for file in rg.data_files %}
     {% set pacbiofq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do pacbiofqlist.append(pacbiofq) %}
+    {% do hififqlist.append(pacbiofq) %}
   {% endfor %}
 {% endfor %}
 
 {% for rg in pair.ont %}
-  {% for file in rg.data_files %}
+  {% for file in rg.data_files|selectattr('fastqCode', 'eq', 'duplex')|list %}
+    {% set hififq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do hififqlist.append(hififq) %}
+  {% endfor %}
+{% endfor %}
+
+{% for rg in pair.ont %}
+  {% for file in rg.data_files|selectattr('fastqCode', 'eq', 'simplex')|list %}
     {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do ontfqlist.append(ontfq) %}
   {% endfor %}
 {% endfor %}
 
-{% if pacbiofqlist | length > 0 %}
+{% if hififqlist | length > 0 %}
 - name: hifiasm_{{ pair.project }}
   input:
     {% for ontfq in ontfqlist %}
     - {{ ontfq }}
     {% endfor %}
-    {% for pacbiofq in pacbiofqlist %}
-    - {{ pacbiofq }}
+    {% for hififq in hififqlist %}
+    - {{ hififq }}
     {% endfor %}
   output: {{ results_dir }}
   cpus: 20
@@ -49,8 +56,8 @@
       {% if ontfqlist | length > 0 %}
       --ul "{{ ontfqlist | join(',') }}" \
       {% endif %}
-      {% if pacbiofqlist | length > 0 %}
-      "{{ pacbiofqlist | join(',') }}"
+      {% if hififqlist | length > 0 %}
+      "{{ hififqlist | join(',') }}"
       {% endif %}
 
 {% else %}
