@@ -17,6 +17,9 @@
     samtools fastq \
       --threads 6 \
       -T '*' \
+      {% if ubam.fastqCode == 'duplex' %}
+      -d dx:1 \
+      {% endif %}
       {{ ubam.path }} \
       -0 temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
 
