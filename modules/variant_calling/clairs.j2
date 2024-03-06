@@ -32,14 +32,11 @@
       --ref_fn {{ constants.grandcanyon.reference_fasta }} \
       --threads 8 \
       {% if pair.tumor.rgpl == "ONT" %}
-      --platform "ont" \
-      --model_path "/opt/models/r1041_e82_400bps_sup_v420" \
+      --platform "ont_r10_dorado_sup_4khz" \
       {% elif pair.tumor.rgpl == "PACBIO" %}
-      --platform "hifi" \
-      --model_path "/opt/models/hifi_revio" \
+      --platform "hifi_revio" \
       {% else %}
       --platform "ilmn" \
-      --model_path "/opt/models/ilmn" \
       {% endif %}
       --output_dir {{ results_dir }}
 

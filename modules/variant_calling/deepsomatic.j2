@@ -8,6 +8,9 @@
 {%- set all_gvcf %}{{ results_dir }}/{{ pair.name }}.minimap2.deepsomatic.all.g.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ pair.name }}.minimap2.deepsomatic.pass.vcf.gz{% endset %}
 
+{% if pair.tumor.rgpl not in ['PACBIO', 'ILLUMINA'] %}
+
+{% else %}
 - name: deepsomatic_{{ pair.name }}_minimap2
   tags: [{{ pair.gltype }}, somatic, snp_indel_caller, deepsomatic, {{ pair.name }}]
   input:
@@ -33,10 +36,10 @@
     mkdir -p {{ results_dir }}
 
     run_deepsomatic \
-      {% if pair.tumor.rgpl in ('ONT') %}
-      --model_type ONT_R104 \
-      {% elif pair.tumor.rgpl in ('PACBIO') %}
+      {% if pair.tumor.rgpl in ('PACBIO') %}
       --model_type PACBIO \
+      {% else %}
+      --model_type WGS \
       {% endif %}
       --ref {{ constants.grandcanyon.reference_fasta }} \
       --reads_tumor {{ tumor_bam }} \
@@ -77,5 +80,7 @@
       > "{{ pass_vcf }}"
 
     bcftools index --tbi --force "{{ pass_vcf }}"
+
+{% endif %}
 
 {% endmacro %}
