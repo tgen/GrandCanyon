@@ -8,18 +8,14 @@
 {% set ontfqlist = [] %}
 {% set pacbiofqlist = [] %}
 
-{% for rg in pair.pacbio %}
-  {% for file in rg.data_files %}
+{% for file in pair.pacbio %}
     {% set pacbiofq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do pacbiofqlist.append(pacbiofq) %}
-  {% endfor %}
 {% endfor %}
 
-{% for rg in pair.ont %}
-  {% for file in rg.data_files %}
+{% for file in pair.ont %}
     {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do ontfqlist.append(ontfq) %}
-  {% endfor %}
 {% endfor %}
 
 - name: shasta_{{ pair.project }}
@@ -33,8 +29,8 @@
   output:
     - {{ results_dir }}/assembly.fasta
   cpus: 20
-  mem: 200G
-  walltime: "24:00:00"
+  mem: 256G
+  walltime: "48:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.shasta.container }}
   cmd: |
@@ -42,14 +38,14 @@
     set -o pipefail
 
     rm -r {{ temp_dir }} || true
-    mkdir -p {{ temp_dir }}
+    mkdir -p {{ temp_dir }}/run_dir
     mkdir -p {{ results_dir }}
 
     {% for fastq in ontfqlist %}
-    gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.split('.fastq.gz')[0] | basename }}.fasta
+    gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.split('.fastq.gz')[0] | basename }}.fasta
     {% endfor %}
     {% for fastq in pacbiofqlist %}
-    gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.split('.fastq.gz')[0] | basename }}.fasta
+    gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.split('.fastq.gz')[0] | basename }}.fasta
     {% endfor %}
 
     shasta \
@@ -57,6 +53,6 @@
       --input {{ temp_dir }}/*.fasta \
       --config Nanopore-Phased-R10-Fast-Nov2022 \
       --Reads.minReadLength 500 \
-      --assemblyDirectory {{ temp_dir }}
+      --assemblyDirectory {{ temp_dir }}/run_dir
 
 {% endmacro %}

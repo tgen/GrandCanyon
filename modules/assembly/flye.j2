@@ -8,18 +8,14 @@
 {% set ontfqlist = [] %}
 {% set pacbiofqlist = [] %}
 
-{% for rg in pair.pacbio %}
-  {% for file in rg.data_files %}
+{% for file in pair.pacbio %}
     {% set pacbiofq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do pacbiofqlist.append(pacbiofq) %}
-  {% endfor %}
 {% endfor %}
 
-{% for rg in pair.ont %}
-  {% for file in rg.data_files %}
+{% for file in pair.ont %}
     {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do ontfqlist.append(ontfq) %}
-  {% endfor %}
 {% endfor %}
 
 - name: flye_{{ pair.project }}
@@ -37,7 +33,7 @@
     - {{ results_dir }}/assembly_info.txt
   cpus: 20
   mem: 200G
-  walltime: "24:00:00"
+  walltime: "48:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.flye.container }}
   cmd: |
@@ -52,8 +48,7 @@
       --threads 20 \
       {% if pacbiofqlist | length > 0 %}
       --pacbio-hifi "{{ pacbiofqlist | join('" "') }}" \
-      {% endif %}
-      {% if ontfqlist | length > 0 %}
+      {% elif ontfqlist | length > 0 %}
       --nano-hq "{{ ontfqlist | join('" "') }}" \
       {% endif %}
       --out-dir {{ temp_dir }}

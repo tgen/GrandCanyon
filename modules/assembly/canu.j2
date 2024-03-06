@@ -14,18 +14,14 @@
 {% set ontfqlist = [] %}
 {% set pacbiofqlist = [] %}
 
-{% for rg in pair.pacbio %}
-  {% for file in rg.data_files %}
+{% for file in pair.pacbio %}
     {% set pacbiofq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do pacbiofqlist.append(pacbiofq) %}
-  {% endfor %}
 {% endfor %}
 
-{% for rg in pair.ont %}
-  {% for file in rg.data_files %}
+{% for file in pair.ont %}
     {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do ontfqlist.append(ontfq) %}
-  {% endfor %}
 {% endfor %}
 
 - name: canu_{{ pair.project }}
@@ -40,7 +36,7 @@
     - {{ temp_dir }}/assembly.fasta
   cpus: 20
   mem: 200G
-  walltime: "24:00:00"
+  walltime: "48:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.canu.container }}
   cmd: |
@@ -54,8 +50,7 @@
     canu \
       {% if pacbiofqlist | length > 0 %}
       -pacbio-hifi "{{ pacbiofqlist | join('" "') }}" \
-      {% endif %}
-      {% if ontfqlist | length > 0 %}
+      {% elif ontfqlist | length > 0 %}
       -nanopore "{{ ontfqlist | join('" "') }}" \
       {% endif %}
       -p {{ pair.project }} \

@@ -6,40 +6,24 @@
 
 {%- macro assembly(samples) %}
 
-  {% set pairs = [] %}
-  {% for sample in samples.values()|selectattr('subGroup', 'eq', 'Constitutional')|selectattr('gltype', 'in', ['genome','genomephased']) %}
-    {% set pair = {'project': project} %}
-    {% do pair.update({'gltype': 'genome'}) %}
-    {% do pair.update({'ont': []}) %}
-    {% do pair.update({'pacbio': []}) %}
-    {% do pair.update({'short': []}) %}
+  {% set pair = {'project': project} %}
+  {% do pair.update({'gltype': 'genome'}) %}
+  {% do pair.update({'ont': []}) %}
+  {% do pair.update({'pacbio': []}) %}
+  {% do pair.update({'short': []}) %}
+  {% for file in dataFiles|selectattr('subGroup', 'eq', 'Constitutional')|selectattr('gltype', 'in', ['genome','genomephased']) %}
     {% set log_msg %}Collecting sequencing data types for {{ project }}, we will then attempt an assembly{% endset %}
     {{ log(log_msg, level='WARNING') }}
-    {% set log_msg %}Parsing {{ sample.name }}{% endset %}
     {{ log(log_msg, level='WARNING') }}
-    {% if sample.rgpl in ('ONT') %}
-      {% for readgroup in sample.read_groups.values() %}
-        {% do pair.ont.append(readgroup) %}
-      {% endfor %}
-      {% set log_msg %}{{ sample.name }} was added to ont list{% endset %}
-      {{ log(log_msg, level='WARNING') }}
-    {% elif sample.rgpl in ('PACBIO') %}
-      {% for readgroup in sample.read_groups.values() %}
-        {% do pair.ont.append(readgroup) %}
-      {% endfor %}
-      {% set log_msg %}{{ sample.name }} was added to pacbio list{% endset %}
-      {{ log(log_msg, level='WARNING') }}
+    {% if file.rgpl in ('ONT') %}
+      {% do pair.ont.append(file) %}
+    {% elif file.rgpl in ('PACBIO') %}
+        {% do pair.pacbio.append(file) %}
     {% else %}
-      {% for readgroup in sample.read_groups.values() %}
-        {% do pair.ont.append(readgroup) %}
-      {% endfor %}
-      {% set log_msg %}{{ sample.name }} did not match ont or pacbio patterns, so it is assumed to be short read data{% endset %}
-      {{ log(log_msg, level='WARNING') }}
+        {% do pair.short.append(file) %}
     {% endif %}
-    {% do pairs.append(pair) %}
   {% endfor %}
 
-  {% for pair in pairs %}
     {% if pair.gltype in 'exome' %}
       {% set taskPrefix = 'Exome' %}
     {% elif pair.gltype in ['genome','genomephased'] %}
@@ -60,7 +44,6 @@
     {% if tasks[taskPrefix+"_assembly_shasta"]|default(false) %}
       {{- shasta(pair) }}
     {% endif %}
-  {% endfor %}
 
 {% endmacro %}
 

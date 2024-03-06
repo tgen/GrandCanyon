@@ -8,25 +8,19 @@
 {% set ontfqlist = [] %}
 {% set hififqlist = [] %}
 
-{% for rg in pair.pacbio %}
-  {% for file in rg.data_files %}
+{% for file in pair.pacbio %}
     {% set pacbiofq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do hififqlist.append(pacbiofq) %}
-  {% endfor %}
 {% endfor %}
 
-{% for rg in pair.ont %}
-  {% for file in rg.data_files|selectattr('fastqCode', 'eq', 'duplex')|list %}
+{% for file in pair.ont|selectattr('fastqCode', 'eq', 'duplex')|list %}
     {% set hififq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do hififqlist.append(hififq) %}
-  {% endfor %}
 {% endfor %}
 
-{% for rg in pair.ont %}
-  {% for file in rg.data_files|selectattr('fastqCode', 'eq', 'simplex')|list %}
+{% for file in pair.ont|selectattr('fastqCode', 'eq', 'simplex')|list %}
     {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do ontfqlist.append(ontfq) %}
-  {% endfor %}
 {% endfor %}
 
 {% if hififqlist | length > 0 %}
@@ -41,7 +35,7 @@
   output: {{ results_dir }}/assembly.fasta
   cpus: 20
   mem: 200G
-  walltime: "24:00:00"
+  walltime: "48:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.verkko.container }}
   cmd: |
