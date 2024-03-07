@@ -66,7 +66,9 @@
       --input {{ temp_dir }}/*.fasta \
       --config Nanopore-Phased-R10-Fast-Nov2022 \
       --Reads.minReadLength 500 \
-      --assemblyDirectory {{ results_dir }}
+      --assemblyDirectory {{ temp_dir }}/run_dir
+
+    mv {{ temp_dir }}/run_dir/Assembly* {{ results_dir }}
 
 {% set input_assembly %}{{ results_dir }}/Assembly-Phased.fasta{% endset %}
 {{- assembly_stats(pair, input_assembly, 'shasta') }}

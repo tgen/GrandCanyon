@@ -33,7 +33,7 @@
     {% for hififq in hififqlist %}
     - {{ hififq }}
     {% endfor %}
-  output: {{ results_dir }}
+  output: {{ results_dir }}/{{ pair.project }}.asm.bp.hap1.p_ctg.fa
   cpus: 20
   mem: 200G
   walltime: "48:00:00"
