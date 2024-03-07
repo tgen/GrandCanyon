@@ -1,4 +1,5 @@
 {% from 'modules/assembly/assembly_stats.j2' import assembly_stats with context %}
+{% from 'modules/assembly/quast.j2' import quast with context %}
 
 {% macro flye(pair) %}
 
@@ -61,5 +62,6 @@
 
 {% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
 {{- assembly_stats(pair, input_assembly, 'flye') }}
+{{- quast(pair, input_assembly, 'flye') }}
 
 {% endmacro %}

@@ -1,4 +1,5 @@
 {% from 'modules/assembly/assembly_stats.j2' import assembly_stats with context %}
+{% from 'modules/assembly/quast.j2' import quast with context %}
 
 {% macro shasta(pair) %}
 
@@ -27,7 +28,19 @@
     - {{ pacbiofq }}
     {% endfor %}
   output:
-    - {{ results_dir }}/assembly.fasta
+    - {{ results_dir }}/Assembly-Detailed.csv
+    - {{ results_dir }}/Assembly-Detailed.fasta
+    - {{ results_dir }}/Assembly-Detailed.gfa
+    - {{ results_dir }}/Assembly-Detailed-NoSequence.gfa
+    - {{ results_dir }}/Assembly-Haploid.csv
+    - {{ results_dir }}/Assembly-Haploid.fasta
+    - {{ results_dir }}/Assembly-Haploid.gfa
+    - {{ results_dir }}/Assembly-Haploid-NoSequence.gfa
+    - {{ results_dir }}/Assembly-Phased.csv
+    - {{ results_dir }}/Assembly-Phased-Details.csv
+    - {{ results_dir }}/Assembly-Phased.fasta
+    - {{ results_dir }}/Assembly-Phased.gfa
+    - {{ results_dir }}/Assembly-Phased-NoSequence.gfa
   cpus: 20
   mem: 300G
   walltime: "48:00:00"
@@ -53,6 +66,10 @@
       --input {{ temp_dir }}/*.fasta \
       --config Nanopore-Phased-R10-Fast-Nov2022 \
       --Reads.minReadLength 500 \
-      --assemblyDirectory {{ temp_dir }}/run_dir
+      --assemblyDirectory {{ results_dir }}
+
+{% set input_assembly %}{{ results_dir }}/Assembly-Phased.fasta{% endset %}
+{{- assembly_stats(pair, input_assembly, 'shasta') }}
+{{- quast(pair, input_assembly, 'shasta') }}
 
 {% endmacro %}

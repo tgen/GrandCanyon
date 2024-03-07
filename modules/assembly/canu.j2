@@ -6,6 +6,9 @@
 #singularity exec -B $PWD -B $DIR $CANU sh -c "canu -p $PREFIX -d $DIR stopOnLowCoverage=0.1 minInputCoverage=0.1 genomeSize=${GENOME_SIZE} -pacbio-hifi $INPUT"
 #}
 
+{% from 'modules/assembly/assembly_stats.j2' import assembly_stats with context %}
+{% from 'modules/assembly/quast.j2' import quast with context %}
+
 {% macro canu(pair) %}
 
 {%- set temp_dir %}temp/{{ pair.gltype }}/assembly/canu/{{ pair.project }}{% endset %}
@@ -57,6 +60,9 @@
       -d {{ temp_dir }} \
       genomeSize=3.2g
 
+{% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
+{{- assembly_stats(pair, input_assembly, 'canu') }}
+{{- quast(pair, input_assembly, 'canu') }}
 
 {% endmacro %}
 

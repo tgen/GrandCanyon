@@ -58,6 +58,8 @@ constants:
       container: python:3.7.16-slim-bullseye
     python3_with_modules:
       container: ghcr.io/tgen/jetstream_containers/python:3.7.2-v1-with_modules
+    quast:
+      container: quay.io/biocontainers/quast:5.2.0--py39pl5321h4e691d4_3
     R:
       container: ghcr.io/tgen/containers/r_with_modules:4.1.2-23080815
     salmon:

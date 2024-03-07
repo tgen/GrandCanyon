@@ -1,3 +1,6 @@
+{% from 'modules/assembly/assembly_stats.j2' import assembly_stats with context %}
+{% from 'modules/assembly/quast.j2' import quast with context %}
+
 {% macro hifiasm(pair) %}
 
 {%- set temp_dir %}temp/{{ pair.gltype }}/assembly/hifiasm/{{ pair.project }}{% endset %}
@@ -53,6 +56,14 @@
       {% if hififqlist | length > 0 %}
       {{ hififqlist | join(' ') }}
       {% endif %}
+
+    for graph in {{ temp_dir }}/{{ pair.project }}.asm.*.gfa ; do
+      awk '/^S/{print ">"$2;print $3}' ${graph} > {{ results_dir }}/$(basename ${graph%.gfa}.fa)
+    done
+
+{% set input_assembly %}{{ results_dir }}/{{ pair.project }}.asm.bp.hap1.p_ctg.fa{% endset %}
+{{- assembly_stats(pair, input_assembly, 'hifiasm') }}
+{{- quast(pair, input_assembly, 'hifiasm') }}
 
 {% else %}
   {% set log_msg %}hifiasm was enabled, but no pacbio data was found. Hifiasm requires pacbio input data, so this task was skipped{% endset %}
