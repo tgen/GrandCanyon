@@ -1,0 +1,30 @@
+{% from 'modules/assembly/plotting.j2' import pafplot with context %}
+
+{% macro mashmap(pair, input_assembly, assembler) %}
+
+{% set results_dir %}{{ input_assembly | dirname }}{% endset %}
+{% set paf_output %}{{ input_assembly }}.mashmap.paf{% endset %}
+
+- name: mashmap_{{ pair.project }}_{{ assembler }}
+  input:
+    - {{ input_assembly }}
+    - {{ constants.grandcanyon.reference_fasta }}
+  output: {{ paf_output }}
+  cpus: 8
+  mem: 64G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.mashmap.container }}
+  cmd: |
+
+    mashmap \
+      -t 8 \
+      -r {{ constants.grandcanyon.reference_fasta }} \
+      -q {{ input_assembly }} \
+      -o {{ paf_output }}
+
+
+{{- pafplot(pair, paf_output, assembler) }}
+
+{% endmacro %}
+

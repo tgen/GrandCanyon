@@ -1,0 +1,53 @@
+{% macro moddotplot(pair, input_assembly, assembler) %}
+
+{% set results_dir %}{{ input_assembly | dirname }}{% endset %}
+
+- name: moddotplot_{{ pair.project }}_{{ assembler }}
+  input:
+    - {{ input_assembly }}
+    - {{ constants.grandcanyon.reference_fasta }}
+  output: {{ results_dir }}/moddotplot
+  cpus: 8
+  mem: 160G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.moddotplot.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}/moddotplot
+
+    moddotplot \
+      --static \
+      --compare-only \
+      -o {{ results_dir }}/moddotplot \
+      -i {{ constants.grandcanyon.reference_fasta }} {{ input_assembly }}
+
+{% endmacro %}
+
+{% macro pafplot(pair, input_paf, assembler) %}
+
+{% set results_dir %}{{ input_paf | dirname }}{% endset %}
+{% set output_plot %}{{ input_paf | basename }}.pafplot.png{% endset %}
+
+- name: pafplot_{{ pair.project }}_{{ assembler }}
+  input:
+    - {{ input_paf }}
+    - {{ constants.grandcanyon.reference_fasta }}
+  output: {{ results_dir }}/{{ output_plot }}
+  cpus: 4
+  mem: 20G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.pafplot.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    pafplot \
+      -p {{ results_dir }}/{{ output_plot }} \
+      {{ input_paf }}
+
+{% endmacro %}
+
