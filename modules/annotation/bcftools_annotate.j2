@@ -11,11 +11,11 @@
     {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_dbsnp"]|default(false) %}
     - {{ constants.grandcanyon.dbsnp }}
     {% endif %}
-    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad_exome"]|default(false) %}
-    - {{ constants.grandcanyon.gnomad_exome }}
+    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad"]|default(false) %}
+    - {{ constants.grandcanyon.gnomad }}
     {% endif %}
-    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad_genome"]|default(false) %}
-    - {{ constants.grandcanyon.gnomad_genome }}
+    {% if tasks[taskPrefix+"_"+analysis_type+"_annotate_vcfs_bcftools_clinvar"]|default(false) %}
+    - {{ constants.grandcanyon.clinvar }}
     {% endif %}
   walltime: "8:00:00"
   cpus: 4
@@ -57,13 +57,13 @@
     bcftools index --threads 4 --force "{{ output_bcf }}"
     {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad_exome"]|default(false) %}
+    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad"]|default(false) %}
     {# annotate with gnomad exome #}
     bcftools annotate \
       --threads 4 \
-      --annotations "{{ constants.grandcanyon.gnomad_exome }}" \
-      --mark-sites GNOMAD_EXOME \
-      --columns GNOMAD_EXOME_AC:=AC,GNOMAD_EXOME_AN:=AN,GNOMAD_EXOME_AF:=AF,GNOMAD_EXOME_n_alt_alleles:=n_alt_alleles \
+      --annotations "{{ constants.grandcanyon.gnomad }}" \
+      --mark-sites GNOMAD \
+      --columns GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF,GNOMAD_n_alt_alleles:=n_alt_alleles \
       --output-type b \
       --output "{{ temp_dir }}/tempout.bcf" \
       "{{ output_bcf }}"
@@ -74,13 +74,13 @@
     bcftools index --threads 4 --force "{{ output_bcf }}"
     {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad_genome"]|default(false) %}
-    {# annotate with gnomad genome #}
+    {% if tasks[taskPrefix+"_"+analysis_type+"_annotate_vcfs_bcftools_clinvar"]|default(false) %}
+    {# annotate with clinvar #}
     bcftools annotate \
       --threads 4 \
-      --annotations "{{ constants.grandcanyon.gnomad_genome }}" \
-      --mark-sites GNOMAD_GENOME \
-      --columns GNOMAD_GENOME_AC:=AC,GNOMAD_GENOME_AN:=AN,GNOMAD_GENOME_AF:=AF,GNOMAD_GENOME_n_alt_alleles:=n_alt_alleles \
+      --annotations "{{ constants.grandcanyon.clinvar }}" \
+      --mark-sites CLINVAR \
+      --columns CLNDN,CLNDNINCL,CLNDISDB,CLNDISDBINCL,CLNHGVS,CLNREVSTAT,CLNSIG,CLNSIGCONF,CLNSIGINCL,CLNVC,CLNVCSO,CLNVI,CLNORIGIN:=ORIGIN \
       --output-type b \
       --output "{{ temp_dir }}/tempout.bcf" \
       "{{ output_bcf }}"
