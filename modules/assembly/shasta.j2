@@ -14,7 +14,14 @@
     {% do pacbiofqlist.append(pacbiofq) %}
 {% endfor %}
 
-{% for file in pair.ont %}
+{% for file in pair.ont|selectattr('fastqCode', 'eq', 'duplex')|list %}
+    {% set duplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do pacbiofqlist.append(duplexfq) %}
+    {% set simplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz{% endset %}
+    {% do ontfqlist.append(simplexfq) %}
+{% endfor %}
+
+{% for file in pair.ont|selectattr('fastqCode', 'eq', 'simplex')|list %}
     {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do ontfqlist.append(ontfq) %}
 {% endfor %}

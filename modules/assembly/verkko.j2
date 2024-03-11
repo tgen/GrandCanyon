@@ -22,6 +22,8 @@
 {% for file in pair.ont|selectattr('fastqCode', 'eq', 'duplex')|list %}
     {% set hififq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do hififqlist.append(hififq) %}
+    {% set simplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz{% endset %}
+    {% do ontfqlist.append(simplexfq) %}
 {% endfor %}
 
 {% for file in pair.ont|selectattr('fastqCode', 'eq', 'simplex')|list %}
@@ -39,8 +41,8 @@
     - {{ hififq }}
     {% endfor %}
   output: {{ results_dir }}/assembly.fasta
-  cpus: 20
-  mem: 200G
+  cpus: 32
+  mem: 240G
   walltime: "72:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.verkko.container }}
@@ -53,8 +55,8 @@
     mkdir -p {{ results_dir }}
 
     verkko \
-      --local-cpus 20 \
-      --local-memory 200 \
+      --local-cpus 32 \
+      --local-memory 240 \
       {% if hififqlist | length > 0 %}
       --hifi "{{ hififqlist | join('" "') }}" \
       {% endif %}

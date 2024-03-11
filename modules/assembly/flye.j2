@@ -14,7 +14,14 @@
     {% do pacbiofqlist.append(pacbiofq) %}
 {% endfor %}
 
-{% for file in pair.ont %}
+{% for file in pair.ont|selectattr('fastqCode', 'eq', 'duplex')|list %}
+    {% set duplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do pacbiofqlist.append(duplexfq) %}
+    {% set simplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz{% endset %}
+    {% do ontfqlist.append(simplexfq) %}
+{% endfor %}
+
+{% for file in pair.ont|selectattr('fastqCode', 'eq', 'simplex')|list %}
     {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do ontfqlist.append(ontfq) %}
 {% endfor %}
@@ -32,8 +39,8 @@
     - {{ results_dir }}/assembly_graph.gfa
     - {{ results_dir }}/assembly_graph.gv
     - {{ results_dir }}/assembly_info.txt
-  cpus: 20
-  mem: 200G
+  cpus: 32
+  mem: 240G
   walltime: "48:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.flye.container }}
@@ -46,7 +53,7 @@
     mkdir -p {{ results_dir }}
 
     flye \
-      --threads 20 \
+      --threads 32 \
       {% if pacbiofqlist | length > 0 %}
       --pacbio-hifi "{{ pacbiofqlist | join('" "') }}" \
       {% elif ontfqlist | length > 0 %}

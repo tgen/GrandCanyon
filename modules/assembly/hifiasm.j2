@@ -19,12 +19,14 @@
     {% do hififqlist.append(pacbiofq) %}
 {% endfor %}
 
-{% for file in pair.ont|selectattr('fastqCode', 'eq', 'duplex')|selectattr('assayCode', '!=', 'OUL14')|list %}
-    {% set hififq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do hififqlist.append(hififq) %}
+{% for file in pair.ont|selectattr('fastqCode', 'eq', 'duplex')|list %}
+    {% set duplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do hififqlist.append(duplexfq) %}
+    {% set simplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz{% endset %}
+    {% do ontfqlist.append(simplexfq) %}
 {% endfor %}
 
-{% for file in pair.ont|selectattr('assayCode', '==', 'OUL14')|list %}
+{% for file in pair.ont|selectattr('fastqCode', 'eq', 'simplex')|list %}
     {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do ontfqlist.append(ontfq) %}
 {% endfor %}
@@ -39,8 +41,8 @@
     - {{ hififq }}
     {% endfor %}
   output: {{ results_dir }}/{{ pair.project }}.asm.bp.hap1.p_ctg.fa
-  cpus: 20
-  mem: 200G
+  cpus: 32
+  mem: 240G
   walltime: "48:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.hifiasm.container }}
@@ -53,7 +55,7 @@
     mkdir -p {{ results_dir }}
 
     hifiasm \
-      -t 20 \
+      -t 32 \
       -o {{ temp_dir }}/{{ pair.project }}.asm \
       {% if ontfqlist | length > 0 %}
       --ul "{{ ontfqlist | join(',') }}" \
