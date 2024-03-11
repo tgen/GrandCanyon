@@ -21,12 +21,12 @@
 
     minimap2 \
       -t 20 \
-      -x asm5 \
+      -cx asm5 \
       {{ constants.grandcanyon.reference_fasta }} \
       {{ input_assembly }} > {{ paf_output }}
 
 
-{{- pafplot(pair, paf_output, assembler) }}
+{{- pafplot(pair, paf_output, 'minimap2', assembler) }}
 
 {% endmacro %}
 

@@ -26,12 +26,12 @@
 
 {% endmacro %}
 
-{% macro pafplot(pair, input_paf, assembler) %}
+{% macro pafplot(pair, input_paf, aligner, assembler) %}
 
 {% set results_dir %}{{ input_paf | dirname }}{% endset %}
 {% set output_plot %}{{ input_paf | basename }}.pafplot.png{% endset %}
 
-- name: pafplot_{{ pair.project }}_{{ assembler }}
+- name: pafplot_{{ aligner }}_{{ pair.project }}_{{ assembler }}
   input:
     - {{ input_paf }}
     - {{ constants.grandcanyon.reference_fasta }}
