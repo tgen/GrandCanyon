@@ -9,6 +9,11 @@
 {% from 'modules/assembly/assembly_stats.j2' import assembly_stats with context %}
 {% from 'modules/assembly/quast.j2' import quast with context %}
 
+{% from 'modules/assembly/minimap2.j2' import minimap2_asm with context %}
+{% from 'modules/assembly/mashmap.j2' import mashmap with context %}
+
+{% from 'modules/assembly/plotting.j2' import moddotplot with context %}
+
 {% macro canu(pair) %}
 
 {%- set temp_dir %}temp/{{ pair.gltype }}/assembly/canu/{{ pair.project }}{% endset %}
@@ -70,6 +75,11 @@
 {% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
 {{- assembly_stats(pair, input_assembly, 'canu') }}
 {{- quast(pair, input_assembly, 'canu') }}
+
+{{- minimap2_asm(pair, input_assembly, 'canu') }}
+{{- mashmap(pair, input_assembly, 'canu') }}
+
+{{- moddotplot(pair, input_assembly, 'canu') }}
 
 {% endmacro %}
 
