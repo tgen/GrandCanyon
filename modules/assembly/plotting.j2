@@ -49,5 +49,21 @@
       -p {{ results_dir }}/{{ output_plot }} \
       {{ input_paf }}
 
+- name: pafr_{{ aligner }}_{{ pair.project }}_{{ assembler }}
+  input:
+    - {{ input_paf }}
+  output: {{ input_paf }}_dotplot.png
+  cpus: 2
+  mem: 8G
+  walltime: "1:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.pafr.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    Rscript --vanilla {{ required_scripts.pafr_plot_Rscript.path }} \
+      -i {{ input_paf }}
+
 {% endmacro %}
 
