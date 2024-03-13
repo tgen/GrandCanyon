@@ -61,6 +61,9 @@
     - {{ constants.grandcanyon.reference_fasta }}
     {% for file in rg.data_files %}
     - temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz
+    {% if file.fastqCode == 'duplex' %}
+    - temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz
+    {% endif %}
     {% endfor %}
   output:
     - {{ temp_dir }}/st_sort_temp/{{ rgid }}
@@ -107,6 +110,9 @@
       {{ constants.grandcanyon.reference_fasta }} \
       {% for file in rg.data_files %}
       temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz \
+      {% if file.fastqCode == 'duplex' %}
+      temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz \
+      {% endif %}
       {% endfor %}
     | samtools sort \
       --threads 20 \
