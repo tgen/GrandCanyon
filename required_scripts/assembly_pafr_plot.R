@@ -12,7 +12,11 @@ option_list = list(
               type="character",
               default=NULL,
               help="input paf file",
-              metavar="filename")
+              metavar="filename"),
+  make_option(c("-t", "--target"),
+              type="character",
+              default='chr3',
+              help="target contig")
 );
 
 opt_parser = OptionParser(option_list=option_list);
@@ -30,7 +34,7 @@ if (is.null(opt$input)){
 ## Define Functions
 ####################################
 
-process_paf <- function(input) {
+process_paf <- function(input, target) {
   ali <- read_paf(input)
 
   # Graph
@@ -48,13 +52,19 @@ process_paf <- function(input) {
     theme_pubr()
   ggsave(paste(input, "pafr_alignment_divergence.png", sep = "_"))
 
-  prim_alignment <- filter_secondary_alignments(ali)
-  dotplot(prim_alignment, label_seqs=TRUE, order_by="qstart") + theme_bw()
+  dotplot(ali, order_by="qstart") + theme_bw()
   ggsave(paste(input, "pafr_dotplot.png", sep = "_"))
 
-  plot_coverage(prim_alignment)
+  plot_coverage(ali)
   ggsave(paste(input, "pafr_coverage_target.png", sep = "_"))
 
+  target_only <- ali[ali$tname == target,]
+  dotplot(target_only, label_seqs=FALSE, dashes=FALSE, order_by="qstart") + theme_bw()
+  ggsave(paste(input, target, "pafr_dotplot.png", sep = "_"))
+
+  plot_coverage(target_only)
+  ggsave(paste(input, target, "pafr_coverage_target.png", sep = "_"))
 }
 
-process_paf(opt$input)
+process_paf(opt$input, opt$target)
+

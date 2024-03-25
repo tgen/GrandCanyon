@@ -53,8 +53,8 @@
     - {{ results_dir }}/Assembly-Phased.fasta
     - {{ results_dir }}/Assembly-Phased.gfa
     - {{ results_dir }}/Assembly-Phased-NoSequence.gfa
-  cpus: 20
-  mem: 300G
+  cpus: 32
+  mem: 400G
   walltime: "48:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.shasta.container }}
@@ -74,7 +74,7 @@
     {% endfor %}
 
     shasta \
-      --threads 20 \
+      --threads 32 \
       --input {{ temp_dir }}/*.fasta \
       --config Nanopore-Phased-R10-Fast-Nov2022 \
       --Reads.minReadLength 500 \

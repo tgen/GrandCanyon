@@ -42,7 +42,7 @@
     {% endfor %}
   output: {{ results_dir }}/{{ pair.project }}.asm.bp.hap1.p_ctg.fa
   cpus: 32
-  mem: 240G
+  mem: 600G
   walltime: "48:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.hifiasm.container }}
