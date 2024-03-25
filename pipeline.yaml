@@ -107,7 +107,7 @@ constants:
     ref_flat: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.refFlat.txt
     ribo_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.ribo.interval_list
     dbsnp: /home/tgenref/homo_sapiens/t2t_chm13/public_databases/dbsnp/chm13v2.0_dbSNPv155.vcf.gz
-    gnomad: /home/tgenref/homo_sapiens/t2t_chm13/public_databases/gnomad/Homo_sapiens-GCA_009914755.4-2022_10-gnomad.vcf.gz
+    gnomad: /home/tgenref/homo_sapiens/t2t_chm13/public_databases/gnomad/Homo_sapiens-GCA_009914755.4-2022_10-gnomad.pass.reduced.bcf
     clinvar: /home/tgenref/homo_sapiens/t2t_chm13/public_databases/clinvar/chm13v2.0_ClinVar20220313.vcf.gz
     tool_resources:
       severus:

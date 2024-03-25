@@ -14,7 +14,7 @@
     {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad"]|default(false) %}
     - {{ constants.grandcanyon.gnomad }}
     {% endif %}
-    {% if tasks[taskPrefix+"_"+analysis_type+"_annotate_vcfs_bcftools_clinvar"]|default(false) %}
+    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_clinvar"]|default(false) %}
     - {{ constants.grandcanyon.clinvar }}
     {% endif %}
   walltime: "8:00:00"
@@ -63,7 +63,7 @@
       --threads 4 \
       --annotations "{{ constants.grandcanyon.gnomad }}" \
       --mark-sites GNOMAD \
-      --columns GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF,GNOMAD_n_alt_alleles:=n_alt_alleles \
+      --columns GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF \
       --output-type b \
       --output "{{ temp_dir }}/tempout.bcf" \
       "{{ output_bcf }}"
@@ -74,7 +74,7 @@
     bcftools index --threads 4 --force "{{ output_bcf }}"
     {% endif %}
 
-    {% if tasks[taskPrefix+"_"+analysis_type+"_annotate_vcfs_bcftools_clinvar"]|default(false) %}
+    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_clinvar"]|default(false) %}
     {# annotate with clinvar #}
     bcftools annotate \
       --threads 4 \
@@ -101,4 +101,5 @@
     bcftools index --threads 4 --tbi --force "{{ output_vcf }}"
 
 {% endmacro -%}
+
 
