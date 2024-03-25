@@ -58,9 +58,9 @@
   {% if bam_level is sameas false %}
   reset: predecessors
   {% endif %}
-  walltime: "4:00:00"
+  walltime: "8:00:00"
   cpus: 4
-  mem: 8G
+  mem: 16G
   queue_preset: "DEFAULT"
   container: {{ constants.tools.samtools.container }}
   cmd: |
