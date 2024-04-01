@@ -28,6 +28,8 @@
 
 {% for file in dataFiles %}
     {% set bn = file.fastqPath | basename %}
+    {% set gltype = file.glType | lower | replace("genomephased", "genome") %}
+    {% set glprep = file.glPrep | lower %}
     {% if 'sampleMergeKey' in file %}
         {% set name = file.sampleMergeKey %}
     {% else %}
@@ -36,8 +38,8 @@
 
     {% do file.update({'name': name}) %}
     {% do file.update({'basename': bn}) %}
-    {% do file.update({'gltype': file.glType.lower()}) %}
-    {% do file.update({'glprep': file.glPrep.lower()}) %}
+    {% do file.update({'gltype': gltype}) %}
+    {% do file.update({'glprep': glprep}) %}
     {% do file.update({'path': file.fastqPath}) %}
 
     {% if 'subGroup' not in file %}
