@@ -1,0 +1,26 @@
+{% macro oarfish(sample, sample_bam) %}
+
+{% set temp_dir %}temp/{{ sample.gltype }}/quant/oarfish{% endset %}
+{% set results_dir %}{{ sample.gltype }}/quant/oarfish/{{ sample.name }}{% endset %}
+
+- name: oarfish_{{ sample.name }}
+  input:
+    - {{ sample_bam }}
+  output: {{ results_dir }}
+  cpus: 10
+  mem: 32G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.oarfish.container }}
+  cmd: |
+
+    mkdir -p {{ results_dir }}
+    mkdir -p {{ temp_dir }}
+
+    oarfish \
+      --threads 10 \
+      --alignments {{ sample_bam }} \
+      --output {{ results_dir }}/{{ sample.name }}
+
+{% endmacro %}
+

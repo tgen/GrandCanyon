@@ -2,6 +2,7 @@
 {% from 'modules/rna/flair.j2' import flair with context %}
 {% from 'modules/rna/isoquant.j2' import isoquant with context %}
 {% from 'modules/rna/salmon.j2' import salmon with context %}
+{% from 'modules/rna/oarfish.j2' import oarfish with context %}
 
 {% macro minimap2_rna(sample) %}
 
@@ -264,6 +265,12 @@
     {{- salmon(sample, sample_bam, transcriptome, SIRV=true) }}
   {% endif %}
 {% endif %}
+
+{% if tasks['RNA_transcriptome_quantify_expression_oarfish']|default(true) %}
+  {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.transcriptome.bam{% endset %}
+  {{- oarfish(sample, sample_bam) }}
+{% endif %}
+
 
 {% if tasks['RNA_transcriptome_quantify_expression_flair']|default(true) %}
   {% set input_fastq %}{{ temp_dir }}/{{ sample.name }}.minimap2.sirv.unmapped.fq{% endset %}
