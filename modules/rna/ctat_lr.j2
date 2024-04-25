@@ -1,0 +1,64 @@
+{% macro ctat_lr(sample) %}
+
+{%- set temp_dir %}temp/{{ sample.gltype }}/fusions/starfusion/{{ sample.name }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/fusions/starfusion/{{ sample.name }}{% endset %}
+
+{# Here we build up lists of all the fastq files for this sample #}
+{% set longfqlist = [] %}
+{% set r1fqlist = [] %}
+{% set r2fqlist = [] %}
+
+{% for rgid, rg in sample.read_groups.items() %}
+  {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
+  {% set longfastq_path %}temp/fastqs/{{ longfastq.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+  {% do longfastq.update({"path": longfastq_path}) %}
+  {% do longfqlist.append(longfastq) %}
+
+  {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
+  {% do r1fastq.update({"path": "temp/fastqs/" + r1fastq.basename}) %}
+  {% do r1fqlist.append(r1fastq) %}
+
+  {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
+  {% do r2fastq.update({"path": "temp/fastqs/" + r2fastq.basename}) %}
+  {% do r2fqlist.append(r2fastq) %}
+{% endfor %}
+
+{% if longfqlist | length > 0 %}
+
+- name: ctat_lr_{{ sample.name }}
+  input:
+    - {{ constants.grandcanyon.starfusion_index }}
+  {% for fq in longfqlist %}
+    - {{ fq.path }}
+  {% endfor %}
+  {% for fq in r1fqlist %}
+    - {{ fq.path }}
+  {% endfor %}
+  {% for fq in r2fqlist %}
+    - {{ fq.path }}
+  {% endfor %}
+  output: {{ results_dir }}
+  cpus: 10
+  mem: 32G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.ctat_lr.container }}
+  cmd: |
+
+    ctat-LR-fusion \
+      --CPU 10 \
+      --genome_lib_dir {{ constants.grandcanyon.starfusion_index }} \
+      -T "{{ longfqlist|map(attribute='path')|join(',') }}" \
+      {% if r1fqlist | length > 0 %}
+      --left_fq "{{ r1fqlist|map(attribute='path')|join(',') }}" \
+      --right_fq "{{ r2fqlist|map(attribute='path')|join(',') }}" \
+      {% endif %}
+      --output {{ temp_dir }} \
+      --vis
+
+{% else %}
+  {% set log_msg %}ctat_lr_fusion was enabled, but no compatible long read data was found for {{ sample.name }}{% endset %}
+  {{ log(log_msg, level='WARNING') }}
+{% endif %}
+
+{% endmacro %}
