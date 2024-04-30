@@ -1,0 +1,106 @@
+{% macro isoseq(sample) %}
+
+{% set temp_dir %}temp/{{ sample.gltype }}/alignment/isoseq/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/alignment/isoseq/{{ sample.name }}{% endset %}
+
+{% set longfqlist = [] %}
+
+{% for rgid, rg in sample.read_groups.items() %}
+  {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
+  {% set longfastq_path %}temp/fastqs/{{ longfastq.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+  {% do longfastq.update({"path": longfastq_path}) %}
+  {% do longfqlist.append(longfastq) %}
+{% endfor %}
+
+- name: isoseq_cluster_{{ sample.name }}
+  input:
+    - {{ constants.grandcanyon.reference_fasta }}
+    {% for file in longfqlist %}
+    - {{ file.path }}
+    {% endfor %}
+  output:
+    - {{ temp_dir }}/{{ sample.name }}.clustered.bam
+  cpus: 20
+  mem: 80G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.isoseq.container }}
+  cmd: |
+
+    rm -rf {{ temp_dir }}
+    mkdir {{ temp_dir }}
+
+    ls {{ longfqlist|map(attribute='path')|join(' ') }} > {{ temp_dir }}/{{ sample.name }}.fofn
+
+    isoseq cluster2 {{ temp_dir }}/{{ sample.name }}.fofn {{ temp_dir }}/{{ sample.name }}.clustered.bam
+
+- name: isoseq_pbmm2_{{ sample.name }}
+  input:
+    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ temp_dir }}/{{ sample.name }}.clustered.bam
+  output:
+    - {{ results_dir }}/{{ sample.name }}.pbmm2.bam
+  cpus: 20
+  mem: 80G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.pbmm2.container }}
+  cmd: |
+
+    pbmm2 align \
+      --preset ISOSEQ \
+      --sort \
+      {{ temp_dir }}/{{ sample.name }}.clustered.bam \
+      {{ constants.grandcanyon.reference_fasta }} \
+      {{ results_dir }}/{{ sample.name }}.pbmm2.bam
+
+- name: isoseq_collapse_{{ sample.name }}
+  input:
+    - {{ results_dir }}/{{ sample.name }}.pbmm2.bam
+    - {{ temp_dir }}/{{ sample.name }}.clustered.bam
+  output: {{ results_dir }}/{{ sample.name }}.collapsed.gff
+  cpus: 10
+  mem: 32G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.isoseq.container }}
+  cmd: |
+
+    isoseq collapse \
+      --do-not-collapse-extra-5exons \
+      {{ results_dir }}/{{ sample.name }}.pbmm2.bam \
+      {{ temp_dir }}/{{ sample.name }}.clustered.bam \
+      {{ results_dir }}/{{ sample.name }}.collapsed.gff
+
+- name: pigeon_{{ sample.name }}
+  input:
+    - {{ results_dir }}/{{ sample.name }}.collapsed.gff
+    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon.gtf }}
+  output:
+    - {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff
+    - {{ results_dir }}/{{ sample.name }}.collapsed_classification.txt
+  cpus: 10
+  mem: 32G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.pbpigeon.container }}
+  cmd: |
+
+    pigeon prepare {{ results_dir }}/{{ sample.name }}.collapsed.gff
+
+    {# pigeon classify <collapsed.sorted.gff> <annotations.gtf> <reference.fa> --fl flnc_count.txt #}
+    pigeon classify \
+      {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff \
+      {{ constants.grandcanyon.gtf }} \
+      {{ constants.grandcanyon.reference_fasta }}
+
+    pigeon filter \
+      {{ results_dir }}/{{ sample.name }}.collapsed_classification.txt \
+      {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff
+
+    pigeon report \
+      {{ results_dir }}/{{ sample.name }}.collapsed_classification.filtered_lite_classification.txt \
+      {{ results_dir }}/{{ sample.name }}.collapsed_classification.filtered_lite_classification.saturation.txt
+
+{% endmacro %}
