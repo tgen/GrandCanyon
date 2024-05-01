@@ -7,10 +7,14 @@
 
 {% for rgid, rg in sample.read_groups.items() %}
   {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
-  {% set longfastq_path %}temp/fastqs/{{ longfastq.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-  {% do longfastq.update({"path": longfastq_path}) %}
-  {% do longfqlist.append(longfastq) %}
+  {% if longfastq is defined %}
+    {% set longfastq_path %}temp/ubams/{{ longfastq.basename }}{% endset %}
+    {% do longfastq.update({"path": longfastq_path}) %}
+    {% do longfqlist.append(longfastq) %}
+  {% endif %}
 {% endfor %}
+
+{% if longfqlist | length > 0 %}
 
 - name: isoseq_cluster_{{ sample.name }}
   input:
@@ -20,19 +24,24 @@
     {% endfor %}
   output:
     - {{ temp_dir }}/{{ sample.name }}.clustered.bam
-  cpus: 20
-  mem: 80G
+  cpus: 10
+  mem: 32G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.isoseq.container }}
   cmd: |
 
     rm -rf {{ temp_dir }}
-    mkdir {{ temp_dir }}
+    mkdir -p {{ temp_dir }}
 
-    ls {{ longfqlist|map(attribute='path')|join(' ') }} > {{ temp_dir }}/{{ sample.name }}.fofn
+    ROOT_DIR=${PWD}
 
-    isoseq cluster2 {{ temp_dir }}/{{ sample.name }}.fofn {{ temp_dir }}/{{ sample.name }}.clustered.bam
+    {# ls {{ longfqlist|map(attribute='path')|join(' ') }} > {{ temp_dir }}/{{ sample.name }}.fofn #}
+    cd {{ temp_dir }} && \
+    isoseq cluster2 \
+      --num-threads 10 \
+      $ROOT_DIR/{{ longfqlist|map(attribute='path')|join(' ') }} \
+      {{ sample.name }}.clustered.bam
 
 - name: isoseq_pbmm2_{{ sample.name }}
   input:
@@ -66,10 +75,11 @@
   container: {{ constants.tools.isoseq.container }}
   cmd: |
 
+    {# isoseq collapse supports reading in the flnc bam, but it complains about missing a pbi index #}
+    {# and this is missing because we cannot reindex the u.bam after addreplacerg insertion of rgid #}
     isoseq collapse \
       --do-not-collapse-extra-5exons \
       {{ results_dir }}/{{ sample.name }}.pbmm2.bam \
-      {{ temp_dir }}/{{ sample.name }}.clustered.bam \
       {{ results_dir }}/{{ sample.name }}.collapsed.gff
 
 - name: pigeon_{{ sample.name }}
@@ -89,18 +99,22 @@
 
     pigeon prepare {{ results_dir }}/{{ sample.name }}.collapsed.gff
 
+    {# If we use the flnc.bam during isoseq collapse, then we can use this optional output here: #}
     {# pigeon classify <collapsed.sorted.gff> <annotations.gtf> <reference.fa> --fl flnc_count.txt #}
     pigeon classify \
+      --out-dir {{ results_dir}} \
       {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff \
       {{ constants.grandcanyon.gtf }} \
       {{ constants.grandcanyon.reference_fasta }}
 
     pigeon filter \
-      {{ results_dir }}/{{ sample.name }}.collapsed_classification.txt \
+      {{ results_dir }}/{{ sample.name }}_classification.txt \
       {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff
 
     pigeon report \
-      {{ results_dir }}/{{ sample.name }}.collapsed_classification.filtered_lite_classification.txt \
-      {{ results_dir }}/{{ sample.name }}.collapsed_classification.filtered_lite_classification.saturation.txt
+      {{ results_dir }}/{{ sample.name }}_classification.filtered_lite_classification.txt \
+      {{ results_dir }}/{{ sample.name }}_classification.filtered_lite_classification.saturation.txt
+
+{% endif %}
 
 {% endmacro %}

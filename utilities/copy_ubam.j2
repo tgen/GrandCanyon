@@ -2,40 +2,55 @@
 
 - name: copy_ubams_{{ ubam.basename | replace(".", "_") }}
   input: {{ ubam.path }}
-  output: temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
+  output:
+    - temp/ubams/{{ ubam.basename }}
   retry: 2
   cpus: 6
   walltime: "4:00:00"
   queue_preset: "DATA-MOVER"
+  cmd: |
+    set -uev
+
+    mkdir -p temp/ubams/
+
+    rsync {{ ubam.path }} temp/ubams/
+
+- name: convert_ubam_to_fastq_{{ ubam.basename | replace(".", "_") }}
+  input:
+    - temp/ubams/{{ ubam.basename }}
+  output:
+    - temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
+  cpus: 6
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
   container: {{ constants.tools.samtools.container }}
   cmd: |
     set -uev
 
     mkdir -p temp/fastqs/
-
+    
     {# we currently expect ont style input, which isn't paired so we output to -0 #}
     {% if ubam.fastqCode == 'duplex' %}
     samtools fastq \
       --threads 6 \
       -T '*' \
       -d dx:1 \
-      {{ ubam.path }} \
+      temp/ubams/{{ ubam.basename }} \
       -0 temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
 
     samtools fastq \
       --threads 6 \
       -T '*' \
       -d dx:0 \
-      {{ ubam.path }} \
+      temp/ubams/{{ ubam.basename }} \
       -0 temp/fastqs/{{ ubam.basename | replace(".", "_") }}.simplex.fastq.gz
     {% else %}
     samtools fastq \
       --threads 6 \
       -T '*' \
-      {{ ubam.path }} \
+      temp/ubams/{{ ubam.basename }} \
       -0 temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
     {% endif %}
-
 
 {% endmacro %}
 
