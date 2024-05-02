@@ -32,11 +32,11 @@
     mkdir -p {{ results_dir }}
 
     run_deepvariant \
-      {% if pair.tumor.rgpl in ('PACBIO') %}
+      {% if sample.rgpl in ('PACBIO') %}
       --model_type PACBIO \
-      {% elif pair.tumor.rgpl in ('ONT') %}
+      {% elif sample.rgpl in ('ONT') %}
       --model_type ONT_R104 \
-      {% elif pair.tumor.gltype in ('exome') %}
+      {% elif sample.gltype in ('exome') %}
       --model_type WES \
       {% else %}
       --model_type WGS \
