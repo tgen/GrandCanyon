@@ -27,10 +27,6 @@
   container: {{ constants.tools.pychopper.container }}
   cmd: |
 
-    {# note: this step runs pychopper, which trims, orients, and rescues reads #}
-    {# input: raw fastq #}
-    {# output: pychopper chopped and rescued fastq #}
-
     mkdir -p {{ temp_dir }}/pychopper/{{ sample.name }}
 
     zcat {{ input_fastq }} > {{ decompressed_fastq }}
@@ -68,12 +64,7 @@
   container: {{ constants.tools.minimap2.container }}
   cmd: |
 
-    {# note: this step aligns reads to the SIRV spike-in reference. If skipped and sample has spike-ins, some SIRVs will align to the human genome. #}
-    {# input: pychopper chopped and rescued fastq #}
-    {# output: SIRVome mapped SAM #}
-
-    mkdir -p {{ temp_dir }}/minimap2
-    mkdir -p {{ results_dir }}/stats
+    mkdir -p {{ temp_dir }}
 
     minimap2 \
       -ax splice \
@@ -162,6 +153,7 @@
 - name: minimap2_{{ sample.name }}
   input:
     - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon.gtf }}
     - {{ prepped_fastq }}
   output:
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram
@@ -172,14 +164,16 @@
   container: {{ constants.tools.minimap2.container }}
   cmd: |
 
-    {# note: this step converts unmapped SIRV bam to fq #}
-    {# input: bam with reads unmapped to SIRVs #}
-    {# output: fq with reads unmapped to SIRVs #}
-
-    mkdir -p {{ results_dir }}/stats
+    paftools.js gff2bed {{ constants.grandcanyon.gtf }} > {{ temp_dir }}/{{ sample.name }}_anno.bed
 
     minimap2 \
+      {% if sample.glprep in 'kinnex' %}
+      -ax splice:hq \
+      -uf \
+      {% else %}
       -ax splice \
+      {% endif %}
+      --junc-bed {{ temp_dir }}/{{ sample.name }}_anno.bed \
       -t 20 \
       -L \
       {{ constants.grandcanyon.reference_fasta }} \
@@ -228,13 +222,6 @@
   queue_preset: "DEFAULT"
   container: {{ constants.tools.minimap2.container }}
   cmd: |
-
-    {# note: this step aligns reads (unmapped to SIRVs) to the human transcriptome #}
-    {# input: fq with reads unmapped to SIRVs #}
-    {# output: human aligned transcriptome bam for salmon #}
-    {# parameters match nanopore workflow https://github.com/nanoporetech/pipeline-transcriptome-de/tree/master #}
-    {# -N 100 allows up to 100 secondary alignments (multiple isoforms) #}
-    {# -p 1.0 secondary score ratio, this is higher than the default of 0.8 since we are looking for transcriptome isoforms #}
 
     minimap2 \
       -ax map-ont \
