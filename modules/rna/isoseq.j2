@@ -99,10 +99,9 @@
 
     pigeon prepare {{ results_dir }}/{{ sample.name }}.collapsed.gff
 
-    {# If we use the flnc.bam during isoseq collapse, then we can use this optional output here: #}
-    {# pigeon classify <collapsed.sorted.gff> <annotations.gtf> <reference.fa> --fl flnc_count.txt #}
     pigeon classify \
       --out-dir {{ results_dir}} \
+      --fl {{ results_dir }}/{{ sample.name }}.collapsed.flnc_count.txt \
       {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff \
       {{ constants.grandcanyon.gtf }} \
       {{ constants.grandcanyon.reference_fasta }}
