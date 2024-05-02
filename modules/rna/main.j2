@@ -6,12 +6,14 @@
 {% macro rna_alignment(samples) %}
 
   {% for sample in samples.values() if sample.gltype in ['rna'] %}
-    {{- minimap2_rna(sample) }}
-    {{- bam_qc(sample, aligner='minimap2') }}
-    {{- ctat_lr(sample) }}
+    {% if sample.glprep in ['kinnex', 'longread'] %}
+      {{- minimap2_rna(sample) }}
+      {{- bam_qc(sample, aligner='minimap2') }}
+    {% endif %}
     {% if sample.glprep in 'kinnex' %}
       {{- isoseq(sample) }}
     {% endif %}
+    {{- ctat_lr(sample) }}
   {% endfor %}
 
 {% endmacro %}

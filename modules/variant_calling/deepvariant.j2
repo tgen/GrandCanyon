@@ -10,146 +10,57 @@
 {%- set all_gvcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.all.g.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.pass.vcf.gz{% endset %}
 
-{%- set nshards=40 %}
-{% for i in range(nshards) %}
-
-{% set iteration = ('00000' + i|string)|reverse|truncate(5, True, '', 0)|reverse %}
-{% set stop = ('00000' + nshards|string)|reverse|truncate(5, True, '', 0)|reverse %}
-
-- name: deepvariant_make_examples_{{ sample.name }}_minimap2_shard{{ i }}
+- name: deepvariant_{{ sample.name }}_minimap2
   tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
   input:
     - {{ bam }}
     - {{ bam }}.bai
     - {{ constants.grandcanyon.reference_fasta }}
   output:
-    - {{ temp_dir }}/{{ sample.name }}.ex.tfrecord-{{ iteration }}-of-{{ stop }}.gz
-    - {{ temp_dir }}/{{ sample.name }}.gvcf.tfrecord-{{ iteration }}-of-{{ stop }}.gz
-  cpus: 1
-  mem: 4G
-  walltime: "6:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.deepvariant.container }}
-  cmd: |
-    set -eu
-    set -o pipefail
-
-    PROJECT_ROOT=$PWD
-
-    mkdir -p {{ temp_dir }}
-
-    cd {{ temp_dir }}
-
-    make_examples \
-      --norealign_reads \
-      --pileup_image_width 199 \
-      --track_ref_reads \
-      --phase_reads \
-      --partition_size=25000 \
-      --max_reads_per_partition=600 \
-      --alt_aligned_pileup=diff_channels \
-      --add_hp_channel \
-      --sort_by_haplotypes \
-      --parse_sam_aux_fields \
-      {% if sample.rgpl in ('ONT') %}
-      --min_mapping_quality=5 \
-      --vsc_min_fraction_indels 0.12 \
-      --vsc_min_fraction_snps 0.08 \
-      {% elif sample.rgpl in ('PACBIO') %}
-      --min_mapping_quality=1 \
-      --vsc_min_fraction_indels 0.12 \
-      {% endif %}
-      --mode calling \
-      --task {{ i }} \
-      --ref "{{ constants.grandcanyon.reference_fasta }}" \
-      --reads "${PROJECT_ROOT}/{{ bam }}" \
-      --examples "${PROJECT_ROOT}/{{ temp_dir }}/{{ sample.name }}.ex.tfrecord@{{ nshards }}.gz" \
-      --gvcf "${PROJECT_ROOT}/{{ temp_dir }}/{{ sample.name }}.gvcf.tfrecord@{{ nshards }}.gz"
-
-{% endfor %}
-
-- name: deepvariant_call_variants_{{ sample.name }}_minimap2
-  tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
-  reset: predecessors
-  input:
-    {% for i in range(nshards) %}
-    {% set iteration = ('00000' + i|string)|reverse|truncate(5, True, '', 0)|reverse %}
-    {% set stop = ('00000' + nshards|string)|reverse|truncate(5, True, '', 0)|reverse %}
-    - {{ temp_dir }}/{{ sample.name }}.ex.tfrecord-{{ iteration }}-of-{{ stop }}.gz
-    - {{ temp_dir }}/{{ sample.name }}.gvcf.tfrecord-{{ iteration }}-of-{{ stop }}.gz
-    {% endfor %}
-  output: {{ temp_dir }}/{{ sample.name }}.cvo.tfrecord.gz
-  cpus: 8
-  mem: 40G
-  walltime: "24:00:00"
+    - {{ all_vcf }}
+  cpus: 20
+  mem: 120G
+  walltime: "12:00:00"
   queue_preset: "DEEPVARIANT"
   container: {{ constants.tools.deepvariant.container }}
   cmd: |
     set -eu
     set -o pipefail
 
-    PROJECT_ROOT=$PWD
-
-    cd {{ temp_dir }}
-
-    call_variants \
-      {% if sample.rgpl in ('ONT') %}
-      --checkpoint /opt/models/ont_r104 \
-      {% elif sample.rgpl in ('PACBIO') %}
-      --checkpoint /opt/models/pacbio \
-      {% endif %}
-      --examples "{{ sample.name }}.ex.tfrecord@{{ nshards }}.gz" \
-      --outfile "{{ sample.name }}.cvo.tfrecord.gz"
-
-
-- name: deepvariant_postprocess_variants_{{ sample.name }}_minimap2
-  tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
-  reset: predecessors
-  input:
-    - {{ temp_dir }}/{{ sample.name }}.cvo.tfrecord.gz
-    - {{ constants.grandcanyon.reference_fasta }}
-  output:
-    - {{ all_vcf }}
-    - {{ all_gvcf }}
-  cpus: 20
-  mem: 160G
-  walltime: "24:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.deepvariant.container }}
-  cmd: |
-    set -eu
-    set -o pipefail
-
-    PROJECT_ROOT=$PWD
-
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
-    cd {{ temp_dir }}
-
-    postprocess_variants \
-      --cpus 20 \
-      --ref "{{ constants.grandcanyon.reference_fasta }}" \
-      --infile "{{ sample.name }}.cvo.tfrecord.gz" \
-      --outfile "${PROJECT_ROOT}/{{ all_vcf }}" \
-      --novcf_stats_report \
-      --nonvariant_site_tfrecord_path "${PROJECT_ROOT}/{{ temp_dir }}/{{ sample.name }}.gvcf.tfrecord@{{ nshards }}.gz" \
-      --gvcf_outfile "${PROJECT_ROOT}/{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.all.g.vcf.gz"
-
+    run_deepvariant \
+      {% if pair.tumor.rgpl in ('PACBIO') %}
+      --model_type PACBIO \
+      {% elif pair.tumor.rgpl in ('ONT') %}
+      --model_type ONT_R104 \
+      {% elif pair.tumor.gltype in ('exome') %}
+      --model_type WES \
+      {% else %}
+      --model_type WGS \
+      {% endif %}
+      --ref {{ constants.grandcanyon.reference_fasta }} \
+      --reads {{ bam }} \
+      --output_vcf {{ all_vcf }} \
+      --output_gvcf {{ all_gvcf }} \
+      --sample_name {{ sample.name }} \
+      --num_shards 20 \
+      --logging_dir {{ temp_dir }}/logs \
+      --intermediate_results_dir {{ temp_dir }}/intermediate_results_dir
 
 - name: deepvariant_filter_variants_{{ sample.name }}_minimap2
   tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
   input:
     - {{ all_vcf }}
-    {% if sample.gltype == 'exome' %}
-    - {{ sample.capture_kit.extended_bed }}
-    {% endif %}
   output:
     - {{ all_vcf }}.tbi
     - {{ pass_vcf }}
     - {{ pass_vcf }}.tbi
   cpus: 1
   mem: 4G
-  walltime: "24:00:00"
+  walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.bcftools.container }}
   cmd: |
@@ -193,7 +104,7 @@
     {% endif %}
   cpus: 8
   mem: 32G
-  walltime: "24:00:00"
+  walltime: "8:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.margin.container }}
   cmd: |

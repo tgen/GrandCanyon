@@ -14,7 +14,6 @@
   {% for file in dataFiles|selectattr('subGroup', 'eq', 'Constitutional')|selectattr('gltype', 'in', ['genome','genomephased']) %}
     {% set log_msg %}Collecting sequencing data types for {{ project }}, we will then attempt an assembly{% endset %}
     {{ log(log_msg, level='WARNING') }}
-    {{ log(log_msg, level='WARNING') }}
     {% if file.rgpl in ('ONT') %}
       {% do pair.ont.append(file) %}
     {% elif file.rgpl in ('PACBIO') %}
