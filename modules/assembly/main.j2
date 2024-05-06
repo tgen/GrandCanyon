@@ -11,9 +11,7 @@
   {% do pair.update({'ont': []}) %}
   {% do pair.update({'pacbio': []}) %}
   {% do pair.update({'short': []}) %}
-  {% for file in dataFiles|selectattr('subGroup', 'eq', 'Constitutional')|selectattr('gltype', 'in', ['genome','genomephased']) %}
-    {% set log_msg %}Collecting sequencing data types for {{ project }}, we will then attempt an assembly{% endset %}
-    {{ log(log_msg, level='WARNING') }}
+  {% for file in dataFiles|selectattr('subGroup', 'eq', 'Constitutional')|selectattr('gltype', 'in', ['genome']) %}
     {% if file.rgpl in ('ONT') %}
       {% do pair.ont.append(file) %}
     {% elif file.rgpl in ('PACBIO') %}

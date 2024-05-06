@@ -7,9 +7,11 @@
 
 {% if reference is not defined %}
     {% set reference = "chm13" %}
+    {% set log_msg %}reference not defined, defaulting to chm13{% endset %}
+    {{ log(log_msg, level='WARNING') }}
 {% elif reference not in ['chm13', 'grch38'] %}
-  {% set raise_msg %}Unsupported reference defined! {{ reference }} is not in {{ supported_references }}{% endset %}
-  {{ raise(raise_msg) }}
+    {% set raise_msg %}Unsupported reference defined! {{ reference }} is not in {{ supported_references }}{% endset %}
+    {{ raise(raise_msg) }}
 {% endif %}
 
 {% set required_scripts = {} %}
