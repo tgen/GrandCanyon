@@ -4,19 +4,14 @@
 
 - name: bcftools_annotate_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
-  input: {{ input_vcf }}
+  input:
+    - {{ input_vcf }}
+    {% for db in constants.grandcanyon[reference].annotation_databases %}
+    - {{ db.file }}
+    {% endfor %}
   output:
     - {{ output_vcf }}
     - {{ output_vcf }}.tbi
-    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_dbsnp"]|default(false) %}
-    - {{ constants.grandcanyon.dbsnp }}
-    {% endif %}
-    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad"]|default(false) %}
-    - {{ constants.grandcanyon.gnomad }}
-    {% endif %}
-    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_clinvar"]|default(false) %}
-    - {{ constants.grandcanyon.clinvar }}
-    {% endif %}
   walltime: "8:00:00"
   cpus: 4
   mem: 4G
@@ -40,13 +35,14 @@
 
     bcftools index --threads 4 --force "{{ output_bcf }}"
 
-    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_dbsnp"]|default(false) %}
-    {# annotate with dbsnp #}
+    {% for db in constants.grandcanyon[reference].annotation_databases %}
     bcftools annotate \
       --threads 4 \
-      --annotations "{{ constants.grandcanyon.dbsnp }}" \
-      --mark-sites DB \
-      --columns ID \
+      --annotations {{ db.file }} \
+      --mark-sites {{ db.mark_sites }} \
+      {% if db.columns != "" %}
+      --columns {{ db.columns }} \
+      {% endif %}
       --output-type b \
       --output "{{ temp_dir }}/tempout.bcf" \
       "{{ output_bcf }}"
@@ -55,43 +51,8 @@
     mv "{{ temp_dir }}/tempout.bcf" "{{ output_bcf }}"
 
     bcftools index --threads 4 --force "{{ output_bcf }}"
-    {% endif %}
+    {% endfor %}
 
-    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_gnomad"]|default(false) %}
-    {# annotate with gnomad exome #}
-    bcftools annotate \
-      --threads 4 \
-      --annotations "{{ constants.grandcanyon.gnomad }}" \
-      --mark-sites GNOMAD \
-      --columns GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF \
-      --output-type b \
-      --output "{{ temp_dir }}/tempout.bcf" \
-      "{{ output_bcf }}"
-
-    {# move tempout to tempin for next step #}
-    mv "{{ temp_dir }}/tempout.bcf" "{{ output_bcf }}"
-
-    bcftools index --threads 4 --force "{{ output_bcf }}"
-    {% endif %}
-
-    {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools_clinvar"]|default(false) %}
-    {# annotate with clinvar #}
-    bcftools annotate \
-      --threads 4 \
-      --annotations "{{ constants.grandcanyon.clinvar }}" \
-      --mark-sites CLINVAR \
-      --columns CLNDN,CLNDNINCL,CLNDISDB,CLNDISDBINCL,CLNHGVS,CLNREVSTAT,CLNSIG,CLNSIGCONF,CLNSIGINCL,CLNVC,CLNVCSO,CLNVI,CLNORIGIN:=ORIGIN \
-      --output-type b \
-      --output "{{ temp_dir }}/tempout.bcf" \
-      "{{ output_bcf }}"
-
-    {# move tempout to tempin for next step #}
-    mv "{{ temp_dir }}/tempout.bcf" "{{ output_bcf }}"
-
-    bcftools index --threads 4 --force "{{ output_bcf }}"
-    {% endif %}
-
-    {# convert back to vcf.gz for the average users #}
     bcftools view \
     --threads 4 \
     --output-type z \
@@ -101,5 +62,3 @@
     bcftools index --threads 4 --tbi --force "{{ output_vcf }}"
 
 {% endmacro -%}
-
-

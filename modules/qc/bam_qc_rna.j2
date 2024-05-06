@@ -26,8 +26,8 @@
   input:
     - {{ bam }}
     - {{ bam_index }}
-    - {{ constants.grandcanyon.ref_flat }}
-    - {{ constants.grandcanyon.ribo_locations }}
+    - {{ constants.grandcanyon[reference].ref_flat }}
+    - {{ constants.grandcanyon[reference].ribo_locations }}
   output:
     - {{ rna_metrics }}
     - {{ rna_metrics }}.pdf
@@ -53,8 +53,8 @@
       --IGNORE_SEQUENCE chrEBV \
       --STRAND_SPECIFICITY {{ constants.grandcanyon.strandedness_options[sample.strandedness].collectrnaseqmetrics }} \
       --VALIDATION_STRINGENCY LENIENT \
-      --REF_FLAT "{{ constants.grandcanyon.ref_flat }}" \
-      --RIBOSOMAL_INTERVALS "{{ constants.grandcanyon.ribo_locations }}" \
+      --REF_FLAT "{{ constants.grandcanyon[reference].ref_flat }}" \
+      --RIBOSOMAL_INTERVALS "{{ constants.grandcanyon[reference].ribo_locations }}" \
       --METRIC_ACCUMULATION_LEVEL ALL_READS \
       --METRIC_ACCUMULATION_LEVEL SAMPLE \
       --METRIC_ACCUMULATION_LEVEL LIBRARY \

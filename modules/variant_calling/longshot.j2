@@ -11,7 +11,7 @@
   input:
     - {{ bam }}
     - {{ bam }}.bai
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ all_vcf }}
   cpus: 8
@@ -25,7 +25,7 @@
 
     longshot \
       -b {{ bam }} \
-      -f {{ constants.grandcanyon.reference_fasta }} \
+      -f {{ constants.grandcanyon[reference].reference_fasta }} \
       -o {{ all_vcf }}
 
 {% endmacro %}

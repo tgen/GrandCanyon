@@ -52,7 +52,7 @@
 
 - name: minimap2_SIRV_{{ sample.name }}
   input:
-    - {{ constants.grandcanyon.reference_fastaSIRV }}
+    - {{ constants.grandcanyon[reference].reference_fastaSIRV }}
     - {{ prepped_fastq }}
   output:
     - {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.unmapped.fq
@@ -71,26 +71,26 @@
       --splice-flank=no \
       -t 10 \
       -L \
-      {{ constants.grandcanyon.reference_fastaSIRV }} \
+      {{ constants.grandcanyon[reference].reference_fastaSIRV }} \
       {{ prepped_fastq }} |\
     samtools view -@ 10 -b -F 4 \
       -o - \
       -U {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.unmapped.bam |\
     samtools sort \
       --threads 10 \
-      --reference {{ constants.grandcanyon.reference_fastaSIRV }} \
+      --reference {{ constants.grandcanyon[reference].reference_fastaSIRV }} \
       -o {{ results_dir }}/{{ sample.name }}}.minimap2.sirv.cram \
       --output-fmt CRAM \
       --write-index \
       -
 
-    samtools fastq -@ 10 --reference {{ constants.grandcanyon.reference_fastaSIRV }} {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.cram > {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.fq
+    samtools fastq -@ 10 --reference {{ constants.grandcanyon[reference].reference_fastaSIRV }} {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.cram > {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.fq
     samtools fastq -@ 10 {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.unmapped.bam > {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.unmapped.fq
 
 - name: minimap2_SIRV_samtools_create_temp_bam_{{ sample.name }}
   tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
   input:
-    - {{ constants.grandcanyon.reference_fastaSIRV }}
+    - {{ constants.grandcanyon[reference].reference_fastaSIRV }}
     - {{ results_dir }}/{{ sample.name }}.minimap2.sirv.cram
   output:
     - {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.bam
@@ -104,7 +104,7 @@
 
     samtools view \
       -@ 8 \
-      --reference {{ constants.grandcanyon.reference_fastaSIRV }} \
+      --reference {{ constants.grandcanyon[reference].reference_fastaSIRV }} \
       --no-PG \
       -o {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.bam \
       --write-index \
@@ -114,7 +114,7 @@
 
 - name: minimap2_SIRV_transcriptome_{{ sample.name }}
   input:
-    - {{ constants.grandcanyon.transcriptomeSIRV }}
+    - {{ constants.grandcanyon[reference].transcriptomeSIRV }}
     - {{ prepped_fastq }}
   output: {{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.bam
   cpus: 10
@@ -139,7 +139,7 @@
       -L \
       -N 100 \
       -p 1.0 \
-      {{ constants.grandcanyon.transcriptomeSIRV }} \
+      {{ constants.grandcanyon[reference].transcriptomeSIRV }} \
       {{ prepped_fastq }} |\
     samtools view -b -o {{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.bam
 
@@ -152,8 +152,8 @@
 
 - name: minimap2_{{ sample.name }}
   input:
-    - {{ constants.grandcanyon.reference_fasta }}
-    - {{ constants.grandcanyon.gtf }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].gtf }}
     - {{ prepped_fastq }}
   output:
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram
@@ -164,7 +164,7 @@
   container: {{ constants.tools.minimap2.container }}
   cmd: |
 
-    paftools.js gff2bed {{ constants.grandcanyon.gtf }} > {{ temp_dir }}/{{ sample.name }}_anno.bed
+    paftools.js gff2bed {{ constants.grandcanyon[reference].gtf }} > {{ temp_dir }}/{{ sample.name }}_anno.bed
 
     minimap2 \
       {% if sample.glprep in 'kinnex' %}
@@ -176,11 +176,11 @@
       --junc-bed {{ temp_dir }}/{{ sample.name }}_anno.bed \
       -t 20 \
       -L \
-      {{ constants.grandcanyon.reference_fasta }} \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ prepped_fastq }} |\
     samtools sort \
       --threads 20 \
-      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       -o {{ results_dir }}/{{ sample.name }}.minimap2.cram \
       --output-fmt CRAM \
       --write-index \
@@ -189,7 +189,7 @@
 - name: minimap2_samtools_create_temp_bam_{{ sample.name }}
   tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
   input:
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram
   output:
     - {{ temp_dir }}/{{ sample.name }}.minimap2.bam
@@ -203,7 +203,7 @@
 
     samtools view \
       -@ 8 \
-      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --no-PG \
       -o {{ temp_dir }}/{{ sample.name }}.minimap2.bam \
       --write-index \
@@ -213,7 +213,7 @@
 
 - name: minimap2_transcriptome_{{ sample.name }}
   input:
-    - {{ constants.grandcanyon.transcriptome }}
+    - {{ constants.grandcanyon[reference].transcriptome }}
     - {{ prepped_fastq }}
   output: {{ results_dir }}/{{ sample.name }}.transcriptome.bam
   cpus: 10
@@ -229,7 +229,7 @@
       -L \
       -N 100 \
       -p 1.0 \
-      {{ constants.grandcanyon.transcriptome }} \
+      {{ constants.grandcanyon[reference].transcriptome }} \
       {{ prepped_fastq }} |\
     samtools view -b -o {{ results_dir }}/{{ sample.name }}.transcriptome.bam
 
@@ -237,21 +237,21 @@
 
 {% if tasks['RNA_transcriptome_quantify_expression_featureCounts']|default(true) %}
   {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.bam{% endset %}
-  {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
+  {% set gtf %}{{ constants.grandcanyon[reference].gtf }}{% endset %}
   {{- featureCounts(sample, sample_bam, gtf, SIRV=false) }}
   {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.sirv.bam{% endset %}
-    {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
+    {% set gtf %}{{ constants.grandcanyon[reference].gtfSIRV }}{% endset %}
     {{- featureCounts(sample, sample_bam, gtf, SIRV=true) }}
   {% endif %}
 {% endif %}
 
 {% if tasks['RNA_transcriptome_quantify_expression_salmon']|default(true) %}
-  {% set transcriptome %}{{ constants.grandcanyon.transcriptome }}{% endset %}
+  {% set transcriptome %}{{ constants.grandcanyon[reference].transcriptome }}{% endset %}
   {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.transcriptome.bam{% endset %}
   {{- salmon(sample, sample_bam, transcriptome, SIRV=false) }}
   {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
-    {% set transcriptome %}{{ constants.grandcanyon.transcriptomeSIRV }}{% endset %}
+    {% set transcriptome %}{{ constants.grandcanyon[reference].transcriptomeSIRV }}{% endset %}
     {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.bam{% endset %}
     {{- salmon(sample, sample_bam, transcriptome, SIRV=true) }}
   {% endif %}
@@ -265,27 +265,27 @@
 
 {% if tasks['RNA_transcriptome_quantify_expression_flair']|default(true) %}
   {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.bam{% endset %}
-  {% set reference_fasta %}{{ constants.grandcanyon.reference_fasta }}{% endset %}
-  {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+  {% set gtf %}{{ constants.grandcanyon[reference].gtf }}{% endset %}
   {{- flair(sample, sample_bam, prepped_fastq, reference_fasta, gtf, SIRV=false) }}
   {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set sirv_fastq %}{{ temp_dir }}/{{ sample.name }}.minimap2.sirv.fq{% endset %}
     {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.sirv.bam{% endset %}
-    {% set reference_fasta %}{{ constants.grandcanyon.reference_fastaSIRV }}{% endset %}
-    {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fastaSIRV }}{% endset %}
+    {% set gtf %}{{ constants.grandcanyon[reference].gtfSIRV }}{% endset %}
     {{- flair(sample, sample_bam, sirv_fastq, reference_fasta, gtf, SIRV=true) }}
   {% endif %}
 {% endif %}
 
 {% if tasks['RNA_transcriptome_quantify_expression_isoquant']|default(true) %}
   {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.bam{% endset %}
-  {% set reference_fasta %}{{ constants.grandcanyon.reference_fasta }}{% endset %}
-  {% set gtf %}{{ constants.grandcanyon.gtf }}{% endset %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+  {% set gtf %}{{ constants.grandcanyon[reference].gtf }}{% endset %}
   {{- isoquant(sample, sample_bam, reference_fasta, gtf, SIRV=false) }}
   {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.sirv.bam{% endset %}
-    {% set reference_fasta %}{{ constants.grandcanyon.reference_fastaSIRV }}{% endset %}
-    {% set gtf %}{{ constants.grandcanyon.gtfSIRV }}{% endset %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fastaSIRV }}{% endset %}
+    {% set gtf %}{{ constants.grandcanyon[reference].gtfSIRV }}{% endset %}
     {{- isoquant(sample, sample_bam, reference_fasta, gtf, SIRV=true) }}
   {% endif %}
 {% endif %}

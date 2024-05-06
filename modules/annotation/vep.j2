@@ -4,8 +4,8 @@
   tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
     - {{ input_vcf }}
-    - {{ constants.grandcanyon.vep_data }}
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].vep_data }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output: {{ final_vcf_prefix }}.vep.full.vcf
   walltime: "8:00:00"
   cpus: 4
@@ -27,10 +27,10 @@
         --species homo_sapiens \
         --force_overwrite \
         --cache \
-        --dir_cache "{{ constants.grandcanyon.vep_data }}" \
-        --cache_version {{ constants.grandcanyon.gene_model_version }} \
+        --dir_cache "{{ constants.grandcanyon[reference].vep_data }}" \
+        --cache_version {{ constants.grandcanyon[reference].gene_model_version }} \
         --offline \
-        --fasta "{{ constants.grandcanyon.reference_fasta }}" \
+        --fasta "{{ constants.grandcanyon[reference].reference_fasta }}" \
         --buffer_size 10000 \
         --terms SO \
         --hgvs \
@@ -75,8 +75,8 @@
   tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
     - {{ input_vcf }}
-    - {{ constants.grandcanyon.vep_data }}
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].vep_data }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output: {{ final_vcf_prefix }}.vep.pick.vcf
   walltime: "8:00:00"
   cpus: 4
@@ -98,10 +98,10 @@
         --species homo_sapiens \
         --force_overwrite \
         --cache \
-        --dir_cache "{{ constants.grandcanyon.vep_data }}" \
-        --cache_version {{ constants.grandcanyon.gene_model_version }} \
+        --dir_cache "{{ constants.grandcanyon[reference].vep_data }}" \
+        --cache_version {{ constants.grandcanyon[reference].gene_model_version }} \
         --offline \
-        --fasta "{{ constants.grandcanyon.reference_fasta }}" \
+        --fasta "{{ constants.grandcanyon[reference].reference_fasta }}" \
         --buffer_size 10000 \
         --terms SO \
         --hgvs \

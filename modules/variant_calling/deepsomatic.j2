@@ -18,7 +18,7 @@
     - {{ tumor_bam }}.bai
     - {{ normal_bam }}
     - {{ normal_bam }}.bai
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ all_vcf }}
     - {{ all_gvcf }}
@@ -41,7 +41,7 @@
       {% else %}
       --model_type WGS \
       {% endif %}
-      --ref {{ constants.grandcanyon.reference_fasta }} \
+      --ref {{ constants.grandcanyon[reference].reference_fasta }} \
       --reads_tumor {{ tumor_bam }} \
       --reads_normal {{ normal_bam }} \
       --output_vcf {{ all_vcf }} \

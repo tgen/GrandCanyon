@@ -8,7 +8,7 @@
 - name: mashmap_{{ pair.project }}_{{ assembler }}
   input:
     - {{ input_assembly }}
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output: {{ paf_output }}
   cpus: 8
   mem: 64G
@@ -19,7 +19,7 @@
 
     mashmap \
       -t 8 \
-      -r {{ constants.grandcanyon.reference_fasta }} \
+      -r {{ constants.grandcanyon[reference].reference_fasta }} \
       -q {{ input_assembly }} \
       -o {{ paf_output }}
 

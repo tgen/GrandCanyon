@@ -49,7 +49,7 @@
   input:
     - {{ bam }}
     - {{ bam_index }}
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ results_dir }}/{{ bam|basename }}.cramstats.txt
     {% if libraryCount == 1 %}
@@ -83,14 +83,14 @@
       --threads 4 \
       -q 10 \
       -h \
-      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ bam }} \
       | \
     samtools stats \
       --GC-depth 100 \
       --filtering-flag 256 \
       --coverage 1,2500,1 \
-      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       > {{ results_dir }}/{{ bam|basename }}.cramstats.txt
 
     {% if libraryCount == 1 %}
@@ -285,7 +285,7 @@
   input:
     - {{ bam }}
     - {{ bam_index }}
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ results_dir }}/{{ bam|basename }}.alignment_summary_metrics
     - {{ results_dir }}/{{ bam|basename }}.bait_bias_detail_metrics
@@ -334,7 +334,7 @@
       --java-options "-Xmx7G" \
       --INPUT {{ bam }} \
       --OUTPUT {{ results_dir }}/{{ bam|basename }} \
-      --REFERENCE_SEQUENCE {{ constants.grandcanyon.reference_fasta }} \
+      --REFERENCE_SEQUENCE {{ constants.grandcanyon[reference].reference_fasta }} \
       --METRIC_ACCUMULATION_LEVEL null \
       --METRIC_ACCUMULATION_LEVEL LIBRARY \
       --METRIC_ACCUMULATION_LEVEL SAMPLE \

@@ -10,7 +10,7 @@
 - name: split_bam_{{ sample.name }}_{{ sample_lb }}_{{ aligner }}
   tags: [{{ sample.gltype }}, {{ sample.name }}, {{ sample_lb }}, split_bam ]
   input:
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ bam }}
     - {{ bam }}.bai
   output:
@@ -28,7 +28,7 @@
     mkdir -p {{ temp_dir }}
 
     samtools view \
-      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --threads 10 \
       --output-fmt CRAM \
       --write-index \

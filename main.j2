@@ -3,6 +3,15 @@
     {% set tasks = {} %}
 {% endif %}
 
+{% set supported_references = ['chm13', 'grch38'] %}
+
+{% if reference is not defined %}
+    {% set reference = "chm13" %}
+{% elif reference not in ['chm13', 'grch38'] %}
+  {% set raise_msg %}Unsupported reference defined! {{ reference }} is not in {{ supported_references }}{% endset %}
+  {{ raise(raise_msg) }}
+{% endif %}
+
 {% set required_scripts = {} %}
 {% for name, value in constants.grandcanyon.required_scripts.items() %}
     {% set path = '${JS_PIPELINE_PATH}/' ~ __pipeline__.bin ~ value %}

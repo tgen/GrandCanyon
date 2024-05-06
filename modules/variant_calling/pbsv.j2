@@ -10,7 +10,7 @@
   input:
     - {{ bam }}
     - {{ bam }}.bai
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ all_vcf }}
   cpus: 8
@@ -25,7 +25,7 @@
       {{ results_dir }}/{{ sample.name }}.svsig.gz
 
     pbsv call \
-      {{ constants.grandcanyon.reference_fasta }} \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ results_dir }}/{{ sample.name }}.svsig.gz \
       {{ all_vcf }}
 

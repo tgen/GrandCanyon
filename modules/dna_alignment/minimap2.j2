@@ -58,7 +58,7 @@
 {% for rgid, rg in sample.read_groups.items() %}
 - name: minimap2_{{ sample.name }}_{{ rgid }}
   input:
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
     {% for file in rg.data_files %}
     - temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz
     {% if file.fastqCode == 'duplex' %}
@@ -107,7 +107,7 @@
       -Y \
       --secondary=no \
       -R "{{ read_group_line(rg, format='minimap2') }}" \
-      {{ constants.grandcanyon.reference_fasta }} \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
       {% for file in rg.data_files %}
       temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz \
       {% if file.fastqCode == 'duplex' %}
@@ -116,7 +116,7 @@
       {% endfor %}
     | samtools sort \
       --threads 20 \
-      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       -T {{ temp_dir }}/st_sort_temp/{{ rg.rgid }} \
       {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
       -o {{ temp_dir }}/{{ rg.rgid }}/{{ sample.name }}_{{ rgid }}.cram \
@@ -134,7 +134,7 @@
   tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
   reset: predecessors
   input:
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   {% for rgid, rg in sample.read_groups.items() %}
     - {{ temp_dir }}/{{ rg.rgid }}/{{ sample.name }}_{{ rgid }}.cram
   {% endfor %}
@@ -156,7 +156,7 @@
     #}
     samtools merge \
       --threads 4 \
-      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       -c \
       -f \
       --write-index \
@@ -174,7 +174,7 @@
 - name: minimap2_samtools_create_temp_bam_{{ sample.name }}
   tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
   input:
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram
   output:
     - {{ temp_dir }}/{{ sample.name }}.minimap2.bam
@@ -188,7 +188,7 @@
 
     samtools view \
       -@ 8 \
-      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --no-PG \
       -o {{ temp_dir }}/{{ sample.name }}.minimap2.bam \
       --write-index \

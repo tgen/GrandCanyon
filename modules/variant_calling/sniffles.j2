@@ -11,7 +11,7 @@
   input:
     - {{ bam }}
     - {{ bam }}.bai
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ all_vcf }}
     - {{ all_vcf }}.tbi
@@ -27,7 +27,7 @@
     sniffles \
       --threads 8 \
       -i {{ bam }} \
-      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       -v {{ all_vcf }} \
       --allow-overwrite
 

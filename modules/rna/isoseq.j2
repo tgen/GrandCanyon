@@ -18,7 +18,7 @@
 
 - name: isoseq_cluster_{{ sample.name }}
   input:
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
     {% for file in longfqlist %}
     - {{ file.path }}
     {% endfor %}
@@ -45,7 +45,7 @@
 
 - name: isoseq_pbmm2_{{ sample.name }}
   input:
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ temp_dir }}/{{ sample.name }}.clustered.bam
   output:
     - {{ results_dir }}/{{ sample.name }}.pbmm2.bam
@@ -60,7 +60,7 @@
       --preset ISOSEQ \
       --sort \
       {{ temp_dir }}/{{ sample.name }}.clustered.bam \
-      {{ constants.grandcanyon.reference_fasta }} \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ results_dir }}/{{ sample.name }}.pbmm2.bam
 
 - name: isoseq_collapse_{{ sample.name }}
@@ -85,8 +85,8 @@
 - name: pigeon_{{ sample.name }}
   input:
     - {{ results_dir }}/{{ sample.name }}.collapsed.gff
-    - {{ constants.grandcanyon.reference_fasta }}
-    - {{ constants.grandcanyon.gtf }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].gtf }}
   output:
     - {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff
     - {{ results_dir }}/{{ sample.name }}.collapsed_classification.txt
@@ -103,8 +103,8 @@
       --out-dir {{ results_dir}} \
       --fl {{ results_dir }}/{{ sample.name }}.collapsed.flnc_count.txt \
       {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff \
-      {{ constants.grandcanyon.gtf }} \
-      {{ constants.grandcanyon.reference_fasta }}
+      {{ constants.grandcanyon[reference].gtf }} \
+      {{ constants.grandcanyon[reference].reference_fasta }}
 
     pigeon filter \
       {{ results_dir }}/{{ sample.name }}_classification.txt \

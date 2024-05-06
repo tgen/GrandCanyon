@@ -8,7 +8,7 @@
 - name: minimap2_asm_{{ pair.project }}_{{ assembler }}
   input:
     - {{ input_assembly }}
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output: {{ paf_output }}
   cpus: 20
   mem: 80G
@@ -22,7 +22,7 @@
     minimap2 \
       -t 20 \
       -cx asm5 \
-      {{ constants.grandcanyon.reference_fasta }} \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ input_assembly }} > {{ paf_output }}
 
 

@@ -73,8 +73,8 @@ options:
     - {{ bam }}
     - {{ bam }}.bai
     {% endif %}
-    - {{ constants.grandcanyon.reference_fasta }}
-    - {{ constants.grandcanyon.tool_resources.severus.vntrs }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }}
   output:
     - {{ all_vcf }}
   cpus: 16
@@ -93,7 +93,7 @@ options:
       --control-bam {{ normal_bam }} \
       --out-dir {{ results_dir }} \
       --phasing-vcf {{ phased_vcf }} \
-      --vntr-bed {{ constants.grandcanyon.tool_resources.severus.vntrs }}
+      --vntr-bed {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }}
     {% else %}
     severus \
       --threads 16 \

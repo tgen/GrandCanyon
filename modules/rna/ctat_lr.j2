@@ -33,7 +33,7 @@
 
 - name: ctat_lr_{{ sample.name }}
   input:
-    - {{ constants.grandcanyon.starfusion_index }}
+    - {{ constants.grandcanyon[reference].starfusion_index }}
   {% for fq in longfqlist %}
     - {{ fq.path }}
   {% endfor %}
@@ -63,7 +63,7 @@
 
     ctat-LR-fusion \
       --CPU 10 \
-      --genome_lib_dir {{ constants.grandcanyon.starfusion_index }} \
+      --genome_lib_dir {{ constants.grandcanyon[reference].starfusion_index }} \
       -T "{{ longfqlist|map(attribute='path')|join(',') }}" \
       {% if r1fqlist | length > 0 %}
       --left_fq "{{ r1fqlist|map(attribute='path')|join(',') }}" \

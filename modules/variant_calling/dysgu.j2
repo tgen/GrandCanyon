@@ -14,7 +14,7 @@
   input:
     - {{ bam }}
     - {{ bam }}.bai
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ discordant_bam }}
   cpus: 8
@@ -31,7 +31,7 @@
     mkdir -p {{ results_dir }}
 
     dysgu fetch \
-      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --output {{ discordant_bam }} \
       --compression wb0 \
       --write_all \
@@ -87,7 +87,7 @@
     - {{ bam }}
     - {{ bam }}.bai
     - {{ discordant_bam }}
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ temp_all_vcf }}
   cpus: 8
@@ -117,7 +117,7 @@
       --max-cov 200 \
       --procs 8 \
       --overwrite \
-      {{ constants.grandcanyon.reference_fasta }} \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ temp_dir }} \
       {{ discordant_bam }}
 
@@ -276,7 +276,7 @@
 
 - name: dysgu_samtools_compress_{{ sample.name }}_minimap2
   input:
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ discordant_bam }}
   output:
     - {{ discordant_cram }}
@@ -293,7 +293,7 @@
     {# Convert to compressed VCF #}
     samtools view \
       -@ 8 \
-      --reference {{ constants.grandcanyon.reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --no-PG \
       -o {{ discordant_cram }} \
       --write-index \

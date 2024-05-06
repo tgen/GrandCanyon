@@ -14,7 +14,7 @@
     - {{ tumor_bam }}.bai
     - {{ normal_bam }}
     - {{ normal_bam }}.bai
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ all_vcf }}
   cpus: 8
@@ -29,7 +29,7 @@
     /opt/bin/run_clairs \
       --tumor_bam_fn {{ tumor_bam }} \
       --normal_bam_fn {{ normal_bam }} \
-      --ref_fn {{ constants.grandcanyon.reference_fasta }} \
+      --ref_fn {{ constants.grandcanyon[reference].reference_fasta }} \
       --threads 8 \
       {% if pair.tumor.rgpl == "ONT" %}
       --platform "ont_r10_dorado_sup_4khz" \

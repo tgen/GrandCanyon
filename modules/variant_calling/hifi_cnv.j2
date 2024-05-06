@@ -37,7 +37,7 @@
   input:
     - {{ bam }}
     - {{ bam }}.bai
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ results_dir }}/{{ sample.name }}.hificnv.copynum.bedgraph
     - {{ results_dir }}/{{ sample.name }}.hificnv.depth.bw
@@ -53,7 +53,7 @@
 
     hificnv \
       --threads 8 \
-      --ref {{ constants.grandcanyon.reference_fasta }} \
+      --ref {{ constants.grandcanyon[reference].reference_fasta }} \
       --bam {{ bam }} \
       --output-prefix {{ results_dir }}/{{ sample.name }}
 

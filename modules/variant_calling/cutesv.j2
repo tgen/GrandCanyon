@@ -105,7 +105,7 @@ Advanced:
   input:
     - {{ bam }}
     - {{ bam }}.bai
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ temp_vcf }}
   cpus: 8
@@ -122,7 +122,7 @@ Advanced:
 
     cuteSV \
       {{ bam }} \
-      {{ constants.grandcanyon.reference_fasta }} \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ temp_vcf }} \
       {{ temp_dir }} \
       {% if sample.rgpl in ('ONT') %}

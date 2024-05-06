@@ -8,7 +8,7 @@
   input:
     - {{ bam }}
     - {{ bam }}.bai
-    - {{ constants.grandcanyon.reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ results_dir }}/{{ sample.name }}.minimap2.CNV.bed
     - {{ results_dir }}/{{ sample.name }}.minimap2.ideo.png
