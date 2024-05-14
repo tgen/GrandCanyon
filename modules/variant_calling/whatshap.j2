@@ -1,3 +1,51 @@
+{% macro whatshap_phase(sample, input_vcf, input_bam, temp_dir, results_dir, output_prefix, variant_caller) %}
+
+- name: whatshap_phase_{{ variant_caller }}_{{ sample.name }}_minimap2
+  input:
+    - {{ input_vcf }}
+    - {{ input_bam }}
+    - {{ input_bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ temp_dir }}/{{ output_prefix }}.phased.vcf.gz
+  cpus: 8
+  mem: 32G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.whatshap.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ temp_dir }}
+
+    whatshap phase \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --output {{ temp_dir }}/{{ output_prefix }}.phased.vcf.gz \
+      --ignore-read-groups \
+      {{ input_vcf }} \
+      {{ input_bam }}
+
+
+- name: whatshap_stats_{{ variant_caller }}_{{ sample.name }}_minimap2
+  input:
+    - {{ temp_dir }}/{{ output_prefix }}.phased.vcf.gz
+  walltime: "8:00:00"
+  cpus: 8
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.whatshap.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ temp_dir }}
+
+    whatshap stats \
+      {{ temp_dir }}/{{ output_prefix }}.phased.vcf.gz
+
+
+{% endmacro %}
 
 {% macro whatshap_haplotag(sample, input_vcf, input_bam, temp_dir, results_dir, output_prefix, variant_caller) %}
 

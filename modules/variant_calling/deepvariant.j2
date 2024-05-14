@@ -1,5 +1,6 @@
 {% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
 {% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
+{% from 'modules/variant_calling/whatshap.j2' import whatshap_phase with context %}
 
 {%- macro deepvariant(sample, taskPrefix='Genome') %}
 
@@ -80,6 +81,8 @@
 
 
 {% set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
+{% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.whatshap{% endset %}
+{{- whatshap_phase(sample, pass_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant') }}
 {% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.margin{% endset %}
 
 {#
@@ -192,5 +195,20 @@
 {{- annotate_vcfs(sample, temp_dir, results_dir, margin_phased_vcf, taskPrefix, 'minimap2', 'deepvariant') }}
 {% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.whatshap{% endset %}
 {{- whatshap_haplotag(sample, margin_phased_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant') }}
+
+- name: whatshap_stats_deepvariant_margin_{{ sample.name }}_minimap2
+  input:
+    - {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
+  walltime: "8:00:00"
+  cpus: 8
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.whatshap.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    whatshap stats \
+      {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
 
 {% endmacro %}
