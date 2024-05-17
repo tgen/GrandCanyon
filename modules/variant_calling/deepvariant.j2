@@ -31,6 +31,7 @@
     rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
+    export TMPDIR={{ temp_dir }}/intermediate_results_dir
 
     run_deepvariant \
       {% if sample.rgpl in ('PACBIO') %}
@@ -193,8 +194,6 @@
 
 {% set margin_phased_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.margin.phased.vcf.gz{% endset %}
 {{- annotate_vcfs(sample, temp_dir, results_dir, margin_phased_vcf, taskPrefix, 'minimap2', 'deepvariant') }}
-{% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.whatshap{% endset %}
-{{- whatshap_haplotag(sample, margin_phased_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant') }}
 
 - name: whatshap_stats_deepvariant_margin_{{ sample.name }}_minimap2
   input:
@@ -210,5 +209,8 @@
 
     whatshap stats \
       {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
+
+{% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.whatshap{% endset %}
+{{- whatshap_haplotag(sample, margin_phased_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant') }}
 
 {% endmacro %}
