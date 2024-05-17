@@ -111,9 +111,9 @@
 {% endfor %}
 
 {% for sample in samples.values() if sample.gltype == 'rna' %}
-    {% set readOrientation=sample.readOrientation|default('inward')|lower %}
-    {% set rnaStrandType=sample.rnaStrandType|default('unstranded')|lower %}
-    {% set rnaStrandDirection=sample.rnaStrandDirection|default('notapplicable')|lower %}
+    {% set readOrientation=sample.readOrientation|default('inward')|lower|replace('-','') %}
+    {% set rnaStrandType=sample.rnaStrandType|default('unstranded')|lower|replace('-','') %}
+    {% set rnaStrandDirection=sample.rnaStrandDirection|default('notapplicable')|lower|replace('-','') %}
     {% set strandedness %}{{ readOrientation }}-{{ rnaStrandType }}-{{ rnaStrandDirection }}{% endset %}
     {% do sample.update({'strandedness': strandedness}) %}
 {% endfor %}
