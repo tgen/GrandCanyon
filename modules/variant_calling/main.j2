@@ -8,7 +8,7 @@
 {% from 'modules/variant_calling/pbsv.j2' import pbsv with context %}
 {% from 'modules/variant_calling/severus.j2' import severus with context %}
 {% from 'modules/variant_calling/dysgu.j2' import dysgu with context %}
-{% from 'modules/variant_calling/cytocad.j2' import cytocad with context %}
+{% from 'modules/variant_calling/spectre.j2' import spectre with context %}
 {% from 'modules/variant_calling/hifi_cnv.j2' import hifi_cnv with context %}
 
 {%- macro constitutional_variant_calling(samples) %}
@@ -54,8 +54,8 @@
       {{- dysgu(sample) }}
     {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_cna_caller_cytocad"]|default(true) %}
-      {{- cytocad(sample) }}
+    {% if tasks[taskPrefix+"_variant_calling_cna_caller_spectre"]|default(true) %}
+      {{- spectre(sample) }}
     {% endif %}
 
     {% if sample.rgpl in ('PACBIO') %}

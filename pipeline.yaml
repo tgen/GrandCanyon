@@ -22,8 +22,6 @@ constants:
       container: quay.io/biocontainers/cutesv:2.0.3--pyhdfd78af_0
     ctat_lr:
       container: trinityctat/ctat_lr_fusion:0.13.0
-    cytocad:
-      container: quay.io/biocontainers/cytocad:1.0.3--py310h4b81fae_2
     deepsomatic:
       container: google/deepsomatic:1.6.0-gpu
     deepvariant:
@@ -58,6 +56,8 @@ constants:
       container: /home/tgenref/containers/minimap2-samtools_2.28_1.20.sif
     moddotplot:
       container: /home/tgenref/containers/moddotplot_latest.sif
+    mosdepth:
+      container: quay.io/biocontainers/mosdepth:0.3.8--hd299d5a_0
     oarfish:
       container: quay.io/biocontainers/oarfish:0.4.0--h4349ce8_0
     pafplot:
@@ -90,6 +90,8 @@ constants:
       container: quay.io/biocontainers/shasta:0.11.1--h4ac6f70_2
     sniffles:
       container: quay.io/biocontainers/sniffles:2.2--pyhdfd78af_0
+    spectre:
+      container: /home/tgenref/containers/spectre-cnv_0.2.1.sif
     subread:
       container: quay.io/biocontainers/subread:2.0.6--he4a0461_0
     vep:
@@ -125,6 +127,9 @@ constants:
       tool_resources:
         severus:
           vntrs: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/severus/chm13.bed
+        spectre:
+          mdr: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/spectre/grch38.mdr
+          denylist: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/spectre/grch38_blacklist_spectre.bed
     grch38:
       genome_build: grch38_hg38
       genome_subversion_name: hg38
@@ -152,6 +157,12 @@ constants:
         - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/cosmic/v96/CosmicNonCodingMuts_v96_hg38_tempe.bcf", "mark_sites": "COSMIC_NC", "columns": "COSMIC_NC_CNT:=CNT"}
         - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/clinvar/20220910/clinvar_20220910_hg38_tempe.bcf", "mark_sites": "CLINVAR", "columns": ""}
         - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/topmed/freeze8/All.BRAVO_TOPMed_Freeze_8.bcf", "mark_sites": "TOPMED", "columns": "TOPMED_AF:=AF,TOPMED_AN:=AN,TOPMED_AC:=AC,TOPMED_HET:=Het,TOPMED_HOM:=Hom"}
+      tool_resources:
+        severus:
+          vntrs: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/severus/chm13.bed
+        spectre:
+          mdr: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38.mdr
+          denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38_blacklist_spectre.bed
     required_scripts:
       plotSamStats_Rscript: summarize_samstats.R
       pafr_plot_Rscript: assembly_pafr_plot.R
