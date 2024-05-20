@@ -51,7 +51,9 @@
 
     gatk CollectRnaSeqMetrics \
       --java-options "-Xmx14G" \
+      {% if reference == "grch38" %}
       --IGNORE_SEQUENCE chrEBV \
+      {% endif %}
       --STRAND_SPECIFICITY {{ constants.grandcanyon.strandedness_options[sample.strandedness].collectrnaseqmetrics }} \
       --VALIDATION_STRINGENCY LENIENT \
       --REF_FLAT "{{ constants.grandcanyon[reference].ref_flat }}" \
