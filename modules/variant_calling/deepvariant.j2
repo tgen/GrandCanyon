@@ -198,6 +198,9 @@
 - name: whatshap_stats_deepvariant_margin_{{ sample.name }}_minimap2
   input:
     - {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
+  output:
+    - {{ results_dir }}/{{ output_prefix }}.phased_stats.tsv
+    - {{ results_dir }}/{{ output_prefix }}.phased.gtf
   walltime: "8:00:00"
   cpus: 8
   mem: 8G
@@ -208,6 +211,8 @@
     set -o pipefail
 
     whatshap stats \
+      --tsv {{ results_dir }}/{{ output_prefix }}.phased_stats.tsv \
+      --gtf {{ results_dir }}/{{ output_prefix }}.phased.gtf \
       {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
 
 {% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.whatshap{% endset %}
