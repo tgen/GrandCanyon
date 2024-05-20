@@ -71,6 +71,8 @@
       --splice-flank=no \
       -t 10 \
       -L \
+      -y \
+      -Y \
       {{ constants.grandcanyon[reference].reference_fastaSIRV }} \
       {{ prepped_fastq }} |\
     samtools view -@ 10 -b -F 4 \
@@ -137,6 +139,8 @@
       -ax map-ont \
       -t 10 \
       -L \
+      -y \
+      -Y \
       -N 100 \
       -p 1.0 \
       {{ constants.grandcanyon[reference].transcriptomeSIRV }} \
@@ -176,6 +180,8 @@
       --junc-bed {{ temp_dir }}/{{ sample.name }}_anno.bed \
       -t 20 \
       -L \
+      -y \
+      -Y \
       {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ prepped_fastq }} |\
     samtools sort \
@@ -227,6 +233,8 @@
       -ax map-ont \
       -t 10 \
       -L \
+      -y \
+      -Y \
       -N 100 \
       -p 1.0 \
       {{ constants.grandcanyon[reference].transcriptome }} \
