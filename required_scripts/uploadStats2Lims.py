@@ -392,22 +392,6 @@ try:
                 print("Value from KBase: " + db_project)
                 raise Exception('The provided Project does not match the DCL Patient ID in the LIMS.')
 
-            postStudyResponse, parsed_postStudyResponse = server_request("POST", urlStudyFind, json_studyData, headers)
-
-            if postStudyResponse.status_code != 200:
-                print("ERROR:")
-                print("Code: " + str(parsed_postStudyResponse["messages"][0]["code"]))
-                print("Message: " + str(parsed_postStudyResponse["messages"][0]['message']))
-                raise ValueError("Something went wrong finding the Isilon path")
-
-            db_isilonpath = parsed_postStudyResponse['response']['data'][0]['fieldData']['Pipeline_FinalStoragePath']
-
-            if not args.isilonpath == db_isilonpath:
-                print("UPLOAD FAILED: Isilon path does not match. ")
-                print("Entered value: " + args.isilonpath)
-                print("Value from KBase: " + db_isilonpath)
-                raise Exception('The provided IsilonPath does not match the Pipeline_FinalStoragePath in the LIMS.')
-
             # PATCH
             # Converts data to be patched into json format
             json_samplePatchData = json.dumps(samplePatchData)
