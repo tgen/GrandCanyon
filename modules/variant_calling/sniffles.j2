@@ -4,6 +4,7 @@
 {%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_minimap2{% endset %}
 {%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_minimap2{% endset %}
 {%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.sniffles.all.vcf.gz{% endset %}
+{%- set all_snf %}{{ results_dir }}/{{ sample.name }}.minimap2.sniffles.all.snf{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.sniffles.pass.vcf.gz{% endset %}
 
 - name: sniffles_{{ sample.name }}_minimap2
@@ -15,6 +16,7 @@
   output:
     - {{ all_vcf }}
     - {{ all_vcf }}.tbi
+    - {{ all_snf }}
   cpus: 8
   mem: 32G
   walltime: "24:00:00"
@@ -26,9 +28,14 @@
 
     sniffles \
       --threads 8 \
-      -i {{ bam }} \
+      --input {{ bam }} \
+      --sample-id {{ sample.name }} \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      -v {{ all_vcf }} \
+      --vcf {{ all_vcf }} \
+      --snf {{ all_snf }} \
+      {% if sample.subGroup|lower == 'tumor' %}
+      --mosaic \
+      {% endif %}
       --allow-overwrite
 
 
