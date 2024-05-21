@@ -4,7 +4,11 @@
 {%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_copy_number/spectre/{{ sample.name }}_minimap2{% endset %}
 {%- set results_dir %}{{ sample.gltype }}/constitutional_copy_number/spectre/{{ sample.name }}_minimap2{% endset %}
 
+{% set taskPrefix %}{{ sample.gltype | capitalize }}{% endset %}
+
+{% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
 {%- set sniffles_snf %}{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_minimap2/{{ sample.name }}.minimap2.sniffles.all.snf{% endset %}
+{% endif %}
 
 - name: spectre_mosdepth_{{ sample.name }}_minimap2
   input:
@@ -37,7 +41,9 @@
 
 - name: spectre_{{ sample.name }}_minimap2
   input:
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
     - {{ sniffles_snf }}
+    {% endif %}
     - {{ results_dir }}/{{ sample.name }}.regions.bed.gz
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].tool_resources.spectre.mdr }}
@@ -53,11 +59,15 @@
     rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
 
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
     snf2json {{ sniffles_snf }} {{ temp_dir }}/{{ sample.name }}.snfj.gz
+    {% endif %}
 
     spectre CNVCaller \
       --coverage {{ results_dir }}/{{ sample.name }}.regions.bed.gz \
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
       --snf {{ temp_dir }}/{{ sample.name }}.snfj.gz \
+      {% endif %}
       {% if sample.subGroup|lower == 'tumor' %}
       --cancer \
       {% endif %}
