@@ -13,6 +13,7 @@
 {% else %}
 - name: flair_{{ sample.name }}
 {% endif %}
+  reset: predecessors
   input:
     - {{ reference_fasta }}
     - {{ gtf }}

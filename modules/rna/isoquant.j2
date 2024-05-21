@@ -13,6 +13,7 @@
 {% else %}
 - name: isoquant_{{ sample.name }}
 {% endif %}
+  reset: predecessors
   input:
     - {{ sample_bam }}
     - {{ gtf }}

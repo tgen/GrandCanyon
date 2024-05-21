@@ -13,6 +13,7 @@
 {% else %}
 - name: salmon_{{ sample.name }}
 {% endif %}
+  reset: predecessors
   input:
     - {{ sample_bam }}
     - {{ transcriptome }}

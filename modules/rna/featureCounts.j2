@@ -11,6 +11,7 @@
 {% else %}
 - name: featureCounts_{{ sample.name }}
 {% endif %}
+  reset: predecessors
   input:
     - {{ gtf }}
     - {{ sample_bam }}
