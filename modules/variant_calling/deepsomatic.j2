@@ -34,6 +34,7 @@
     rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
+    export TMPDIR={{ temp_dir }}/intermediate_results_dir
 
     run_deepsomatic \
       {% if pair.tumor.rgpl in ('PACBIO') %}
