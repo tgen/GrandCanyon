@@ -241,10 +241,14 @@
       -Y \
       -N 100 \
       -p 1.0 \
-      -R "{{ read_group_line(rg, format='minimap2') }}" \
       {{ constants.grandcanyon[reference].transcriptome }} \
       {{ prepped_fastq }} |\
-    samtools view -b -o {{ results_dir }}/{{ sample.name }}.transcriptome.bam
+    samtools addreplacerg \
+      --threads 4 \
+      -m orphan_only \
+      -r "{{ read_group_line(rg, format='minimap2') }}" \
+      -O BAM \
+      -o {{ results_dir }}/{{ sample.name }}.transcriptome.bam
 
 {% endif %}
 
