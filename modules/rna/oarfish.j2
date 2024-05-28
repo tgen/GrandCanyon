@@ -4,7 +4,6 @@
 {% set results_dir %}{{ sample.gltype }}/quant/oarfish/{{ sample.name }}{% endset %}
 
 - name: oarfish_{{ sample.name }}
-  reset: predecessors
   input:
     - {{ sample_bam }}
   output: {{ results_dir }}

@@ -120,7 +120,7 @@
   input:
     - {{ constants.grandcanyon[reference].transcriptomeSIRV }}
     - {{ prepped_fastq }}
-  output: {{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.cram
+  output: {{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.bam
   cpus: 10
   mem: 32G
   walltime: "4:00:00"
@@ -148,34 +148,7 @@
       -R "{{ read_group_line(rg, format='minimap2') }}" \
       {{ constants.grandcanyon[reference].transcriptomeSIRV }} \
       {{ prepped_fastq }} |\
-    samtools view \
-      --threads 10 \
-      --reference {{ constants.grandcanyon[reference].transcriptomeSIRV }} \
-      -o {{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.cram \
-      --output-fmt CRAM \
-      -
-
-- name: minimap2_SIRV_transcriptome_samtools_create_temp_bam_{{ sample.name }}
-  tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
-  input:
-    - {{ constants.grandcanyon[reference].transcriptomeSIRV }}
-    - {{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.cram
-  output:
-    - {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.bam
-  walltime: "4:00:00"
-  cpus: 8
-  mem: 8G
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.minimap2.container }}
-  cmd: |
-
-    samtools view \
-      -@ 8 \
-      --reference {{ constants.grandcanyon[reference].transcriptomeSIRV }} \
-      --no-PG \
-      -o {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.bam \
-      {{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.cram
-
+    samtools view -b -o {{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.bam
 
 {% endif %}
 {% endif %}
@@ -252,7 +225,7 @@
   input:
     - {{ constants.grandcanyon[reference].transcriptome }}
     - {{ prepped_fastq }}
-  output: {{ results_dir }}/{{ sample.name }}.minimap2.transcriptome.cram
+  output: {{ results_dir }}/{{ sample.name }}.transcriptome.bam
   cpus: 10
   mem: 32G
   walltime: "4:00:00"
@@ -271,34 +244,7 @@
       -R "{{ read_group_line(rg, format='minimap2') }}" \
       {{ constants.grandcanyon[reference].transcriptome }} \
       {{ prepped_fastq }} |\
-    samtools view \
-      --threads 10 \
-      --reference {{ constants.grandcanyon[reference].transcriptome }} \
-      -o {{ results_dir }}/{{ sample.name }}.minimap2.transcriptome.cram \
-      --output-fmt CRAM \
-      -
-
-- name: minimap2_transcriptome_samtools_create_temp_bam_{{ sample.name }}
-  tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
-  input:
-    - {{ constants.grandcanyon[reference].transcriptome }}
-    - {{ results_dir }}/{{ sample.name }}.minimap2.transcriptome.cram
-  output:
-    - {{ temp_dir }}/{{ sample.name }}.minimap2.transcriptome.bam
-  walltime: "4:00:00"
-  cpus: 8
-  mem: 8G
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.minimap2.container }}
-  cmd: |
-
-    samtools view \
-      -@ 8 \
-      --reference {{ constants.grandcanyon[reference].transcriptome }} \
-      --no-PG \
-      -o {{ temp_dir }}/{{ sample.name }}.minimap2.transcriptome.bam \
-      {{ results_dir }}/{{ sample.name }}.minimap2.transcriptome.cram
-
+    samtools view -b -o {{ results_dir }}/{{ sample.name }}.transcriptome.bam
 
 {% endif %}
 
@@ -315,17 +261,17 @@
 
 {% if tasks['RNA_transcriptome_quantify_expression_salmon']|default(true) %}
   {% set transcriptome %}{{ constants.grandcanyon[reference].transcriptome }}{% endset %}
-  {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.transcriptome.bam{% endset %}
+  {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.transcriptome.bam{% endset %}
   {{- salmon(sample, sample_bam, transcriptome, SIRV=false) }}
   {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set transcriptome %}{{ constants.grandcanyon[reference].transcriptomeSIRV }}{% endset %}
-    {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.bam{% endset %}
+    {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.bam{% endset %}
     {{- salmon(sample, sample_bam, transcriptome, SIRV=true) }}
   {% endif %}
 {% endif %}
 
 {% if tasks['RNA_transcriptome_quantify_expression_oarfish']|default(true) %}
-  {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.transcriptome.bam{% endset %}
+  {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.transcriptome.bam{% endset %}
   {{- oarfish(sample, sample_bam) }}
 {% endif %}
 
