@@ -59,6 +59,7 @@
     pbmm2 align \
       --preset ISOSEQ \
       --sort \
+      --num-threads 20 \
       {{ temp_dir }}/{{ sample.name }}.clustered.bam \
       {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ results_dir }}/{{ sample.name }}.pbmm2.bam
@@ -68,8 +69,8 @@
     - {{ results_dir }}/{{ sample.name }}.pbmm2.bam
     - {{ temp_dir }}/{{ sample.name }}.clustered.bam
   output: {{ results_dir }}/{{ sample.name }}.collapsed.gff
-  cpus: 10
-  mem: 32G
+  cpus: 4
+  mem: 16G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.isoseq.container }}
@@ -78,6 +79,7 @@
     {# isoseq collapse supports reading in the flnc bam, but it complains about missing a pbi index #}
     {# and this is missing because we cannot reindex the u.bam after addreplacerg insertion of rgid #}
     isoseq collapse \
+      --num-threads 4 \
       --do-not-collapse-extra-5exons \
       {{ results_dir }}/{{ sample.name }}.pbmm2.bam \
       {{ results_dir }}/{{ sample.name }}.collapsed.gff
@@ -90,8 +92,8 @@
   output:
     - {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff
     - {{ results_dir }}/{{ sample.name }}.collapsed_classification.txt
-  cpus: 10
-  mem: 32G
+  cpus: 4
+  mem: 16G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.pbpigeon.container }}
@@ -100,6 +102,7 @@
     pigeon prepare {{ results_dir }}/{{ sample.name }}.collapsed.gff
 
     pigeon classify \
+      --num-threads 4 \
       --out-dir {{ results_dir}} \
       --fl {{ results_dir }}/{{ sample.name }}.collapsed.flnc_count.txt \
       {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff \
@@ -107,10 +110,12 @@
       {{ constants.grandcanyon[reference].reference_fasta }}
 
     pigeon filter \
+      --num-threads 4 \
+      --isoforms {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff \
       {{ results_dir }}/{{ sample.name }}_classification.txt \
-      {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff
 
     pigeon report \
+      --num-threads 4 \
       {{ results_dir }}/{{ sample.name }}_classification.filtered_lite_classification.txt \
       {{ results_dir }}/{{ sample.name }}_classification.filtered_lite_classification.saturation.txt
 
