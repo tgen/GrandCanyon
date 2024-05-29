@@ -1,7 +1,7 @@
 {%- macro deepsomatic(pair, taskPrefix='Genome') %}
 
-{%- set normal_bam %}{{ pair.normal.gltype }}/alignment/minimap2/{{ pair.normal.name }}/{{ pair.normal.name }}.minimap2.cram{% endset %}
-{%- set tumor_bam %}{{ pair.tumor.gltype }}/alignment/minimap2/{{ pair.tumor.name }}/{{ pair.tumor.name }}.minimap2.cram{% endset %}
+{%- set normal_bam %}temp/{{ pair.normal.gltype }}/alignment/minimap2/{{ pair.normal.name }}/{{ pair.normal.name }}.minimap2.bam{% endset %}
+{%- set tumor_bam %}temp/{{ pair.tumor.gltype }}/alignment/minimap2/{{ pair.tumor.name }}/{{ pair.tumor.name }}.minimap2.bam{% endset %}
 {%- set temp_dir %}temp/{{ pair.gltype }}/somatic_variant_calls/deepsomatic/{{ pair.name }}_minimap2{% endset %}
 {%- set results_dir %}{{ pair.gltype }}/somatic_variant_calls/deepsomatic/{{ pair.name }}_minimap2{% endset %}
 {%- set all_vcf %}{{ results_dir }}/{{ pair.name }}.minimap2.deepsomatic.all.vcf.gz{% endset %}

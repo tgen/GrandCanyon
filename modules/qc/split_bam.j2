@@ -3,19 +3,19 @@
 # stats at the library level.
 
 {% macro split_bam(sample, sample_lb, sample_rgs, aligner='minimap2') %}
-{% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+{% set cram %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
 {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
-{% set temp_lb_bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram{% endset %}
+{% set temp_lb_cram %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram{% endset %}
 
 - name: split_bam_{{ sample.name }}_{{ sample_lb }}_{{ aligner }}
   tags: [{{ sample.gltype }}, {{ sample.name }}, {{ sample_lb }}, split_bam ]
   input:
     - {{ constants.grandcanyon[reference].reference_fasta }}
-    - {{ bam }}
-    - {{ bam }}.bai
+    - {{ cram }}
+    - {{ cram }}.crai
   output:
-    - {{ temp_lb_bam }}
-    - {{ temp_lb_bam }}.csi
+    - {{ temp_lb_cram }}
+    - {{ temp_lb_cram }}.csi
   walltime: "1:00:00"
   cpus: 10
   mem: 20G
@@ -35,8 +35,8 @@
       {% for rg in sample_rgs %}
       -r "{{ rg.rgid }}" \
       {% endfor %}
-      -o {{ temp_lb_bam }} \
-      "{{ bam }}"
+      -o {{ temp_lb_cram }} \
+      "{{ cram }}"
 
 {% endmacro %}
 
