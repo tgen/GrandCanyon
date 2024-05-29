@@ -248,7 +248,8 @@
       -m orphan_only \
       -r "{{ read_group_line(rg, format='minimap2') }}" \
       -O BAM \
-      -o {{ results_dir }}/{{ sample.name }}.transcriptome.bam
+      -o {{ results_dir }}/{{ sample.name }}.transcriptome.bam \
+      -
 
 {% endif %}
 
