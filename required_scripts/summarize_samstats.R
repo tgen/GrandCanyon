@@ -926,6 +926,144 @@ insertSize_summary <- function(input, bam, rgsm, rglb, rgid) {
   ggsave(paste(bam, "samtools_insertSize_histogram.png", sep = "_"))
 }
 
+
+#### MAPQ Summary
+mapq_summary <- function(input, bam, rgsm, rglb, rgid) {
+  # Extract the MAPQ histogram data
+  mapq_table <- grep("^MAPQ",input, value=TRUE)
+  mapq_table <- separate(tibble(mapq_table),
+                           col=1,
+                           into=c("ID", "MAPQ", "Count"),
+                           sep="\t") %>%
+    type_convert()
+  
+  # Calculate the sum of the count
+  total_reads <- sum(mapq_table$Count)
+  
+  # Calculate the percentage of reads at each MAPQ
+  mapq_table <- mapq_table %>% mutate(Fraction_Reads = Count / total_reads)
+  
+  # Add meta-data to mapq table (histogram)
+  mapq_table <- mapq_table %>%
+    add_column(Sample = rgsm) %>%
+    add_column(Library = rglb) %>%
+    add_column(Read_Group = rgid) %>%
+    add_column(BAM_File = bam)
+  
+  # Save mapq histogram table
+  write_tsv(mapq_table, paste(bam, "samtools_mapq_histogram.tsv", sep = "_"))
+  
+  # Add flag for the number of reads in the bin to calculate median and percentiles
+  # Multiply the MAPQ value and number of reads for mean calculations
+  mapq_table <- mapq_table %>%
+    mutate(Last_Ordered_Pair = cumsum(Count)) %>%
+    mutate(First_Ordered_Pair = Last_Ordered_Pair - Count + 1) %>% 
+    mutate(Total_MAPQ = MAPQ * Count)
+
+  # Calculate MEAN, for SD calculation
+  fast_mean <- mapq_table %>%
+    summarise(Reads = sum(Count),
+              MAPQ_SUM = sum(Total_MAPQ)) %>%
+    mutate(MEAN = MAPQ_SUM / Reads) %>%
+    pull(var = MEAN)
+  
+  # Add column to MAPQ table SD_lineNumerator = ((InsertSize - MEAN)^2) * Total_Pairs
+  mapq_table <- mapq_table %>%
+    mutate(SD_lineNumerator = ((MAPQ - fast_mean)^2) * Count)
+  
+  # Summarize MAPQ table
+  summary <- mapq_table %>%
+    summarise(Reads = sum(Count),
+              SD_lineNumerator = sum(SD_lineNumerator))
+  
+  # Get position information for MAPQ percentiles
+  median_position <- round(summary %>% pull(var = Reads) * 0.5)
+  median_value <- mapq_table %>% filter(First_Ordered_Pair <= median_position) %>% filter(Last_Ordered_Pair >= median_position) %>% pull(var = MAPQ)
+  percentile1_position <- round(summary %>% pull(var = Reads) * 0.01)
+  percentile1_value <- mapq_table %>% filter(First_Ordered_Pair <= percentile1_position) %>% filter(Last_Ordered_Pair >= percentile1_position) %>% pull(var = MAPQ)
+  percentile5_position <- round(summary %>% pull(var = Reads) * 0.05)
+  percentile5_value <- mapq_table %>% filter(First_Ordered_Pair <= percentile5_position) %>% filter(Last_Ordered_Pair >= percentile5_position) %>% pull(var = MAPQ)
+  percentile10_position <- round(summary %>% pull(var = Reads) * 0.10)
+  percentile10_value <- mapq_table %>% filter(First_Ordered_Pair <= percentile10_position) %>% filter(Last_Ordered_Pair >= percentile10_position) %>% pull(var = MAPQ)
+  percentile25_position <- round(summary %>% pull(var = Reads) * 0.25)
+  percentile25_value <- mapq_table %>% filter(First_Ordered_Pair <= percentile25_position) %>% filter(Last_Ordered_Pair >= percentile25_position) %>% pull(var = MAPQ)
+  percentile75_position <- round(summary %>% pull(var = Reads) * 0.75)
+  percentile75_value <- mapq_table %>% filter(First_Ordered_Pair <= percentile75_position) %>% filter(Last_Ordered_Pair >= percentile75_position) %>% pull(var = MAPQ)
+  percentile90_position <- round(summary %>% pull(var = Reads) * 0.90)
+  percentile90_value <- mapq_table %>% filter(First_Ordered_Pair <= percentile90_position) %>% filter(Last_Ordered_Pair >= percentile90_position) %>% pull(var = MAPQ)
+  percentile95_position <- round(summary %>% pull(var = Reads) * 0.95)
+  percentile95_value <- mapq_table %>% filter(First_Ordered_Pair <= percentile95_position) %>% filter(Last_Ordered_Pair >= percentile95_position) %>% pull(var = MAPQ)
+  percentile99_position <- round(summary %>% pull(var = Reads) * 0.99)
+  percentile99_value <- mapq_table %>% filter(First_Ordered_Pair <= percentile99_position) %>% filter(Last_Ordered_Pair >= percentile99_position) %>% pull(var = MAPQ)
+  
+  # Determin the MAD
+  mad_MAPQ <- mapq_table %>%
+    select(MAPQ, Count) %>%
+    mutate(Abs_Deviation = abs(MAPQ - median_value)) %>%
+    arrange(desc(Abs_Deviation)) %>%
+    mutate(Last_Ordered_Pair = cumsum(Count)) %>%
+    mutate(First_Ordered_Pair = Last_Ordered_Pair - Count + 1) %>%
+    filter(First_Ordered_Pair <= median_position) %>%
+    filter(Last_Ordered_Pair >= median_position) %>%
+    pull(var = Abs_Deviation)
+  
+  # Add Summary Calculations
+  summary <- summary %>%
+    mutate(Mean = fast_mean) %>%
+    mutate(Variance = (1 / Reads) * SD_lineNumerator) %>%
+    mutate(SD = sqrt(Variance)) %>%
+    mutate(Median = median_value) %>%
+    mutate(MAD = mad_MAPQ) %>%
+    mutate(Percentile_1 = percentile1_value) %>%
+    mutate(Percentile_5 = percentile5_value) %>%
+    mutate(Percentile_10 = percentile10_value) %>%
+    mutate(Percentile_25 = percentile25_value) %>%
+    mutate(Percentile_75 = percentile75_value) %>%
+    mutate(Percentile_90 = percentile90_value) %>%
+    mutate(Percentile_95 = percentile95_value) %>%
+    mutate(Percentile_99 = percentile99_value) %>%
+    mutate(IQR = Percentile_75 - Percentile_25) %>%
+    add_column(Sample = rgsm) %>%
+    add_column(Library = rglb) %>%
+    add_column(Read_Group = rgid) %>%
+    add_column(BAM_File = bam)
+  
+  # Write out the summary table
+  write_tsv(summary, paste(bam, "samtools_mapq_summary.tsv", sep = "_"))
+  
+  # Capture variables needed for plot
+  mean <- pull(summary, var = Mean) %>% round(digits = 3)
+  standard_deviation <- pull(summary, var = SD) %>% round(digits = 3)
+  median <- pull(summary, var = Median) %>% round(digits = 3)
+  mad <- pull(summary, var = MAD) %>% round(digits = 3)
+
+  
+  # Generate a summary text blob to add to plot
+  summary_label <- paste(paste("Mean(SD): ", mean, " +/- ", standard_deviation, sep = ""), 
+                         paste("Median(MAD): ", median, " +/- ", mad, sep = ""), 
+                         paste("1th Percentile: ", percentile1_value, sep = ""), 
+                         paste("5th Percentile: ", percentile5_value, sep = ""), 
+                         paste("10th Percentile: ", percentile10_value, sep = ""), 
+                         paste("25th Percentile: ", percentile25_value, sep = ""), 
+                         paste("75th Percentile: ", percentile75_value, sep = ""), 
+                         sep="\n")
+
+  # Plot
+  ggplot(mapq_table, aes(x = MAPQ, y = Fraction_Reads*100)) +
+    geom_bar(stat="identity", fill = "#d8b365") +
+    annotate(geom = "text", x=15, y=70, label = summary_label) +
+    scale_x_continuous(name="MAPQ", 
+                       breaks = seq(0,60, by = 5)) +
+    scale_y_continuous(name="Percent of Reads", 
+                       breaks = seq(0,100, by = 10)) +
+    ggtitle(bam) +
+    theme_bw() +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave(paste(bam, "samtools_mapq_histogram.png", sep = "_"))
+}
+
+
+
 #### Samtools markdups stats table processed as follows is the the expected input:
 ##
 markdup_summary <- function(file, bam, rgsm, rglb) {
@@ -1045,10 +1183,16 @@ if (!is.null(opt$samtoolsStatsFile)) {
   # Call the indel size summary function
   indel_size_summary(stats_file, opt$bam, opt$sample, opt$library, opt$readgroup)
   
-  # Calcualte per cycle and overall base quality distributions
+  # Calculate per cycle and overall base quality distributions
   print("Summarizing Samtools stats Base Quality Statistics:")
   # Call the base quality function
   baseQuality_summary(stats_file, opt$bam, opt$sample, opt$library, opt$readgroup, opt$readformat)
+  
+  # Calculate MAPQ Statistics
+  print("Summarizing Samtools MAPQ Statistics:")
+  # Call the MAPQ function
+  mapq_summary(stats_file, opt$bam, opt$sample, opt$library, opt$readgroup)
+  
   
   if ( opt$readformat == "PairedEnd") {
     # Calculate insert size and fraction of reads crossing over
