@@ -126,6 +126,9 @@
       --remove-overlaps \
       --filtering-flag 256 \
       --coverage 1,2500,1 \
+      {% if sample.rgpm|lower not in known_long_read_platforms %}
+      --GC-depth 100 \
+      {% endif %}
       {% if sample.gltype == 'exome' %}
       --target-regions {{ regions }} \
       {% else %}
@@ -198,7 +201,7 @@
         --bam={{ bam|basename }} \
         --sample={{ sample.name }} \
         --library={{ sample_lb }} \
-        --readformat={{ sample.readOrientation | replace("-", "") }} \
+        --readformat={{ sample.readOrientation | replace("-", "") | replace("Inward","PairedEnd") }} \
         --platformModel={{ sample.rgpm }}
 
     {% if libraryCount == 1 %}
@@ -209,7 +212,7 @@
         --bam={{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram \
         --sample={{ sample.name }} \
         --library={{ sample_lb }} \
-        --readformat={{ sample.readOrientation | replace("-", "") }} \
+        --readformat={{ sample.readOrientation | replace("-", "") | replace("Inward","PairedEnd") }} \
         --platformModel={{ sample.rgpm }}
     {% endif %}
 

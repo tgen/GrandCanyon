@@ -14,6 +14,9 @@
     {{ raise(raise_msg) }}
 {% endif %}
 
+{# Known long read platform models in lower case for comparison against sample.rgpm #}
+{% set known_long_read_platforms = ['revio', 'promethion', 'minion'] %}
+
 {% set required_scripts = {} %}
 {% for name, value in constants.grandcanyon.required_scripts.items() %}
     {% set path = '${JS_PIPELINE_PATH}/' ~ __pipeline__.bin ~ value %}

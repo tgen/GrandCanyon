@@ -1173,11 +1173,6 @@ if (!is.null(opt$samtoolsStatsFile)) {
   # Call Coverage Summary
   median_cov <- coverage_summary(stats_file, opt$bam, opt$sample, opt$library, opt$readgroup)
   
-  # Summarize GC data
-  print("Summarizing Samtools stats GC Effect on Coverage:")
-  # Call the base distribution function (mean_cov is returned from the coverage function)
-  gcdepth_summary(stats_file, median_cov, opt$bam, opt$sample, opt$library, opt$readgroup)
-  
   # Summarize INDEL size distribution
   print("Summarizing Samtools stats INDEL size distribution:")
   # Call the indel size summary function
@@ -1224,6 +1219,10 @@ if (!is.null(opt$samtoolsStatsFile)) {
     # Call the indel by cycle summary function
     indel_cycle_summary(stats_file, opt$bam, opt$sample, opt$library, opt$readgroup)
     
+    # Summarize GC data
+    print("Summarizing Samtools stats GC Effect on Coverage:")
+    # Call the base distribution function (mean_cov is returned from the coverage function)
+    gcdepth_summary(stats_file, median_cov, opt$bam, opt$sample, opt$library, opt$readgroup)
   }
 }
 
