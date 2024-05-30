@@ -15,10 +15,12 @@
     {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
     {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram{% endset %}
     {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.crai{% endset %}
+    {% set regions %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.samstats_no_N_1based_target_regions.txt{% endset %}
   {% else %}
     {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
     {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
     {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
+    {% set regions %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.samstats_no_N_1based_target_regions.txt{% endset %}
   {% endif %}
 
   {% set sample_name_string %}{{ sample.name }}_{{ sample_lb }}{% endset %}
@@ -43,12 +45,55 @@
   {% set bam_level_summaryNumbers_output_json %}{{ results_dir }}/{{ bam|basename }}_samtools_summaryNumbers_summary.json{% endset %}
 {% endif %}
 
+{% if sample.gltype == 'exome' %}
+- name: samtools_stats_exome_region_prep_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, stats, samtools_stats, {{ sample.name }}]
+  methods: Quality control metrics for {{ sample.name }} ({{ aligner }}) were generated with samtools stats.
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon[reference].tool_resources.samtools_stats.interval_list }}
+    - {{ sample.capture_kit.no_header_targets_interval_list }}
+  output:
+    - {{ regions }}
+    {% if libraryCount == 1 %}
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.samstats_no_N_1based_target_regions.txt
+    {% endif %}
+  walltime: "4:00:00"
+  cpus: 1
+  mem: 2G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bedtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    bedtools intersect \
+      -a {{ constants.grandcanyon[reference].tool_resources.samtools_stats.interval_list }} \
+      -b {{ sample.capture_kit.no_header_targets_interval_list }} \
+      | \
+    sort -k1,1 -k2,2n \
+      > {{ regions }}
+
+    {% if libraryCount == 1 %}
+    cp {{ regions }} {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.samstats_no_N_1based_target_regions.txt
+    {% endif %}
+
+{% endif %}
+
 - name: samtools_stats_{{ task }}
   tags: [{{ sample.gltype }}, quality_control, stats, samtools_stats, {{ sample.name }}]
   methods: Quality control metrics for {{ sample.name }} ({{ aligner }}) were generated with samtools stats.
   input:
     - {{ bam }}
     - {{ bam_index }}
+    {% if sample.gltype == 'exome' %}
+    - {{ regions }}
+    {% else %}
+    - {{ constants.grandcanyon[reference].tool_resources.samtools_stats.interval_list }}
+    {% endif %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ results_dir }}/{{ bam|basename }}.cramstats.txt
@@ -70,27 +115,24 @@
     mkdir -p {{ results_dir }}
 
     {#
-      samtools view
-        -q INT   only include reads with mapping quality >= INT [0]
-        -h       include header in SAM output
-
       samtools stats
        --filtering-flag 256
             not primary alignment (0x100)
        --coverage <int>,<int>,<int>    Coverage distribution min,max,step [1,1000,1]
     #}
-    samtools view \
-      --threads 4 \
-      -q 10 \
-      -h \
-      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      {{ bam }} \
-      | \
     samtools stats \
-      --GC-depth 100 \
+      --threads 4 \
+      --remove-dups \
+      --remove-overlaps \
       --filtering-flag 256 \
       --coverage 1,2500,1 \
+      {% if sample.gltype == 'exome' %}
+      --target-regions {{ regions }} \
+      {% else %}
+      --target-regions {{ constants.grandcanyon[reference].tool_resources.samtools_stats.interval_list }} \
+      {% endif %}
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      {{ bam }} \
       > {{ results_dir }}/{{ bam|basename }}.cramstats.txt
 
     {% if libraryCount == 1 %}

@@ -110,6 +110,23 @@
   {% endfor %}
 {% endfor %}
 
+{% for sample in samples.values() if sample.gltype == 'exome' %}
+    {% do sample.update({'library_code': sample.assayCode[0:2]|upper}) %}
+    {% do sample.update({'capture_kit_code': sample.assayCode[-3:]|upper}) %}
+
+    {% set capture_kit_path_prefix %}{{ constants.grandcanyon[reference].capture_kit_path }}/{{ sample.capture_kit_code }}/{{ sample.capture_kit_code }}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}{% endset %}
+    {% set targets_interval_list %}{{ capture_kit_path_prefix }}.targets.interval_list{% endset %}
+    {% set no_header_targets_interval_list %}{{ capture_kit_path_prefix }}.no.header.targets.interval_list{% endset %}
+    {% set baits_interval_list %}{{ capture_kit_path_prefix }}.baits.interval_list{% endset %}
+    {% set extended_bed %}{{ capture_kit_path_prefix }}.extended.bed{% endset %}
+
+    {% do sample.update({'capture_kit': {}}) %}
+    {% do sample['capture_kit'].update({'targets_interval_list': targets_interval_list}) %}
+    {% do sample['capture_kit'].update({'no_header_targets_interval_list': no_header_targets_interval_list}) %}
+    {% do sample['capture_kit'].update({'baits_interval_list': baits_interval_list}) %}
+    {% do sample['capture_kit'].update({'extended_bed': extended_bed}) %}
+{% endfor %}
+
 {% for sample in samples.values() if sample.gltype == 'rna' %}
     {% set readOrientation=sample.readOrientation|default('inward')|lower|replace('-','') %}
     {% set rnaStrandType=sample.rnaStrandType|default('unstranded')|lower|replace('-','') %}
