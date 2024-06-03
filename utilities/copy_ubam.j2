@@ -2,7 +2,7 @@
 
 {% if ubam.rgpl == 'PACBIO' %}
   {% set ubam_index %}{{ ubam.path }}.pbi{% endset %}
-{% endif }
+{% endif %}
 
 - name: copy_ubams_{{ ubam.basename | replace(".", "_") }}
   input: {{ ubam.path }}
