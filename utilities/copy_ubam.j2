@@ -1,5 +1,9 @@
 {% macro copy_ubam(ubam) %}
 
+{% if ubam.rgpl == 'PACBIO' %}
+  {% set ubam_index %}{{ ubam.path }}.pbi{% endset %}
+{% endif }
+
 - name: copy_ubams_{{ ubam.basename | replace(".", "_") }}
   input: {{ ubam.path }}
   output:
@@ -14,6 +18,9 @@
     mkdir -p temp/ubams/
 
     rsync {{ ubam.path }} temp/ubams/
+    {% if ubam_index is defined %}
+    rsync {{ ubam_index }} temp/ubams/
+    {% endif %}
 
 - name: convert_ubam_to_fastq_{{ ubam.basename | replace(".", "_") }}
   input:

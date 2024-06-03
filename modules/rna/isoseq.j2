@@ -24,8 +24,8 @@
     {% endfor %}
   output:
     - {{ temp_dir }}/{{ sample.name }}.clustered.bam
-  cpus: 10
-  mem: 32G
+  cpus: 20
+  mem: 60G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.isoseq.container }}
@@ -36,11 +36,12 @@
 
     ROOT_DIR=${PWD}
 
-    {# ls {{ longfqlist|map(attribute='path')|join(' ') }} > {{ temp_dir }}/{{ sample.name }}.fofn #}
+    ls $ROOT_DIR/{{ longfqlist|map(attribute='path')|join(' $ROOT_DIR/') }} > {{ temp_dir }}/{{ sample.name }}.fofn
     cd {{ temp_dir }} && \
     isoseq cluster2 \
-      --num-threads 10 \
-      $ROOT_DIR/{{ longfqlist|map(attribute='path')|join(' ') }} \
+      --use-qvs \
+      --num-threads 20 \
+      {{ sample.name }}.fofn \
       {{ sample.name }}.clustered.bam
 
 - name: isoseq_pbmm2_{{ sample.name }}
@@ -82,6 +83,7 @@
       --num-threads 4 \
       --do-not-collapse-extra-5exons \
       {{ results_dir }}/{{ sample.name }}.pbmm2.bam \
+      {{ temp_dir }}/{{ sample.name }}.fofn \
       {{ results_dir }}/{{ sample.name }}.collapsed.gff
 
 - name: pigeon_{{ sample.name }}

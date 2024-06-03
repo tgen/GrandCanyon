@@ -66,6 +66,7 @@
   cmd: |
 
     mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
 
     minimap2 \
       -ax splice \
@@ -136,6 +137,7 @@
     {# -p 1.0 secondary score ratio, this is higher than the default of 0.8 since we are looking for transcriptome isoforms #}
 
     mkdir -p {{ temp_dir }}/minimap2
+    mkdir -p {{ results_dir }}
 
     minimap2 \
       -ax map-ont \
@@ -171,6 +173,10 @@
   container: {{ constants.tools.minimap2.container }}
   cmd: |
 
+    rm -r {{ temp_dir }}/st_sort_temp/{{ rgid | replace("/", "_") }} || true
+    mkdir -p {{ temp_dir }}/st_sort_temp/{{ rgid | replace("/", "_") }}
+    mkdir -p {{ results_dir }}
+
     paftools.js gff2bed {{ constants.grandcanyon[reference].gtf }} > {{ temp_dir }}/{{ sample.name }}_anno.bed
 
     minimap2 \
@@ -191,6 +197,7 @@
     samtools sort \
       --threads 20 \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      -T {{ temp_dir }}/st_sort_temp/{{ rgid | replace("/", "_") }} \
       -o {{ results_dir }}/{{ sample.name }}.minimap2.cram \
       --output-fmt CRAM \
       --write-index \
