@@ -18,8 +18,8 @@
     - {{ gtf }}
     - {{ reference_fasta }}
   output: {{ results_dir }}
-  cpus: 10
-  mem: 32G
+  cpus: 20
+  mem: 48G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.isoquant.container }}
@@ -29,23 +29,30 @@
     {# input: human aligned genome bam #}
     {# output: gene and transcript quantification, gtf #}
 
-    mkdir -p {{ results_dir }}
+    rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+    export TMPDIR={{ temp_dir }}
+
+    paftools.js gff2bed {{ gtf }} > {{ temp_dir }}/{{ sample.name }}_anno.bed
 
     isoquant.py \
       --reference {{ reference_fasta }} \
       -o {{ temp_dir }}/ \
       -g {{ gtf }} \
+      {% if sample.glprep in 'kinnex' %}
+      -d pacbio \
+      {% else %}
       -d nanopore \
+      {% endif %}
       --complete_genedb \
       --bam {{ sample_bam }} \
       --labels {{ sample.name }} \
       -p {{ sample.name }} \
+      --junc_bed_file {{ temp_dir }}/{{ sample.name }}_anno.bed \
       --sqanti_output \
       --check_canonical \
-      -t 10
-
-    mv {{ temp_dir }}/{{ sample.name }}/{{ sample.name }}.* {{ results_dir }}/
+      -t 20
 
 {% endmacro %}
 
