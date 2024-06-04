@@ -147,7 +147,7 @@ constants:
       reference_fastaSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa
       reference_faiSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa.fai
       reference_dict: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_alts_hla_masked.dict
-      gtf: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.gtf
+      gtf: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.noheader.sorted.gtf
       gtfSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/gene_model/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf
       transcriptome: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-cdna.fa
       transcriptomeSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/transcriptome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa
