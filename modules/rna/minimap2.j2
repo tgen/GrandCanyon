@@ -82,7 +82,6 @@
       -U {{ temp_dir }}/{{ sample.name }}.minimap2.sirv.unmapped.bam |\
     samtools addreplacerg \
       --threads 4 \
-      -m orphan_only \
       -r "{{ read_group_line(rg, format='minimap2') }}" \
       - |\
     samtools sort \
@@ -155,7 +154,6 @@
       {{ prepped_fastq }} |\
     samtools addreplacerg \
       --threads 4 \
-      -m orphan_only \
       -r "{{ read_group_line(rg, format='minimap2') }}" \
       -O BAM \
       -o {{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.bam \
@@ -204,7 +202,6 @@
       {{ prepped_fastq }} |\
     samtools addreplacerg \
       --threads 4 \
-      -m orphan_only \
       -r "{{ read_group_line(rg, format='minimap2') }}" \
       - |\
     samtools sort \
@@ -265,7 +262,6 @@
       {{ prepped_fastq }} |\
     samtools addreplacerg \
       --threads 4 \
-      -m orphan_only \
       -r "{{ read_group_line(rg, format='minimap2') }}" \
       -O BAM \
       -o {{ results_dir }}/{{ sample.name }}.transcriptome.bam \
