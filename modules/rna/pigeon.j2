@@ -20,6 +20,7 @@
 - name: pigeon_{{ sample.name }}
   input:
     - {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff
+    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].gtf }}
   output:

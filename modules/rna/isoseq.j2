@@ -72,7 +72,9 @@
   input:
     - {{ results_dir }}/{{ sample.name }}.pbmm2.bam
     - {{ temp_dir }}/{{ sample.name }}.clustered.bam
-  output: {{ results_dir }}/{{ sample.name }}.collapsed.gff
+  output:
+    - {{ results_dir }}/{{ sample.name }}.collapsed.gff
+    - {{ results_dir }}/{{ sample.name }}.collapsed.flnc_count.txt
   cpus: 4
   mem: 16G
   walltime: "4:00:00"
