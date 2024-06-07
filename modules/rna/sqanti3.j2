@@ -38,8 +38,8 @@
     - {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff
     - {{ results_dir }}/{{ sample.name }}.collapsed_classification.txt
   cpus: 20
-  mem: 80G
-  walltime: "4:00:00"
+  mem: 64G
+  walltime: "12:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.sqanti3.container }}
   cmd: |
