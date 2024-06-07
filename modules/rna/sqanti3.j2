@@ -63,7 +63,7 @@
       --CAGE_peak /opt2/sqanti3/5.2.1/SQANTI3-5.2.1/data/ref_TSS_annotation/human.refTSS_v3.1.hg38.bed \
       --polyA_motif_list /opt2/sqanti3/5.2.1/SQANTI3-5.2.1/data/polyA_motifs/mouse_and_human.polyA_motif.txt \
       -o {{ sample.name }} \
-      -d {{ temp_dir }} \
+      -d {{ results_dir }} \
       -fl {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt \
     {% if shortfqlist | length > 0 %}
       --short_reads {{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
