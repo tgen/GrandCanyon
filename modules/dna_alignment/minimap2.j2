@@ -116,7 +116,7 @@
     | samtools addreplacerg \
       --threads 10 \
       -r "{{ read_group_line(rg, format='minimap2') }}" \
-      - |\
+      - \
     | samtools sort \
       --threads 20 \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
