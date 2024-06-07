@@ -3,9 +3,11 @@
 
 {% macro dna_alignment(samples) %}
 
-  {% for sample in samples.values() if sample.gltype in ['genome', 'genomephased', 'exome'] %}
-    {{- minimap2(sample) }}
-    {{- bam_qc(sample, aligner='minimap2')}}
+  {% for sample in samples.values() if sample.gltype in ['genome', 'exome'] %}
+    {% if long_read_only|default(true) and sample.rgpl in ['ONT', 'PACBIO'] %}
+      {{- minimap2(sample) }}
+      {{- bam_qc(sample, aligner='minimap2')}}
+    {% endif %}
   {% endfor %}
 
 {% endmacro %}

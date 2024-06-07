@@ -25,7 +25,7 @@
       {% set taskPrefix = 'RNA' %}
     {% elif sample.gltype == 'exome' %}
       {% set taskPrefix = 'Exome' %}
-    {% elif sample.gltype in ['genome','genomephased'] %}
+    {% elif sample.gltype in 'genome' %}
       {% set taskPrefix = 'Genome' %}
     {% endif %}
 

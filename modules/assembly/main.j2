@@ -23,7 +23,7 @@
 
     {% if pair.gltype in 'exome' %}
       {% set taskPrefix = 'Exome' %}
-    {% elif pair.gltype in ['genome','genomephased'] %}
+    {% elif pair.gltype in 'genome' %}
       {% set taskPrefix = 'Genome' %}
     {% endif %}
     {% if tasks[taskPrefix+"_assembly_flye"]|default(false) %}
