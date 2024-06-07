@@ -7,18 +7,22 @@
 {% set longfqlist = [] %}
 {% set shortfqlist = [] %}
 
+{% for rgid, data_files in dataFiles|selectattr('rgsm', 'eq', sample.rgsm)|selectattr('glType', 'eq', 'RNA')|selectattr('rgpl', 'eq', 'ILLUMINA')|groupby('rgid') %}
+  {% set rg = data_files %}
+  {% set r1fastq = rg|selectattr('fastqCode', 'eq', 'R1')|first %}
+  {% set r2fastq = rg|selectattr('fastqCode', 'eq', 'R2')|first %}
+  {% if r1fastq is defined and r2fastq is defined %}
+    {% set sr_pair = {"r1path": r1fastq.path, "r2path": r2fastq.path} %}
+    {% do shortfqlist.append(sr_pair) %}
+  {% endif %}
+{% endfor %}
+
 {% for rgid, rg in sample.read_groups.items() %}
   {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
   {% if longfastq is defined %}
     {% set longfastq_path %}temp/ubams/{{ longfastq.basename }}{% endset %}
     {% do longfastq.update({"path": longfastq_path}) %}
     {% do longfqlist.append(longfastq) %}
-  {% endif %}
-  {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
-  {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
-  {% if r1fastq is defined and r2fastq is defined %}
-    {% set sr_pair = {"r1path": "temp/fastqs/" + r1fastq.basename, "r2path": "temp/fastqs/" + r2fastq.basename} %}
-    {% do shortfqlist.append(sr_pair) %}
   {% endif %}
 {% endfor %}
 
@@ -55,15 +59,15 @@
     sqanti3_qc.py \
       {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff \
       {{ constants.grandcanyon[reference].gtf }} \
-      {{ constants.grandcanyon[reference].reference_fasta }}
+      {{ constants.grandcanyon[reference].reference_fasta }} \
       --CAGE_peak /opt2/sqanti3/5.2.1/SQANTI3-5.2.1/data/ref_TSS_annotation/human.refTSS_v3.1.hg38.bed \
       --polyA_motif_list /opt2/sqanti3/5.2.1/SQANTI3-5.2.1/data/polyA_motifs/mouse_and_human.polyA_motif.txt \
       -o {{ sample.name }} \
       -d {{ temp_dir }} \
-    {% if shortfqlist | length > 0 %}
       -fl {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt \
-    {% endif %}
+    {% if shortfqlist | length > 0 %}
       --short_reads {{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
+    {% endif %}
       --cpus 20 \
       --report both                     
 
