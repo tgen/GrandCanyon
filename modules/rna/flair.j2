@@ -1,11 +1,11 @@
 {% macro flair(sample, sample_bam, input_fq, reference_fasta, gtf, SIRV=false) %}
 
 {% if SIRV %}
-  {% set temp_dir %}temp/{{ sample.gltype }}/quant/flair_SIRV/{{ sample.name }}{% endset %}
-  {% set results_dir %}{{ sample.gltype }}/quant/flair_SIRV/{{ sample.name }}{% endset %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/isoforms/flair_SIRV/{{ sample.name }}{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/isoforms/flair_SIRV/{{ sample.name }}{% endset %}
 {% else %}
-  {% set temp_dir %}temp/{{ sample.gltype }}/quant/flair/{{ sample.name }}{% endset %}
-  {% set results_dir %}{{ sample.gltype }}/quant/flair/{{ sample.name }}{% endset %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/isoforms/flair/{{ sample.name }}{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/isoforms/flair/{{ sample.name }}{% endset %}
 {% endif %}
 
 {% if SIRV %}

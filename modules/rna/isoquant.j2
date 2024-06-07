@@ -1,11 +1,11 @@
 {% macro isoquant(sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
 
 {% if SIRV %}
-  {% set temp_dir %}temp/{{ sample.gltype }}/quant/isoquant_SIRV{% endset %}
-  {% set results_dir %}{{ sample.gltype }}/quant/isoquant_SIRV/{{ sample.name }}{% endset %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/isoforms/isoquant_SIRV{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/isoforms/isoquant_SIRV/{{ sample.name }}{% endset %}
 {% else %}
-  {% set temp_dir %}temp/{{ sample.gltype }}/quant/isoquant{% endset %}
-  {% set results_dir %}{{ sample.gltype }}/quant/isoquant/{{ sample.name }}{% endset %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/isoforms/isoquant{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/isoforms/isoquant/{{ sample.name }}{% endset %}
 {% endif %}
 
 {% if SIRV %}
