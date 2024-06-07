@@ -5,14 +5,16 @@
 
 {% set supported_references = ['chm13', 'grch38'] %}
 
-{% if reference is not defined %}
-    {% set reference = "chm13" %}
-    {% set log_msg %}reference not defined, defaulting to chm13{% endset %}
+{% if reference is not defined or reference == "" %}
+    {% set reference = "grch38" %}
+    {% set log_msg %}reference not defined, defaulting to grch38{% endset %}
     {{ log(log_msg, level='WARNING') }}
-{% elif reference not in ['chm13', 'grch38'] %}
-    {% set raise_msg %}Unsupported reference defined! {{ reference }} is not in {{ supported_references }}{% endset %}
+{% elif reference|lower not in ['chm13', 'grch38'] %}
+    {% set raise_msg %}Unsupported reference defined! {{ reference|lower }} is not in {{ supported_references }}{% endset %}
     {{ raise(raise_msg) }}
 {% endif %}
+
+{% set reference = reference | lower %}
 
 {# Known long read platform models in lower case for comparison against sample.rgpm #}
 {% set known_long_read_platforms = ['revio', 'promethion', 'minion'] %}

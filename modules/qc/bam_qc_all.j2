@@ -83,6 +83,12 @@
 
 {% endif %}
 
+{% if sample.gltype == 'rna' and constants.grandcanyon[reference].star_fasta is defined %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].star_fasta }}{% endset %}
+{% else %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+{% endif %}
+
 - name: samtools_stats_{{ task }}
   tags: [{{ sample.gltype }}, quality_control, stats, samtools_stats, {{ sample.name }}]
   methods: Quality control metrics for {{ sample.name }} ({{ aligner }}) were generated with samtools stats.
@@ -94,7 +100,7 @@
     {% else %}
     - {{ constants.grandcanyon[reference].tool_resources.samtools_stats.interval_list }}
     {% endif %}
-    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ reference_fasta }}
   output:
     - {{ results_dir }}/{{ bam|basename }}.cramstats.txt
     {% if libraryCount == 1 %}
@@ -134,7 +140,7 @@
       {% else %}
       --target-regions {{ constants.grandcanyon[reference].tool_resources.samtools_stats.interval_list }} \
       {% endif %}
-      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --reference {{ reference_fasta }} \
       {{ bam }} \
       > {{ results_dir }}/{{ bam|basename }}.cramstats.txt
 
@@ -323,6 +329,12 @@
   {% set error_metrics_json %}{{ error_metrics }}.json{% endset %}
   {% set quality_yield_metrics_json %}{{ quality_yield_metrics }}.json{% endset %}
 
+  {% if sample.gltype == 'rna' and constants.grandcanyon[reference].star_fasta is defined %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].star_fasta }}{% endset %}
+  {% else %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+  {% endif %}
+
 - name: gatk_collectmultiplemetrics_{{ task }}
   tags: [{{ sample.gltype }}, quality_control, stats, gatk_CollectMultipleMetrics, {{ sample.name }}]
   methods: Alignment metrics, base distribution, quality, and other metrics for
@@ -330,7 +342,7 @@
   input:
     - {{ bam }}
     - {{ bam_index }}
-    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ reference_fasta }}
   output:
     - {{ results_dir }}/{{ bam|basename }}.alignment_summary_metrics
     - {{ results_dir }}/{{ bam|basename }}.bait_bias_detail_metrics
@@ -379,7 +391,7 @@
       --java-options "-Xmx7G" \
       --INPUT {{ bam }} \
       --OUTPUT {{ results_dir }}/{{ bam|basename }} \
-      --REFERENCE_SEQUENCE {{ constants.grandcanyon[reference].reference_fasta }} \
+      --REFERENCE_SEQUENCE {{ reference_fasta }} \
       --METRIC_ACCUMULATION_LEVEL null \
       --METRIC_ACCUMULATION_LEVEL LIBRARY \
       --METRIC_ACCUMULATION_LEVEL SAMPLE \
