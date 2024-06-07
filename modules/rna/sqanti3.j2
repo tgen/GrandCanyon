@@ -16,8 +16,10 @@
   {% endif %}
   {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
   {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
-  {% set short_read_path = "temp/fastqs/" + r1fastq.basename + " temp/fastqs/" + r2fastq.basename) %}
-  {% do shortfqlist.append(short_read_path) %}
+  {% if r1fastq is defined and r2fastq is defined %}
+    {% set sr_pair = {"r1path": "temp/fastqs/" + r1fastq.basename, "r2path": "temp/fastqs/" + r2fastq.basename} %}
+    {% do shortfqlist.append(sr_pair) %}
+  {% endif %}
 {% endfor %}
 
 {% if longfqlist | length > 0 %}
@@ -42,13 +44,15 @@
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
+    {% if shortfqlist | length > 0 %}
     cat <<EOF > "{{ temp_dir }}/{{ sample.name }}_short_reads.fofn"
     {% for pair in shortfqlist %}
-    {{ pair }}
+    {{ pair.r1path }} {{ pair.r2path }}
     {% endfor %}
     EOF
+    {% endif %}
 
-    python sqanti3_qc.py \
+    sqanti3_qc.py \
       {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff \
       {{ constants.grandcanyon[reference].gtf }} \
       {{ constants.grandcanyon[reference].reference_fasta }}
@@ -56,7 +60,9 @@
       --polyA_motif_list /opt2/sqanti3/5.2.1/SQANTI3-5.2.1/data/polyA_motifs/mouse_and_human.polyA_motif.txt \
       -o {{ sample.name }} \
       -d {{ temp_dir }} \
+    {% if shortfqlist | length > 0 %}
       -fl {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt \
+    {% endif %}
       --short_reads {{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
       --cpus 20 \
       --report both                     

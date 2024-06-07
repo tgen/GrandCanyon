@@ -52,7 +52,7 @@
       {% if not SIRV %}
       --gtf {{ gtf }} \
       {% endif %}
-      --output {{ temp_dir }}/{{ sample.name }}.collapse
+      --output {{ results_dir }}/{{ sample.name }}.collapse
 
     {# generate reads_manifest.tsv file for flair quantify #}
     printf "{{ sample.name }}\tcondition1\tbatch1\t{{ input_fq }}\n" > {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv
@@ -62,19 +62,19 @@
       --temp_dir {{ temp_dir }} \
       --reads_manifest {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv \
       --sample_id_only \
-      --isoforms {{ temp_dir }}/{{ sample.name }}.collapse.isoforms.fa \
+      --isoforms {{ results_dir }}/{{ sample.name }}.collapse.isoforms.fa \
       --output {{ results_dir }}/{{ sample.name }}.quantify
     flair quantify \
       --threads 10 \
       --temp_dir {{ temp_dir }} \
       --reads_manifest {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv \
       --sample_id_only \
-      --isoforms {{ temp_dir }}/{{ sample.name }}.collapse.isoforms.fa \
+      --isoforms {{ results_dir }}/{{ sample.name }}.collapse.isoforms.fa \
       --tpm \
       --output {{ results_dir }}/{{ sample.name }}.quantify
 
     {# generate file with the 10 longest isoforms #}
-    awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' {{ results_dir }}/{{ sample.name }}.quantify.isoforms.fa |\
+    awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' {{ results_dir }}/{{ sample.name }}.collapse.isoforms.fa |\
     awk '{printf("%d\t%s\t%s\t%s\n",length($2),$1,$1,$2);}' |\
     sort -t $'\t' -k1,1nr | cut -f 1,2 | head > {{ results_dir }}/{{ sample.name }}_flair_top10.txt
 

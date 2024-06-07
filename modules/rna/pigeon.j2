@@ -31,6 +31,10 @@
   queue_preset: "DEFAULT"
   container: {{ constants.tools.pbpigeon.container }}
   cmd: |
+    set -e
+
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
 
     pigeon prepare {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff
 
@@ -44,7 +48,7 @@
 
     pigeon filter \
       --num-threads 4 \
-      --isoforms {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff \
+      --isoforms {{ isoseq_dir }}/{{ sample.name }}.collapsed.sorted.gff \
       {{ results_dir }}/{{ sample.name }}_classification.txt \
 
     pigeon report \
