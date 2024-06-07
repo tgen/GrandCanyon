@@ -42,7 +42,7 @@ constants:
     hificnv:
       container: quay.io/biocontainers/hificnv:0.1.7--h9ee0642_0
     isoquant:
-      container: quay.io/biocontainers/isoquant:3.3.1--hdfd78af_0
+      container: quay.io/biocontainers/isoquant:3.4.1--hdfd78af_0
     isoseq:
       container: quay.io/biocontainers/isoseq:4.0.0--h9ee0642_0
     longshot:
@@ -95,6 +95,8 @@ constants:
       container: quay.io/biocontainers/sniffles:2.2--pyhdfd78af_0
     spectre:
       container: /home/tgenref/containers/spectre-cnv_0.2.1.sif
+    sqanti3:
+      container: /home/tgenref/containers/sqanti3_5.2.1.sif
     subread:
       container: quay.io/biocontainers/subread:2.0.6--he4a0461_0
     vep:
@@ -151,6 +153,7 @@ constants:
       gtfSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/gene_model/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf
       transcriptome: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-cdna.fa
       transcriptomeSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/transcriptome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa
+      star_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_masked.fa
       starfusion_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/tool_resources/starFusion_gencode_v37/starFusion_Resources/ctat_genome_lib_build_dir
       vep_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/v103/
       ref_flat: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.refFlat.txt

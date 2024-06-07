@@ -1,0 +1,66 @@
+{% macro sqanti3(sample) %}
+
+{% set temp_dir %}temp/{{ sample.gltype }}/isoforms/sqanti3/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/isoforms/sqanti3/{{ sample.name }}{% endset %}
+{% set isoseq_dir %}{{ sample.gltype }}/isoforms/isoseq/{{ sample.name }}{% endset %}
+
+{% set longfqlist = [] %}
+{% set shortfqlist = [] %}
+
+{% for rgid, rg in sample.read_groups.items() %}
+  {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
+  {% if longfastq is defined %}
+    {% set longfastq_path %}temp/ubams/{{ longfastq.basename }}{% endset %}
+    {% do longfastq.update({"path": longfastq_path}) %}
+    {% do longfqlist.append(longfastq) %}
+  {% endif %}
+  {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
+  {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
+  {% set short_read_path = "temp/fastqs/" + r1fastq.basename + " temp/fastqs/" + r2fastq.basename) %}
+  {% do shortfqlist.append(short_read_path) %}
+{% endfor %}
+
+{% if longfqlist | length > 0 %}
+
+- name: sqanti3_{{ sample.name }}
+  input:
+    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff
+    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].gtf }}
+  output:
+    - {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff
+    - {{ results_dir }}/{{ sample.name }}.collapsed_classification.txt
+  cpus: 20
+  mem: 80G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.sqanti3.container }}
+  cmd: |
+    set -e
+
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    cat <<EOF > "{{ temp_dir }}/{{ sample.name }}_short_reads.fofn"
+    {% for pair in shortfqlist %}
+    {{ pair }}
+    {% endfor %}
+    EOF
+
+    python sqanti3_qc.py \
+      {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff \
+      {{ constants.grandcanyon[reference].gtf }} \
+      {{ constants.grandcanyon[reference].reference_fasta }}
+      --CAGE_peak /opt2/sqanti3/5.2.1/SQANTI3-5.2.1/data/ref_TSS_annotation/human.refTSS_v3.1.hg38.bed \
+      --polyA_motif_list /opt2/sqanti3/5.2.1/SQANTI3-5.2.1/data/polyA_motifs/mouse_and_human.polyA_motif.txt \
+      -o {{ sample.name }} \
+      -d {{ temp_dir }} \
+      -fl {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt \
+      --short_reads {{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
+      --cpus 20 \
+      --report both                     
+
+{% endif %}
+
+{% endmacro %}

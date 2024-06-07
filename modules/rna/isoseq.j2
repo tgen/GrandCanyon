@@ -1,3 +1,6 @@
+{% from 'modules/rna/pigeon.j2' import pigeon with context %}
+{% from 'modules/rna/sqanti3.j2' import sqanti3 with context %}
+
 {% macro isoseq(sample) %}
 
 {% set temp_dir %}temp/{{ sample.gltype }}/alignment/isoseq/{{ sample.name }}{% endset %}
@@ -86,40 +89,8 @@
       {{ temp_dir }}/{{ sample.name }}.fofn \
       {{ results_dir }}/{{ sample.name }}.collapsed.gff
 
-- name: pigeon_{{ sample.name }}
-  input:
-    - {{ results_dir }}/{{ sample.name }}.collapsed.gff
-    - {{ constants.grandcanyon[reference].reference_fasta }}
-    - {{ constants.grandcanyon[reference].gtf }}
-  output:
-    - {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff
-    - {{ results_dir }}/{{ sample.name }}.collapsed_classification.txt
-  cpus: 4
-  mem: 16G
-  walltime: "4:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.pbpigeon.container }}
-  cmd: |
-
-    pigeon prepare {{ results_dir }}/{{ sample.name }}.collapsed.gff
-
-    pigeon classify \
-      --num-threads 4 \
-      --out-dir {{ results_dir}} \
-      --fl {{ results_dir }}/{{ sample.name }}.collapsed.flnc_count.txt \
-      {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff \
-      {{ constants.grandcanyon[reference].gtf }} \
-      {{ constants.grandcanyon[reference].reference_fasta }}
-
-    pigeon filter \
-      --num-threads 4 \
-      --isoforms {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff \
-      {{ results_dir }}/{{ sample.name }}_classification.txt \
-
-    pigeon report \
-      --num-threads 4 \
-      {{ results_dir }}/{{ sample.name }}_classification.filtered_lite_classification.txt \
-      {{ results_dir }}/{{ sample.name }}_classification.filtered_lite_classification.saturation.txt
+{{- pigeon(sample) }}
+{{- sqanti3(sample) }}
 
 {% endif %}
 
