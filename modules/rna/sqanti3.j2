@@ -31,7 +31,7 @@
 - name: sqanti3_{{ sample.name }}
   input:
     - {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff
-    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt
+    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.abundance.txt
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].gtf }}
   output:
@@ -64,12 +64,72 @@
       --polyA_motif_list /opt2/sqanti3/5.2.1/SQANTI3-5.2.1/data/polyA_motifs/mouse_and_human.polyA_motif.txt \
       -o {{ sample.name }} \
       -d {{ results_dir }} \
-      -fl {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt \
+      -fl {{ isoseq_dir }}/{{ sample.name }}.collapsed.abundance.txt \
     {% if shortfqlist | length > 0 %}
       --short_reads {{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
     {% endif %}
       --cpus 20 \
       --report both                     
+
+    sqanti3_filter.py rules \
+      {{ results_dir }}/{{ sample.name }}_classification.txt \
+      -o {{ sample.name }} \
+      -d {{ results_dir }} \
+      --skip_report
+
+    {% if shortfqlist | length > 0 %}
+    cat <<EOF > {{ results_dir }}/{{ sample.name }}_rules_filter.json
+    {
+      "full-splice_match": [
+          {
+              "perc_A_downstream_TTS":[0,59]
+          }
+      ],
+      "incomplete-splice_match":[
+          {
+              "length":[2001,14999],
+              "subcategory": ["3prime_fragment", "5prime_fragment", "internal_fragment"]
+          }
+      ],
+      "novel_in_catalog":[
+          {
+              "all_canonical": "canonical"
+          },
+          {
+              "min_cov": 10
+          }
+      ],
+      "novel_not_in_catalog":[
+          {
+              "all_canonical": "canonical",
+              "diff_to_gene_TSS":[-50,50],
+              "diff_to_gene_TTS": [-50,50]
+          },
+          {
+              "min_cov": 10,
+              "diff_to_gene_TSS":[-50,50],
+              "diff_to_gene_TTS": [-50,50]
+          }
+      ],
+      "rest": [
+          {
+              "RTS_stage":"FALSE",
+              "all_canonical":"canonical",
+              "coding": "coding",
+              "perc_A_downstream_TTS":[0,59],
+              "exons": 2
+          }
+       ]
+    }
+    EOF
+
+    sqanti3_filter.py rules \
+      {{ results_dir }}/{{ sample.name }}_classification.txt \
+      -o {{ sample.name }}_strict_filter \
+      -d {{ results_dir }} \
+      --json_filter {{ results_dir }}/{{ sample.name }}_rules_filter.json \
+      --skip_report
+    {% endif %}
 
 {% endif %}
 
