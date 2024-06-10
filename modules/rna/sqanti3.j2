@@ -7,7 +7,8 @@
 {% set longfqlist = [] %}
 {% set shortfqlist = [] %}
 
-{% for rgid, data_files in dataFiles|selectattr('rgsm', 'eq', sample.rgsm)|selectattr('glType', 'eq', 'RNA')|selectattr('rgpl', 'eq', 'ILLUMINA')|groupby('rgid') %}
+{# TODO: Need to sort out a technique to select the best set of short read data, or decide whether or not all of it should likely be used. #}
+{% for rgid, data_files in dataFiles|selectattr('rgsm', 'eq', sample.rgsm)|selectattr('glType', 'eq', 'RNA')|selectattr('rgpl', 'eq', 'ILLUMINA')|selectattr('rgpm', 'eq', 'NOVASEQXPLUS')|groupby('rgid') %}
   {% set rg = data_files %}
   {% set r1fastq = rg|selectattr('fastqCode', 'eq', 'R1')|first %}
   {% set r2fastq = rg|selectattr('fastqCode', 'eq', 'R2')|first %}
@@ -34,6 +35,7 @@
     - {{ isoseq_dir }}/{{ sample.name }}.collapsed.abundance.txt
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].gtf }}
+    - {{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }}
   output:
     - {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff
     - {{ results_dir }}/{{ sample.name }}.collapsed_classification.txt
@@ -45,6 +47,7 @@
   cmd: |
     set -e
 
+    rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
@@ -62,14 +65,19 @@
       {{ constants.grandcanyon[reference].reference_fasta }} \
       --CAGE_peak /opt2/sqanti3/5.2.1/SQANTI3-5.2.1/data/ref_TSS_annotation/human.refTSS_v3.1.hg38.bed \
       --polyA_motif_list /opt2/sqanti3/5.2.1/SQANTI3-5.2.1/data/polyA_motifs/mouse_and_human.polyA_motif.txt \
+      --gff3 {{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }} \
+      --isoAnnotLite \
       -o {{ sample.name }} \
-      -d {{ results_dir }} \
+      -d {{ temp_dir }} \
       -fl {{ isoseq_dir }}/{{ sample.name }}.collapsed.abundance.txt \
     {% if shortfqlist | length > 0 %}
       --short_reads {{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
     {% endif %}
       --cpus 20 \
+      --chunks 4 \
       --report both                     
+
+    mv {{ temp_dir }}/{{ sample.name }}* {{ results_dir }}
 
     sqanti3_filter.py rules \
       {{ results_dir }}/{{ sample.name }}_classification.txt \
