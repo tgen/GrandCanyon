@@ -28,8 +28,8 @@
   output:
     - {{ temp_dir }}/{{ sample.name }}.clustered.bam
   cpus: 20
-  mem: 80G
-  walltime: "4:00:00"
+  mem: 120G
+  walltime: "8:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.isoseq.container }}
   cmd: |
