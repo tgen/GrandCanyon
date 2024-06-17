@@ -4,9 +4,21 @@
 {%- set results_dir %}{{ sample.gltype }}/fusions/starfusion/{{ sample.name }}{% endset %}
 
 {# Here we build up lists of all the fastq files for this sample #}
+
 {% set longfqlist = [] %}
 {% set r1fqlist = [] %}
 {% set r2fqlist = [] %}
+
+{# TODO: Need to sort out a technique to select the best set of short read data, or decide whether or not all of it should likely be used. #}
+{% for rgid, data_files in dataFiles|selectattr('rgsm', 'eq', sample.rgsm)|selectattr('glType', 'eq', 'RNA')|selectattr('rgpl', 'eq', 'ILLUMINA')|selectattr('rgpm', 'eq', 'NOVASEQXPLUS')|groupby('rgid') %}
+  {% set rg = data_files %}
+  {% set r1fastq = rg|selectattr('fastqCode', 'eq', 'R1')|first %}
+  {% set r2fastq = rg|selectattr('fastqCode', 'eq', 'R2')|first %}
+  {% if r1fastq is defined and r2fastq is defined %}
+    {% do r1fqlist.append(r1fastq.path) %}
+    {% do r2fqlist.append(r2fastq.path) %}
+  {% endif %}
+{% endfor %}
 
 {% for rgid, rg in sample.read_groups.items() %}
   {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
@@ -14,18 +26,6 @@
     {% set longfastq_path %}temp/fastqs/{{ longfastq.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
     {% do longfastq.update({"path": longfastq_path}) %}
     {% do longfqlist.append(longfastq) %}
-  {% endif %}
-
-  {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
-  {% if r1fastq is defined %}
-    {% do r1fastq.update({"path": "temp/fastqs/" + r1fastq.basename}) %}
-    {% do r1fqlist.append(r1fastq) %}
-  {% endif %}
-
-  {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
-  {% if r2fastq is defined %}
-    {% do r2fastq.update({"path": "temp/fastqs/" + r2fastq.basename}) %}
-    {% do r2fqlist.append(r2fastq) %}
   {% endif %}
 {% endfor %}
 
@@ -38,10 +38,10 @@
     - {{ fq.path }}
   {% endfor %}
   {% for fq in r1fqlist %}
-    - {{ fq.path }}
+    - {{ fq }}
   {% endfor %}
   {% for fq in r2fqlist %}
-    - {{ fq.path }}
+    - {{ fq }}
   {% endfor %}
   output:
     - {{ results_dir }}/{{ sample.name }}.fusion_inspector_web.html
@@ -66,8 +66,8 @@
       --genome_lib_dir {{ constants.grandcanyon[reference].starfusion_index }} \
       -T "{{ longfqlist|map(attribute='path')|join(',') }}" \
       {% if r1fqlist | length > 0 %}
-      --left_fq "{{ r1fqlist|map(attribute='path')|join(',') }}" \
-      --right_fq "{{ r2fqlist|map(attribute='path')|join(',') }}" \
+      --left_fq "{{ r1fqlist|join(',') }}" \
+      --right_fq "{{ r2fqlist|join(',') }}" \
       {% endif %}
       --output {{ temp_dir }} \
       --vis
