@@ -2,7 +2,7 @@ __pipeline__:
   name: grandcanyon
   main: main.j2
   description: Human CHM13 genomics suite
-  version: 0.0.1.dev2
+  version: 0.0.1.dev3
   bin: required_scripts/
 constants:
   tools:
