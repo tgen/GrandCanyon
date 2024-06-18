@@ -13,7 +13,7 @@
   {% set r1fastq = rg|selectattr('fastqCode', 'eq', 'R1')|first %}
   {% set r2fastq = rg|selectattr('fastqCode', 'eq', 'R2')|first %}
   {% if r1fastq is defined and r2fastq is defined %}
-    {% set sr_pair = {"r1path": r1fastq.path, "r2path": r2fastq.path} %}
+    {% set sr_pair = {"r1path": "temp/fastqs/" + r1fastq.basename, "r2path": "temp/fastqs/" + r2fastq.basename} %}
     {% do shortfqlist.append(sr_pair) %}
   {% endif %}
 {% endfor %}
@@ -36,6 +36,10 @@
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].gtf }}
     - {{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }}
+    {% for pair in shortfqlist %}
+    - {{ pair.r1path }}
+    - {{ pair.r2path }}
+    {% endfor %}
   output:
     - {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff
     - {{ results_dir }}/{{ sample.name }}.collapsed_classification.txt
