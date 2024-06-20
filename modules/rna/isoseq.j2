@@ -55,6 +55,7 @@
       {{ sample.name }}.clustered.bam
 
 - name: isoseq_pbmm2_{{ sample.name }}
+  reset: predecessors
   input:
     - {{ reference_fasta }}
     - {{ constants.grandcanyon[reference].gtf }}
