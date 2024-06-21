@@ -21,13 +21,11 @@
 {% for rgid, rg in sample.read_groups.items() %}
   {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
   {% if longfastq is defined %}
-    {% set longfastq_path %}temp/fastqs/{{ longfastq.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do longfastq.update({"path": longfastq_path}) %}
+    {% set longfastq_path %}${PWD}/temp/fastqs/{{ longfastq.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}    {% do longfastq.update({"path": longfastq_path}) %}
     {% do longfqlist.append(longfastq) %}
   {% endif %}
 {% endfor %}
 
-{% if longfqlist | length > 0 %}
 
 - name: ctat_lr_{{ sample.name }}
   input:
@@ -57,13 +55,31 @@
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
+    {% if longfqlist | length > 1 %}
+    cat {{ longfqlist|map(attribute='path')|join(' ') }} > {{ temp_dir }}/concatenated_LR.fastq.gz
+    {% endif %}
+
+    {% if shortfqlist | length > 1 %}
+    cat {{ shortfqlist|map(attribute='r1path')|join(' ') }} > {{ temp_dir }}/concatenated_SR_r1.fastq.gz
+    cat {{ shortfqlist|map(attribute='r2path')|join(' ') }} > {{ temp_dir }}/concatenated_SR_r2.fastq.gz
+    {% endif %}
+
     ctat-LR-fusion \
       --CPU 10 \
       --genome_lib_dir {{ constants.grandcanyon[reference].starfusion_index }} \
-      -T "{{ longfqlist|map(attribute='path')|join(',') }}" \
+      {% if longfqlist | length > 1 %}
+      -T "{{ temp_dir }}/concatenated_LR.fastq.gz" \
+      {% else %}
+      -T "{{ longfqlist|map(attribute='path') }}" \
+      {% endif %}
       {% if shortfqlist | length > 0 %}
-      --left_fq "{{ shortfqlist|map(attribute="r1path")|join(',') }}" \
-      --right_fq "{{ shortfqlist|map(attribute="r2path")|join(',') }}" \
+        {% if shortfqlist | length > 1 %}
+        --left_fq "{{ temp_dir }}/concatenated_SR_r1.fastq.gz" \
+        --right_fq "{{ temp_dir }}/concatenated_SR_r2.fastq.gz" \
+        {% else %}
+        --left_fq "{{ shortfqlist|map(attribute="r1path") }}" \
+        --right_fq "{{ shortfqlist|map(attribute="r2path") }}" \
+        {% endif %}
       {% endif %}
       --output {{ temp_dir }} \
       --vis
