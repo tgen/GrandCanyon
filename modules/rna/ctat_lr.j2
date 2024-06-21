@@ -26,6 +26,7 @@
   {% endif %}
 {% endfor %}
 
+{% if longfqlist | length > 0 %}
 
 - name: ctat_lr_{{ sample.name }}
   input:
