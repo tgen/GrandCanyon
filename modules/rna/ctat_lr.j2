@@ -71,15 +71,15 @@
       {% if longfqlist | length > 1 %}
       -T "{{ temp_dir }}/concatenated_LR.fastq.gz" \
       {% else %}
-      -T "{{ longfqlist|map(attribute='path') }}" \
+      -T "{{ longfqlist|map(attribute='path')|join(' ') }}" \
       {% endif %}
       {% if shortfqlist | length > 0 %}
         {% if shortfqlist | length > 1 %}
         --left_fq "{{ temp_dir }}/concatenated_SR_r1.fastq.gz" \
         --right_fq "{{ temp_dir }}/concatenated_SR_r2.fastq.gz" \
         {% else %}
-        --left_fq "{{ shortfqlist|map(attribute="r1path") }}" \
-        --right_fq "{{ shortfqlist|map(attribute="r2path") }}" \
+        --left_fq "{{ shortfqlist|map(attribute="r1path")|join(' ') }}" \
+        --right_fq "{{ shortfqlist|map(attribute="r2path")|join(' ') }}" \
         {% endif %}
       {% endif %}
       --output {{ temp_dir }} \
