@@ -1,4 +1,5 @@
 {% from 'modules/rna/minimap2.j2' import minimap2_rna with context %}
+{% from 'modules/rna/salmon_sr.j2' import salmon_sr with context %}
 {% from 'modules/rna/ctat_lr.j2' import ctat_lr with context %}
 {% from 'modules/rna/isoseq.j2' import isoseq with context %}
 {% from 'modules/qc/main.j2' import bam_qc with context %}
@@ -9,6 +10,8 @@
     {% if sample.glprep in ['kinnex', 'longread'] %}
       {{- minimap2_rna(sample) }}
       {{- bam_qc(sample, aligner='minimap2') }}
+    {% else %}
+      {{- salmon_sr(sample) }}
     {% endif %}
     {% if sample.glprep in 'kinnex' %}
       {{- isoseq(sample) }}

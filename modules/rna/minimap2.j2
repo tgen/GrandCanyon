@@ -2,7 +2,7 @@
 {% from 'modules/rna/featureCounts.j2' import featureCounts with context %}
 {% from 'modules/rna/flair.j2' import flair with context %}
 {% from 'modules/rna/isoquant.j2' import isoquant with context %}
-{% from 'modules/rna/salmon.j2' import salmon with context %}
+{% from 'modules/rna/salmon_lr.j2' import salmon_lr with context %}
 {% from 'modules/rna/oarfish.j2' import oarfish with context %}
 
 {% macro minimap2_rna(sample) %}
@@ -289,11 +289,11 @@
 {% if tasks['RNA_transcriptome_quantify_expression_salmon']|default(true) %}
   {% set transcriptome %}{{ constants.grandcanyon[reference].transcriptome }}{% endset %}
   {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.transcriptome.bam{% endset %}
-  {{- salmon(sample, sample_bam, transcriptome, SIRV=false) }}
+  {{- salmon_lr(sample, sample_bam, transcriptome, SIRV=false) }}
   {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(true) %}
     {% set transcriptome %}{{ constants.grandcanyon[reference].transcriptomeSIRV }}{% endset %}
     {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.bam{% endset %}
-    {{- salmon(sample, sample_bam, transcriptome, SIRV=true) }}
+    {{- salmon_lr(sample, sample_bam, transcriptome, SIRV=true) }}
   {% endif %}
 {% endif %}
 

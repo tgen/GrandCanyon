@@ -1,4 +1,4 @@
-{% macro salmon(sample, sample_bam, transcriptome, SIRV=false) %}
+{% macro salmon_lr(sample, sample_bam, transcriptome, SIRV=false) %}
 
 {% if SIRV %}
   {% set temp_dir %}temp/{{ sample.gltype }}/quant/salmon_SIRV/{{ sample.name }}{% endset %}
