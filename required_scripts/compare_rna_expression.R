@@ -109,7 +109,7 @@ counts.spearman <- cor(counts$Assay2, counts$Assay1, method = "spearman")
 counts.r2 <- counts.pearson ^ 2
 
 g1 <- ggplot(data = counts, aes(x = Assay1, y = Assay2)) +
-  geom_bin2d() +
+  geom_bin2d(bins=120) +
   geom_smooth(
     method = "lm",
     se = FALSE,
