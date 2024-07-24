@@ -37,7 +37,7 @@
 
     mkdir -p {{ results_dir }}
 
-    Rscript {{ required_scripts.compareRNAExp_Rscript }} \
+    Rscript {{ required_scripts.compareRNAExp_Rscript.path }} \
       --quant-1 {{ quant1 }} \
       --assay-1 {{ pair.sample.assayCode }} \
       --quant-2 rna/quant/salmon/{{ pair.test.name }}/{{ pair.test.name }}.transcripts.sf \
