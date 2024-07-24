@@ -11,13 +11,14 @@
     {% if sample.glprep in ['kinnex', 'longread'] %}
       {{- minimap2_rna(sample) }}
       {{- bam_qc(sample, aligner='minimap2') }}
+      {{- ctat_lr(sample) }}
     {% else %}
       {{- salmon_sr(sample) }}
     {% endif %}
     {% if sample.glprep in 'kinnex' %}
       {{- isoseq(sample) }}
     {% endif %}
-    {{- ctat_lr(sample) }}
+
   {% endfor %}
 
   {{- compare_expression(samples) }}
