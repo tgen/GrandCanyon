@@ -38,12 +38,12 @@
     mkdir -p {{ results_dir }}
 
     Rscript {{ required_scripts.compareRNAExp_Rscript }} \
-      --quant-1 {{ quant1 }}
-      --assay-1 {{ pair.sample.assayCode }}
-      --quant-2 rna/quant/salmon/{{ pair.test.name }}/{{ pair.test.name }}.transcripts.sf
-      --assay-2 {{ pair.test.assayCode }}
-      --cell-line {{ pair.sample.name }}
-      --output-graph {{ results_dir }}/{{ pair.name }}_viz.png
+      --quant-1 {{ quant1 }} \
+      --assay-1 {{ pair.sample.assayCode }} \
+      --quant-2 rna/quant/salmon/{{ pair.test.name }}/{{ pair.test.name }}.transcripts.sf \
+      --assay-2 {{ pair.test.assayCode }} \
+      --cell-line {{ pair.sample.name }} \
+      --output-graph {{ results_dir }}/{{ pair.name }}_viz.png \
       --output-correlation {{ results_dir }}/{{ pair.name }}_cor.tsv
 
 
