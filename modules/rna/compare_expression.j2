@@ -1,0 +1,56 @@
+{% macro compare_expression(samples) %}
+
+{% set pairs = [] %}
+{% for sample in samples.values() if sample.gltype in ('rna') %}
+  {% for test in samples.values() if test.gltype in ('rna') %}
+    # This depends on LR assay always coming alphabetically before SR assay.
+    {% if sample.assayCode < test.assayCode %}
+      {% set pair_name = sample.name + '-' + test.name %}
+      {% do pairs.append({'name': pair_name, 'sample': sample, 'test': test}) %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
+
+{% for pair in pairs %}
+
+# Check if sample1 will have oarfish data
+{% if sample.glprep in ['kinnex', 'longread'] %}
+  {% set quant1 %}rna/quant/oarfish/{{ pair.sample.name }}/{{ pair.sample.name }}.quant{% endset %}
+  {% set results_dir %}rna/quant/aggregate{{ pair.sample.name }}{% endset %}
+{% else %}
+  {% set quant1 %}rna/quant/salmon/{{ pair.sample.name }}/{{ pair.sample.name }}.transcripts.sf{% endset %}
+  {% set results_dir %}rna/quant/aggregate/{{ pair.sample.name }}{% endset %}
+{% endif %}
+
+
+- name: compare_expression_{{ pair.name }}
+  input:
+    - {{ quant1 }}
+    - rna/quant/salmon/{{ pair.test.name }}/{{ pair.test.name }}.transcripts.sf
+  cpus: 10
+  mem: 32G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.R.container }}
+  cmd: |
+
+    mkdir -p {{ results_dir }}
+
+    Rscript {{ required_scripts.compareRNAExp_Rscript }} \
+      --quant-1 {{ quant1 }}
+      --assay-1 {{ pair.sample.assayCode }}
+      --quant-2 rna/quant/salmon/{{ pair.test.name }}/{{ pair.test.name }}.transcripts.sf
+      --assay-2 {{ pair.test.assayCode }}
+      --cell-line {{ pair.sample.name }}
+      --output-graph {{ results_dir }}/{{ pair.name }}_viz.png
+      --output-correlation {{ results_dir }}/{{ pair.name }}_cor.tsv
+
+
+{% endfor %}
+
+{% endmacro %}
+
+
+
+
