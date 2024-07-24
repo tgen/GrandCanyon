@@ -55,7 +55,7 @@ assay2 <- opt$assay_2
 cl <- opt$c
 
 output_graph <- opt$output_graph
-output_r2 <- opt$output_correlation
+output_correlation <- opt$output_correlation
 
 
 if (assay1 == "PKFLR") {
@@ -109,7 +109,7 @@ counts.spearman <- cor(counts$Assay2, counts$Assay1, method = "spearman")
 counts.r2 <- counts.pearson ^ 2
 
 g1 <- ggplot(data = counts, aes(x = Assay1, y = Assay2)) +
-  stat_bin_hex() +
+  geom_bin2d() +
   geom_smooth(
     method = "lm",
     se = FALSE,
@@ -141,5 +141,5 @@ g1 <- ggplot(data = counts, aes(x = Assay1, y = Assay2)) +
 ggsave(output_graph, g1, width = 10, height = 8)
 
 tsv_out <- tibble(Assay1 = assay1, Assay2 = assay2, CellLine = cl, R2 = counts.r2, Pearson = counts.pearson, Spearman = counts.spearman)
-write_tsv(tsv_out, output_r2)
+write_tsv(tsv_out, output_correlation)
 

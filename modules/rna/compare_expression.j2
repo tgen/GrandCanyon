@@ -17,7 +17,7 @@
 # Check if sample1 will have oarfish data
 {% if pair.sample.glprep in ['kinnex', 'longread'] %}
   {% set quant1 %}rna/quant/oarfish/{{ pair.sample.name }}/{{ pair.sample.name }}.quant{% endset %}
-  {% set results_dir %}rna/quant/aggregate{{ pair.sample.name }}{% endset %}
+  {% set results_dir %}rna/quant/aggregate/{{ pair.sample.name }}{% endset %}
 {% else %}
   {% set quant1 %}rna/quant/salmon/{{ pair.sample.name }}/{{ pair.sample.name }}.transcripts.sf{% endset %}
   {% set results_dir %}rna/quant/aggregate/{{ pair.sample.name }}{% endset %}
