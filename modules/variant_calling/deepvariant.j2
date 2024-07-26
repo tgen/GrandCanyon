@@ -83,15 +83,13 @@
 
 {% set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
 {% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.whatshap{% endset %}
+{% set whatshap_phased_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.whatshap.phased.vcf.gz{% endset %}
 {{- whatshap_phase(sample, pass_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant') }}
-{% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.margin{% endset %}
+{{- annotate_vcfs(sample, temp_dir, results_dir, margin_phased_vcf, taskPrefix, 'minimap2', 'deepvariant') }}
 
-{#
-  to haplotag ONT data use allParams.haplotag.ont-r94g507.json
-  to haplotag PacBio HiFi data use allParams.haplotag.pb-hifi.json
-  to phase a VCF generated using ONT data use allParams.phase_vcf.ont.json
-  to phase a VCF generated using PacBio-HiFi data use: allParams.phase_vcf.pb-hifi.json
-#}
+{% if tasks.deepvariant_margin_phase | default(false) %}
+
+{% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.margin{% endset %}
 
 - name: deepvariant_margin_{{ sample.name }}_minimap2
   input:
@@ -217,5 +215,7 @@
 
 {% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.whatshap{% endset %}
 {{- whatshap_haplotag(sample, margin_phased_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant') }}
+
+{% endif %}
 
 {% endmacro %}

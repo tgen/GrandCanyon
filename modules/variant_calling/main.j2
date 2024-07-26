@@ -13,7 +13,7 @@
 
 {%- macro constitutional_variant_calling(samples) %}
 
-{%- for sample in samples.values() if sample.gltype in ('genome') %}
+{%- for sample in samples.values() if sample.gltype in ('exome','genome') %}
 
   {% if sample.gltype in 'exome' %}
     {% set taskPrefix = 'Exome' %}
@@ -78,7 +78,7 @@
 {% macro somatic_variant_calling(samples) %}
 
 {% set pairs = [] %}
-{% for tumor in samples.values() if tumor.subGroup|lower == 'tumor' and tumor.gltype in ('genome') %}
+{% for tumor in samples.values() if tumor.subGroup|lower == 'tumor' and tumor.gltype in ('exome','genome') %}
   {% for normal in samples.values() if normal.subGroup|lower == 'constitutional' and normal.gltype == tumor.gltype and normal.assayCode == tumor.assayCode %}
   {% if long_read_only|default(true) and tumor.glprep in 'longread' %}
     {% set pair_name = normal.name + '-' + tumor.name %}
