@@ -23,6 +23,10 @@
     set -eu
     set -o pipefail
 
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
     /opt/bin/run_clair3.sh \
       --bam_fn={{ bam }} \
       --ref_fn={{ constants.grandcanyon[reference].reference_fasta }} \
@@ -37,6 +41,34 @@
       --platform="ilmn" \
       --model_path="/opt/models/ilmn" \
       {% endif %}
-      --output={{ results_dir }}
+      --output={{ temp_dir }}
+
+    mv {{ temp_dir }}/merge_output.vcf.gz {{ all_vcf }}
+    mv {{ temp_dir }}/merge_output.vcf.gz.tbi {{ all_vcf }}.tbi
+
+
+- name: clair3_filter_variants_{{ sample.name }}_minimap2
+  input:
+    - {{ all_vcf }}
+  output:
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# Then filter out the PASS variants to a separate file #}
+    bcftools filter \
+      --output-type z \
+      --include 'FILTER == "PASS"' \
+      "{{ all_vcf }}" \
+      > "{{ pass_vcf }}"
+
+    bcftools index --tbi --force "{{ pass_vcf }}"
 
 {% endmacro %}
