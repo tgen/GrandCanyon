@@ -47,7 +47,7 @@ options:
 {% macro severus(sample_or_pair) %}
 
 {% if sample_or_pair.normal is defined %}
-{%- set phased_vcf %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_minimap2/{{ sample_or_pair.normal.name }}.minimap2.deepvariant.margin.phased.vcf.gz{% endset %}
+{%- set phased_vcf %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_minimap2/{{ sample_or_pair.normal.name }}.minimap2.deepvariant.whatshap.phased.vcf.gz{% endset %}
 {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/minimap2/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.minimap2.bam{% endset %}
 {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/minimap2/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.minimap2.bam{% endset %}
 {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_minimap2{% endset %}
