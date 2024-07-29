@@ -42,7 +42,6 @@
 
 {% set samples = {} %}
 
-# This comes from project yaml which comes from the json after jetstream init
 {% for file in dataFiles %}
     {% set bn = file.fastqPath | basename %}
     {% set gltype = file.glType | lower | replace("genomephased", "genome") %}
