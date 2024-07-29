@@ -58,6 +58,7 @@
     {% do file.update({'gltype': gltype}) %}
     {% do file.update({'glprep': glprep}) %}
     {% do file.update({'path': file.fastqPath}) %}
+    {% do file.update({'fraction': file.fraction}) %}
 
     {% if 'subGroup' not in file %}
         {% do file.update({'subGroup': 'constitutional'}) %}
