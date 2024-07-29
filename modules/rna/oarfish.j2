@@ -20,7 +20,8 @@
     oarfish \
       --threads 10 \
       --alignments {{ sample_bam }} \
-      --output {{ results_dir }}/{{ sample.name }}
+      --output {{ results_dir }}/{{ sample.name }} \
+      --model-coverage
 
 {% endmacro %}
 
