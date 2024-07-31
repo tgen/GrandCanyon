@@ -28,14 +28,18 @@
 
 {% if pair.sample.glprep in ['kinnex', 'longread'] %}
   {% set quant1 %}rna/quant/oarfish/{{ pair.sample.name }}/{{ pair.sample.name }}.quant{% endset %}
+  {% set quant1_source %}oarfish{% endset %}
 {% else %}
   {% set quant1 %}rna/quant/salmon/{{ pair.sample.name }}/{{ pair.sample.name }}.transcripts.sf{% endset %}
+  {% set quant1_source %}salmon{% endset %}
 {% endif %}
 
 {% if pair.test.glprep in ['kinnex', 'longread'] %}
   {% set quant2 %}rna/quant/oarfish/{{ pair.test.name }}/{{ pair.test.name }}.quant{% endset %}
+  {% set quant2_source %}oarfish{% endset %}
 {% else %}
   {% set quant2 %}rna/quant/salmon/{{ pair.test.name }}/{{ pair.test.name }}.transcripts.sf{% endset %}
+  {% set quant2_source %}salmon{% endset %}
 {% endif %}
 
 {% set results_dir %}rna/quant/aggregate/{{ pair.sample.name }}{% endset %}
@@ -55,10 +59,12 @@
 
     Rscript {{ required_scripts.compareRNAExp_Rscript.path }} \
       --quant-1 {{ quant1 }} \
+      --quant-1-source {{ quant1_source }} \
       --assay-1 {{ pair.sample.assayCode }} \
       --quant-2 {{ quant2 }} \
+      --quant-2-source {{ quant2_source }} \
       --assay-2 {{ pair.test.assayCode }} \
-      --cell-line {{ pair.sample.name }} \
+      --sample-name {{ pair.sample.name }} \
       --output-graph {{ results_dir }}/{{ pair.name }}_viz.png \
       --output-correlation {{ results_dir }}/{{ pair.name }}_cor.tsv
 

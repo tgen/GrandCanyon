@@ -21,7 +21,8 @@
 {% for rgid, rg in sample.read_groups.items() %}
   {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
   {% if longfastq is defined %}
-    {% set longfastq_path %}temp/fastqs/{{ longfastq.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}    {% do longfastq.update({"path": longfastq_path}) %}
+    {% set longfastq_path %}temp/fastqs/{{ longfastq.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do longfastq.update({"path": longfastq_path}) %}
     {% do longfqlist.append(longfastq) %}
   {% endif %}
 {% endfor %}
