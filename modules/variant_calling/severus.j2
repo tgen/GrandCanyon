@@ -51,10 +51,12 @@ options:
 {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/minimap2/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.minimap2.bam{% endset %}
 {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/minimap2/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.minimap2.bam{% endset %}
 {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_minimap2{% endset %}
+{%- set temp_vcf %}{{ temp_dir }}/somatic_SVs/severus_somatic.vcf{% endset %}
 {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_minimap2{% endset %}
 {% else %}
 {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/minimap2/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.minimap2.bam{% endset %}
 {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_variant_calls/severus/{{ sample_or_pair.name }}_minimap2{% endset %}
+{%- set temp_vcf %}{{ temp_dir }}/all_SVs/severus_all.vcf{% endset %}
 {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/severus/{{ sample_or_pair.name }}_minimap2{% endset %}
 {% endif %}
 {%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.minimap2.severus.all.vcf.gz{% endset %}
@@ -76,7 +78,11 @@ options:
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }}
   output:
-    - {{ all_vcf }}
+    - {{ temp_vcf }}
+    - {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
+    - {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.csv
+    - {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters_list.tsv
+    - {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_graph.gv
   cpus: 16
   mem: 64G
   walltime: "24:00:00"
@@ -86,19 +92,65 @@ options:
     set -eu
     set -o pipefail
 
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
     {% if sample_or_pair.normal is defined %}
     severus \
       --threads 16 \
       --target-bam {{ tumor_bam }} \
       --control-bam {{ normal_bam }} \
-      --out-dir {{ results_dir }} \
+      --out-dir {{ temp_dir }} \
       --phasing-vcf {{ phased_vcf }} \
       --vntr-bed {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }}
+
+    mv {{ temp_dir }}/breakpoints_double.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
+    mv {{ temp_dir }}/somatic_SVs/breakpoint_clusters.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.csv
+    mv {{ temp_dir }}/somatic_SVs/breakpoint_clusters_list.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters_list.tsv
+    mv {{ temp_dir }}/somatic_SVs/breakpoint_graph.gv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_graph.gv
     {% else %}
     severus \
       --threads 16 \
       --target-bam {{ bam }} \
-      --out-dir {{ results_dir }}
+      --out-dir {{ temp_dir }}
+
+    mv {{ temp_dir }}/breakpoints_double.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
+    mv {{ temp_dir }}/all_SVs/breakpoint_clusters.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.csv
+    mv {{ temp_dir }}/all_SVs/breakpoint_clusters_list.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters_list.tsv
+    mv {{ temp_dir }}/all_SVs/breakpoint_graph.gv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_graph.gv
     {% endif %}
+
+
+- name: severus_filter_variants_{{ sample_or_pair.name }}_minimap2
+  input:
+    - {{ temp_vcf }}
+  output:
+    - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+
+    mkdir -p {{ results_dir }}
+
+    bcftools view \
+      --output-type z \
+      --output {{ all_vcf }} \
+      --write-index \
+      {{ temp_vcf }}
+
+    bcftools filter \
+      --include 'FILTER == "PASS"' \
+      --output-type z \
+      --output {{ pass_vcf }} \
+      --write-index \
+      {{ all_vcf }}
 
 {% endmacro %}
