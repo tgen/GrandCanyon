@@ -85,7 +85,7 @@
 {% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.whatshap{% endset %}
 {% set whatshap_phased_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.whatshap.phased.vcf.gz{% endset %}
 {{- whatshap_phase(sample, pass_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant') }}
-{{- annotate_vcfs(sample, temp_dir, results_dir, margin_phased_vcf, taskPrefix, 'minimap2', 'deepvariant') }}
+{{- annotate_vcfs(sample, temp_dir, results_dir, whatshap_phased_vcf, taskPrefix, 'minimap2', 'deepvariant') }}
 
 {% if tasks.deepvariant_margin_phase | default(false) %}
 
