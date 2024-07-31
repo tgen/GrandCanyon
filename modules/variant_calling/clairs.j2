@@ -26,6 +26,10 @@
     set -eu
     set -o pipefail
 
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
     /opt/bin/run_clairs \
       --tumor_bam_fn {{ tumor_bam }} \
       --normal_bam_fn {{ normal_bam }} \
@@ -38,6 +42,32 @@
       {% else %}
       --platform "ilmn" \
       {% endif %}
-      --output_dir {{ results_dir }}
+      --output_dir {{ temp_dir }}
+
+    mv {{ temp_dir }}/output.vcf.gz {{ all_vcf }}
+    mv {{ temp_dir }}/output.vcf.gz.tbi {{ all_vcf }}.tbi
+
+
+- name: clairs_filter_variants_{{ pair.name }}_minimap2
+  input:
+    - {{ all_vcf }}
+  output:
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    bcftools filter \
+      --include 'FILTER == "PASS"' \
+      --output-type z \
+      --output {{ pass_vcf }} \
+      --write-index \
+      {{ all_vcf }}
 
 {% endmacro %}

@@ -73,14 +73,12 @@
 
     bcftools index --tbi --force "{{ all_vcf }}"
 
-    {# Then filter out the PASS variants to a separate file #}
     bcftools filter \
-      --output-type z \
       --include 'FILTER == "PASS"' \
-      "{{ all_vcf }}" \
-      > "{{ pass_vcf }}"
-
-    bcftools index --tbi --force "{{ pass_vcf }}"
+      --output-type z \
+      --output {{ pass_vcf }} \
+      --write-index \
+      {{ all_vcf }}
 
 {% endif %}
 
