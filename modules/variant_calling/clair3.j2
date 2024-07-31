@@ -12,6 +12,7 @@
     - {{ bam }}
     - {{ bam }}.bai
     - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon.ont_resources }}
   output:
     - {{ all_vcf }}
   cpus: 8
@@ -33,7 +34,7 @@
       --threads=8 \
       {% if sample.rgpl == "ONT" %}
       --platform="ont" \
-      --model_path="/opt/models/r1041_e82_400bps_sup_v420" \
+      --model_path="{{ constants.grandcanyon.ont_resources }}/clair3_models/r1041_e82_400bps_sup_v500" \
       {% elif sample.rgpl == "PACBIO" %}
       --platform="hifi" \
       --model_path="/opt/models/hifi_revio" \

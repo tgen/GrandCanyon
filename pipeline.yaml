@@ -177,6 +177,7 @@ constants:
           denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38_blacklist_spectre.bed
         sqanti3:
           tappas_gff: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sqanti3/human_tappas_gencode_annotation_file.gff3
+    ont_resources: /home/tgenref/instrument_resources/ont
     required_scripts:
       plotSamStats_Rscript: summarize_samstats.R
       pafr_plot_Rscript: assembly_pafr_plot.R
