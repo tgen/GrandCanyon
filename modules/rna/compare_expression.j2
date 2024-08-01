@@ -1,0 +1,77 @@
+{% macro compare_expression(samples) %}
+
+
+
+{% set pairs = [] %}
+{% for sample in samples.values() if sample.gltype in ('rna') %}
+  {% for test in samples.values() if test.gltype in ('rna') %}
+
+    {# Two different assays OR same assay, different replicates #}
+    {% if (sample.assayCode != test.assayCode and sample.fraction == "Whole" and test.fraction == "Whole") or (sample.assayCode == test.assayCode and sample.fraction != "Whole" and test.fraction != "Whole") %}
+      
+      {% if sample.name < test.name %}
+        {% set pair_name = sample.name + '-' + test.name %}
+      {% elif sample.name > test.name %}
+        {% set pair_name = test.name + '-' + sample.name %}
+      {% endif %}
+
+      {% if pair_name is defined and pair_name not in pairs|map(attribute='name')|list %}
+        {% do pairs.append({'name': pair_name, 'sample': sample, 'test': test}) %}
+      {% endif %}
+      
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
+
+{% for pair in pairs %}
+
+{% if pair.sample.glprep in ['kinnex', 'longread'] %}
+  {% set quant1 %}rna/quant/oarfish/{{ pair.sample.name }}/{{ pair.sample.name }}.quant{% endset %}
+  {% set quant1_source %}oarfish{% endset %}
+{% else %}
+  {% set quant1 %}rna/quant/salmon/{{ pair.sample.name }}/{{ pair.sample.name }}.transcripts.sf{% endset %}
+  {% set quant1_source %}salmon{% endset %}
+{% endif %}
+
+{% if pair.test.glprep in ['kinnex', 'longread'] %}
+  {% set quant2 %}rna/quant/oarfish/{{ pair.test.name }}/{{ pair.test.name }}.quant{% endset %}
+  {% set quant2_source %}oarfish{% endset %}
+{% else %}
+  {% set quant2 %}rna/quant/salmon/{{ pair.test.name }}/{{ pair.test.name }}.transcripts.sf{% endset %}
+  {% set quant2_source %}salmon{% endset %}
+{% endif %}
+
+{% set results_dir %}rna/quant/aggregate/{{ pair.sample.name }}{% endset %}
+
+- name: compare_expression_{{ pair.name }}
+  input:
+    - {{ quant1 }}
+    - {{ quant2 }}
+  cpus: 10
+  mem: 32G
+  walltime: "1:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.R.container }}
+  cmd: |
+
+    mkdir -p {{ results_dir }}
+
+    Rscript {{ required_scripts.compareRNAExp_Rscript.path }} \
+      --quant-1 {{ quant1 }} \
+      --quant-1-source {{ quant1_source }} \
+      --assay-1 {{ pair.sample.assayCode }} \
+      --quant-2 {{ quant2 }} \
+      --quant-2-source {{ quant2_source }} \
+      --assay-2 {{ pair.test.assayCode }} \
+      --sample-name {{ pair.sample.name }} \
+      --output-graph {{ results_dir }}/{{ pair.name }}_viz.png \
+      --output-correlation {{ results_dir }}/{{ pair.name }}_cor.tsv
+
+{% endfor %}
+
+{% endmacro %}
+
+
+
+

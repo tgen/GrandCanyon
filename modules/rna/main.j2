@@ -3,6 +3,7 @@
 {% from 'modules/rna/ctat_lr.j2' import ctat_lr with context %}
 {% from 'modules/rna/isoseq.j2' import isoseq with context %}
 {% from 'modules/qc/main.j2' import bam_qc with context %}
+{% from 'modules/rna/compare_expression.j2' import compare_expression with context %}
 
 {% macro rna_alignment(samples) %}
 
@@ -10,14 +11,17 @@
     {% if sample.glprep in ['kinnex', 'longread'] %}
       {{- minimap2_rna(sample) }}
       {{- bam_qc(sample, aligner='minimap2') }}
+      {{- ctat_lr(sample) }}
     {% else %}
       {{- salmon_sr(sample) }}
     {% endif %}
     {% if sample.glprep in 'kinnex' %}
       {{- isoseq(sample) }}
     {% endif %}
-    {{- ctat_lr(sample) }}
+
   {% endfor %}
+
+  {{- compare_expression(samples) }}
 
 {% endmacro %}
 
