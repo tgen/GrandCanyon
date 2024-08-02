@@ -57,6 +57,7 @@
     hifiasm \
       -t 32 \
       -o {{ temp_dir }}/{{ pair.project }}.asm \
+      --telo-m CCCTAA \
       {% if ontfqlist | length > 0 %}
       --ul "{{ ontfqlist | join(',') }}" \
       {% endif %}
