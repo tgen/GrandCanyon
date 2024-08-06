@@ -106,7 +106,7 @@ options:
       --vntr-bed {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }}
 
     mv {{ temp_dir }}/breakpoints_double.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
-    mv {{ temp_dir }}/somatic_SVs/breakpoint_clusters.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.csv
+    mv {{ temp_dir }}/somatic_SVs/breakpoint_clusters.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.tsv
     mv {{ temp_dir }}/somatic_SVs/breakpoint_clusters_list.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters_list.tsv
     mv {{ temp_dir }}/somatic_SVs/breakpoint_graph.gv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_graph.gv
     {% else %}
@@ -116,7 +116,7 @@ options:
       --out-dir {{ temp_dir }}
 
     mv {{ temp_dir }}/breakpoints_double.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
-    mv {{ temp_dir }}/all_SVs/breakpoint_clusters.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.csv
+    mv {{ temp_dir }}/all_SVs/breakpoint_clusters.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.tsv
     mv {{ temp_dir }}/all_SVs/breakpoint_clusters_list.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters_list.tsv
     mv {{ temp_dir }}/all_SVs/breakpoint_graph.gv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_graph.gv
     {% endif %}
