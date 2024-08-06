@@ -42,7 +42,7 @@
     {% endfor %}
   output: {{ results_dir }}/assembly.fasta
   cpus: 32
-  mem: 240G
+  mem: 600G
   walltime: "72:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.verkko.container }}
@@ -56,7 +56,7 @@
 
     verkko \
       --local-cpus 32 \
-      --local-memory 240 \
+      --local-memory 584 \
       {% if hififqlist | length > 0 %}
       --hifi "{{ hififqlist | join('" "') }}" \
       {% endif %}
@@ -74,10 +74,12 @@
 {{- assembly_stats(pair, input_assembly, 'verkko') }}
 {{- quast(pair, input_assembly, 'verkko') }}
 
+{% if tasks.plot_assembly | default(false) %}
 {{- minimap2_asm(pair, input_assembly, 'verkko') }}
 {{- mashmap(pair, input_assembly, 'verkko') }}
 
 {{- moddotplot(pair, input_assembly, 'verkko') }}
+{% endif %}
 
 {% else %}
   {% set log_msg %}verkko was enabled, but no pacbio or ont duplex data was found. Verkko requires pacbio or ont duplex input data, so this task was skipped{% endset %}

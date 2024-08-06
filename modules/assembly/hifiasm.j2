@@ -73,10 +73,12 @@
 {{- assembly_stats(pair, input_assembly, 'hifiasm') }}
 {{- quast(pair, input_assembly, 'hifiasm') }}
 
+{% if tasks.plot_assembly | default(false) %}
 {{- minimap2_asm(pair, input_assembly, 'hifiasm') }}
 {{- mashmap(pair, input_assembly, 'hifiasm') }}
 
 {{- moddotplot(pair, input_assembly, 'hifiasm') }}
+{% endif %}
 
 {% else %}
   {% set log_msg %}hifiasm was enabled, but no pacbio data was found. Hifiasm requires pacbio input data, so this task was skipped{% endset %}

@@ -76,10 +76,12 @@
 {{- assembly_stats(pair, input_assembly, 'canu') }}
 {{- quast(pair, input_assembly, 'canu') }}
 
+{% if tasks.plot_assembly | default(false) %}
 {{- minimap2_asm(pair, input_assembly, 'canu') }}
 {{- mashmap(pair, input_assembly, 'canu') }}
 
 {{- moddotplot(pair, input_assembly, 'canu') }}
+{% endif %}
 
 {% endmacro %}
 
