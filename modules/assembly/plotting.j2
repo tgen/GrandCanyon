@@ -49,6 +49,10 @@
       -p {{ results_dir }}/{{ output_plot }} \
       {{ input_paf }}
 
+{% endmacro %}
+
+{% macro pafr(pair, input_paf, aligner, assembler) %}
+
 - name: pafr_{{ aligner }}_{{ pair.project }}_{{ assembler }}
   input:
     - {{ input_paf }}
@@ -63,8 +67,7 @@
     set -o pipefail
 
     Rscript --vanilla {{ required_scripts.pafr_plot_Rscript.path }} \
-      -i {{ input_paf }} \
-      -t 'chr3'
+      -i {{ input_paf }}
 
 {% endmacro %}
 

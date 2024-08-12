@@ -60,6 +60,7 @@
       --telo-m CCCTAA \
       {% if ontfqlist | length > 0 %}
       --ul "{{ ontfqlist | join(',') }}" \
+      --ul-cut 10000 \
       {% endif %}
       {% if hififqlist | length > 0 %}
       {{ hififqlist | join(' ') }}
@@ -73,10 +74,13 @@
 {{- assembly_stats(pair, input_assembly, 'hifiasm') }}
 {{- quast(pair, input_assembly, 'hifiasm') }}
 
-{% if tasks.plot_assembly | default(false) %}
+{% if tasks.assembly_align_minimap2 | default(true) %}
 {{- minimap2_asm(pair, input_assembly, 'hifiasm') }}
+{% endif %}
+{% if tasks.assembly_align_mashmap | default(false) %}
 {{- mashmap(pair, input_assembly, 'hifiasm') }}
-
+{% endif %}
+{% if tasks.assembly_moddotplot | default(false) %}
 {{- moddotplot(pair, input_assembly, 'hifiasm') }}
 {% endif %}
 

@@ -1,4 +1,5 @@
 {% from 'modules/assembly/plotting.j2' import pafplot with context %}
+{% from 'modules/assembly/plotting.j2' import pafr with context %}
 
 {% macro minimap2_asm(pair, input_assembly, assembler) %}
 
@@ -26,7 +27,12 @@
       {{ input_assembly }} > {{ paf_output }}
 
 
+{% if tasks.plot_assembly_pafplot | default(false) %}
 {{- pafplot(pair, paf_output, 'minimap2', assembler) }}
+{% endif %}
+{% if tasks.plot_assembly_pafr | default(true) %}
+{{- pafr(pair, paf_output, 'minimap2', assembler) }}
+{% endif %}
 
 {% endmacro %}
 

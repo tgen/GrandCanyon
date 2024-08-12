@@ -15,7 +15,7 @@ option_list = list(
               metavar="filename"),
   make_option(c("-t", "--target"),
               type="character",
-              default='chr3',
+              default=NULL,
               help="target contig")
 );
 
@@ -58,12 +58,14 @@ process_paf <- function(input, target) {
   plot_coverage(ali)
   ggsave(paste(input, "pafr_coverage_target.png", sep = "_"))
 
-  target_only <- ali[ali$tname == target,]
-  dotplot(target_only, label_seqs=FALSE, dashes=FALSE, order_by="qstart") + theme_bw()
-  ggsave(paste(input, target, "pafr_dotplot.png", sep = "_"))
+  if (target != NULL) {
+    target_only <- ali[ali$tname == target,]
+    dotplot(target_only, label_seqs=FALSE, dashes=FALSE, order_by="qstart") + theme_bw()
+    ggsave(paste(input, target, "pafr_dotplot.png", sep = "_"))
 
-  plot_coverage(target_only)
-  ggsave(paste(input, target, "pafr_coverage_target.png", sep = "_"))
+    plot_coverage(target_only)
+    ggsave(paste(input, target, "pafr_coverage_target.png", sep = "_"))
+  }
 }
 
 process_paf(opt$input, opt$target)
