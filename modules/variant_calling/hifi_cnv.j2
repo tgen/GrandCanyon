@@ -27,13 +27,13 @@
 ##@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #}
 
-{% macro hifi_cnv(sample) %}
+{% macro hifi_cnv(sample, aligner) %}
 
-{%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_copy_number/hifi_cnv/{{ sample.name }}_minimap2{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_copy_number/hifi_cnv/{{ sample.name }}_minimap2{% endset %}
+{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_copy_number/hifi_cnv/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_copy_number/hifi_cnv/{{ sample.name }}_{{ aligner }}{% endset %}
 
-- name: hifi_cnv_{{ sample.name }}_minimap2
+- name: hifi_cnv_{{ sample.name }}_{{ aligner }}
   input:
     - {{ bam }}
     - {{ bam }}.bai

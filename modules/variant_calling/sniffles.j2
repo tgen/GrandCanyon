@@ -1,13 +1,13 @@
-{% macro sniffles(sample) %}
+{% macro sniffles(sample, aligner) %}
 
-{%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_minimap2{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_minimap2{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.sniffles.all.vcf.gz{% endset %}
-{%- set all_snf %}{{ results_dir }}/{{ sample.name }}.minimap2.sniffles.all.snf{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.sniffles.pass.vcf.gz{% endset %}
+{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.sniffles.all.vcf.gz{% endset %}
+{%- set all_snf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.sniffles.all.snf{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.sniffles.pass.vcf.gz{% endset %}
 
-- name: sniffles_{{ sample.name }}_minimap2
+- name: sniffles_{{ sample.name }}_{{ aligner }}
   reset: predecessors
   input:
     - {{ bam }}
@@ -39,7 +39,7 @@
       --allow-overwrite
 
 
-- name: sniffles_filter_variants_{{ sample.name }}_minimap2
+- name: sniffles_filter_variants_{{ sample.name }}_{{ aligner }}
   input:
     - {{ all_vcf }}
     - {{ all_vcf }}.tbi

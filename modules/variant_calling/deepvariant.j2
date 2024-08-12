@@ -2,16 +2,16 @@
 {% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
 {% from 'modules/variant_calling/whatshap.j2' import whatshap_phase with context %}
 
-{%- macro deepvariant(sample, taskPrefix='Genome') %}
+{%- macro deepvariant(sample, aligner) %}
 
-{%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/deepvariant/{{ sample.name }}_minimap2{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/deepvariant/{{ sample.name }}_minimap2{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.all.vcf.gz{% endset %}
-{%- set all_gvcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.all.g.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.pass.vcf.gz{% endset %}
+{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/deepvariant/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/deepvariant/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.all.vcf.gz{% endset %}
+{%- set all_gvcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.pass.vcf.gz{% endset %}
 
-- name: deepvariant_{{ sample.name }}_minimap2
+- name: deepvariant_{{ sample.name }}_{{ aligner }}
   tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
   input:
     - {{ bam }}
@@ -52,7 +52,7 @@
       --logging_dir {{ temp_dir }}/logs \
       --intermediate_results_dir {{ temp_dir }}/intermediate_results_dir
 
-- name: deepvariant_filter_variants_{{ sample.name }}_minimap2
+- name: deepvariant_filter_variants_{{ sample.name }}_{{ aligner }}
   tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
   input:
     - {{ all_vcf }}
@@ -79,17 +79,17 @@
       {{ all_vcf }}
 
 
-{% set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
-{% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.whatshap{% endset %}
-{% set whatshap_phased_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.whatshap.phased.vcf.gz{% endset %}
-{{- whatshap_phase(sample, pass_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant') }}
-{{- annotate_vcfs(sample, temp_dir, results_dir, whatshap_phased_vcf, taskPrefix, 'minimap2', 'deepvariant') }}
+{% set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{% set output_prefix %}{{ sample.name }}.{{ aligner }}.deepvariant.whatshap{% endset %}
+{% set whatshap_phased_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.whatshap.phased.vcf.gz{% endset %}
+{{- whatshap_phase(sample, pass_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant', aligner) }}
+{{- annotate_vcfs(sample, temp_dir, results_dir, whatshap_phased_vcf, 'minimap2', 'deepvariant') }}
 
 {% if tasks.deepvariant_margin_phase | default(false) %}
 
-{% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.margin{% endset %}
+{% set output_prefix %}{{ sample.name }}.{{ aligner }}.deepvariant.margin{% endset %}
 
-- name: deepvariant_margin_{{ sample.name }}_minimap2
+- name: deepvariant_margin_{{ sample.name }}_{{ aligner }}
   input:
     - {{ pass_vcf }}
     - {{ bam }}
@@ -135,7 +135,7 @@
 
 
 {% if tasks.margin_phase_keep_phased_bam | default(true) %}
-- name: deepvariant_margin_samtools_compress_{{ sample.name }}_minimap2
+- name: deepvariant_margin_samtools_compress_{{ sample.name }}_{{ aligner }}
   input:
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam
@@ -162,7 +162,7 @@
 
 {% endif %}
 
-- name: deepvariant_margin_bcftools_compress_{{ sample.name }}_minimap2
+- name: deepvariant_margin_bcftools_compress_{{ sample.name }}_{{ aligner }}
   input:
     - {{ results_dir }}/{{ output_prefix }}.phased.vcf
   output:
@@ -188,10 +188,10 @@
 
     rm {{ results_dir }}/{{ output_prefix }}.phased.vcf
 
-{% set margin_phased_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.deepvariant.margin.phased.vcf.gz{% endset %}
-{{- annotate_vcfs(sample, temp_dir, results_dir, margin_phased_vcf, taskPrefix, 'minimap2', 'deepvariant') }}
+{% set margin_phased_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.margin.phased.vcf.gz{% endset %}
+{{- annotate_vcfs(sample, temp_dir, results_dir, margin_phased_vcf, 'minimap2', 'deepvariant') }}
 
-- name: whatshap_stats_deepvariant_margin_{{ sample.name }}_minimap2
+- name: whatshap_stats_deepvariant_margin_{{ sample.name }}_{{ aligner }}
   input:
     - {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
   output:
@@ -211,8 +211,8 @@
       --gtf {{ results_dir }}/{{ output_prefix }}.phased.gtf \
       {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
 
-{% set output_prefix %}{{ sample.name }}.minimap2.deepvariant.whatshap{% endset %}
-{{- whatshap_haplotag(sample, margin_phased_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant') }}
+{% set output_prefix %}{{ sample.name }}.{{ aligner }}.deepvariant.whatshap{% endset %}
+{{- whatshap_haplotag(sample, margin_phased_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant', aligner) }}
 
 {% endif %}
 

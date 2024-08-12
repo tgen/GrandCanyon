@@ -105,14 +105,25 @@
 {% endfor %}
 
 {% for sample in samples.values() %}
-  {% for rgid, rg in sample.read_groups.items() %}
-    {% for file in rg.data_files|selectattr('fastqCode', 'eq', 'simplex') %}
-      {% set duplex_matches = rg.data_files|selectattr('fastqCode', 'eq', 'duplex')|selectattr('sampleName', 'eq', file.sampleName)|selectattr('rgid', 'eq', file.rgid)|list %}
-      {% if duplex_matches | length > 0 %}
-        {% do rg.data_files.pop(loop.index) %}
-      {% endif %}
+    {% do sample.update({'aligners': []}) %}
+
+    {% if sample.gltype in ['genome', 'exome'] and sample.glprep not in ['longread'] %}
+        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_bwa"]|default(false) %}
+            {% do sample.aligners.append('bwa') %}
+        {% endif %}
+        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minimap2"]|default(false) %}
+            {% do sample.aligners.append('minimap2') %}
+        {% endif %}
+    {% endif %}
+
+    {% for rgid, rg in sample.read_groups.items() %}
+        {% for file in rg.data_files|selectattr('fastqCode', 'eq', 'simplex') %}
+          {% set duplex_matches = rg.data_files|selectattr('fastqCode', 'eq', 'duplex')|selectattr('sampleName', 'eq', file.sampleName)|selectattr('rgid', 'eq', file.rgid)|list %}
+          {% if duplex_matches | length > 0 %}
+              {% do rg.data_files.pop(loop.index) %}
+          {% endif %}
+        {% endfor %}
     {% endfor %}
-  {% endfor %}
 {% endfor %}
 
 {% for sample in samples.values() if sample.gltype == 'exome' %}

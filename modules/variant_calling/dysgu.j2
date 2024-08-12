@@ -1,16 +1,16 @@
-{% macro dysgu(sample) %}
+{% macro dysgu(sample, aligner) %}
 
-{%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/dysgu/{{ sample.name }}_minimap2{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/dysgu/{{ sample.name }}_minimap2{% endset %}
-{%- set discordant_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.discordant.bam{% endset %}
-{%- set discordant_cram %}{{ results_dir }}/{{ sample.name }}.minimap2.discordant.cram{% endset %}
-{%- set temp_all_vcf %}{{ temp_dir }}/{{ sample.name }}.minimap2.dysgu.all.vcf{% endset %}
-{%- set temp_pass_vcf %}{{ temp_dir }}/{{ sample.name }}.minimap2.dysgu.pass.vcf{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.dysgu.all.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.dysgu.pass.vcf.gz{% endset %}
+{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/dysgu/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/dysgu/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set discordant_bam %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.discordant.bam{% endset %}
+{%- set discordant_cram %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.discordant.cram{% endset %}
+{%- set temp_all_vcf %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.dysgu.all.vcf{% endset %}
+{%- set temp_pass_vcf %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.dysgu.pass.vcf{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.dysgu.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.dysgu.pass.vcf.gz{% endset %}
 
-- name: dysgu_fetch_{{ sample.name }}_minimap2
+- name: dysgu_fetch_{{ sample.name }}_{{ aligner }}
   input:
     - {{ bam }}
     - {{ bam }}.bai
@@ -82,7 +82,7 @@
 #  --help                     Show this message and exit.
 #}
 
-- name: dysgu_call_{{ sample.name }}_minimap2
+- name: dysgu_call_{{ sample.name }}_{{ aligner }}
   input:
     - {{ bam }}
     - {{ bam }}.bai
@@ -220,7 +220,7 @@
 #  --help                          Show this message and exit.
 #}
 
-- name: dysgu_filter_{{ sample.name }}_minimap2
+- name: dysgu_filter_{{ sample.name }}_{{ aligner }}
   input:
     - {{ temp_all_vcf }}
   output:
@@ -274,7 +274,7 @@
 #  --help                        Show this message and exit.
 #}
 
-- name: dysgu_samtools_compress_{{ sample.name }}_minimap2
+- name: dysgu_samtools_compress_{{ sample.name }}_{{ aligner }}
   input:
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ discordant_bam }}
@@ -299,7 +299,7 @@
       --write-index \
       {{ discordant_bam }}
 
-- name: dysgu_bcftools_compress_{{ sample.name }}_minimap2
+- name: dysgu_bcftools_compress_{{ sample.name }}_{{ aligner }}
   input:
     - {{ temp_all_vcf }}
     - {{ temp_pass_vcf }}

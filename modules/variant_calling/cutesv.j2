@@ -1,13 +1,13 @@
-{% macro cutesv(sample) %}
+{% macro cutesv(sample, aligner) %}
 
-{%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/cutesv/{{ sample.name }}_minimap2{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/cutesv/{{ sample.name }}_minimap2{% endset %}
-{%- set temp_vcf %}{{ temp_dir }}/{{ sample.name }}.minimap2.cutesv.all.vcf{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.cutesv.all.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.cutesv.pass.vcf.gz{% endset %}
+{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/cutesv/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/cutesv/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set temp_vcf %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.cutesv.all.vcf{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cutesv.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cutesv.pass.vcf.gz{% endset %}
 
-- name: cutesv_{{ sample.name }}_minimap2
+- name: cutesv_{{ sample.name }}_{{ aligner }}
   reset: predecessors
   input:
     - {{ bam }}
@@ -53,7 +53,7 @@
       --threads 8
 
 
-- name: cutesv_filter_variants_{{ sample.name }}_minimap2
+- name: cutesv_filter_variants_{{ sample.name }}_{{ aligner }}
   input:
     - {{ temp_vcf }}
   output:

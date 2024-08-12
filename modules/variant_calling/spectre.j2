@@ -1,16 +1,16 @@
-{% macro spectre(sample) %}
+{% macro spectre(sample, aligner) %}
 
-{%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_copy_number/spectre/{{ sample.name }}_minimap2{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_copy_number/spectre/{{ sample.name }}_minimap2{% endset %}
+{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_copy_number/spectre/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_copy_number/spectre/{{ sample.name }}_{{ aligner }}{% endset %}
 
 {% set taskPrefix %}{{ sample.gltype | capitalize }}{% endset %}
 
 {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
-{%- set sniffles_snf %}{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_minimap2/{{ sample.name }}.minimap2.sniffles.all.snf{% endset %}
+{%- set sniffles_snf %}{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_{{ aligner }}/{{ sample.name }}.{{ aligner }}.sniffles.all.snf{% endset %}
 {% endif %}
 
-- name: spectre_mosdepth_{{ sample.name }}_minimap2
+- name: spectre_mosdepth_{{ sample.name }}_{{ aligner }}
   input:
     - {{ bam }}
     - {{ bam }}.bai
@@ -39,7 +39,7 @@
       {{ results_dir }}/{{ sample.name }} \
       {{ bam }}
 
-- name: spectre_{{ sample.name }}_minimap2
+- name: spectre_{{ sample.name }}_{{ aligner }}
   input:
     {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
     - {{ sniffles_snf }}

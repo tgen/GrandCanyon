@@ -1,6 +1,6 @@
-{% macro whatshap_phase(sample, input_vcf, input_bam, temp_dir, results_dir, output_prefix, variant_caller) %}
+{% macro whatshap_phase(sample, input_vcf, input_bam, temp_dir, results_dir, output_prefix, variant_caller, aligner) %}
 
-- name: whatshap_phase_{{ variant_caller }}_{{ sample.name }}_minimap2
+- name: whatshap_phase_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
     - {{ input_vcf }}
     - {{ input_bam }}
@@ -27,7 +27,7 @@
       {{ input_bam }}
 
 
-- name: whatshap_stats_{{ variant_caller }}_{{ sample.name }}_minimap2
+- name: whatshap_stats_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
     - {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
   output:
@@ -50,7 +50,7 @@
       {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
 
 
-- name: whatshap_stats_extended_{{ variant_caller }}_{{ sample.name }}_minimap2
+- name: whatshap_stats_extended_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
     - {{ constants.grandcanyon[reference].gtf }}
     - {{ constants.grandcanyon[reference].canonical_cds_intervals }}
@@ -90,9 +90,9 @@
 
 {% endmacro %}
 
-{% macro whatshap_haplotag(sample, input_vcf, input_bam, temp_dir, results_dir, output_prefix, variant_caller) %}
+{% macro whatshap_haplotag(sample, input_vcf, input_bam, temp_dir, results_dir, output_prefix, variant_caller, aligner) %}
 
-- name: whatshap_haplotag_{{ variant_caller }}_{{ sample.name }}_minimap2
+- name: whatshap_haplotag_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
     - {{ input_vcf }}
     - {{ input_bam }}
@@ -122,7 +122,7 @@
       {{ input_bam }}
 
 
-- name: whatshap_haplotag_{{ variant_caller }}_samtools_compress_{{ sample.name }}_minimap2
+- name: whatshap_haplotag_{{ variant_caller }}_samtools_compress_{{ sample.name }}_{{ aligner }}
   input:
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam

@@ -1,17 +1,17 @@
-{%- macro deepsomatic(pair, taskPrefix='Genome') %}
+{%- macro deepsomatic(pair, aligner) %}
 
-{%- set normal_bam %}temp/{{ pair.normal.gltype }}/alignment/minimap2/{{ pair.normal.name }}/{{ pair.normal.name }}.minimap2.bam{% endset %}
-{%- set tumor_bam %}temp/{{ pair.tumor.gltype }}/alignment/minimap2/{{ pair.tumor.name }}/{{ pair.tumor.name }}.minimap2.bam{% endset %}
-{%- set temp_dir %}temp/{{ pair.gltype }}/somatic_variant_calls/deepsomatic/{{ pair.name }}_minimap2{% endset %}
-{%- set results_dir %}{{ pair.gltype }}/somatic_variant_calls/deepsomatic/{{ pair.name }}_minimap2{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ pair.name }}.minimap2.deepsomatic.all.vcf.gz{% endset %}
-{%- set all_gvcf %}{{ results_dir }}/{{ pair.name }}.minimap2.deepsomatic.all.g.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ pair.name }}.minimap2.deepsomatic.pass.vcf.gz{% endset %}
+{%- set normal_bam %}temp/{{ pair.normal.gltype }}/alignment/{{ aligner }}/{{ pair.normal.name }}/{{ pair.normal.name }}.{{ aligner }}.bam{% endset %}
+{%- set tumor_bam %}temp/{{ pair.tumor.gltype }}/alignment/{{ aligner }}/{{ pair.tumor.name }}/{{ pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+{%- set temp_dir %}temp/{{ pair.gltype }}/somatic_variant_calls/deepsomatic/{{ pair.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ pair.gltype }}/somatic_variant_calls/deepsomatic/{{ pair.name }}_{{ aligner }}{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ pair.name }}.{{ aligner }}.deepsomatic.all.vcf.gz{% endset %}
+{%- set all_gvcf %}{{ results_dir }}/{{ pair.name }}.{{ aligner }}.deepsomatic.all.g.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ pair.name }}.{{ aligner }}.deepsomatic.pass.vcf.gz{% endset %}
 
 {% if pair.tumor.rgpl not in ['PACBIO', 'ILLUMINA'] %}
 
 {% else %}
-- name: deepsomatic_{{ pair.name }}_minimap2
+- name: deepsomatic_{{ pair.name }}_{{ aligner }}
   tags: [{{ pair.gltype }}, somatic, snp_indel_caller, deepsomatic, {{ pair.name }}]
   input:
     - {{ tumor_bam }}
@@ -54,7 +54,7 @@
       --intermediate_results_dir {{ temp_dir }}/intermediate_results_dir
 
 
-- name: deepsomatic_filter_variants_{{ pair.name }}_minimap2
+- name: deepsomatic_filter_variants_{{ pair.name }}_{{ aligner }}
   tags: [{{ pair.gltype }}, somatic, snp_indel_caller, deepsomatic, {{ pair.name }}]
   input:
     - {{ all_vcf }}

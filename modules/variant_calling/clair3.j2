@@ -1,12 +1,12 @@
-{% macro clair3(sample) %}
+{% macro clair3(sample, aligner) %}
 
-{%- set bam %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}/{{ sample.name }}.minimap2.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/clair3/{{ sample.name }}_minimap2{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/clair3/{{ sample.name }}_minimap2{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.clair3.all.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.minimap2.clair3.pass.vcf.gz{% endset %}
+{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/clair3/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/clair3/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.clair3.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.clair3.pass.vcf.gz{% endset %}
 
-- name: clair3_{{ sample.name }}_minimap2
+- name: clair3_{{ sample.name }}_{{ aligner }}
   reset: predecessors
   input:
     - {{ bam }}
@@ -48,7 +48,7 @@
     mv {{ temp_dir }}/merge_output.vcf.gz.tbi {{ all_vcf }}.tbi
 
 
-- name: clair3_filter_variants_{{ sample.name }}_minimap2
+- name: clair3_filter_variants_{{ sample.name }}_{{ aligner }}
   input:
     - {{ all_vcf }}
   output:
