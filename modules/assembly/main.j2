@@ -3,44 +3,83 @@
 {% from 'modules/assembly/verkko.j2' import verkko with context %}
 {% from 'modules/assembly/shasta.j2' import shasta with context %}
 {% from 'modules/assembly/hifiasm.j2' import hifiasm with context %}
+{% from 'modules/assembly/herro.j2' import herro with context %}
 
-{%- macro assembly(samples) %}
+{%- macro assembly() %}
 
-  {% set pair = {'project': project} %}
-  {% do pair.update({'gltype': 'genome'}) %}
-  {% do pair.update({'ont': []}) %}
-  {% do pair.update({'pacbio': []}) %}
-  {% do pair.update({'short': []}) %}
+  {% set input = {'project': project} %}
+  {% do input.update({'gltype': 'genome'}) %}
+  {% do input.update({'ont_ulong': []}) %}
+  {% do input.update({'ont_corr': []}) %}
+  {% do input.update({'ont_duplex': []}) %}
+  {% do input.update({'ont_simplex': []}) %}
+  {% do input.update({'pb_hifi': []}) %}
+  {% do input.update({'3c_r1': []}) %}
+  {% do input.update({'3c_r2': []}) %}
+
   {% for file in dataFiles|selectattr('subGroup', 'eq', 'Constitutional')|selectattr('gltype', 'in', ['genome']) %}
-    {% if file.rgpl in ('ONT') %}
-      {% do pair.ont.append(file) %}
+    {% if file.glprep == '3c' %}
+      {% set hic_file %}temp/fastqs/{{ file.basename }}{% endset %}
+      {% if file.fastqCode == 'R1' %}
+        {% do input.3c_r1.append(hic_file) %}
+      {% elif file.fastqCode == 'R2' %}
+        {% do input.3c_r2.append(hic_file) %}
+      {% endif %}
+    {% elif file.rgpl in ('ONT') %}
+      {% if file.fastqCode == 'simplex' %}
+        {% set duplex_matches = dataFiles|selectattr('fastqCode', 'eq', 'duplex')|selectattr('sampleName', 'eq', file.sampleName)|selectattr('rgid', 'eq', file.rgid)|list %}
+        {% if not duplex_matches | length > 0 %}
+          {% set simplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
+          {% set corrected_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.corrected.fa{% endset %}
+          {% do input.ont_simplex.append(simplex_file) %}
+          {% if tasks.Genome_assembly_herro_correction | default(false) %}
+            {{- herro(simplex_file, corrected_file) }}
+            {% do input.ont_corr.append(corrected_file) %}
+          {% endif %}
+          {% if file.assayCode in ('OUL14') %}
+            {% do input.ont_ulong.append(simplex_file) %}
+          {% endif %}
+        {% endif %}
+      {% elif file.fastqCode == 'duplex' %}
+        {% set duplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
+        {% set simplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.simplex.fastq.gz{% endset %}
+        {% set corrected_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.simplex.corrected.fa{% endset %}
+        {% do input.ont_duplex.append(duplex_file) %}
+        {% do input.ont_simplex.append(simplex_file) %}
+        {% if tasks.Genome_assembly_herro_correction | default(false) %}
+          {% do input.ont_corr.append(corrected_file) %}
+          {{- herro(simplex_file, corrected_file) }}
+        {% endif %}
+        {% if file.assayCode in ('OUL14') %}
+          {% do input.ont_ulong.append(simplex_file) %}
+        {% endif %}
+      {% endif %}
     {% elif file.rgpl in ('PACBIO') %}
-        {% do pair.pacbio.append(file) %}
-    {% else %}
-        {% do pair.short.append(file) %}
+      {% set pacbio_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
+      {% do input.hifi.append(pacbio_file) %}
     {% endif %}
   {% endfor %}
 
-    {% if pair.gltype in 'exome' %}
-      {% set taskPrefix = 'Exome' %}
-    {% elif pair.gltype in 'genome' %}
-      {% set taskPrefix = 'Genome' %}
-    {% endif %}
-    {% if tasks[taskPrefix+"_assembly_flye"]|default(false) %}
-      {{- flye(pair) }}
-    {% endif %}
-    {% if tasks[taskPrefix+"_assembly_canu"]|default(false) %}
-      {{- canu(pair) }}
-    {% endif %}
-    {% if tasks[taskPrefix+"_assembly_hifiasm"]|default(false) %}
-      {{- hifiasm(pair) }}
-    {% endif %}
-    {% if tasks[taskPrefix+"_assembly_verkko"]|default(false) %}
-      {{- verkko(pair) }}
-    {% endif %}
-    {% if tasks[taskPrefix+"_assembly_shasta"]|default(false) %}
-      {{- shasta(pair) }}
-    {% endif %}
+  {% if input.gltype in 'exome' %}
+    {% set taskPrefix = 'Exome' %}
+  {% elif input.gltype in 'genome' %}
+    {% set taskPrefix = 'Genome' %}
+  {% endif %}
+  {% if tasks[taskPrefix+"_assembly_flye"]|default(false) %}
+    {{- flye(input) }}
+  {% endif %}
+  {% if tasks[taskPrefix+"_assembly_canu"]|default(false) %}
+    {{- canu(input) }}
+  {% endif %}
+  {% if tasks[taskPrefix+"_assembly_hifiasm"]|default(false) %}
+    {{- hifiasm(input) }}
+  {% endif %}
+  {% if tasks[taskPrefix+"_assembly_verkko"]|default(false) %}
+    {{- verkko(input) }}
+  {% endif %}
+  {% if tasks[taskPrefix+"_assembly_shasta"]|default(false) %}
+    {{- shasta(input) }}
+  {% endif %}
 
 {% endmacro %}
 

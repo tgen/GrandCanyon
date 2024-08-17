@@ -37,6 +37,8 @@ constants:
       container: quay.io/biocontainers/flye:2.9.4--py311hc849397_2
     gatk:
       container: broadinstitute/gatk:4.4.0.0
+    herro:
+      container: /home/tgenref/containers/herro_010824.sif
     hifiasm:
       container: quay.io/biocontainers/hifiasm:0.19.9--h43eeafb_0
     hificnv:

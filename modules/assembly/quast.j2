@@ -6,6 +6,7 @@
   input:
     - {{ input_assembly }}
     - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].gtf }}
   output: {{ results_dir }}/quast_results
   cpus: 8
   mem: 64G
@@ -20,6 +21,8 @@
     quast \
       -t 8 \
       -r {{ constants.grandcanyon[reference].reference_fasta }} \
+      -g {{ constants.grandcanyon[reference].gtf }} \
+      -l {{ assembler }} \
       --large \
       --no-snps \
       --no-sv \

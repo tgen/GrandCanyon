@@ -6,38 +6,17 @@
 
 {% from 'modules/assembly/plotting.j2' import moddotplot with context %}
 
-{% macro verkko(pair) %}
+{% macro verkko(input) %}
 
-{%- set temp_dir %}temp/{{ pair.gltype }}/assembly/verkko/{{ pair.project }}{% endset %}
-{%- set results_dir %}{{ pair.gltype }}/assembly/verkko/{{ pair.project }}{% endset %}
+{%- set temp_dir %}temp/{{ input.gltype }}/assembly/verkko/{{ input.project }}{% endset %}
+{%- set results_dir %}{{ input.gltype }}/assembly/verkko/{{ input.project }}{% endset %}
 
-{% set ontfqlist = [] %}
-{% set hififqlist = [] %}
+{% set hifi_list = input.ont_duplex + input.ont_corr + input.pb_hifi %}
 
-{% for file in pair.pacbio %}
-    {% set pacbiofq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do hififqlist.append(pacbiofq) %}
-{% endfor %}
-
-{% for file in pair.ont|selectattr('fastqCode', 'eq', 'duplex')|list %}
-    {% set hififq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do hififqlist.append(hififq) %}
-    {% set simplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz{% endset %}
-    {% do ontfqlist.append(simplexfq) %}
-{% endfor %}
-
-{% for file in pair.ont|selectattr('fastqCode', 'eq', 'simplex')|list %}
-    {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do ontfqlist.append(ontfq) %}
-{% endfor %}
-
-{% if hififqlist | length > 0 %}
-- name: verkko_{{ pair.project }}
+{% if hifi_list | length > 0 %}
+- name: verkko_{{ input.project }}
   input:
-    {% for ontfq in ontfqlist %}
-    - {{ ontfq }}
-    {% endfor %}
-    {% for hififq in hififqlist %}
+    {% for hififq in hifi_list %}
     - {{ hififq }}
     {% endfor %}
   output: {{ results_dir }}/assembly.fasta
@@ -57,13 +36,15 @@
     verkko \
       --local-cpus 32 \
       --local-memory 584 \
-      {% if hififqlist | length > 0 %}
-      --hifi "{{ hififqlist | join('" "') }}" \
-      {% endif %}
-      {% if ontfqlist | length > 0 %}
-      --nano "{{ ontfqlist | join('" "') }}" \
+      --hifi {{ hifi_list | join(' ') }} \
+      {% if input.ulong | length > 0 %}
+      --nano {{ input.ulong | join(' ') }} \
       {% else %}
       --no-nano \
+      {% endif %}
+      {% if input.3c_r1 | length > 0 %}
+      --hic1 {{ input.3c_r1 | sort | join(' ') }} \
+      --hic2 {{ input.3c_r2 | sort | join(' ') }} \
       {% endif %}
       --screen human \
       -d {{ temp_dir }}
@@ -71,17 +52,17 @@
     mv {{ temp_dir }}/assembly* {{ results_dir }}
 
 {% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
-{{- assembly_stats(pair, input_assembly, 'verkko') }}
-{{- quast(pair, input_assembly, 'verkko') }}
+{{- assembly_stats(input, input_assembly, 'verkko') }}
+{{- quast(input, input_assembly, 'verkko') }}
 
 {% if tasks.assembly_align_minimap2 | default(true) %}
-{{- minimap2_asm(pair, input_assembly, 'verkko') }}
+{{- minimap2_asm(input, input_assembly, 'verkko') }}
 {% endif %}
 {% if tasks.assembly_align_mashmap | default(false) %}
-{{- mashmap(pair, input_assembly, 'verkko') }}
+{{- mashmap(input, input_assembly, 'verkko') }}
 {% endif %}
 {% if tasks.assembly_moddotplot | default(false) %}
-{{- moddotplot(pair, input_assembly, 'verkko') }}
+{{- moddotplot(input, input_assembly, 'verkko') }}
 {% endif %}
 
 {% else %}

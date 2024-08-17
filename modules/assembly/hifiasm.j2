@@ -6,41 +6,20 @@
 
 {% from 'modules/assembly/plotting.j2' import moddotplot with context %}
 
-{% macro hifiasm(pair) %}
+{% macro hifiasm(input) %}
 
-{%- set temp_dir %}temp/{{ pair.gltype }}/assembly/hifiasm/{{ pair.project }}{% endset %}
-{%- set results_dir %}{{ pair.gltype }}/assembly/hifiasm/{{ pair.project }}{% endset %}
+{%- set temp_dir %}temp/{{ input.gltype }}/assembly/hifiasm/{{ input.project }}{% endset %}
+{%- set results_dir %}{{ input.gltype }}/assembly/hifiasm/{{ input.project }}{% endset %}
 
-{% set ontfqlist = [] %}
-{% set hififqlist = [] %}
+{% set hifi_list = input.ont_duplex + input.ont_corr + input.pb_hifi %}
 
-{% for file in pair.pacbio %}
-    {% set pacbiofq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do hififqlist.append(pacbiofq) %}
-{% endfor %}
-
-{% for file in pair.ont|selectattr('fastqCode', 'eq', 'duplex')|list %}
-    {% set duplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do hififqlist.append(duplexfq) %}
-    {% set simplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz{% endset %}
-    {% do ontfqlist.append(simplexfq) %}
-{% endfor %}
-
-{% for file in pair.ont|selectattr('fastqCode', 'eq', 'simplex')|list %}
-    {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do ontfqlist.append(ontfq) %}
-{% endfor %}
-
-{% if hififqlist | length > 0 %}
-- name: hifiasm_{{ pair.project }}
+{% if hifi_list | length > 0 %}
+- name: hifiasm_{{ input.project }}
   input:
-    {% for ontfq in ontfqlist %}
-    - {{ ontfq }}
-    {% endfor %}
-    {% for hififq in hififqlist %}
+    {% for hififq in hifi_list %}
     - {{ hififq }}
     {% endfor %}
-  output: {{ results_dir }}/{{ pair.project }}.asm.bp.hap1.p_ctg.fa
+  output: {{ results_dir }}/{{ input.project }}.asm.bp.hap1.p_ctg.fa
   cpus: 32
   mem: 600G
   walltime: "48:00:00"
@@ -56,32 +35,34 @@
 
     hifiasm \
       -t 32 \
-      -o {{ temp_dir }}/{{ pair.project }}.asm \
+      -o {{ temp_dir }}/{{ input.project }}.asm \
       --telo-m CCCTAA \
-      {% if ontfqlist | length > 0 %}
-      --ul "{{ ontfqlist | join(',') }}" \
+      {% if input.ulong | length > 0 %}
+      --ul "{{ input.ulong | join(',') }}" \
       --ul-cut 10000 \
       {% endif %}
-      {% if hififqlist | length > 0 %}
-      {{ hififqlist | join(' ') }}
+      {% if input.3c_r1 | length > 0 %}
+      --h1 "{{ input.3c_r1 | sort | join(',') }}" \
+      --h2 "{{ input.3c_r2 | sort | join(',') }}" \
       {% endif %}
+      {{ hifi_list | join(' ') }}
 
-    for graph in {{ temp_dir }}/{{ pair.project }}.asm.*.gfa ; do
+    for graph in {{ temp_dir }}/{{ input.project }}.asm.*.gfa ; do
       awk '/^S/{print ">"$2;print $3}' ${graph} > {{ results_dir }}/$(basename ${graph%.gfa}.fa)
     done
 
-{% set input_assembly %}{{ results_dir }}/{{ pair.project }}.asm.bp.hap1.p_ctg.fa{% endset %}
-{{- assembly_stats(pair, input_assembly, 'hifiasm') }}
-{{- quast(pair, input_assembly, 'hifiasm') }}
+{% set input_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.hap1.p_ctg.fa{% endset %}
+{{- assembly_stats(input, input_assembly, 'hifiasm') }}
+{{- quast(input, input_assembly, 'hifiasm') }}
 
 {% if tasks.assembly_align_minimap2 | default(true) %}
-{{- minimap2_asm(pair, input_assembly, 'hifiasm') }}
+{{- minimap2_asm(input, input_assembly, 'hifiasm') }}
 {% endif %}
 {% if tasks.assembly_align_mashmap | default(false) %}
-{{- mashmap(pair, input_assembly, 'hifiasm') }}
+{{- mashmap(input, input_assembly, 'hifiasm') }}
 {% endif %}
 {% if tasks.assembly_moddotplot | default(false) %}
-{{- moddotplot(pair, input_assembly, 'hifiasm') }}
+{{- moddotplot(input, input_assembly, 'hifiasm') }}
 {% endif %}
 
 {% else %}

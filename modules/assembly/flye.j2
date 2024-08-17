@@ -6,37 +6,17 @@
 
 {% from 'modules/assembly/plotting.j2' import moddotplot with context %}
 
-{% macro flye(pair) %}
+{% macro flye(input) %}
 
-{%- set temp_dir %}temp/{{ pair.gltype }}/assembly/flye/{{ pair.project }}{% endset %}
-{%- set results_dir %}{{ pair.gltype }}/assembly/flye/{{ pair.project }}{% endset %}
+{%- set temp_dir %}temp/{{ input.gltype }}/assembly/flye/{{ input.project }}{% endset %}
+{%- set results_dir %}{{ input.gltype }}/assembly/flye/{{ input.project }}{% endset %}
 
-{% set ontfqlist = [] %}
-{% set pacbiofqlist = [] %}
-
-{% for file in pair.pacbio %}
-    {% set pacbiofq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do pacbiofqlist.append(pacbiofq) %}
-{% endfor %}
-
-{% for file in pair.ont|selectattr('fastqCode', 'eq', 'duplex')|list %}
-    {% set duplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do pacbiofqlist.append(duplexfq) %}
-    {% set simplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz{% endset %}
-    {% do ontfqlist.append(simplexfq) %}
-{% endfor %}
-
-{% for file in pair.ont|selectattr('fastqCode', 'eq', 'simplex')|list %}
-    {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
-    {% do ontfqlist.append(ontfq) %}
-{% endfor %}
-
-- name: flye_{{ pair.project }}
+- name: flye_{{ input.project }}
   input:
-    {% for ontfq in ontfqlist %}
+    {% for ontfq in input.ont_duplex %}
     - {{ ontfq }}
     {% endfor %}
-    {% for pacbiofq in pacbiofqlist %}
+    {% for pacbiofq in input.pb_hifi %}
     - {{ pacbiofq }}
     {% endfor %}
   output:
@@ -59,10 +39,10 @@
 
     flye \
       --threads 32 \
-      {% if pacbiofqlist | length > 0 %}
-      --pacbio-hifi "{{ pacbiofqlist | join('" "') }}" \
-      {% elif ontfqlist | length > 0 %}
-      --nano-hq "{{ ontfqlist | join('" "') }}" \
+      {% if input.pb_hifi | length > 0 %}
+      --pacbio-hifi "{{ input.pb_hifi | join('" "') }}" \
+      {% elif input.ont_duplex | length > 0 %}
+      --nano-hq "{{ input.ont_duplex | join('" "') }}" \
       {% endif %}
       --out-dir {{ temp_dir }}
 
@@ -73,17 +53,17 @@
 
 
 {% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
-{{- assembly_stats(pair, input_assembly, 'flye') }}
-{{- quast(pair, input_assembly, 'flye') }}
+{{- assembly_stats(input, input_assembly, 'flye') }}
+{{- quast(input, input_assembly, 'flye') }}
 
 {% if tasks.assembly_align_minimap2 | default(true) %}
-{{- minimap2_asm(pair, input_assembly, 'flye') }}
+{{- minimap2_asm(input, input_assembly, 'flye') }}
 {% endif %}
 {% if tasks.assembly_align_mashmap | default(false) %}
-{{- mashmap(pair, input_assembly, 'flye') }}
+{{- mashmap(input, input_assembly, 'flye') }}
 {% endif %}
 {% if tasks.assembly_moddotplot | default(false) %}
-{{- moddotplot(pair, input_assembly, 'flye') }}
+{{- moddotplot(input, input_assembly, 'flye') }}
 {% endif %}
 
 {% endmacro %}
