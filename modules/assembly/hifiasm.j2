@@ -37,13 +37,13 @@
       -t 32 \
       -o {{ temp_dir }}/{{ input.project }}.asm \
       --telo-m CCCTAA \
-      {% if input.ulong | length > 0 %}
-      --ul "{{ input.ulong | join(',') }}" \
+      {% if input.ont_ulong | length > 0 %}
+      --ul "{{ input.ont_ulong | join(',') }}" \
       --ul-cut 10000 \
       {% endif %}
-      {% if input.3c_r1 | length > 0 %}
-      --h1 "{{ input.3c_r1 | sort | join(',') }}" \
-      --h2 "{{ input.3c_r2 | sort | join(',') }}" \
+      {% if input.hic_r1 | length > 0 %}
+      --h1 "{{ input.hic_r1 | sort | join(',') }}" \
+      --h2 "{{ input.hic_r2 | sort | join(',') }}" \
       {% endif %}
       {{ hifi_list | join(' ') }}
 

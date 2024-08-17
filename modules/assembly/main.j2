@@ -1,5 +1,4 @@
 {% from 'modules/assembly/flye.j2' import flye with context %}
-{% from 'modules/assembly/canu.j2' import canu with context %}
 {% from 'modules/assembly/verkko.j2' import verkko with context %}
 {% from 'modules/assembly/shasta.j2' import shasta with context %}
 {% from 'modules/assembly/hifiasm.j2' import hifiasm with context %}
@@ -14,16 +13,16 @@
   {% do input.update({'ont_duplex': []}) %}
   {% do input.update({'ont_simplex': []}) %}
   {% do input.update({'pb_hifi': []}) %}
-  {% do input.update({'3c_r1': []}) %}
-  {% do input.update({'3c_r2': []}) %}
+  {% do input.update({'hic_r1': []}) %}
+  {% do input.update({'hic_r2': []}) %}
 
   {% for file in dataFiles|selectattr('subGroup', 'eq', 'Constitutional')|selectattr('gltype', 'in', ['genome']) %}
     {% if file.glprep == '3c' %}
       {% set hic_file %}temp/fastqs/{{ file.basename }}{% endset %}
       {% if file.fastqCode == 'R1' %}
-        {% do input.3c_r1.append(hic_file) %}
+        {% do input.hic_r1.append(hic_file) %}
       {% elif file.fastqCode == 'R2' %}
-        {% do input.3c_r2.append(hic_file) %}
+        {% do input.hic_r2.append(hic_file) %}
       {% endif %}
     {% elif file.rgpl in ('ONT') %}
       {% if file.fastqCode == 'simplex' %}
@@ -56,7 +55,7 @@
       {% endif %}
     {% elif file.rgpl in ('PACBIO') %}
       {% set pacbio_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
-      {% do input.hifi.append(pacbio_file) %}
+      {% do input.pb_hifi.append(pacbio_file) %}
     {% endif %}
   {% endfor %}
 
@@ -67,9 +66,6 @@
   {% endif %}
   {% if tasks[taskPrefix+"_assembly_flye"]|default(false) %}
     {{- flye(input) }}
-  {% endif %}
-  {% if tasks[taskPrefix+"_assembly_canu"]|default(false) %}
-    {{- canu(input) }}
   {% endif %}
   {% if tasks[taskPrefix+"_assembly_hifiasm"]|default(false) %}
     {{- hifiasm(input) }}
