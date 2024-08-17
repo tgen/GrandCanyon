@@ -41,7 +41,8 @@
       --threads 32 \
       {% if input.pb_hifi | length > 0 %}
       --pacbio-hifi "{{ input.pb_hifi | join('" "') }}" \
-      {% elif input.ont_duplex | length > 0 %}
+      {% endif %}
+      {% if input.ont_duplex | length > 0 %}
       --nano-hq "{{ input.ont_duplex | join('" "') }}" \
       {% endif %}
       --out-dir {{ temp_dir }}

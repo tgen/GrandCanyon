@@ -1,6 +1,6 @@
 {% macro herro(fastq, corrected_fasta) %}
 
-- name: herro_{{ fastq }}
+- name: herro_{{ fastq | basename | replace('.', '_') }}
   input:
     - {{ fastq }}
   output:
