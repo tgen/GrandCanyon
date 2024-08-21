@@ -89,6 +89,8 @@ constants:
       container: quay.io/biocontainers/salmon:1.10.2--hecfa306_0
     samtools:
       container: quay.io/biocontainers/samtools:1.20--h50ea8bc_1
+    seqkit:
+      container: quay.io/biocontainers/seqkit:2.8.2--h9ee0642_1
     severus:
       container: quay.io/biocontainers/severus:1.1--pyhdfd78af_0
     shasta:

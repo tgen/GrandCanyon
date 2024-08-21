@@ -114,6 +114,10 @@
         {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minimap2"]|default(false) %}
             {% do sample.aligners.append('minimap2') %}
         {% endif %}
+    {% else %}
+        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minimap2"]|default(false) %}
+            {% do sample.aligners.append('minimap2') %}
+        {% endif %}
     {% endif %}
 
     {% for rgid, rg in sample.read_groups.items() %}

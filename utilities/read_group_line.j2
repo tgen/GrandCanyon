@@ -9,7 +9,7 @@
   'PM:{}'.format(rg.rgpm),
   'BC:{}'.format(rg.rgbc|default('unknown'))
 ] %}
-{% if format == 'minimap2' %}
+{% if format in ['minimap2','bwa'] %}
   {# BWA requires one argument with fields separated by \t #}
   {% set rg_line = '\\t'.join(['@RG'] + tags) %}
 {% else %}
