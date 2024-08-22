@@ -2,7 +2,7 @@
 
 {%- set temp_dir %}temp/{{ input.gltype }}/assembly/herro/{{ input.project }}{% endset %}
 {%- set results_dir %}{{ input.gltype }}/assembly/herro/{{ input.project }}{% endset %}
-{% set filtered_fastq %}{{ temp_dir }}/{{ fastq | basename.split('.fastq.gz')[0] }}.filtered.fastq.gz{% endset %}
+{% set filtered_fastq %}{{ temp_dir }}/{{ fastq | basename | replace('.fastq.gz', '.filtered.fastq.gz') }}{% endset %}
 
 - name: herro_preprocess_{{ fastq | basename | replace('.', '_') }}
   input: {{ fastq }}
