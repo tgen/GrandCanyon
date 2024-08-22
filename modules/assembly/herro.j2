@@ -7,13 +7,17 @@
 - name: herro_preprocess_{{ fastq | basename | replace('.', '_') }}
   input: {{ fastq }}
   output:
-    - {{ corrected_fasta }}
+    - {{ filtered_fastq }}
+    - {{ temp_dir }}/{{ fastq | basename }}.stats.tsv
   cpus: 4
   mem: 8G
   walltime: "8:00:00"
   container: {{ constants.tools.seqkit.container }}
   cmd: |
     set -eu
+
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
 
     seqkit stats \
       --tabular \
@@ -28,6 +32,7 @@
       {{ fastq }}
 
 - name: dorado_herro_{{ fastq | basename | replace('.', '_') }}
+  reset: predecessors
   input:
     - {{ constants.grandcanyon.ont_resources }}
     - {{ filtered_fastq }}
@@ -47,6 +52,8 @@
       -t 16 \
       {{ filtered_fastq }} \
       > {{ corrected_fasta }}
+
+{% endmacro %}
 
 {#
 - name: herro_{{ fastq | basename | replace('.', '_') }}
@@ -76,5 +83,3 @@
       {{ filtered_fastq }} \
       {{ corrected_fasta }}
 #}
-{% endmacro %}
-

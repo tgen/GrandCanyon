@@ -30,7 +30,7 @@
           {% set simplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
           {% set corrected_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.corrected.fa{% endset %}
           {% do input.ont.append(simplex_file) %}
-          {% if tasks.Genome_assembly_herro_correction | default(false) %}
+          {% if tasks.Genome_assembly_long_read_assembler_herro_correction | default(false) %}
             {{- herro(input, simplex_file, corrected_file) }}
             {% do input.corr.append(corrected_file) %}
           {% endif %}
@@ -44,7 +44,7 @@
         {% set corrected_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.simplex.corrected.fa{% endset %}
         {% do input.hifi.append(duplex_file) %}
         {% do input.ont.append(simplex_file) %}
-        {% if tasks.Genome_assembly_herro_correction | default(false) %}
+        {% if tasks.Genome_assembly_long_read_assembler_herro_correction | default(false) %}
           {% do input.corr.append(corrected_file) %}
           {{- herro(input, simplex_file, corrected_file) }}
         {% endif %}
@@ -63,16 +63,16 @@
   {% elif input.gltype in 'genome' %}
     {% set taskPrefix = 'Genome' %}
   {% endif %}
-  {% if tasks[taskPrefix+"_assembly_flye"]|default(false) %}
+  {% if tasks[taskPrefix+"_assembly_long_read_assembler_flye"]|default(false) %}
     {{- flye(input) }}
   {% endif %}
-  {% if tasks[taskPrefix+"_assembly_hifiasm"]|default(false) %}
+  {% if tasks[taskPrefix+"_assembly_long_read_assembler_hifiasm"]|default(false) %}
     {{- hifiasm(input) }}
   {% endif %}
-  {% if tasks[taskPrefix+"_assembly_verkko"]|default(false) %}
+  {% if tasks[taskPrefix+"_assembly_long_read_assembler_verkko"]|default(false) %}
     {{- verkko(input) }}
   {% endif %}
-  {% if tasks[taskPrefix+"_assembly_shasta"]|default(false) %}
+  {% if tasks[taskPrefix+"_assembly_long_read_assembler_shasta"]|default(false) %}
     {{- shasta(input) }}
   {% endif %}
 
