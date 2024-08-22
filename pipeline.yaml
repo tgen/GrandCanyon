@@ -15,6 +15,9 @@ constants:
       digest: cde92d1b69ecfda6e5f115c6b9220a312c380b0d7aa30378437476cd50206ee0
     busco:
       container: quay.io/biocontainers/busco:5.5.0--pyhdfd78af_0
+    bwa_mem2_samtools:
+      container: ghcr.io/tgen/containers/bwa_mem2_samtools:2.2.1-23080315
+      digest: 98a83bc2d70fa39755a02c2d81de64ef36dac292cdf6b1fcf02570a3e227b7f6
     canu:
       container: quay.io/biocontainers/canu:2.2--ha47f30e_0
     clair3:
@@ -156,6 +159,7 @@ constants:
       reference_fastaSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa
       reference_faiSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa.fai
       reference_dict: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_alts_hla_masked.dict
+      bwa_mem2_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/bwa_2.2.1/GRCh38tempe_decoy_alts_hla_masked.fa
       gtf: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.noheader.sorted.gtf
       gtfSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/gene_model/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf
       transcriptome: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.transcriptome.fasta
