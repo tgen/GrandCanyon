@@ -68,7 +68,7 @@
               -t 20 \
               -x sr \
               -a \
-              -R "{{ read_group_line(rg, format='minimap2') }}" \
+              -R '{{ read_group_line(rg, format="minimap2") }}' \
               {{ constants.grandcanyon[reference].reference_fasta }} \
               temp/fastqs/{{ sample.name }}/{{ rgid }}/{{ r1fastq.basename.split('.fastq.gz')[0] }}.part_{chunk}.fastq.gz \
               temp/fastqs/{{ sample.name }}/{{ rgid }}/{{ r2fastq.basename.split('.fastq.gz')[0] }}.part_{chunk}.fastq.gz |\
@@ -205,7 +205,7 @@
   reset: predecessors
   input: 
   {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
-    - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.bam
+    - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram
   {% endfor %}
   output: {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
   walltime: "24:00:00"
