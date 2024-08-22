@@ -1,15 +1,15 @@
-{% from 'modules/variant_calling/deepvariant.j2' import deepvariant with context %}
-{% from 'modules/variant_calling/deepsomatic.j2' import deepsomatic with context %}
-{% from 'modules/variant_calling/clair3.j2' import clair3 with context %}
-{% from 'modules/variant_calling/clairs.j2' import clairs with context %}
-{% from 'modules/variant_calling/cutesv.j2' import cutesv with context %}
-{% from 'modules/variant_calling/longshot.j2' import longshot with context %}
-{% from 'modules/variant_calling/sniffles.j2' import sniffles with context %}
-{% from 'modules/variant_calling/pbsv.j2' import pbsv with context %}
-{% from 'modules/variant_calling/severus.j2' import severus with context %}
-{% from 'modules/variant_calling/dysgu.j2' import dysgu with context %}
-{% from 'modules/variant_calling/spectre.j2' import spectre with context %}
-{% from 'modules/variant_calling/hifi_cnv.j2' import hifi_cnv with context %}
+{% from 'modules/variant_calling/snv_indel/deepvariant.j2' import deepvariant with context %}
+{% from 'modules/variant_calling/snv_indel/deepsomatic.j2' import deepsomatic with context %}
+{% from 'modules/variant_calling/snv_indel/clair3.j2' import clair3 with context %}
+{% from 'modules/variant_calling/snv_indel/clairs.j2' import clairs with context %}
+{% from 'modules/variant_calling/snv_indel/longshot.j2' import longshot with context %}
+{% from 'modules/variant_calling/structural/cutesv.j2' import cutesv with context %}
+{% from 'modules/variant_calling/structural/sniffles.j2' import sniffles with context %}
+{% from 'modules/variant_calling/structural/pbsv.j2' import pbsv with context %}
+{% from 'modules/variant_calling/structural/severus.j2' import severus with context %}
+{% from 'modules/variant_calling/structural/dysgu.j2' import dysgu with context %}
+{% from 'modules/variant_calling/copy_number/spectre.j2' import spectre with context %}
+{% from 'modules/variant_calling/copy_number/hifi_cnv.j2' import hifi_cnv with context %}
 
 {%- macro constitutional_variant_calling(samples) %}
 
@@ -27,15 +27,13 @@
     {% set taskPrefix = 'Genome' %}
   {% endif %}
 
-  {% if long_read_only|default(true) and sample.glprep in 'longread' %}
-    {%- if sample.subGroup|lower == 'constitutional' %}
-      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(true) %}
-        {{- deepvariant(sample, aligner) }}
-      {% endif %}
+  {%- if sample.subGroup|lower == 'constitutional' %}
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(true) %}
+      {{- deepvariant(sample, aligner) }}
+    {% endif %}
 
-      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clair3"]|default(false) %}
-        {{- clair3(sample, aligner) }}
-      {% endif %}
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clair3"]|default(false) %}
+      {{- clair3(sample, aligner) }}
     {% endif %}
   {% endif %}
 
@@ -88,10 +86,8 @@
 {% set pairs = [] %}
 {% for tumor in samples.values() if tumor.subGroup|lower == 'tumor' and tumor.gltype in ('exome','genome') %}
   {% for normal in samples.values() if normal.subGroup|lower == 'constitutional' and normal.gltype == tumor.gltype and normal.assayCode == tumor.assayCode %}
-  {% if long_read_only|default(true) and tumor.glprep in 'longread' %}
     {% set pair_name = normal.name + '-' + tumor.name %}
     {% do pairs.append({'name': pair_name, 'gltype': normal.gltype, 'normal': normal, 'tumor': tumor}) %}
-  {% endif %}
   {% endfor %}
 {% endfor %}
 
@@ -113,8 +109,10 @@
     {{- clairs(pair, aligner) }}
   {% endif %}
 
-  {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(true) %}
-    {{- severus(pair, aligner) }}
+  {% if sample.glprep in 'longread' %}
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(true) %}
+      {{- severus(pair, aligner) }}
+    {% endif %}
   {% endif %}
 
   {% endfor %}
