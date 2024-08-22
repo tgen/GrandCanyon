@@ -13,10 +13,10 @@
 
 - name: flye_{{ input.project }}
   input:
-    {% for ontfq in input.ont_duplex %}
+    {% for ontfq in input.hifi %}
     - {{ ontfq }}
     {% endfor %}
-    {% for pacbiofq in input.pb_hifi %}
+    {% for pacbiofq in input.hifi %}
     - {{ pacbiofq }}
     {% endfor %}
   output:
@@ -39,11 +39,11 @@
 
     flye \
       --threads 32 \
-      {% if input.pb_hifi | length > 0 %}
-      --pacbio-hifi "{{ input.pb_hifi | join('" "') }}" \
+      {% if input.hifi | length > 0 %}
+      --pacbio-hifi "{{ input.hifi | join('" "') }}" \
       {% endif %}
-      {% if input.ont_duplex | length > 0 %}
-      --nano-hq "{{ input.ont_duplex | join('" "') }}" \
+      {% if input.hifi | length > 0 %}
+      --nano-hq "{{ input.hifi | join('" "') }}" \
       {% endif %}
       --out-dir {{ temp_dir }}
 

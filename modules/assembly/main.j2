@@ -8,11 +8,10 @@
 
   {% set input = {'project': project} %}
   {% do input.update({'gltype': 'genome'}) %}
-  {% do input.update({'ont_ulong': []}) %}
-  {% do input.update({'ont_corr': []}) %}
-  {% do input.update({'ont_duplex': []}) %}
-  {% do input.update({'ont_simplex': []}) %}
-  {% do input.update({'pb_hifi': []}) %}
+  {% do input.update({'ulong': []}) %}
+  {% do input.update({'corr': []}) %}
+  {% do input.update({'hifi': []}) %}
+  {% do input.update({'ont': []}) %}
   {% do input.update({'hic_r1': []}) %}
   {% do input.update({'hic_r2': []}) %}
 
@@ -30,32 +29,32 @@
         {% if not duplex_matches | length > 0 %}
           {% set simplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
           {% set corrected_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.corrected.fa{% endset %}
-          {% do input.ont_simplex.append(simplex_file) %}
+          {% do input.ont.append(simplex_file) %}
           {% if tasks.Genome_assembly_herro_correction | default(false) %}
-            {{- herro(simplex_file, corrected_file) }}
-            {% do input.ont_corr.append(corrected_file) %}
+            {{- herro(input, simplex_file, corrected_file) }}
+            {% do input.corr.append(corrected_file) %}
           {% endif %}
           {% if file.assayCode in ('OUL14') %}
-            {% do input.ont_ulong.append(simplex_file) %}
+            {% do input.ulong.append(simplex_file) %}
           {% endif %}
         {% endif %}
       {% elif file.fastqCode == 'duplex' %}
         {% set duplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
         {% set simplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.simplex.fastq.gz{% endset %}
         {% set corrected_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.simplex.corrected.fa{% endset %}
-        {% do input.ont_duplex.append(duplex_file) %}
-        {% do input.ont_simplex.append(simplex_file) %}
+        {% do input.hifi.append(duplex_file) %}
+        {% do input.ont.append(simplex_file) %}
         {% if tasks.Genome_assembly_herro_correction | default(false) %}
-          {% do input.ont_corr.append(corrected_file) %}
-          {{- herro(simplex_file, corrected_file) }}
+          {% do input.corr.append(corrected_file) %}
+          {{- herro(input, simplex_file, corrected_file) }}
         {% endif %}
         {% if file.assayCode in ('OUL14') %}
-          {% do input.ont_ulong.append(simplex_file) %}
+          {% do input.ulong.append(simplex_file) %}
         {% endif %}
       {% endif %}
     {% elif file.rgpl in ('PACBIO') %}
       {% set pacbio_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
-      {% do input.pb_hifi.append(pacbio_file) %}
+      {% do input.hifi.append(pacbio_file) %}
     {% endif %}
   {% endfor %}
 

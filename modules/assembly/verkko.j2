@@ -11,7 +11,7 @@
 {%- set temp_dir %}temp/{{ input.gltype }}/assembly/verkko/{{ input.project }}{% endset %}
 {%- set results_dir %}{{ input.gltype }}/assembly/verkko/{{ input.project }}{% endset %}
 
-{% set hifi_list = input.ont_duplex + input.ont_corr + input.pb_hifi %}
+{% set hifi_list = input.hifi + input.corr + input.hifi %}
 
 {% if hifi_list | length > 0 %}
 - name: verkko_{{ input.project }}
@@ -37,8 +37,8 @@
       --local-cpus 32 \
       --local-memory 584 \
       --hifi {{ hifi_list | join(' ') }} \
-      {% if input.ont_ulong | length > 0 %}
-      --nano {{ input.ont_ulong | join(' ') }} \
+      {% if input.ulong | length > 0 %}
+      --nano {{ input.ulong | join(' ') }} \
       {% else %}
       --no-nano \
       {% endif %}

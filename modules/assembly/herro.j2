@@ -1,8 +1,58 @@
-{% macro herro(fastq, corrected_fasta) %}
+{% macro herro(input, fastq, corrected_fasta) %}
 
+{%- set temp_dir %}temp/{{ input.gltype }}/assembly/herro/{{ input.project }}{% endset %}
+{%- set results_dir %}{{ input.gltype }}/assembly/herro/{{ input.project }}{% endset %}
+{% set filtered_fastq %}{{ temp_dir }}/{{ fastq | basename.split('.fastq.gz')[0] }}.filtered.fastq.gz{% endset %}
+
+- name: herro_preprocess_{{ fastq | basename | replace('.', '_') }}
+  input: {{ fastq }}
+  output:
+    - {{ corrected_fasta }}
+  cpus: 4
+  mem: 8G
+  walltime: "8:00:00"
+  container: {{ constants.tools.seqkit.container }}
+  cmd: |
+    set -eu
+
+    seqkit stats \
+      --tabular \
+      --basename \
+      --out-file {{ temp_dir }}/{{ fastq | basename }}.stats.tsv \
+      {{ fastq }}
+
+    seqkit seq \
+      --min-qual 10 \
+      --min-len 10000 \
+      -o {{ filtered_fastq }} \
+      {{ fastq }}
+
+- name: dorado_herro_{{ fastq | basename | replace('.', '_') }}
+  input:
+    - {{ constants.grandcanyon.ont_resources }}
+    - {{ filtered_fastq }}
+  output:
+    - {{ corrected_fasta }}
+  cpus: 16
+  mem: 64G
+  walltime: "8:00:00"
+  queue_preset: "HERRO"
+  container: {{ constants.tools.dorado.container }}
+  cmd: |
+    set -e
+
+    dorado correct \
+      -v \
+      -m {{ constants.grandcanyon.ont_resources }}/dorado_models/herro-v1 \
+      -t 16 \
+      {{ filtered_fastq }} \
+      > {{ corrected_fasta }}
+
+{#
 - name: herro_{{ fastq | basename | replace('.', '_') }}
   input:
-    - {{ fastq }}
+    - {{ constants.grandcanyon.ont_resources }}
+    - {{ filtered_fastq }}
   output:
     - {{ corrected_fasta }}
   cpus: 16
@@ -22,8 +72,9 @@
       -b 32 \
       -d $gpus \
       -t 8 \
-      {{ fastq }} \
+      --write-alns {{ temp_dir }}/{{ fastq | basename | replace('.', '_') }} \
+      {{ filtered_fastq }} \
       {{ corrected_fasta }}
-
+#}
 {% endmacro %}
 
