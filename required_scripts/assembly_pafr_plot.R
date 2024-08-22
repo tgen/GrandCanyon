@@ -58,7 +58,7 @@ process_paf <- function(input, target) {
   plot_coverage(ali)
   ggsave(paste(input, "pafr_coverage_target.png", sep = "_"))
 
-  if (target != NULL) {
+  if (!is.null(target)) {
     target_only <- ali[ali$tname == target,]
     dotplot(target_only, label_seqs=FALSE, dashes=FALSE, order_by="qstart") + theme_bw()
     ggsave(paste(input, target, "pafr_dotplot.png", sep = "_"))
