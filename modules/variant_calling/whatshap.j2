@@ -23,6 +23,7 @@
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --output {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz \
       --ignore-read-groups \
+      --use-supplementary \
       {{ input_vcf }} \
       {{ input_bam }}
 
