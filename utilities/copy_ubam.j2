@@ -27,6 +27,9 @@
     - temp/ubams/{{ ubam.basename }}
   output:
     - temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
+    {% if ubam.fastqCode == 'duplex' %}
+    - temp/fastqs/{{ ubam.basename | replace(".", "_") }}.simplex.fastq.gz
+    {% endif %}
   cpus: 6
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
