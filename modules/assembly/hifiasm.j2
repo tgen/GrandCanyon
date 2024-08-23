@@ -50,6 +50,7 @@
     for graph in {{ temp_dir }}/{{ input.project }}.asm.*.gfa ; do
       awk '/^S/{print ">"$2;print $3}' ${graph} > {{ results_dir }}/$(basename ${graph%.gfa}.fa)
     done
+    mv {{ temp_dir }}/{{ input.project }}.asm.bp.* {{ results_dir }}/
 
 {% set input_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.hap1.p_ctg.fa{% endset %}
 {{- assembly_stats(input, input_assembly, 'hifiasm') }}
