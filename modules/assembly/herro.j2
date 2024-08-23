@@ -54,32 +54,3 @@
       > {{ corrected_fasta }}
 
 {% endmacro %}
-
-{#
-- name: herro_{{ fastq | basename | replace('.', '_') }}
-  input:
-    - {{ constants.grandcanyon.ont_resources }}
-    - {{ filtered_fastq }}
-  output:
-    - {{ corrected_fasta }}
-  cpus: 16
-  mem: 64G
-  walltime: "8:00:00"
-  queue_preset: "HERRO"
-  container: {{ constants.tools.herro.container }}
-  cmd: |
-    set -e
-
-    {# PyTorch gets mad if CUDA_VISIBLE_DEVICES is set, instead we grab our assigned ordinal and store in a different variable #}
-    gpus=${CUDA_VISIBLE_DEVICES}
-    unset CUDA_VISIBLE_DEVICES
-
-    herro inference \
-      -m {{ constants.grandcanyon.ont_resources }}/herro_models/model_R10_v0.1.pt \
-      -b 32 \
-      -d $gpus \
-      -t 8 \
-      --write-alns {{ temp_dir }}/{{ fastq | basename | replace('.', '_') }} \
-      {{ filtered_fastq }} \
-      {{ corrected_fasta }}
-#}
