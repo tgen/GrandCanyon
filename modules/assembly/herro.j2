@@ -2,7 +2,7 @@
 
 {%- set temp_dir %}temp/{{ input.gltype }}/assembly/herro/{{ input.project }}{% endset %}
 {%- set results_dir %}{{ input.gltype }}/assembly/herro/{{ input.project }}{% endset %}
-{% set filtered_fastq %}{{ temp_dir }}/{{ fastq | basename | replace('.fastq.gz', '.filtered.fastq.gz') }}{% endset %}
+{% set filtered_fastq %}{{ temp_dir }}/{{ fastq | basename | replace('.fastq.gz', '.filtered.fastq') }}{% endset %}
 
 - name: herro_preprocess_{{ fastq | basename | replace('.', '_') }}
   input: {{ fastq }}
@@ -39,7 +39,7 @@
   output:
     - {{ corrected_fasta }}
   cpus: 16
-  mem: 64G
+  mem: 128G
   walltime: "8:00:00"
   queue_preset: "HERRO"
   container: {{ constants.tools.dorado.container }}
