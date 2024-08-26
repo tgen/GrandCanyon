@@ -50,6 +50,7 @@
       --sample_name_tumor {{ pair.tumor.name }} \
       --sample_name_normal {{ pair.normal.name }} \
       --num_shards 20 \
+      --novcf_stats_report \
       --logging_dir {{ temp_dir }}/logs \
       --intermediate_results_dir {{ temp_dir }}/intermediate_results_dir
 

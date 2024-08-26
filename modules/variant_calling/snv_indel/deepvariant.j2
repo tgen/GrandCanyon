@@ -50,6 +50,7 @@
       --sample_name {{ sample.name }} \
       --num_shards 20 \
       --logging_dir {{ temp_dir }}/logs \
+      --novcf_stats_report \
       --intermediate_results_dir {{ temp_dir }}/intermediate_results_dir
 
 - name: deepvariant_filter_variants_{{ sample.name }}_{{ aligner }}
