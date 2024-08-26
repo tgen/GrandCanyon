@@ -12,6 +12,8 @@
 {% if format in ['minimap2','bwa'] %}
   {# BWA requires one argument with fields separated by \t #}
   {% set rg_line = '\\t'.join(['@RG'] + tags) %}
+{% elif format in ['exec_minimap2', 'exec_bwa'] %}
+  {% set rg_line = '\\\\t'.join(['@RG'] + tags) %}
 {% else %}
   {{ raise('Read group line format should be "bwa" or "star"') }}
 {% endif %}
