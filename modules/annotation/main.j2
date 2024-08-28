@@ -37,7 +37,7 @@
     {% set flags.bcftools = false %}
   {% endif %}
 
-  {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_vep"]|default(true) %}
+  {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
     {% set flags.vep = true %}
   {% endif %}
 {% else %}

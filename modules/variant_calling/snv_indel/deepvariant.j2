@@ -100,7 +100,7 @@
     - {{ results_dir }}/{{ output_prefix }}.chunks.csv
     - {{ results_dir }}/{{ output_prefix }}.phased.vcf
     - {{ results_dir }}/{{ output_prefix }}.phaseset.bed
-    {% if tasks.margin_phase_keep_phased_bam | default(true) %}
+    {% if tasks.margin_phase_keep_phased_bam | default(false) %}
     - {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam
     {% endif %}
   cpus: 8
@@ -125,7 +125,7 @@
       /opt/margin/params/phase/allParams.phase_vcf.pb-hifi.json \
       {% endif %}
       -t 8 \
-      {% if not tasks.margin_phase_keep_phased_bam | default(true) %}
+      {% if not tasks.margin_phase_keep_phased_bam | default(false) %}
       --skipHaplotypeBAM \
       {% endif %}
       -o {{ temp_dir }}/{{ output_prefix }}
@@ -135,7 +135,7 @@
     mv {{ temp_dir }}/{{ output_prefix }}.phaseset.bed {{ results_dir }}/
 
 
-{% if tasks.margin_phase_keep_phased_bam | default(true) %}
+{% if tasks.margin_phase_keep_phased_bam | default(false) %}
 - name: deepvariant_margin_samtools_compress_{{ sample.name }}_{{ aligner }}
   input:
     - {{ constants.grandcanyon[reference].reference_fasta }}

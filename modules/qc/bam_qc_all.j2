@@ -6,7 +6,7 @@
 {% from 'modules/qc/stats2lims.j2' import stats2lims with context %}
 
 {% macro bam_qc_samtools_stats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner='minimap2', bam_level=true) %}
-{% if tasks[taskPrefix+"_quality_control_stats_samtools_stats"]|default(true) %}
+{% if tasks[taskPrefix+"_quality_control_stats_samtools_stats"]|default(false) %}
 
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
 
@@ -239,7 +239,7 @@
 {% endmacro %}
 
 {% macro bam_qc_samtools_idxstats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=true) %}
-{% if tasks[taskPrefix+"_quality_control_stats_samtools_idxstats"]|default(true) %}
+{% if tasks[taskPrefix+"_quality_control_stats_samtools_idxstats"]|default(false) %}
 
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
 
@@ -303,7 +303,7 @@
 
 
 {% macro bam_qc_gatk_collectmultiplemetrics(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=true) %}
-{% if tasks[taskPrefix+"_quality_control_stats_gatk_CollectMultipleMetrics"]|default(true) %}
+{% if tasks[taskPrefix+"_quality_control_stats_gatk_CollectMultipleMetrics"]|default(false) %}
 
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
 

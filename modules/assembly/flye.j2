@@ -57,7 +57,7 @@
 {{- assembly_stats(input, input_assembly, 'flye') }}
 {{- quast(input, input_assembly, 'flye') }}
 
-{% if tasks.assembly_align_minimap2 | default(true) %}
+{% if tasks.assembly_align_minimap2 | default(false) %}
 {{- minimap2_asm(input, input_assembly, 'flye') }}
 {% endif %}
 {% if tasks.assembly_align_mashmap | default(false) %}

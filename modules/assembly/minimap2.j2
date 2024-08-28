@@ -30,7 +30,7 @@
 {% if tasks.plot_assembly_pafplot | default(false) %}
 {{- pafplot(pair, paf_output, 'minimap2', assembler) }}
 {% endif %}
-{% if tasks.plot_assembly_pafr | default(true) %}
+{% if tasks.plot_assembly_pafr | default(false) %}
 {{- pafr(pair, paf_output, 'minimap2', assembler) }}
 {% endif %}
 

@@ -24,7 +24,7 @@
   {% endif %}
 
   {%- if sample.subGroup|lower == 'constitutional' %}
-    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(true) %}
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(false) %}
       {{- deepvariant(sample, aligner) }}
     {% endif %}
 
@@ -35,7 +35,7 @@
 
   {% if sample.glprep in 'longread' %}
     {%- if sample.subGroup|lower == 'tumor' %}
-      {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(true) %}
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
         {{- severus(sample, aligner) }}
       {% endif %}
     {% endif %}
@@ -44,19 +44,19 @@
       {{- longshot(sample, aligner) }}
     {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_structural_caller_cutesv"]|default(true) %}
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_cutesv"]|default(false) %}
       {{- cutesv(sample, aligner) }}
     {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(false) %}
       {{- sniffles(sample, aligner) }}
     {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(true) %}
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(false) %}
       {{- dysgu(sample, aligner) }}
     {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_cna_caller_spectre"]|default(true) %}
+    {% if tasks[taskPrefix+"_variant_calling_cna_caller_spectre"]|default(false) %}
       {{- spectre(sample, aligner) }}
     {% endif %}
 
@@ -65,7 +65,7 @@
         {{- pbsv(sample, aligner) }}
       {% endif %}
 
-      {% if tasks[taskPrefix+"_variant_calling_cna_caller_hificnv"]|default(true) %}
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_hificnv"]|default(false) %}
         {{- hifi_cnv(sample, aligner) }}
       {% endif %}
     {% endif %}
@@ -97,16 +97,16 @@
 
   {% for aligner in pair.tumor.aligners %}
 
-  {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(true) %}
+  {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
     {{- deepsomatic(pair, aligner) }}
   {% endif %}
 
-  {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clairs"]|default(true) %}
+  {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clairs"]|default(false) %}
     {{- clairs(pair, aligner) }}
   {% endif %}
 
   {% if sample.glprep in 'longread' %}
-    {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(true) %}
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
       {{- severus(pair, aligner) }}
     {% endif %}
   {% endif %}

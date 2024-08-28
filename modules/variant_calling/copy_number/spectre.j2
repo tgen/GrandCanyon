@@ -6,7 +6,7 @@
 
 {% set taskPrefix %}{{ sample.gltype | capitalize }}{% endset %}
 
-{% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
+{% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(false) %}
 {%- set sniffles_snf %}{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_{{ aligner }}/{{ sample.name }}.{{ aligner }}.sniffles.all.snf{% endset %}
 {% endif %}
 
@@ -41,7 +41,7 @@
 
 - name: spectre_{{ sample.name }}_{{ aligner }}
   input:
-    {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(false) %}
     - {{ sniffles_snf }}
     {% endif %}
     - {{ results_dir }}/{{ sample.name }}.regions.bed.gz
@@ -59,13 +59,13 @@
     rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
 
-    {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
+    {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(false) %}
     snf2json {{ sniffles_snf }} {{ temp_dir }}/{{ sample.name }}.snfj.gz
     {% endif %}
 
     spectre CNVCaller \
       --coverage {{ results_dir }}/{{ sample.name }}.regions.bed.gz \
-      {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(true) %}
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(false) %}
       --snf {{ temp_dir }}/{{ sample.name }}.snfj.gz \
       {% endif %}
       {% if sample.subGroup|lower == 'tumor' %}

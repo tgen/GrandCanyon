@@ -86,7 +86,7 @@
 {{- assembly_stats(pair, input_assembly, 'shasta') }}
 {{- quast(pair, input_assembly, 'shasta') }}
 
-{% if tasks.assembly_align_minimap2 | default(true) %}
+{% if tasks.assembly_align_minimap2 | default(false) %}
 {{- minimap2_asm(pair, input_assembly, 'shasta') }}
 {% endif %}
 {% if tasks.assembly_align_mashmap | default(false) %}
