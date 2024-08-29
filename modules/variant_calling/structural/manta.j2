@@ -5,14 +5,17 @@
   {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set input_config = "paired" %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
   {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set input_config = "tumor_only" %}
   {% else %}
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set input_config = "germline" %}
   {% endif %}
 {% endif %}
 
@@ -34,9 +37,15 @@
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz.tbi
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSV.vcf.gz
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSV.vcf.gz.tbi
+    {% if input_config in ('tumor_only') %}
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.tumorSV.vcf.gz
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.tumorSV.vcf.gz.tbi
+    {% elif input_config in ('germline') %}
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz.tbi
-    {% if sample_or_pair.normal is defined %}
+    {% elif input_config in ('paired') %}
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz.tbi
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.vcf.gz
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.vcf.gz.tbi
     {% endif %}
@@ -81,10 +90,10 @@
       {% endif %}
       --callRegions "${MANTA_BED}.gz" \
       --config "${MANTA_CONFIG}" \
-      {% if sample_or_pair.normal is defined %}
+      {% if input_config in ('paired') %}
       --normalBam "{{ normal_bam }}" \
       --tumorBam "{{ tumor_bam }}" \
-      {% elif sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+      {% elif input_config in ('tumor_only') %}
       --tumorBam "{{ bam }}" \
       {% else %}
       --bam "{{ bam }}" \
@@ -102,20 +111,29 @@
     mv "{{ temp_dir }}/results/variants/candidateSmallIndels.vcf.gz.tbi" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz.tbi"
     mv "{{ temp_dir }}/results/variants/candidateSV.vcf.gz" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSV.vcf.gz"
     mv "{{ temp_dir }}/results/variants/candidateSV.vcf.gz.tbi" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSV.vcf.gz.tbi"
+    {% if input_config in ('tumor_only') %}
+    mv "{{ temp_dir }}/results/variants/tumorSV.vcf.gz" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.tumorSV.vcf.gz"
+    mv "{{ temp_dir }}/results/variants/tumorSV.vcf.gz.tbi" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.tumorSV.vcf.gz.tbi"
+    {% elif input_config in ('germline') %}
     mv "{{ temp_dir }}/results/variants/diploidSV.vcf.gz" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz"
     mv "{{ temp_dir }}/results/variants/diploidSV.vcf.gz.tbi" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz.tbi"
-    {% if sample_or_pair.normal is defined or sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {% elif input_config in ('paired') %}
+    mv "{{ temp_dir }}/results/variants/diploidSV.vcf.gz" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz"
+    mv "{{ temp_dir }}/results/variants/diploidSV.vcf.gz.tbi" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz.tbi"
     mv "{{ temp_dir }}/results/variants/somaticSV.vcf.gz" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.vcf.gz"
     mv "{{ temp_dir }}/results/variants/somaticSV.vcf.gz.tbi" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.vcf.gz.tbi"
     {% endif %}
 
 
-{% if sample_or_pair.normal is defined or sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
-  {% set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.vcf.gz{% endset %}
-  {% set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.pass.vcf.gz{% endset %}
-{% else %}
+{% if input_config in ('tumor_only') %}
+  {% set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.tumorSV.vcf.gz{% endset %}
+  {% set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.tumorSV.pass.vcf.gz{% endset %}
+{% elif input_config in ('germline') %}
   {% set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz{% endset %}
   {% set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.pass.vcf.gz{% endset %}
+{% elif input_config in ('paired') %}
+  {% set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.vcf.gz{% endset %}
+  {% set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.pass.vcf.gz{% endset %}
 {% endif %}
 
 - name: manta_filter_pass_{{ sample_or_pair.name }}_{{ aligner }}
