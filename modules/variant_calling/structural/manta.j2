@@ -1,0 +1,150 @@
+{% macro manta(sample_or_pair, aligner='bwa') %}
+
+{% if sample_or_pair.normal is defined %}
+  {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+  {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+{% else %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {% else %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {% endif %}
+{% endif %}
+
+- name: manta_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, structural_caller, manta, {{ sample_or_pair.name }}]
+  input:
+    {% if sample_or_pair.normal is defined %}
+    - {{ normal_bam }}
+    - {{ normal_bam }}.bai
+    - {{ tumor_bam }}
+    - {{ tumor_bam }}.bai
+    {% else %}
+    - {{ bam }}
+    - {{ bam }}.bai
+    {% endif %}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output: 
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz.tbi
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSV.vcf.gz
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSV.vcf.gz.tbi
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz.tbi
+    {% if sample_or_pair.normal is defined %}
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.vcf.gz
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.vcf.gz.tbi
+    {% endif %}
+  cpus: 20
+  mem: 20G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.manta.container }}
+  digest: {{ constants.tools.manta.digest }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# Purge any existing run files prior to starting #}
+    rm -r "{{ temp_dir }}" || true
+    mkdir -p "{{ temp_dir }}"
+
+    {# creating calling_intervals on the fly based on reference_dict, this should also accept a user supplied value in the future #}
+    MANTA_BED="{{ temp_dir }}/callRegions.bed"
+    grep 'SN:\(chr\)\?[0-9XY]\+\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+      sed 's/SN://;s/LN://' |\
+      awk '{ OFS="\t" ; print $2,0,$3-1 }' \
+      > ${MANTA_BED}
+
+    bgzip -f "${MANTA_BED}"
+    tabix -f -p bed "${MANTA_BED}.gz"
+
+    {#
+    # Some settings are only configurable via tha ini file. Here
+    # we generate this ini file and save it to the run dir.
+    #}
+    MANTA_CONFIG="{{ temp_dir }}/config.ini"
+    cat <<EOF > "${MANTA_CONFIG}"
+    [manta]
+    enableRemoteReadRetrievalForInsertionsInCancerCallingModes = 1
+    EOF
+
+    {# Build the Manta run file #}
+    configManta.py \
+      {% if sample_or_pair.gltype == 'exome' %}
+      --exome \
+      {% endif %}
+      --callRegions "${MANTA_BED}.gz" \
+      --config "${MANTA_CONFIG}" \
+      {% if sample_or_pair.normal is defined %}
+      --normalBam "{{ normal_bam }}" \
+      --tumorBam "{{ tumor_bam }}" \
+      {% elif sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+      --tumorBam "{{ bam }}" \
+      {% else %}
+      --bam "{{ bam }}" \
+      {% endif %}
+      --referenceFasta "{{ constants.grandcanyon[reference].reference_fasta }}" \
+      --runDir "{{ temp_dir }}"
+
+    {# Execute on the local machine with 19 parallel jobs #}
+    "{{ temp_dir }}/runWorkflow.py" -m local -j 19
+
+    {# Save all the vcs in the sample dir #}
+    mkdir -p "{{ results_dir }}" || true
+
+    mv "{{ temp_dir }}/results/variants/candidateSmallIndels.vcf.gz" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz"
+    mv "{{ temp_dir }}/results/variants/candidateSmallIndels.vcf.gz.tbi" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz.tbi"
+    mv "{{ temp_dir }}/results/variants/candidateSV.vcf.gz" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSV.vcf.gz"
+    mv "{{ temp_dir }}/results/variants/candidateSV.vcf.gz.tbi" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSV.vcf.gz.tbi"
+    mv "{{ temp_dir }}/results/variants/diploidSV.vcf.gz" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz"
+    mv "{{ temp_dir }}/results/variants/diploidSV.vcf.gz.tbi" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz.tbi"
+    {% if sample_or_pair.normal is defined or sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    mv "{{ temp_dir }}/results/variants/somaticSV.vcf.gz" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.vcf.gz"
+    mv "{{ temp_dir }}/results/variants/somaticSV.vcf.gz.tbi" "{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.vcf.gz.tbi"
+    {% endif %}
+
+
+{% if sample_or_pair.normal is defined or sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+  {% set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.vcf.gz{% endset %}
+  {% set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.somaticSV.pass.vcf.gz{% endset %}
+{% else %}
+  {% set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.vcf.gz{% endset %}
+  {% set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.diploidSV.pass.vcf.gz{% endset %}
+{% endif %}
+
+- name: manta_filter_pass_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, manta, flag, {{ sample_or_pair.name }}]
+  input:
+    - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
+  output:
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 2G
+  walltime: "12:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+
+    bcftools filter \
+      --include 'FILTER == "PASS"' \
+      --output-type z \
+      --output {{ pass_vcf }} \
+      --write-index \
+      {{ all_vcf }}
+
+{#
+#
+# TODO: Add generic manta flagging/annotation, it currently would only support the pair tumor-normal configuration
+#
+#}
+
+{% endmacro %}

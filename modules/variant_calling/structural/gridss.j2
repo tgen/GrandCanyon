@@ -7,8 +7,13 @@
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
-  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-  {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {% else %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {% endif %}
 {% endif %}
 
 - name: gridss_{{ sample_or_pair.name }}_{{ aligner }}

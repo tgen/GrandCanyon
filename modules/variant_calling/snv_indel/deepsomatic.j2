@@ -18,9 +18,9 @@
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/deepsomatic/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/deepsomatic/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-  {% if sample_or_pair.normal.rgpl == 'PACBIO' %}
+  {% if sample_or_pair.rgpl == 'PACBIO' %}
     {%- set model_type = 'PACBIO_TUMOR_ONLY' %}
-  {% elif sample_or_pair.normal.rgpl == 'ONT' %}
+  {% elif sample_or_pair.rgpl == 'ONT' %}
     {%- set model_type = 'ONT_TUMOR_ONLY' %}
   {% elif sample_or_pair.gltype == 'exome' %}
     {# CURRENTLY NOT SUPPORTED BY DEEPSOMATIC #}

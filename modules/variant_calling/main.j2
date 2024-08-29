@@ -8,13 +8,14 @@
 {% from 'modules/variant_calling/structural/pbsv.j2' import pbsv with context %}
 {% from 'modules/variant_calling/structural/severus.j2' import severus with context %}
 {% from 'modules/variant_calling/structural/dysgu.j2' import dysgu with context %}
+{% from 'modules/variant_calling/structural/manta.j2' import manta with context %}
 {% from 'modules/variant_calling/structural/gridss.j2' import gridss with context %}
 {% from 'modules/variant_calling/copy_number/spectre.j2' import spectre with context %}
 {% from 'modules/variant_calling/copy_number/hifi_cnv.j2' import hifi_cnv with context %}
 
 {%- macro constitutional_variant_calling(samples) %}
 
-{%- for sample in samples.values() if sample.gltype in ('exome','genome') and sample.subGroup|lower == 'constititional' %}
+{%- for sample in samples.values() if sample.gltype in ('exome','genome') and sample.subGroup|lower in ('constitutional','germline','normal','control') %}
 
   {% for aligner in sample.aligners %}
 
@@ -106,7 +107,10 @@
 
 {% macro somatic_variant_calling(samples) %}
 
-{%- for sample in samples.values() if sample.gltype in ('exome','genome') and sample.subGroup|lower == 'tumor' %}
+{############
+# This generates tasks for true tumor only compatible variant callers
+############}
+{%- for sample in samples.values() if sample.gltype in ('exome','genome') and sample.subGroup|lower in ('tumor','tumour','case') %}
 
   {% if sample.gltype in 'exome' %}
     {% set taskPrefix = 'Exome' %}
@@ -116,21 +120,43 @@
 
   {% for aligner in sample.aligners %}
 
-    {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
-      {{- severus(sample, aligner) }}
-    {% endif %}
-
+    {############
+    # snv and indel variant callers
+    ############}
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
       {{- deepsomatic(sample, aligner) }}
     {% endif %}
 
+    {############
+    # structural variant callers
+    ############}
+    {% if sample.glprep in 'longread' %}
+      
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
+        {{- severus(sample, aligner) }}
+      {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_gridss"]|default(false) %}
+        {{- gridss(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
+        {{- manta(sample, aligner) }}
+      {% endif %}
+    
+    {% endif %}
+
+  {% endfor %}
+
 {% endfor %}
 
 {% set pairs = [] %}
-{% for tumor in samples.values() if tumor.subGroup|lower == 'tumor' and tumor.gltype in ('exome','genome') %}
-  {% for normal in samples.values() if normal.subGroup|lower == 'constitutional' and normal.gltype == tumor.gltype and normal.assayCode == tumor.assayCode %}
+{% for tumor in samples.values() if tumor.subGroup|lower in ('tumor','tumour','case') and tumor.gltype in ('exome','genome') %}
+  {% for normal in samples.values() if normal.subGroup|lower in ('constitutional','germline','normal','control') and normal.gltype == tumor.gltype and normal.assayCode == tumor.assayCode %}
     {% set pair_name = normal.name + '-' + tumor.name %}
-    {% do pairs.append({'name': pair_name, 'gltype': normal.gltype, 'normal': normal, 'tumor': tumor}) %}
+    {% do pairs.append({'name': pair_name, 'gltype': normal.gltype, 'glprep': normal.glprep, 'normal': normal, 'tumor': tumor}) %}
   {% endfor %}
 {% endfor %}
 
@@ -170,6 +196,10 @@
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_gridss"]|default(false) %}
         {{- gridss(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
+        {{- manta(pair, aligner) }}
       {% endif %}
     
     {% endif %}

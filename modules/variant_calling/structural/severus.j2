@@ -47,17 +47,19 @@ options:
 {% macro severus(sample_or_pair, aligner) %}
 
 {% if sample_or_pair.normal is defined %}
-{%- set phased_vcf %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.deepvariant.whatshap.phased.vcf.gz{% endset %}
-{%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
-{%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-{%- set temp_vcf %}{{ temp_dir }}/somatic_SVs/severus_somatic.vcf{% endset %}
-{%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(false)  %}
+    {%- set phased_vcf %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.deepvariant.whatshap.phased.vcf.gz{% endset %}
+  {% endif %}
+  {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+  {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set temp_vcf %}{{ temp_dir }}/somatic_SVs/severus_somatic.vcf{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
 {% else %}
-{%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-{%- set temp_vcf %}{{ temp_dir }}/all_SVs/severus_all.vcf{% endset %}
-{%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set temp_vcf %}{{ temp_dir }}/all_SVs/severus_all.vcf{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
 {% endif %}
 {%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.severus.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.severus.pass.vcf.gz{% endset %}
@@ -70,7 +72,9 @@ options:
     - {{ tumor_bam }}.bai
     - {{ normal_bam }}
     - {{ normal_bam }}.bai
+    {% if phased_vcf %}
     - {{ phased_vcf }}
+    {% endif %}
     {% else %}
     - {{ bam }}
     - {{ bam }}.bai
@@ -102,13 +106,14 @@ options:
       --target-bam {{ tumor_bam }} \
       --control-bam {{ normal_bam }} \
       --out-dir {{ temp_dir }} \
+      {% if phased_vcf %}
       --phasing-vcf {{ phased_vcf }} \
+      {% endif %}
       --vntr-bed {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }}
 
     mv {{ temp_dir }}/breakpoints_double.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
     mv {{ temp_dir }}/somatic_SVs/breakpoint_clusters.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.tsv
     mv {{ temp_dir }}/somatic_SVs/breakpoint_clusters_list.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters_list.tsv
-    mv {{ temp_dir }}/somatic_SVs/breakpoint_graph.gv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_graph.gv
     {% else %}
     severus \
       --threads 16 \
@@ -118,7 +123,6 @@ options:
     mv {{ temp_dir }}/breakpoints_double.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
     mv {{ temp_dir }}/all_SVs/breakpoint_clusters.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.tsv
     mv {{ temp_dir }}/all_SVs/breakpoint_clusters_list.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters_list.tsv
-    mv {{ temp_dir }}/all_SVs/breakpoint_graph.gv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_graph.gv
     {% endif %}
 
 

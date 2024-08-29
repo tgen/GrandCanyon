@@ -59,6 +59,9 @@ constants:
       container: quay.io/biocontainers/longshot:0.4.5--hd175d40_2
     lorax:
       container: quay.io/biocontainers/lorax:0.3.8--hb7e2ac5_0
+    manta:
+      container: ghcr.io/tgen/containers/manta:1.6.0-23082819
+      digest: 8413ec3da1e20da9f0cc9544722c7e9d30135f4ee0aa8092b67fc74c782913a3
     margin:
       container: /home/tgenref/containers/margin_latest.sif
     mashmap:
