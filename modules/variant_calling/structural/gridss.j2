@@ -1,0 +1,60 @@
+{% macro gridss(sample_or_pair, aligner='bwa') %}
+
+{% if sample_or_pair.normal is defined %}
+  {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+  {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+{% else %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+{% endif %}
+
+- name: gridss_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, structural_caller, gridss, {{ sample_or_pair.name }}]
+  input:
+    {% if sample_or_pair.normal is defined %}
+    - {{ normal_bam }}
+    - {{ normal_bam }}.bai
+    - {{ tumor_bam }}
+    - {{ tumor_bam }}.bai
+    {% else %}
+    - {{ bam }}
+    - {{ bam }}.bai
+    {% endif %}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.vcf.gz
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.gridss.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    gridss \
+      --threads 8 \
+      --jvmheap 30g \
+      -r {{ constants.grandcanyon[reference].reference_fasta }} \
+      -a {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.bam \
+      -o {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.vcf.gz \
+      --skipsoftcliprealignment \
+      {% if sample_or_pair.normal is defined %}
+      {{ normal_bam }} \
+      {{ tumor_bam }}
+      {% else %}
+      {{ bam }}
+      {% endif %}
+
+    {#
+    gridss_somatic_filter
+      --ref {{ constants.grandcanyon[reference].reference_fasta }} \
+      --input {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.vcf.gz \
+      --output {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.somatic.vcf.gz \
+      --plotdir {{ results_dir }} \
+    #}
+
+{% endmacro %}

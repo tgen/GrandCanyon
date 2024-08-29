@@ -8,6 +8,7 @@
 {% from 'modules/variant_calling/structural/pbsv.j2' import pbsv with context %}
 {% from 'modules/variant_calling/structural/severus.j2' import severus with context %}
 {% from 'modules/variant_calling/structural/dysgu.j2' import dysgu with context %}
+{% from 'modules/variant_calling/structural/gridss.j2' import gridss with context %}
 {% from 'modules/variant_calling/copy_number/spectre.j2' import spectre with context %}
 {% from 'modules/variant_calling/copy_number/hifi_cnv.j2' import hifi_cnv with context %}
 
@@ -66,6 +67,10 @@
       {% endif %}
 
     {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_gridss"]|default(false) %}
+        {{- gridss(sample, aligner) }}
+      {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
         {{- manta(sample, aligner) }}
@@ -163,6 +168,9 @@
 
     {% else %}
 
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_gridss"]|default(false) %}
+        {{- gridss(pair, aligner) }}
+      {% endif %}
     
     {% endif %}
 
