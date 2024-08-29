@@ -47,7 +47,7 @@ options:
 {% macro severus(sample_or_pair, aligner) %}
 
 {% if sample_or_pair.normal is defined %}
-  {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(false)  %}
+  {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_snp_indel_caller_deepvariant"]|default(false)  %}
     {%- set phased_vcf %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.deepvariant.whatshap.phased.vcf.gz{% endset %}
   {% endif %}
   {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
