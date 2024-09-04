@@ -30,6 +30,8 @@ constants:
       container: trinityctat/ctat_lr_fusion:0.13.0
     deepsomatic:
       container: google/deepsomatic:1.7.0-gpu
+    deeptrio:
+      container: google/deepvariant:deeptrio-1.6.0-gpu
     deepvariant:
       container: google/deepvariant:1.6.0-gpu
     dorado:

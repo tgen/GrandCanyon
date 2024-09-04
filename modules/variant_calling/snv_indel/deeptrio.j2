@@ -1,0 +1,125 @@
+{%- macro deeptrio(trio, aligner) %}
+
+{%- set temp_dir %}temp/{{ trio.gltype }}/joint_variant_calls/deeptrio/{{ trio.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ trio.gltype }}/joint_variant_calls/deeptrio/{{ trio.name }}_{{ aligner }}{% endset %}
+
+- name: deeptrio_prep_and_make_examples_{{ trio.name }}_{{ aligner }}
+  tags: [{{ trio.gltype }}, constitutional, snp_indel_caller, deeptrio, {{ trio.name }}]
+  input:
+    - temp/{{ trio.child.gltype }}/alignment/{{ aligner }}/{{ trio.child.name }}/{{ trio.child.name }}.{{ aligner }}.bam
+    - temp/{{ trio.child.gltype }}/alignment/{{ aligner }}/{{ trio.child.name }}/{{ trio.child.name }}.{{ aligner }}.bam.bai
+    {% for sample in trio.parents %}
+    - temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam
+    - temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam.bai
+    {% endfor %}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ temp_dir }}/intermediate_results_dir/make_examples.tfrecord@20.gz
+    - {{ temp_dir }}/intermediate_results_dir/gvcf.tfrecord@20.gz
+    - {{ temp_dir }}/deeptrio_make_examples.sh
+    - {{ temp_dir }}/deeptrio_call_variants.sh
+    - {{ temp_dir }}/deeptrio_postprocess_variants.sh
+  cpus: 20
+  mem: 120G
+  walltime: "12:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.deeptrio.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}/{logs,intermediate_results_dir}
+    mkdir -p {{ results_dir }}
+    export TMPDIR={{ temp_dir }}/intermediate_results_dir
+
+    run_deeptrio \
+      --dry_run \
+      {% if trio.child.rgpl in ('PACBIO') %}
+      --model_type PACBIO \
+      {% elif trio.child.rgpl in ('ONT') %}
+      --model_type ONT \
+      {% elif trio.child.gltype in ('exome') %}
+      --model_type WES \
+      {% else %}
+      --model_type WGS \
+      {% endif %}
+      --ref {{ constants.grandcanyon[reference].reference_fasta }} \
+      --sample_name_child {{ trio.child.name }} \
+      --reads_child temp/{{ trio.child.gltype }}/alignment/{{ aligner }}/{{ trio.child.name }}/{{ trio.child.name }}.{{ aligner }}.bam \
+      --output_vcf_child {{ results_dir }}/{{ trio.child.name }}.{{ aligner }}.deeptrio.all.vcf.gz \
+      --output_gvcf_child {{ results_dir }}/{{ trio.child.name }}.{{ aligner }}.deeptrio.all.g.vcf.gz \
+      {% for parent in trio.parents %}
+      --sample_name_parent{{ loop.index }} {{ parent.name }} \
+      --reads_parent{{ loop.index }} temp/{{ parent.gltype }}/alignment/{{ aligner }}/{{ parent.name }}/{{ parent.name }}.{{ aligner }}.bam \
+      --output_vcf_parent{{ loop.index }} {{ results_dir }}/{{ parent.name }}.{{ aligner }}.deeptrio.all.vcf.gz \
+      --output_gvcf_parent{{ loop.index }} {{ results_dir }}/{{ parent.name }}.{{ aligner }}.deeptrio.all.g.vcf.gz \
+      {% endfor %}
+      --num_shards 20 \
+      --logging_dir {{ temp_dir }}/logs \
+      --novcf_stats_report \
+      --intermediate_results_dir {{ temp_dir }}/intermediate_results_dir 2> /dev/null |\
+      csplit --prefix="{{ temp_dir }}/deeptrio_" -s -z --suppress-matched - "/Running/" '{*}'
+
+    rm {{ temp_dir }}/deeptrio_00
+    mv {{ temp_dir }}/deeptrio_01 {{ temp_dir }}/deeptrio_make_examples.sh
+    mv {{ temp_dir }}/deeptrio_02 {{ temp_dir }}/deeptrio_call_variants.sh
+    mv {{ temp_dir }}/deeptrio_03 {{ temp_dir }}/deeptrio_postprocess_variants.sh
+    sed -i '1i #!/bin/sh' {{ temp_dir }}/deeptrio_*.sh
+
+    cat {{ temp_dir }}/deeptrio_make_examples.sh
+    bash {{ temp_dir }}/deeptrio_make_examples.sh
+
+
+- name: deeptrio_call_variants_{{ trio.name }}_{{ aligner }}
+  tags: [{{ trio.gltype }}, constitutional, snp_indel_caller, deeptrio, {{ trio.name }}]
+  reset: predecessors
+  input:
+    - {{ temp_dir }}/intermediate_results_dir/make_examples.tfrecord@20.gz
+    - {{ temp_dir }}/deeptrio_call_variants.sh
+  output:
+    - {{ temp_dir }}/intermediate_results_dir/call_variants_output.tfrecord.gz
+  cpus: 8
+  mem: 40G
+  walltime: "12:00:00"
+  queue_preset: "deeptrio"
+  container: {{ constants.tools.deeptrio.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    export TMPDIR={{ temp_dir }}/intermediate_results_dir
+
+    cat {{ temp_dir }}/deeptrio_call_variants.sh
+    bash {{ temp_dir }}/deeptrio_call_variants.sh
+
+
+- name: deeptrio_postprocess_variants_{{ trio.name }}_{{ aligner }}
+  tags: [{{ trio.gltype }}, constitutional, snp_indel_caller, deeptrio, {{ trio.name }}]
+  input:
+    - {{ temp_dir }}/deeptrio_postprocess_variants.sh
+    - {{ temp_dir }}/intermediate_results_dir/gvcf.tfrecord@20.gz
+    - {{ temp_dir }}/intermediate_results_dir/call_variants_output.tfrecord.gz
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ trio.child.name }}.{{ aligner }}.deeptrio.all.vcf.gz
+    - {{ results_dir }}/{{ trio.child.name }}.{{ aligner }}.deeptrio.all.g.vcf.gz
+    {% for sample in trio.parents %}
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.deeptrio.all.vcf.gz
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.deeptrio.all.g.vcf.gz
+    {% endfor %}
+  cpus: 16
+  mem: 128G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.deeptrio.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    export TMPDIR={{ temp_dir }}/intermediate_results_dir
+
+    cat {{ temp_dir }}/deeptrio_postprocess_variants.sh
+    bash {{ temp_dir }}/deeptrio_postprocess_variants.sh
+
+{% endmacro %}

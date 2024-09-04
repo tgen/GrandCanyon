@@ -91,7 +91,7 @@
 
 {% endmacro %}
 
-{% macro whatshap_haplotag(sample, input_vcf, input_bam, temp_dir, results_dir, output_prefix, variant_caller, aligner) %}
+{% macro whatshap_haplotag(sample, input_vcf, input_bam, output_dir, output_prefix, variant_caller, aligner) %}
 
 - name: whatshap_haplotag_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
@@ -110,45 +110,20 @@
     set -eu
     set -o pipefail
 
-    mkdir -p {{ temp_dir }}
+    mkdir -p {{ output_dir }}
 
-    whatshap haplotag \
-      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      -o {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam \
-      --ignore-read-groups \
-      --tag-supplementary \
-      --skip-missing-contigs \
-      --output-threads=4 \
-      {{ input_vcf }} \
-      {{ input_bam }}
-
-
-- name: whatshap_haplotag_{{ variant_caller }}_samtools_compress_{{ sample.name }}_{{ aligner }}
-  input:
-    - {{ constants.grandcanyon[reference].reference_fasta }}
-    - {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam
-  output:
-    - {{ results_dir }}/{{ output_prefix }}.haplotagged.cram
-    - {{ results_dir }}/{{ output_prefix }}.haplotagged.cram.crai
-  walltime: "8:00:00"
-  cpus: 8
-  mem: 8G
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.samtools.container }}
-  cmd: |
-    set -eu
-    set -o pipefail
-
-    mkdir -p {{ results_dir }}
-
-    {# Convert to compressed VCF #}
-    samtools view \
-      -@ 8 \
-      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      --no-PG \
-      -o {{ results_dir }}/{{ output_prefix }}.haplotagged.cram \
-      --write-index \
-      {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam
-
+    if ls {{ output_dir }}/{{ output_prefix }}.haplotagged.bam ; then
+      echo "{{ output_dir }}/{{ output_prefix }}.haplotagged.bam already exists! Skipping whatshap haplotagging!"
+    else
+      whatshap haplotag \
+        --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+        -o {{ output_dir }}/{{ output_prefix }}.haplotagged.bam \
+        --ignore-read-groups \
+        --tag-supplementary \
+        --skip-missing-contigs \
+        --output-threads=4 \
+        {{ input_vcf }} \
+        {{ input_bam }}
+    fi
 
 {% endmacro %}

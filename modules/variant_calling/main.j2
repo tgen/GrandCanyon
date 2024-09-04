@@ -1,5 +1,6 @@
 {% from 'modules/variant_calling/snv_indel/deepvariant.j2' import deepvariant with context %}
 {% from 'modules/variant_calling/snv_indel/deepsomatic.j2' import deepsomatic with context %}
+{% from 'modules/variant_calling/snv_indel/deeptrio.j2' import deeptrio with context %}
 {% from 'modules/variant_calling/snv_indel/clair3.j2' import clair3 with context %}
 {% from 'modules/variant_calling/snv_indel/clairs.j2' import clairs with context %}
 {% from 'modules/variant_calling/snv_indel/longshot.j2' import longshot with context %}
@@ -101,6 +102,64 @@
 
   {% endfor %}
 
+{% endfor %}
+
+{% set sample_tuples = [] %}
+{% for assay_code, sample_tuple in samples.values()|selectattr('subGroup', 'eq', 'Constitutional')|groupby('assayCode') %}
+  {% set sample = sample_tuple|first %}
+  {% set tuple_name %}{{ project }}_{{ assay_code }}{% endset %}
+  {% if sample_tuple | length > 1 %}
+    {% do sample_tuples.append({'name': tuple_name, 'gltype': sample.gltype, 'samples': sample_tuple}) %}
+  {% endif %}
+{% endfor %}
+
+{% for sample_tuple in sample_tuples %}
+  {% set sample = sample_tuple.samples|first %}
+  {% for aligner in sample.aligners %}
+
+    {% if tasks[sample_tuple.gltype|capitalize+"_variant_calling_structural_caller_sniffles"]|default(false) %}
+      {{- sniffles(sample_tuple, aligner) }}
+    {% endif %}
+
+  {% endfor %}
+{% endfor %}
+
+{% set trios = [] %}
+{% for relationship in sampleRelations %}
+  {% for sample in relationship.samples if sample.paternalID != '' or sample.maternalID != '' %}
+    {% set parents = [] %}
+    {% if sample.paternalID is defined %}
+      {% set paternal = relationship.samples|selectattr('patientID', 'eq', sample.paternalID)|first|default(none) %}
+      {% set paternal_sample = samples.values()|selectattr('sampleMergeKey', 'eq', paternal.sampleMergeKey)|first|default(none) %}
+      {% if paternal_sample is not none %}
+        {% do parents.append(paternal_sample) %}
+      {% else %}
+
+      {% endif %}
+    {% endif %}
+    {% if sample.maternalID is defined %}
+      {% set maternal = relationship.samples|selectattr('patientID', 'eq', sample.maternalID)|first|default(none) %}
+      {% set maternal_sample = samples.values()|selectattr('sampleMergeKey', 'eq', maternal.sampleMergeKey)|first|default(none) %}
+      {% if maternal_sample is not none %}
+        {% do parents.append(maternal_sample) %}
+      {% else %}
+
+      {% endif %}
+    {% endif %}
+    {% set child = samples.values()|selectattr('sampleMergeKey', 'eq', sample.sampleMergeKey)|first|default(none) %}
+    {% do trios.append({'name': child.name, 'gltype': child.gltype, 'child': child, 'parents': parents}) %}
+  {% endfor %}
+{% endfor %}
+
+{% for trio in trios %}
+
+  {% for aligner in trio.child.aligners %}
+
+    {% if tasks[trio.gltype|capitalize+"_variant_calling_snp_indel_caller_deeptrio"]|default(false) %}
+      {{- deeptrio(trio, aligner) }}
+    {% endif %}
+
+  {% endfor %}
 {% endfor %}
 
 {% endmacro %}
@@ -217,5 +276,3 @@
 {% endfor %}
 
 {% endmacro %}
-
-
