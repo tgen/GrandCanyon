@@ -1,4 +1,4 @@
-{% from 'modules/assembly/assembly_stats.j2' import assembly_stats with context %}
+{% from 'modules/assembly/assembly_qc.j2' import assembly_qc with context %}
 {% from 'modules/assembly/quast.j2' import quast with context %}
 
 {% from 'modules/assembly/minimap2.j2' import minimap2_asm with context %}
@@ -83,7 +83,7 @@
     mv {{ temp_dir }}/run_dir/Assembly* {{ results_dir }}
 
 {% set input_assembly %}{{ results_dir }}/Assembly-Phased.fasta{% endset %}
-{{- assembly_stats(pair, input_assembly, 'shasta') }}
+{{- assembly_qc(pair, input_assembly, 'shasta') }}
 {{- quast(pair, input_assembly, 'shasta') }}
 
 {% if tasks.assembly_align_minimap2 | default(false) %}

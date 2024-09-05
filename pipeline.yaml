@@ -17,16 +17,16 @@ constants:
       container: ghcr.io/tgen/containers/bedtools:2.29.0-23080313
       digest: cde92d1b69ecfda6e5f115c6b9220a312c380b0d7aa30378437476cd50206ee0
     busco:
-      container: quay.io/biocontainers/busco:5.5.0--pyhdfd78af_0
+      container: quay.io/biocontainers/busco:5.7.1--pyhdfd78af_0
     bwa_mem2_samtools:
       container: ghcr.io/tgen/containers/bwa_mem2_samtools:2.2.1-23080315
       digest: 98a83bc2d70fa39755a02c2d81de64ef36dac292cdf6b1fcf02570a3e227b7f6
-    canu:
-      container: quay.io/biocontainers/canu:2.2--ha47f30e_0
     clair3:
       container: hkubal/clair3:v1.0.5
     clairs:
       container: hkubal/clairs:v0.1.7
+    compleasm:
+      container: quay.io/biocontainers/compleasm:0.2.6--pyh7cba7a3_0
     cutesv:
       container: quay.io/biocontainers/cutesv:2.0.3--pyhdfd78af_0
     ctat_lr:
@@ -73,6 +73,8 @@ constants:
       container: /home/tgenref/containers/mashmap_3.1.3--h07ea13f_0.sif
     medaka:
       container: quay.io/biocontainers/medaka:1.11.1--py310h87e71ce_0
+    merqury:
+      container: quay.io/biocontainers/merqury:1.3--hdfd78af_2
     minimap2:
       container: /home/tgenref/containers/minimap2-samtools_2.28_1.20.sif
     moddotplot:
@@ -199,6 +201,7 @@ constants:
         sqanti3:
           tappas_gff: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sqanti3/human_tappas_gencode_annotation_file.gff3
     ont_resources: /home/tgenref/instrument_resources/ont
+    lineages: /home/tgenref/multi_species_resources/tool_specific_resources/busco_lineages
     required_scripts:
       plotSamStats_Rscript: summarize_samstats.R
       pafr_plot_Rscript: assembly_pafr_plot.R

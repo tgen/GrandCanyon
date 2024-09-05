@@ -1,4 +1,4 @@
-{% from 'modules/assembly/assembly_stats.j2' import assembly_stats with context %}
+{% from 'modules/assembly/assembly_qc.j2' import assembly_qc with context %}
 {% from 'modules/assembly/quast.j2' import quast with context %}
 
 {% from 'modules/assembly/minimap2.j2' import minimap2_asm with context %}
@@ -53,7 +53,7 @@
     mv {{ temp_dir }}/assembly* {{ results_dir }}
 
 {% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
-{{- assembly_stats(input, input_assembly, 'verkko') }}
+{{- assembly_qc(input, input_assembly, 'verkko') }}
 {{- quast(input, input_assembly, 'verkko') }}
 
 {% if tasks.assembly_align_minimap2 | default(false) %}
