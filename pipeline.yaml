@@ -8,6 +8,9 @@ constants:
   tools:
     assembly_stats:
       container: quay.io/biocontainers/assembly-stats:1.0.1--h4ac6f70_7
+    base:
+      container: ghcr.io/tgen/containers/debian:bullseye
+      digest: b8f30ec0fb3f1c1ab0de63703b438f8476296df3097af5b52917ec7ce8417863
     bcftools:
       container: quay.io/biocontainers/bcftools:1.20--h8b25389_1
     bedtools:

@@ -3,14 +3,12 @@
     {% set tasks = {} %}
 {% endif %}
 
-{% set supported_references = ['chm13', 'grch38'] %}
-
 {% if reference is not defined or reference == "" %}
     {% set reference = "grch38" %}
     {% set log_msg %}reference not defined, defaulting to grch38{% endset %}
     {{ log(log_msg, level='WARNING') }}
-{% elif reference|lower not in ['chm13', 'grch38'] %}
-    {% set raise_msg %}Unsupported reference defined! {{ reference|lower }} is not in {{ supported_references }}{% endset %}
+{% elif constants.grandcanyon[reference] is not defined %}
+    {% set raise_msg %}Unsupported reference defined! {{ reference|lower }} is not in pipeline.yaml or user supplied input{% endset %}
     {{ raise(raise_msg) }}
 {% endif %}
 
@@ -62,7 +60,7 @@
         {% do file.update({'subGroup': 'constitutional'}) %}
     {% endif %}
 
-    {% if long_read_only is defined and long_read_only and file.rgpl not in ['ONT', 'PACBIO'] %}
+    {% if long_read_only|default(false) and file.rgpl not in ['ONT', 'PACBIO'] %}
 
     {% else %}
     {% if name not in samples %}
@@ -92,7 +90,7 @@
     {% do samples[name]['read_groups'][rgid].update({'data_files': data_files}) %}
 
     {% for file in data_files %}
-      {% if file.fileType == "fastq" %}
+      {% if file.fileType in ["fastq", "fasterq"] %}
         {{- copy_fastq(file) }}
       {% elif file.fileType == "ubam" %}
         {{- copy_ubam(file) }}
