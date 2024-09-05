@@ -117,8 +117,12 @@
   {% set sample = sample_tuple.samples|first %}
   {% for aligner in sample.aligners %}
 
-    {% if tasks[sample_tuple.gltype|capitalize+"_variant_calling_structural_caller_sniffles"]|default(false) %}
-      {{- sniffles(sample_tuple, aligner) }}
+    {% if sample.glprep in 'longread' %}
+
+      {% if tasks[sample_tuple.gltype|capitalize+"_variant_calling_structural_caller_sniffles"]|default(false) %}
+        {{- sniffles(sample_tuple, aligner) }}
+      {% endif %}
+
     {% endif %}
 
   {% endfor %}
