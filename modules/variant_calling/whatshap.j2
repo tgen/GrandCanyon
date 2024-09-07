@@ -8,7 +8,7 @@
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
-  cpus: 8
+  cpus: 2
   mem: 32G
   walltime: "8:00:00"
   queue_preset: "DEFAULT"
@@ -27,6 +27,7 @@
       {{ input_vcf }} \
       {{ input_bam }}
 
+    tabix --threads 2 -C {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
 
 - name: whatshap_stats_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
@@ -34,9 +35,9 @@
   output:
     - {{ results_dir }}/{{ output_prefix }}.phased_stats.tsv
     - {{ results_dir }}/{{ output_prefix }}.phased.gtf
-  walltime: "8:00:00"
-  cpus: 8
+  cpus: 2
   mem: 8G
+  walltime: "8:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.whatshap.container }}
   cmd: |
@@ -58,9 +59,9 @@
     - {{ results_dir }}/{{ output_prefix }}.phased.gtf
   output:
     - {{ results_dir }}/{{ output_prefix }}.phased_gene_stats.tsv
-  walltime: "1:00:00"
   cpus: 1
   mem: 2G
+  walltime: "1:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.bedtools.container }}
   cmd: |
@@ -100,7 +101,7 @@
     - {{ input_bam }}.bai
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
-    - {{ temp_dir }}/{{ output_prefix }}.haplotagged.bam
+    - {{ output_dir }}/{{ output_prefix }}.haplotagged.bam
   cpus: 8
   mem: 32G
   walltime: "8:00:00"
