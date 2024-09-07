@@ -45,12 +45,12 @@
       --model_type WGS \
       {% endif %}
       --ref {{ constants.grandcanyon[reference].reference_fasta }} \
-      --sample_name_child {{ trio.child.name }} \
+      --sample_name_child {{ trio.child.rgsm }} \
       --reads_child temp/{{ trio.child.gltype }}/alignment/{{ aligner }}/{{ trio.child.name }}/{{ trio.child.name }}.{{ aligner }}.bam \
       --output_vcf_child {{ results_dir }}/{{ trio.child.name }}.{{ aligner }}.deeptrio.all.vcf.gz \
       --output_gvcf_child {{ results_dir }}/{{ trio.child.name }}.{{ aligner }}.deeptrio.all.g.vcf.gz \
       {% for parent in trio.parents %}
-      --sample_name_parent{{ loop.index }} {{ parent.name }} \
+      --sample_name_parent{{ loop.index }} {{ parent.rgsm }} \
       --reads_parent{{ loop.index }} temp/{{ parent.gltype }}/alignment/{{ aligner }}/{{ parent.name }}/{{ parent.name }}.{{ aligner }}.bam \
       --output_vcf_parent{{ loop.index }} {{ results_dir }}/{{ parent.name }}.{{ aligner }}.deeptrio.all.vcf.gz \
       --output_gvcf_parent{{ loop.index }} {{ results_dir }}/{{ parent.name }}.{{ aligner }}.deeptrio.all.g.vcf.gz \
@@ -82,7 +82,7 @@
   cpus: 8
   mem: 40G
   walltime: "12:00:00"
-  queue_preset: "deeptrio"
+  queue_preset: "DEEPVARIANT"
   container: {{ constants.tools.deeptrio.container }}
   cmd: |
     set -eu
