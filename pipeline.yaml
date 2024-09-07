@@ -60,6 +60,8 @@ constants:
       container: quay.io/biocontainers/isoquant:3.4.1--hdfd78af_0
     isoseq:
       container: quay.io/biocontainers/isoseq:4.0.0--h9ee0642_0
+    lancet2:
+      container: us-central1-docker.pkg.dev/nygc-app-c-148c/lancet-public/lancet:v2.8.5-main-93e91f5c
     longshot:
       container: quay.io/biocontainers/longshot:0.4.5--hd175d40_2
     lorax:

@@ -1,9 +1,9 @@
-{% macro assembly_qc(pair, input_assembly, assembler) %}
+{% macro assembly_qc(input, input_assembly, assembler) %}
 
 {% set output_prefix %}{{ input_assembly | basename }}{% endset %}
 {% set results_dir %}{{ input_assembly | dirname }}{% endset %}
 
-- name: assembly_stats_{{ pair.project }}_{{ assembler }}
+- name: assembly_stats_{{ input.project }}_{{ assembler }}
   input: {{ input_assembly }}
   output: {{ results_dir }}/{{ output_prefix }}_assembly-stats.txt
   cpus: 2
@@ -20,12 +20,12 @@
       > {{ results_dir }}/{{ output_prefix }}_assembly-stats.txt
 
 
-- name: busco_{{ pair.project }}_{{ assembler }}
+- name: busco_{{ input.project }}_{{ assembler }}
   input:
     - {{ input_assembly }}
     - {{ constants.grandcanyon.lineages }}
   cpus: 8
-  mem: 16G
+  mem: 64G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.busco.container }}
@@ -33,35 +33,95 @@
     set -eu
 
     busco \
+      -f \
       -c 8 \
-      -l primates_odb10 \
+      -l primates \
+      --offline \
+      --opt-out-run-stats \
       --download_path {{ constants.grandcanyon.lineages }} \
       -i {{ input_assembly }} \
       -m genome \
-      -o {{ results_dir }}/{{ output_prefix }}
+      -o busco \
+      --out_path {{ results_dir }}
 
 
-- name: compleasm_{{ pair.project }}_{{ assembler }}
+- name: compleasm_{{ input.project }}_{{ assembler }}
   input:
     - {{ input_assembly }}
     - {{ constants.grandcanyon.lineages }}
   cpus: 8
-  mem: 16G
+  mem: 64G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.compleasm.container }}
   cmd: |
     set -eu
 
+    mkdir -p {{ results_dir }}/compleasm
+
     compleasm run \
       -t 8 \
-      -l primates_odb10 \
+      -l primates \
       -L {{ constants.grandcanyon.lineages }} \
       -a {{ input_assembly }} \
-      -o {{ results_dir }}/{{ output_prefix }}
+      -o {{ results_dir }}/compleasm
+
+
+- name: t2t_assessment_{{ input.project }}_{{ assembler }}
+  input:
+    - {{ input_assembly }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ output_prefix }}_T2T_sequences_alignment_T2T.txt
+    - {{ results_dir }}/{{ output_prefix }}_T2T_sequences_motif_T2T.txt
+  cpus: 8
+  mem: 32G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: ghcr.io/tgen/containers/t2t_seq:test
+  cmd: |
+    set -e
+
+    T2T_chromosomes.sh \
+      -t 8 \
+      -a {{ input_assembly }} \
+      {% if constants.grandcanyon[reference].reference_fasta is defined %}
+      -r {{ constants.grandcanyon[reference].reference_fasta }} \
+      {% endif %}
+      -o {{ results_dir }}/{{ output_prefix }}_T2T_sequences
+
+
+- name: seqtk_scaffold_extraction_{{ input.project }}_{{ assembler }}
+  input:
+    - {{ results_dir }}/{{ output_prefix }}_T2T_sequences_alignment_T2T.txt
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.seqtk.container }}
+  cmd: |
+    set -e
+
+    seqtk gap \
+      {{ input_assembly }} \
+      > {{ results_dir }}/{{ output_prefix }}_seqtk_gaps.tsv
+
+    cut -f1 {{ results_dir }}/{{ output_prefix }}_seqtk_gaps.tsv \
+      > {{ results_dir }}/{{ output_prefix }}_seqtk_ids_with_gaps.txt
+
+    grep -w \
+      -f {{ results_dir }}/{{ output_prefix }}_seqtk_ids_with_gaps.txt \
+      {{ results_dir }}/{{ output_prefix }}_T2T_sequences_alignment_T2T.txt \
+      > {{ results_dir }}/{{ output_prefix }}_seqtk_scaffolds_ids.txt || true
+
+    grep -w -v \
+      -f {{ results_dir }}/{{ output_prefix }}_seqtk_ids_with_gaps.txt \
+      {{ results_dir }}/{{ output_prefix }}_T2T_sequences_alignment_T2T.txt \
+      > {{ results_dir }}/{{ output_prefix }}_seqtk_contigs_ids.txt || true
+
 
 {% if constants.grandcanyon[reference].reference_cdna is defined %}
-- name: minimap2_asmgene_{{ pair.project }}_{{ assembler }}
+- name: minimap2_asmgene_{{ input.project }}_{{ assembler }}
   input:
     - {{ input_assembly }}
     - {{ constants.grandcanyon[reference].reference_fasta }}
@@ -71,7 +131,7 @@
     - {{ results_dir }}/{{ output_prefix }}_asmgene_assembly.paf
     - {{ results_dir }}/{{ output_prefix }}_asmgene_output.txt
   cpus: 8
-  mem: 16G
+  mem: 64G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.minimap2.container }}
@@ -85,7 +145,7 @@
       {{ constants.grandcanyon[reference].reference_cdna }} > {{ results_dir }}/{{ output_prefix }}_asmgene_reference.paf
 
     minimap2 \
-      -cxsplace:hq \
+      -cxsplice:hq \
       -t 8 \
       {{ input_assembly }} \
       {{ constants.grandcanyon[reference].reference_cdna }} > {{ results_dir }}/{{ output_prefix }}_asmgene_assembly.paf
@@ -95,61 +155,69 @@
       -i.97 \
       {{ results_dir }}/{{ output_prefix }}_asmgene_reference.paf \
       {{ results_dir }}/{{ output_prefix }}_asmgene_assembly.paf > {{ results_dir }}/{{ output_prefix }}_asmgene_output.txt
+
 {% endif %}
-{% endmacro %}
 
-{# 
+- name: minigraph_{{ input.project }}_{{ assembler }}
+  input:
+    - {{ input_assembly }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ output_prefix }}_minigraph.paf
+  cpus: 8
+  mem: 64G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minigraph.container }}
+  cmd: |
+    set -eu
 
-- name: merqury_{{ pair.project }}_{{ assembler }}
-  input: {{ input_assembly }}
-  output: {{ results_dir }}/{{ output_prefix }}_assembly-stats.txt
-  cpus: 2
-  mem: 8G
+    minigraph \
+      -xasm \
+      --show-unmap=yes \
+      -t 8 \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
+      {{ input_assembly }} > {{ results_dir }}/{{ output_prefix }}_minigraph.paf
+
+- name: paftools_asmstat_{{ input.project }}_{{ assembler }}
+  input:
+    - {{ results_dir }}/{{ output_prefix }}_minigraph.paf
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ output_prefix }}_asmgene_reference.paf
+    - {{ results_dir }}/{{ output_prefix }}_asmgene_assembly.paf
+    - {{ results_dir }}/{{ output_prefix }}_asmgene_output.txt
+  cpus: 4
+  mem: 16G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
+  cmd: |
+    set -eu
+
+    paftools.js asmstat \
+      {{ constants.grandcanyon[reference].reference_fasta }}.fai \
+      {{ results_dir }}/{{ output_prefix }}_minigraph.paf > {{ results_dir }}/{{ output_prefix }}_minigraph_asmstat.txt
+
+- name: merqury_{{ input.project }}_{{ assembler }}
+  input:
+    - {{ input_assembly }}
+    - {{ input.gltype }}/assembly/meryl/{{ input.project }}/{{ input.project }}.meryl
+  output:
+    - {{ results_dir }}{{ output_prefix }}_merqury
+  cpus: 8
+  mem: 64G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.merqury.container }}
   cmd: |
+    set -eu
 
+    OMP_NUM_THREADS=8
 
-- name: t2t_assessment_{{ pair.project }}_{{ assembler }}
-  cmd: |
-	tmotif="TTAGGG"
+    merqury.sh \
+      {{ input.gltype }}/assembly/meryl/{{ input.project }}/{{ input.project }}.meryl \
+      {{ input_assembly }} \
+      {{ results_dir }}/{{ output_prefix }}_merqury
 
-echo -e "\n\nExtracting sequence information\n"
-seqkit fx2tab -j $threads -C N -l -n -o $output.seqinfo.txt $assembly
-
-echo -e "Extracting 1000bps from start and end of sequences for telomere motif identification\n"
-seqkit subseq -w 0 -j $threads -r 1:1000 $assembly | awk '/^>/ {print $0 "_Start"; next} {print}' >$output.teloinput.fa
-seqkit subseq -w 0 -j $threads -r -1000:-1 $assembly | awk '/^>/ {print $0 "_End"; next} {print}' >>$output.teloinput.fa
-
-echo -e "searching telomere motif\n"
-echo -e "tidk search -d . -f $output.teloinput.fa -o $output -s $tmotif -w 1000\n\n"
-tidk search -d . -f $output.teloinput.fa -o $output -s $tmotif -w 1000
-tail -n +2 $output"_telomeric_repeat_windows.csv" | awk -F "," '$3 + $4 >=15{print $1}' | while read line; do contig=`echo $line | sed 's/_.*//'`; egrep --color ${contig} $output".seqinfo.txt" | tr -s "[:blank:]" "\t" ; done | cut -f1,2 | sort | uniq -c | sort -rgk1 | tr -s "[:blank:]" "\t" | sed 's/^\t//' | grep "^2" | cut -f2- >$output"_motif_T2T.txt"
-
-if [[ $mapping -eq 1 ]]; then
-	if [[ -e $output".paf" ]]; then
-		echo -e "\n\nExisting paf file found. Skipping alingment step\n"
-		cov_cal -T $output".paf" 2>$output"_alignment.txt"
-		tail -n +2 $output"_telomeric_repeat_windows.csv" | awk -F "," '$3 + $4 >= 15{print $1}' | while read line; do contig=$(echo "$line" | sed 's/_.*//'); grep $contig $output".seqinfo.txt" | tr -d '\n'; echo -ne '\t'; grep  $contig $output"_alignment.txt" | tr -d '\n'; echo -ne '\n' ; done | cut -f 1-3,9,10 | awk 'NF>4{print}' | sort | uniq -c | tr -s "[:blank:]" "\t" | sed 's/^\t//' | grep "^2" | cut -f2- >$output"_alignment_T2T.txt"
-	else
-		echo -e "\n\nReference sequence provided, proceeding with mapping based T2T filtering\n"
-		minigraph -x asm --show-unmap=yes -t $threads -K1.9g $reference $assembly >$output".paf"
-		cov_cal -T $output".paf" 2>$output"_alignment.txt"
-		tail -n +2 $output"_telomeric_repeat_windows.csv" | awk -F "," '$3 + $4 >= 15{print $1}' | while read line; do contig=$(echo "$line" | sed 's/_.*//'); grep $contig $output".seqinfo.txt" | tr -d '\n'; echo -ne '\t'; grep  $contig $output"_alignment.txt" | tr -d '\n'; echo -ne '\n' ; done | cut -f 1-3,9,10 | awk 'NF>4{print}' | sort | uniq -c | tr -s "[:blank:]" "\t" | sed 's/^\t//' | grep "^2" | cut -f2- >$output"_alignment_T2T.txt"
-	fi	
-fi
-
-echo -e "\n\nMotif based T2T sequences are                 : "$output"_motif_T2T.txt\n"	
-
-if [[ $mapping -eq 1 ]]; then
-	echo -e "Alignment and motif based T2T sequences       : "$output"_alignment_T2T.txt\n"
-fi
-
-seqtk gap {{ input_assembly }} > gaps.tsv
-cut -f1 gaps.tsv > ids_with_gaps.txt
-grep -w -f ids_with_gaps.txt output_prefix_alignment_T2T.txt > scaffolds_ids.txt
-grep -w -v -f ids_with_gaps.txt output_prefix_alignment_T2T.txt >   contigs_ids.txt
-
-
-#}
+{% endmacro %}

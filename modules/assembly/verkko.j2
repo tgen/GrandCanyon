@@ -11,7 +11,7 @@
 {%- set temp_dir %}temp/{{ input.gltype }}/assembly/verkko/{{ input.project }}{% endset %}
 {%- set results_dir %}{{ input.gltype }}/assembly/verkko/{{ input.project }}{% endset %}
 
-{% set hifi_list = input.hifi + input.corr + input.hifi %}
+{% set hifi_list = input.hifi + input.corr %}
 
 {% if hifi_list | length > 0 %}
 - name: verkko_{{ input.project }}

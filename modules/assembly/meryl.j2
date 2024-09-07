@@ -1,0 +1,29 @@
+{% macro meryl(input) %}
+
+{%- set temp_dir %}temp/{{ input.gltype }}/assembly/meryl/{{ input.project }}{% endset %}
+{%- set results_dir %}{{ input.gltype }}/assembly/meryl/{{ input.project }}{% endset %}
+
+{% set fastqs = input.hifi + input.corr %}
+
+- name: meryl_{{ input.project }}
+  input:
+    {% for fastq in fastqs %}
+    - {{ fastq }}
+    {% endfor %}
+  output: {{ results_dir }}/{{ input.project }}.meryl
+  cpus: 8
+  mem: 64G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.merqury.container }}
+  cmd: |
+    set -e
+
+    meryl count \
+      k=21 \
+      threads=8 \
+      memory=60 \
+      {{ fastqs|join(" ") }} \
+      output {{ results_dir }}/{{ input.project }}.meryl
+
+{% endmacro %}

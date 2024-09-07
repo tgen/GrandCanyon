@@ -11,7 +11,7 @@
 {%- set temp_dir %}temp/{{ input.gltype }}/assembly/hifiasm/{{ input.project }}{% endset %}
 {%- set results_dir %}{{ input.gltype }}/assembly/hifiasm/{{ input.project }}{% endset %}
 
-{% set hifi_list = input.hifi + input.corr + input.hifi %}
+{% set hifi_list = input.hifi + input.corr %}
 
 {% if hifi_list | length > 0 %}
 - name: hifiasm_{{ input.project }}
