@@ -1,0 +1,57 @@
+{% macro glnexus(family, aligner) %}
+
+{% set temp_dir %}temp/{{ family.gltype }}/joint_variant_calling/glnexus/deepvariant/{{ family.name }}{% endset %}
+{% set results_dir %}{{ family.gltype }}/joint_variant_calling/glnexus/deepvariant/{{ family.name }}{% endset %}
+{% set output_vcf %}{{ results_dir }}/{{ family.name }}.vcf.gz{% endset %}
+
+{% if family.gltype in 'exome' %}
+  {% set taskPrefix = 'Exome' %}
+  {% set config_type = 'DeepVariantWES' %}
+{% elif family.gltype in 'genome' %}
+  {% set taskPrefix = 'Genome' %}
+  {% set config_type = 'DeepVariantWGS' %}
+{% endif %}
+
+- name: glnexus_{{ family.name }}_deepvariant_{{ family.gltype }}
+  input:
+    - {{ family.child.gltype }}/constitutional_variant_calls/deepvariant/{{ family.child.name }}_{{ aligner }}/{{ family.child.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz
+    {% for member in family.parents %}
+    - {{ member.gltype }}/constitutional_variant_calls/deepvariant/{{ member.name }}_{{ aligner }}/{{ member.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz
+    {% endfor %}
+  output: {{ output_vcf }}
+  cpus: 8
+  mem: 40G
+  walltime: "8:00:00"
+  container: {{ constants.tools.glnexus.container }}
+  digest: {{ constants.tools.glnexus.digest }}
+  cmd: |
+    set -euo pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    echo {{ family.child.gltype }}/constitutional_variant_calls/deepvariant/{{ family.child.name }}_{{ aligner }}/{{ family.child.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz > {{ temp_dir }}/{{ family.name }}_gvcf_list.txt 
+    {% for member in family.parents %}
+    echo {{ member.gltype }}/constitutional_variant_calls/deepvariant/{{ member.name }}_{{ aligner }}/{{ member.name }}.{{ aligner }}.deepvariant.all.g.vcf.gz >> {{ temp_dir }}/{{ family.name }}_gvcf_list.txt
+    {% endfor %}
+
+    glnexus_cli \
+      --threads 8 \
+      --mem-gbytes 40 \
+      --dir {{ temp_dir }}/{{ family.name }}_glnexus_db \
+      --config {{ config_type }} \
+      --list {{ temp_dir }}/{{ family.name }}_gvcf_list.txt |\
+    bcftools view \
+      --output-type z \
+      --output-file {{ output_vcf }} \
+      -
+
+    bcftools index {{ output_vcf }}
+
+{% if tasks[taskPrefix+"_joint_variant_calling_glnexus_bcftools_filter"] | default(false) %}
+  {% set filtered_vcf %}{{ results_dir }}/{{ family.name }}.glnexus.filtered.vcf.gz{% endset %}
+  {{- dnm_filter(family, output_vcf, filtered_vcf, 'glnexus') }}
+{% endif %}
+
+{% endmacro %}
