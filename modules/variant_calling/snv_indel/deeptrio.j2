@@ -62,13 +62,16 @@
       csplit --prefix="{{ temp_dir }}/deeptrio_" -s -z --suppress-matched - "/Running/" '{*}'
 
     rm {{ temp_dir }}/deeptrio_00
-    mv {{ temp_dir }}/deeptrio_01 {{ temp_dir }}/deeptrio_make_examples.sh
-    mv {{ temp_dir }}/deeptrio_02 {{ temp_dir }}/deeptrio_call_variants.sh
-    mv {{ temp_dir }}/deeptrio_03 {{ temp_dir }}/deeptrio_postprocess_variants.sh
-    sed -i '1i #!/bin/sh' {{ temp_dir }}/deeptrio_*.sh
+    for file in {{ temp_dir }}/deeptrio_* ; do
+      new_name=$(grep -oP 'logs/.*log' $file | cut -d'/' -f2 | sed 's/log/sh/')
+      mv $file {{ temp_dir }}/${new_name}
+      sed -i '1i #!/bin/sh' {{ temp_dir }}/${new_name}
+    done
 
-    cat {{ temp_dir }}/deeptrio_make_examples.sh
-    bash {{ temp_dir }}/deeptrio_make_examples.sh
+    for script in {{ temp_dir }}/make_examples*.sh ; do
+      cat $script
+      bash $script
+    done
 
 
 - name: deeptrio_call_variants_{{ trio.name }}_{{ aligner }}
@@ -90,8 +93,10 @@
 
     export TMPDIR={{ temp_dir }}/intermediate_results_dir
 
-    cat {{ temp_dir }}/deeptrio_call_variants.sh
-    bash {{ temp_dir }}/deeptrio_call_variants.sh
+    for script in {{ temp_dir }}/call_variants_*.sh ; do
+      cat $script
+      bash $script
+    done
 
 
 - name: deeptrio_postprocess_variants_{{ trio.name }}_{{ aligner }}
@@ -119,7 +124,9 @@
 
     export TMPDIR={{ temp_dir }}/intermediate_results_dir
 
-    cat {{ temp_dir }}/deeptrio_postprocess_variants.sh
-    bash {{ temp_dir }}/deeptrio_postprocess_variants.sh
+    for script in {{ temp_dir }}/postprocess_variants_*.sh ; do
+      cat $script
+      bash $script
+    done
 
 {% endmacro %}
