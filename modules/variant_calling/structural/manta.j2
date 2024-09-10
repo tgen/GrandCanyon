@@ -65,7 +65,7 @@
 
     {# creating calling_intervals on the fly based on reference_dict, this should also accept a user supplied value in the future #}
     MANTA_BED="{{ temp_dir }}/callRegions.bed"
-    grep 'SN:\(chr\)\?[0-9XY]\+\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
       sed 's/SN://;s/LN://' |\
       awk '{ OFS="\t" ; print $2,0,$3-1 }' \
       > ${MANTA_BED}

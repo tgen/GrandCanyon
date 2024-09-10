@@ -4,6 +4,7 @@
   {%- set temp_dir %}temp/{{ input.gltype }}/joint_variant_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ input.gltype }}/joint_variant_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
   {%- set all_vcf %}{{ results_dir }}/{{ input.name }}.{{ aligner }}.sniffles.all.vcf.gz{% endset %}
+  {%- set pass_vcf %}{{ results_dir }}/{{ input.name }}.{{ aligner }}.sniffles.pass.vcf.gz{% endset %}
 {% else %}
   {%- set bam %}temp/{{ input.gltype }}/alignment/{{ aligner }}/{{ input.name }}/{{ input.name }}.{{ aligner }}.bam{% endset %}
   {%- set temp_dir %}temp/{{ input.gltype }}/constitutional_variant_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
@@ -46,7 +47,7 @@
     mkdir -p {{ results_dir }}
 
     {# creating calling_intervals on the fly based on reference_dict, this should also accept a user supplied value in the future #}
-    grep 'SN:\(chr\)\?[0-9XY]\+\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
       sed 's/SN://;s/LN://' |\
       awk '{ OFS="\t" ; print $2,0,$3-1 }' \
       > {{ temp_dir }}/calling_intervals.bed
