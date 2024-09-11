@@ -10,6 +10,25 @@
 {% elif constants.grandcanyon[reference] is not defined %}
     {% set raise_msg %}Unsupported reference defined! {{ reference|lower }} is not in pipeline.yaml or user supplied input{% endset %}
     {{ raise(raise_msg) }}
+{% elif reference not in ['grch38', 'chm13'] %}
+    {% set log_msg %}reference: {{ reference }}, appears to be a user supplied input! We will generate expected resources from the supplied paths{% endset %}
+    {{ log(log_msg, level='WARNING') }}
+    {% from 'utilities/prepare_resources.j2' import prepare_resources with context %}
+    {% if constants.grandcanyon[reference].reference_fasta is defined %}
+        {% set reference_fasta = constants.grandcanyon[reference].reference_fasta %}
+        {% set reference_fai %}{{ reference_fasta }}.fai{% endset %}
+        {% set reference_dict %}{{ reference_fasta }}.dict{% endset %}
+        {% do constants.grandcanyon[reference].update({'reference_fai': reference_fai}) %}
+        {% do constants.grandcanyon[reference].update({'reference_dict': reference_dict}) %}
+        {{- prepare_resources(reference_fasta=constants.grandcanyon[reference].reference_fasta) }}
+    {% else %}
+        {% set raise_msg %}reference_fasta not defined! constants.grandcanyon.{{ reference }}.reference_fasta is not in pipeline.yaml or user supplied input{% endset %}
+        {{ raise(raise_msg) }}
+    {% endif %}
+    {% if constants.grandcanyon[reference].gtf is not defined %}
+        {% set raise_msg %}gene_model gtf not defined! constants.grandcanyon.{{ reference }}.gtf is not in pipeline.yaml or user supplied input{% endset %}
+        {{ raise(raise_msg) }}
+    {% endif %}
 {% endif %}
 
 {% set reference = reference | lower %}

@@ -1,0 +1,49 @@
+{% macro prepare_resources(reference_fasta=none, gene_model=none) %}
+
+{% if reference_fasta is not none %}
+- name: create_samtools_resources_for_input_reference
+  input: {{ reference_fasta }}
+  output:
+    - {{ reference_fasta }}.fai
+    - {{ reference_fasta }}.dict
+  cpus: 4
+  mem: 16G
+  walltime: "4:00:00"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -uev
+
+    samtools faidx {{ reference_fasta }}
+
+    samtools dict \
+      -o {{ reference_fasta }}.dict \
+      {{ reference_fasta }}
+
+{% endif %}
+
+{% if gene_model is not none %}
+- name: create_gene_model_resources_for_input_reference
+  input: {{ gene_model }}
+  output:
+    - {{ gene_model }}.gene.bed
+    - {{ gene_model }}.exon.bed
+    - {{ gene_model }}.cds.bed
+  cpus: 4
+  mem: 16G
+  walltime: "4:00:00"
+  container: {{ constants.tools.bedtools.container }}
+  cmd: |
+    set -uev
+
+    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "gene") { OFS = "\t" ; print $1, $4, $5, $10 }}' {{ gene_model }} |\
+      sort -k1,1V -k2,2n -k3,3n > {{ gene_model }}.gene.bed
+
+    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "exon") { OFS = "\t" ; print $1, $4, $5, $10 }}' {{ gene_model }} |\
+      sort -k1,1V -k2,2n -k3,3n > {{ gene_model }}.exon.bed
+
+    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "CDS" && $4 < $5) { OFS = "\t" ; print $1, $4, $5, "CDS" }}' {{ gene_model }} |\
+      awk '!dup[$0]++' | sort -k1,1V -k2,2n -k3,3n | bedtools merge -i - > {{ gene_model }}.cds.bed
+
+{% endif %}
+
+{% endmacro %}
