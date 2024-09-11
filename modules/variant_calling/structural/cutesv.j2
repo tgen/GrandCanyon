@@ -82,6 +82,7 @@
       --output-type z \
       --output {{ all_vcf }} \
       --write-index \
+      --temp-dir {{ temp_dir }} \
       -
 
     bcftools filter \
