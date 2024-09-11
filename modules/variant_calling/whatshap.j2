@@ -55,7 +55,6 @@
 - name: whatshap_stats_extended_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
     - {{ constants.grandcanyon[reference].gtf }}
-    - {{ constants.grandcanyon[reference].canonical_cds_intervals }}
     - {{ results_dir }}/{{ output_prefix }}.phased.gtf
   output:
     - {{ results_dir }}/{{ output_prefix }}.phased_gene_stats.tsv
@@ -72,6 +71,8 @@
 
     awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "gene") { OFS = "\t" ; print $1, $4, $5, $10 }}' {{ constants.grandcanyon[reference].gtf }} |\
       sort -k1,1V -k2,2n -k3,3n > {{ temp_dir }}/gtf_to_gene.bed
+    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "CDS" && $4 < $5) { OFS = "\t" ; print $1, $4, $5, "CDS" }}' {{ constants.grandcanyon[reference].gtf }} | awk '!dup[$0]++' | \
+      sort -k1,1V -k2,2n -k3,3n | bedtools merge -i - > {{ temp_dir }}/gtf_to_cds.bed
 
     PHASED_GENES=$(bedtools intersect \
       -a {{ temp_dir }}/gtf_to_gene.bed \
@@ -83,7 +84,7 @@
     PERCENT_GENES=$(echo $PHASED_GENES $TOTAL_GENES | awk '{ print $1/$2 }')
 
     PERCENT_CDS=$(bedtools intersect \
-      -a <(cat {{ constants.grandcanyon[reference].canonical_cds_intervals }} | awk '{ OFS="\t" ; print $1,$2,$3,$3-$2 }') \
+      -a <(awk '{ OFS="\t" ; print $1,$2,$3,$3-$2 }' {{ temp_dir }}/gtf_to_cds.bed) \
       -b {{ results_dir }}/{{ output_prefix }}.phased.gtf -wao \
       | awk '{ cds_sum+=$4 ; phased_sum+=$NF } END { print phased_sum/cds_sum }')
 
