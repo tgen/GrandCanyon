@@ -1,0 +1,52 @@
+{% macro create_ped(family) %}
+
+{% set results_dir %}{{ family.gltype }}/joint_variant_calls{% endset %}
+
+- name: create_ped_{{ family.name }}
+  output: {{ results_dir }}/{{ family.name }}.ped
+  walltime: "1:00:00"
+  cpus: 1
+  mem: 1G
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+    rm {{ results_dir }}/{{ family.name }}.ped || true
+
+    {# PED file creation #}
+    {% if sampleRelations is defined %}
+      {% for sample in sampleRelations %}
+        {% if sample.paternalID is defined %}
+          {% set paternal = sampleRelations|selectattr('patientID', 'eq', sample.paternalID)|first|default(none) %}
+        {% endif %}
+        {% if sample.maternalID is defined %}
+          {% set maternal = sampleRelations|selectattr('patientID', 'eq', sample.maternalID)|first|default(none) %}
+        {% endif %}
+        {% if sample.sex is defined %}
+            {% if sample.sex.lower() == 'male' %}
+                {% do sample.update({'sex': 1}) %}
+            {% elif sample.sex.lower() == 'female' %}
+                {% do sample.update({'sex': 2}) %}
+            {% else %}
+                {% do sample.update({'sex': 0}) %}
+            {% endif %}
+        {% else %}
+            {% do sample.update({'sex': 0}) %}
+        {% endif %}
+        {% if sample.phenotype is defined %}
+            {% if sample.phenotype.lower() == 'unaffected' %}
+                {% do sample.update({'phenotype': 1}) %}
+            {% elif sample.phenotype.lower() == 'affected' %}
+                {% do sample.update({'phenotype': 2}) %}
+            {% else %}
+                {% do sample.update({'phenotype': 0}) %}
+            {% endif %}
+        {% else %}
+            {% do sample.update({'phenotype': 0}) %}
+        {% endif %}
+        echo -e '{{	family.name }}\t{{ sample.sampleMergeKey }}\t{{ paternal.sampleMergeKey | default(0) }}\t{{ maternal.sampleMergeKey | default(0) }}\t{{ sample.sex }}\t{{ sample.phenotype }}' >> {{ results_dir }}/{{ family.name }}.ped
+      {% endfor %}
+    {% endif %}
+
+{% endmacro %}

@@ -14,6 +14,7 @@
 {% from 'modules/variant_calling/structural/gridss.j2' import gridss with context %}
 {% from 'modules/variant_calling/copy_number/spectre.j2' import spectre with context %}
 {% from 'modules/variant_calling/copy_number/hifi_cnv.j2' import hifi_cnv with context %}
+{% from 'utilities/create_ped.j2' import create_ped with context %}
 
 {%- macro constitutional_variant_calling(samples) %}
 
@@ -138,47 +139,44 @@
 # Trio variant calling is only available if relationships are defined in the input
 ############}
 
+{% set trio = {} %}
 {% if sampleRelations is defined %}
-  {% set trios = [] %}
-  {% for relationship in sampleRelations %}
-    {% for sample in relationship.samples if sample.paternalID != '' or sample.maternalID != '' %}
-      {% set parents = [] %}
-      {% if sample.paternalID is defined %}
-        {% set paternal = relationship.samples|selectattr('patientID', 'eq', sample.paternalID)|first|default(none) %}
-        {% set paternal_sample = samples.values()|selectattr('sampleMergeKey', 'eq', paternal.sampleMergeKey)|first|default(none) %}
-        {% if paternal_sample is not none %}
-          {% do parents.append(paternal_sample) %}
-        {% else %}
+  {% for sample in sampleRelations if sample.paternalID != '' or sample.maternalID != '' %}
+    {% set parents = [] %}
+    {% if sample.paternalID is defined %}
+      {% set paternal = sampleRelations|selectattr('patientID', 'eq', sample.paternalID)|first|default(none) %}
+      {% set paternal_sample = samples.values()|selectattr('sampleMergeKey', 'eq', paternal.sampleMergeKey)|first|default(none) %}
+      {% if paternal_sample is not none %}
+        {% do parents.append(paternal_sample) %}
+      {% else %}
 
-        {% endif %}
       {% endif %}
-      {% if sample.maternalID is defined %}
-        {% set maternal = relationship.samples|selectattr('patientID', 'eq', sample.maternalID)|first|default(none) %}
-        {% set maternal_sample = samples.values()|selectattr('sampleMergeKey', 'eq', maternal.sampleMergeKey)|first|default(none) %}
-        {% if maternal_sample is not none %}
-          {% do parents.append(maternal_sample) %}
-        {% else %}
+    {% endif %}
+    {% if sample.maternalID is defined %}
+      {% set maternal = sampleRelations|selectattr('patientID', 'eq', sample.maternalID)|first|default(none) %}
+      {% set maternal_sample = samples.values()|selectattr('sampleMergeKey', 'eq', maternal.sampleMergeKey)|first|default(none) %}
+      {% if maternal_sample is not none %}
+        {% do parents.append(maternal_sample) %}
+      {% else %}
 
-        {% endif %}
       {% endif %}
-      {% set child = samples.values()|selectattr('sampleMergeKey', 'eq', sample.sampleMergeKey)|first|default(none) %}
-      {% do trios.append({'name': child.name, 'gltype': child.gltype, 'child': child, 'parents': parents}) %}
-    {% endfor %}
+    {% endif %}
+    {% set child = samples.values()|selectattr('sampleMergeKey', 'eq', sample.sampleMergeKey)|first|default(none) %}
+    {% do trio.update({'name': familyCode, 'gltype': child.gltype, 'child': child, 'parents': parents}) %}
   {% endfor %}
 
-  {% for trio in trios %}
+  {{- create_ped(trio) }}
 
-    {% for aligner in trio.child.aligners %}
+  {% for aligner in trio.child.aligners %}
 
-      {% if tasks[trio.gltype|capitalize+"_variant_calling_snp_indel_caller_deeptrio"]|default(false) %}
-        {{- deeptrio(trio, aligner) }}
-      {% endif %}
+    {% if tasks[trio.gltype|capitalize+"_variant_calling_snp_indel_caller_deeptrio"]|default(false) %}
+      {{- deeptrio(trio, aligner) }}
+    {% endif %}
 
-      {% if tasks[trio.gltype|capitalize+"_variant_calling_snp_indel_caller_glnexus"]|default(false) %}
-        {{- glnexus(trio, aligner) }}
-      {% endif %}
+    {% if tasks[trio.gltype|capitalize+"_variant_calling_snp_indel_caller_glnexus"]|default(false) %}
+      {{- glnexus(trio, aligner) }}
+    {% endif %}
 
-    {% endfor %}
   {% endfor %}
 {% endif %}
 

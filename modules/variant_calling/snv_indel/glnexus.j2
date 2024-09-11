@@ -1,7 +1,7 @@
 {% macro glnexus(family, aligner) %}
 
-{% set temp_dir %}temp/{{ family.gltype }}/joint_variant_calling/glnexus/deepvariant/{{ family.name }}{% endset %}
-{% set results_dir %}{{ family.gltype }}/joint_variant_calling/glnexus/deepvariant/{{ family.name }}{% endset %}
+{% set temp_dir %}temp/{{ family.gltype }}/joint_variant_calls/glnexus/deepvariant/{{ family.name }}{% endset %}
+{% set results_dir %}{{ family.gltype }}/joint_variant_calls/glnexus/deepvariant/{{ family.name }}{% endset %}
 {% set output_vcf %}{{ results_dir }}/{{ family.name }}.vcf.gz{% endset %}
 
 {% if family.gltype in 'exome' %}
@@ -49,9 +49,25 @@
 
     bcftools index {{ output_vcf }}
 
-{% if tasks[taskPrefix+"_joint_variant_calling_glnexus_bcftools_filter"] | default(false) %}
-  {% set filtered_vcf %}{{ results_dir }}/{{ family.name }}.glnexus.filtered.vcf.gz{% endset %}
-  {{- dnm_filter(family, output_vcf, filtered_vcf, 'glnexus') }}
+{% set filtered_vcf %}{{ results_dir }}/{{ family.name }}.glnexus.filtered.vcf.gz{% endset %}
+{% set ped_file %}{{ family.gltype }}/joint_variant_calls/{{ family.name }}.ped{% endset %}
+
+{% if family.parents | length > 1 %}
+- name: bcftools_filter_glnexus_{{ family.name }}_deepvariant_{{ family.gltype }}
+  input:
+    - {{ output_vcf }}
+    - {{ ped_file }}
+  output: {{ filtered_vcf }}
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -euo pipefail
+
+    bcftools +trio-dnm2 --with-pAD -P {{ ped_file }} {{ output_vcf }} | \
+      bcftools view \
+        -i '(FMT/GT[0]="ref" && FMT/GT[1]="ref") && (FMT/GT[2]="het" & FMT/VAF[2]>30 & FMT/VAF[2]<70)' - | \
+      bcftools view \
+        -e 'FMT/DP[2]>98 || FMT/DP<=20 || FMT/AD[0-1:1]>1' -O z -o {{ filtered_vcf }} - 
+
 {% endif %}
 
 {% endmacro %}
