@@ -133,10 +133,6 @@
       {% endif %}
       {% endfor %}
 
-{% set totalReads = rg|sum(attribute='numberOfReads') %}
-{% set read_bins = [0, 500000000, 1000000000, 2000000000, 4000000000, 8000000000] %}
-{% set memory_bins = ['16G','32G','48G','64G','80G'] %}
-
 - name: samtools_markdup_{{ sample.name }}_{{ rglb }}_{{ aligner }}
   tags: [{{ sample.gltype }}, alignment, mark_duplicates, samtools, {{ sample.name }}]
   reset: predecessors
@@ -153,7 +149,7 @@
     - {{ results_dir }}/stats/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam.samtools.markdup.json
   walltime: "96:00:00"
   cpus: 4
-  mem: {{ totalReads|assignbin(read_bins, memory_bins) }}
+  mem: 64G
   queue_preset: "DEFAULT-LONG"
   container: {{ constants.tools.samtools.container }}
   cmd: |
