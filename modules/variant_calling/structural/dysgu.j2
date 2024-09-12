@@ -30,9 +30,16 @@
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
+    {# creating calling_intervals on the fly based on reference_dict, this should also accept a user supplied value in the future #}
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+      sed 's/SN://;s/LN://' |\
+      awk '{ OFS="\t" ; print $2,0,$3-1 }' \
+      > {{ temp_dir }}/calling_intervals.bed
+
     dysgu fetch \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --output {{ discordant_bam }} \
+      --search {{ temp_dir }}/calling_intervals.bed \
       --compression wb0 \
       --write_all \
       --clip-length 15 \
@@ -46,6 +53,8 @@
       --pl 'nanopore' \
       {% elif sample.rgpl in ('PACBIO') %}
       --pl 'pacbio' \
+      {% else %}
+      --pl 'pe' \
       {% endif %}
       {{ temp_dir }} {{ bam }}
 
@@ -110,6 +119,9 @@
       {% elif sample.rgpl in ('PACBIO') %}
       --mode 'pacbio' \
       --pl 'pacbio' \
+      {% else %}
+      --mode 'pe' \
+      --pl 'pe' \
       {% endif %}
       --clip-length 15 \
       --mq 1 \
@@ -117,6 +129,9 @@
       --max-cov 200 \
       --procs 8 \
       --overwrite \
+      --regions {{ temp_dir }}/calling_intervals.bed \
+      --regions-only True \
+      --regions-mm-only True \
       {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ temp_dir }} \
       {{ discordant_bam }}
@@ -235,8 +250,8 @@
     set -o pipefail
 
     dysgu filter \
-      --min-prob 0.2 \
-      --support-fraction 0.15 \
+      --min-prob 0.1 \
+      --support-fraction 0.1 \
       --pass-prob 0.3 \
       {{ temp_all_vcf }} \
       > {{ temp_pass_vcf }}
@@ -299,6 +314,8 @@
       --write-index \
       {{ discordant_bam }}
 
+    rm {{ discordant_bam }}
+
 - name: dysgu_bcftools_compress_{{ sample.name }}_{{ aligner }}
   input:
     - {{ temp_all_vcf }}
@@ -308,9 +325,9 @@
     - {{ all_vcf }}.tbi
     - {{ pass_vcf }}
     - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
   walltime: "4:00:00"
-  cpus: 4
-  mem: 8G
   queue_preset: "DEFAULT"
   container: {{ constants.tools.bcftools.container }}
   cmd: |
@@ -318,17 +335,16 @@
     set -o pipefail
 
     bcftools view \
-        --threads 4 \
-        --output-type z \
-        --output-file {{ all_vcf }} \
-        --write-index \
-        {{ temp_all_vcf }}
+      --output-type z \
+      --output-file {{ all_vcf }} \
+      --write-index \
+      {{ temp_all_vcf }}
 
     bcftools view \
-        --threads 4 \
-        --output-type z \
-        --output-file {{ pass_vcf }} \
-        --write-index \
-        {{ temp_pass_vcf }}
+      --include 'FILTER == "PASS"' \
+      --output-type z \
+      --output-file {{ pass_vcf }} \
+      --write-index \
+      {{ temp_pass_vcf }}
 
 {% endmacro %}
