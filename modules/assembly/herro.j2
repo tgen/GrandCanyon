@@ -6,9 +6,7 @@
 
 - name: herro_preprocess_{{ fastq | basename | replace('.', '_') }}
   input: {{ fastq }}
-  output:
-    - {{ filtered_fastq }}
-    - {{ temp_dir }}/{{ fastq | basename }}.stats.tsv
+  output: {{ filtered_fastq }}
   cpus: 4
   mem: 8G
   walltime: "8:00:00"
@@ -18,12 +16,6 @@
 
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
-
-    seqkit stats \
-      --tabular \
-      --basename \
-      --out-file {{ temp_dir }}/{{ fastq | basename }}.stats.tsv \
-      {{ fastq }}
 
     seqkit seq \
       --min-qual 10 \

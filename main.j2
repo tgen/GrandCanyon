@@ -51,6 +51,7 @@
 {% from 'utilities/copy_fastq.j2' import copy_fastq with context %}
 {% from 'utilities/copy_ubam.j2' import copy_ubam with context %}
 {% from 'utilities/copy_bam.j2' import copy_bam with context %}
+{% from 'utilities/fastq_stats.j2' import fastq_stats with context %}
 {% from 'modules/dna_alignment/main.j2' import dna_alignment with context %}
 {% from 'modules/rna/main.j2' import rna_alignment with context %}
 {% from 'modules/variant_calling/main.j2' import constitutional_variant_calling with context %}
@@ -111,6 +112,7 @@
     {% for file in data_files %}
       {% if file.fileType in ["fastq", "fasterq"] %}
         {{- copy_fastq(file) }}
+        {{- fastq_stats(file) }}
       {% elif file.fileType == "ubam" %}
         {{- copy_ubam(file) }}
       {% elif file.fileType == "bam" %}

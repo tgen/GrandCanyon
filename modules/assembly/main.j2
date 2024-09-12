@@ -4,6 +4,7 @@
 {% from 'modules/assembly/hifiasm.j2' import hifiasm with context %}
 {% from 'modules/assembly/herro.j2' import herro with context %}
 {% from 'modules/assembly/meryl.j2' import meryl with context %}
+{% from 'modules/assembly/ul_filter.j2' import ul_filter with context %}
 
 {%- macro assembly() %}
 
@@ -12,7 +13,7 @@
   {% do input.update({'ulong': []}) %}
   {% do input.update({'corr': []}) %}
   {% do input.update({'hifi': []}) %}
-  {% do input.update({'ont': []}) %}
+  {% do input.update({'duplex': []}) %}
   {% do input.update({'hic_r1': []}) %}
   {% do input.update({'hic_r2': []}) %}
 
@@ -29,28 +30,32 @@
         {% set duplex_matches = dataFiles|selectattr('fastqCode', 'eq', 'duplex')|selectattr('sampleName', 'eq', file.sampleName)|selectattr('rgid', 'eq', file.rgid)|list %}
         {% if not duplex_matches | length > 0 %}
           {% set simplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
+          {% set ul_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.ul.filtered.fastq.gz{% endset %}
+          {{- ul_filter(simplex_file, ul_file) }}
+          {% do input.ulong.append(ul_file) %}
+
           {% set corrected_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.corrected.fa{% endset %}
-          {% do input.ont.append(simplex_file) %}
           {% if tasks.Genome_assembly_long_read_assembler_herro_correction | default(false) %}
             {{- herro(input, simplex_file, corrected_file) }}
             {% do input.corr.append(corrected_file) %}
           {% endif %}
-          {% if file.assayCode in ('OUL14') %}
-            {% do input.ulong.append(simplex_file) %}
-          {% endif %}
         {% endif %}
       {% elif file.fastqCode == 'duplex' %}
-        {% set duplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
         {% set simplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.simplex.fastq.gz{% endset %}
+        {% set ul_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.ul.simplex.filtered.fastq.gz{% endset %}
+        {{- ul_filter(simplex_file, ul_file) }}
+        {% do input.ulong.append(ul_file) %}
+
+        {% set duplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
+        {% do input.duplex.append(duplex_file) %}
+        {% set ul_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.ul.filtered.fastq.gz{% endset %}
+        {{- ul_filter(duplex_file, ul_file) }}
+        {% do input.ont.append(ul_file) %}
+
         {% set corrected_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.simplex.corrected.fa{% endset %}
-        {% do input.hifi.append(duplex_file) %}
-        {% do input.ont.append(simplex_file) %}
         {% if tasks.Genome_assembly_long_read_assembler_herro_correction | default(false) %}
           {% do input.corr.append(corrected_file) %}
           {{- herro(input, simplex_file, corrected_file) }}
-        {% endif %}
-        {% if file.assayCode in ('OUL14') %}
-          {% do input.ulong.append(simplex_file) %}
         {% endif %}
       {% endif %}
     {% elif file.rgpl in ('PACBIO') %}

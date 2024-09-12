@@ -11,13 +11,13 @@
 {%- set temp_dir %}temp/{{ input.gltype }}/assembly/verkko/{{ input.project }}{% endset %}
 {%- set results_dir %}{{ input.gltype }}/assembly/verkko/{{ input.project }}{% endset %}
 
-{% set hifi_list = input.hifi + input.corr %}
+{% set hifi_list = input.hifi + input.duplex + input.corr %}
 
 {% if hifi_list | length > 0 %}
 - name: verkko_{{ input.project }}
   input:
-    {% for hififq in hifi_list %}
-    - {{ hififq }}
+    {% for file in hifi_list + input.ulong %}
+    - {{ file }}
     {% endfor %}
   output: {{ results_dir }}/assembly.fasta
   cpus: 32

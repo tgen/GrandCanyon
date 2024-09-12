@@ -11,15 +11,52 @@
 {%- set temp_dir %}temp/{{ input.gltype }}/assembly/hifiasm/{{ input.project }}{% endset %}
 {%- set results_dir %}{{ input.gltype }}/assembly/hifiasm/{{ input.project }}{% endset %}
 
-{% set hifi_list = input.hifi + input.corr %}
+{% set ont_list = input.duplex + input.corr %}
+{% set hifi_list = input.hifi %}
+{% if ont_list | length > 0 %}
+{% set chopped_ont %}{{ temp_dir }}/{{ input.project }}.chopped.ont.fastq.gz{% endset %}
+{% do hifi_list.append(chopped_ont) %}
+{% endif %}
+
+{# PacBio Hifi reads are consistently between 10kb and 30 kb, and therefore it does not need chopping #}
+{% if ont_list | length > 0 %}
+- name: prep_hifiasm_input_{{ input.project }}
+  input:
+    {% for file in ont_list %}
+    - {{ file }}
+    {% endfor %}
+  output:
+    - {{ chopped_ont }}
+  cpus: 4
+  mem: 16G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.seqkit.container }}
+  cmd: |
+    set -eu
+
+    seqkit sliding \
+      -s 30000 \
+      -W 30000 \
+      -g {{ ont_list | join(' ') }} |\
+    seqkit seq \
+      -m 10000 \
+      -o {{ chopped_ont }} \
+      -
+{% endif %}
 
 {% if hifi_list | length > 0 %}
 - name: hifiasm_{{ input.project }}
   input:
-    {% for hififq in hifi_list %}
-    - {{ hififq }}
+    {% for file in hifi_list + input.ulong %}
+    - {{ file }}
     {% endfor %}
-  output: {{ results_dir }}/{{ input.project }}.asm.bp.hap1.p_ctg.fa
+  output:
+    - {{ results_dir }}/{{ input.project }}.asm.p_ctg.fa
+    - {{ results_dir }}/{{ input.project }}.asm.a_ctg.fa
+    - {{ results_dir }}/{{ input.project }}.asm.bp.p_ctg.fa
+    - {{ results_dir }}/{{ input.project }}.asm.bp.hap1.p_ctg.fa
+    - {{ results_dir }}/{{ input.project }}.asm.bp.hap2.p_ctg.fa
   cpus: 32
   mem: 600G
   walltime: "48:00:00"
@@ -37,6 +74,7 @@
       -t 32 \
       -o {{ temp_dir }}/{{ input.project }}.asm \
       --telo-m CCCTAA \
+      --primary \
       {% if input.ulong | length > 0 %}
       --ul "{{ input.ulong | join(',') }}" \
       --ul-cut 10000 \
@@ -52,7 +90,7 @@
     done
     mv {{ temp_dir }}/{{ input.project }}.asm.bp.* {{ results_dir }}/
 
-{% set input_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.hap1.p_ctg.fa{% endset %}
+{% set input_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.p_ctg.fa{% endset %}
 {{- assembly_qc(input, input_assembly, 'hifiasm') }}
 {{- quast(input, input_assembly, 'hifiasm') }}
 
