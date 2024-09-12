@@ -29,6 +29,8 @@
     set -eu
     set -o pipefail
 
+    export TMPDIR={{ temp_dir }}
+
     rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
