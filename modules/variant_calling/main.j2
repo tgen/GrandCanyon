@@ -285,8 +285,8 @@
     # copy number variant callers
     ############}
 
-    {% if tasks[taskprefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
-      {{- gatk_cnv(sample, aligner) }}
+    {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
+      {{- gatk_cnv(pair, aligner) }}
     {% endif %}
 
   {% endfor %}

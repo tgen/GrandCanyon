@@ -1,5 +1,3 @@
-{% from 'utilities/fastq_stats.j2' import fastq_stats with context %}
-
 {% macro copy_ubam(ubam) %}
 
 - name: copy_ubams_{{ ubam.basename | replace(".", "_") }}
@@ -56,13 +54,6 @@
       temp/ubams/{{ ubam.basename }} \
       -0 temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
     {% endif %}
-
-{% set file %}temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz{% endset %}
-{{- fastq_stats(file) }}
-{% if ubam.fastqCode == 'duplex' %}
-{% set file %}temp/fastqs/{{ ubam.basename | replace(".", "_") }}.simplex.fastq.gz{% endset %}
-{{- fastq_stats(file) }}
-{% endif %}
 
 {% endmacro %}
 

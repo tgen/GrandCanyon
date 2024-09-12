@@ -1,21 +1,21 @@
-{% macro fastq_stats(fastq) %}
+{% macro fastq_stats() %}
 
-- name: seqkit_stats_{{ fastq | basename | replace('.', '_') }}
-  input: {{ fastq }}
-  output: {{ fastq }}.stats.tsv
-  cpus: 4
-  mem: 8G
-  walltime: "4:00:00"
+- name: seqkit_stats_{{ project }}
+  input-re: temp/fastqs/.*.fastq.gz
+  output: temp/fastqs/{{ project }}.stats.tsv
+  cpus: 16
+  mem: 32G
+  walltime: "8:00:00"
   container: {{ constants.tools.seqkit.container }}
   cmd: |
     set -eu
 
     seqkit stats \
-      --threads 4 \
+      --threads 16 \
       --all \
       --tabular \
       --basename \
-      --out-file {{ fastq }}.stats.tsv \
-      {{ fastq }}
+      --out-file {{ project }}.stats.tsv \
+      temp/fastqs/*.fastq.gz
 
 {% endmacro %}

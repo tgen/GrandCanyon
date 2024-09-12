@@ -15,12 +15,14 @@
     {{ log(log_msg, level='WARNING') }}
     {% from 'utilities/prepare_resources.j2' import prepare_resources with context %}
     {% if constants.grandcanyon[reference].reference_fasta is defined %}
+        {% if constants.grandcanyon[reference].reference_fai is not defined or constants.grandcanyon[reference].reference_fai is not defined %}
         {% set reference_fasta = constants.grandcanyon[reference].reference_fasta %}
         {% set reference_fai %}{{ reference_fasta }}.fai{% endset %}
         {% set reference_dict %}{{ reference_fasta }}.dict{% endset %}
         {% do constants.grandcanyon[reference].update({'reference_fai': reference_fai}) %}
         {% do constants.grandcanyon[reference].update({'reference_dict': reference_dict}) %}
         {{- prepare_resources(reference_fasta=constants.grandcanyon[reference].reference_fasta) }}
+        {% endif %}
     {% else %}
         {% set raise_msg %}reference_fasta not defined! constants.grandcanyon.{{ reference }}.reference_fasta is not in pipeline.yaml or user supplied input{% endset %}
         {{ raise(raise_msg) }}
@@ -51,6 +53,7 @@
 {% from 'utilities/copy_fastq.j2' import copy_fastq with context %}
 {% from 'utilities/copy_ubam.j2' import copy_ubam with context %}
 {% from 'utilities/copy_bam.j2' import copy_bam with context %}
+{% from 'utilities/fastq_stats.j2' import fastq_stats with context %}
 {% from 'modules/dna_alignment/main.j2' import dna_alignment with context %}
 {% from 'modules/rna/main.j2' import rna_alignment with context %}
 {% from 'modules/variant_calling/main.j2' import constitutional_variant_calling with context %}
@@ -182,4 +185,6 @@
 {{- somatic_variant_calling(samples) }}
 
 {{- assembly() }}
+
+{{- fastq_stats() }}
 
