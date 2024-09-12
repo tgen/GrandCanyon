@@ -77,7 +77,7 @@
       --primary \
       {% if input.ulong | length > 0 %}
       --ul "{{ input.ulong | join(',') }}" \
-      --ul-cut 10000 \
+      --ul-cut 50000 \
       {% endif %}
       {% if input.hic_r1 | length > 0 %}
       --h1 "{{ input.hic_r1 | sort | join(',') }}" \

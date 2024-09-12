@@ -50,7 +50,7 @@
         {% do input.duplex.append(duplex_file) %}
         {% set ul_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.ul.filtered.fastq.gz{% endset %}
         {{- ul_filter(duplex_file, ul_file) }}
-        {% do input.ont.append(ul_file) %}
+        {% do input.ulong.append(ul_file) %}
 
         {% set corrected_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.simplex.corrected.fa{% endset %}
         {% if tasks.Genome_assembly_long_read_assembler_herro_correction | default(false) %}
