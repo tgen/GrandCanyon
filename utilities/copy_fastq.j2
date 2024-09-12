@@ -1,3 +1,5 @@
+{% from 'utilities/fastq_stats.j2' import fastq_stats with context %}
+
 {% macro copy_fastq(fastq) %}
 
 - name: copy_fastqs_{{ fastq.basename | replace(".", "_") }}
@@ -28,6 +30,9 @@
     {% else %}
     rsync "{{ fastq.path }}" "temp/fastqs/"
     {% endif %}
+
+{% set file %}temp/fastqs/{{ fastq.basename }}{% endset %}
+{{- fastq_stats(file) }}
 
 {% endmacro %}
 
