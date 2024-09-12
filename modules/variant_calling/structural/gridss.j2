@@ -46,6 +46,7 @@
       -r {{ constants.grandcanyon[reference].reference_fasta }} \
       -a {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.bam \
       -o {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.vcf.gz \
+      -w {{ temp_dir }} \
       --skipsoftcliprealignment \
       {% if sample_or_pair.normal is defined %}
       {{ normal_bam }} \

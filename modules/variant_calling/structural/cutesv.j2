@@ -85,7 +85,7 @@
       --temp-dir {{ temp_dir }} \
       -
 
-    bcftools filter \
+    bcftools view \
       --include 'FILTER == "PASS"' \
       --output-type z \
       --output {{ pass_vcf }} \

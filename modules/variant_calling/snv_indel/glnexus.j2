@@ -22,6 +22,7 @@
   cpus: 8
   mem: 40G
   walltime: "8:00:00"
+  queue_preset: "DEFAULT"
   container: {{ constants.tools.glnexus.container }}
   digest: {{ constants.tools.glnexus.digest }}
   cmd: |
@@ -58,6 +59,10 @@
     - {{ output_vcf }}
     - {{ ped_file }}
   output: {{ filtered_vcf }}
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
   container: {{ constants.tools.bcftools.container }}
   cmd: |
     set -euo pipefail
