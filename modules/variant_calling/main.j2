@@ -204,6 +204,18 @@
       {{- deepsomatic(sample, aligner) }}
     {% endif %}
 
+    {% if sample.glprep not in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_mutect2"]|default(false) %}
+        {{- mutect2(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
+        {{- strelka2(sample, aligner) }}
+      {% endif %}
+
+    {% endif %}
+
     {############
     # structural variant callers
     ############}
@@ -257,6 +269,18 @@
 
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clairs"]|default(false) %}
       {{- clairs(pair, aligner) }}
+    {% endif %}
+
+    {% if pair.glprep not in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_mutect2"]|default(false) %}
+        {{- mutect2(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
+        {{- strelka2(pair, aligner) }}
+      {% endif %}
+
     {% endif %}
 
     {############

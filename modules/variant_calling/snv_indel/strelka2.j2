@@ -1,0 +1,127 @@
+{% macro strelka2(sample_or_pair, aligner='bwa') %}
+
+{% if sample_or_pair.normal is defined %}
+  {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+  {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set indel_candidates %}{{ sample_or_pair.gltype }}/somatic_variant_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz{% endset %}
+  {%- set input_config = "paired" %}
+{% else %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set indel_candidates %}{{ sample_or_pair.gltype }}/somatic_variant_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz{% endset %}
+    {%- set input_config = "tumor_only" %}
+  {% else %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set indel_candidates %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz{% endset %}
+    {%- set input_config = "germline" %}
+  {% endif %}
+{% endif %}
+{% set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.strelka2.all.vcf.gz{% endset %}
+{% set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.strelka2.pass.vcf.gz{% endset %}
+
+- name: strelka2_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, strelka2, {{ sample_or_pair.name }}]
+  input:
+    {% if input_config in ('paired') %}
+    - {{ normal_bam }}
+    - {{ normal_bam }}.bai
+    - {{ tumor_bam }}
+    - {{ tumor_bam }}.bai
+    {% else %}
+    - {{ bam }}
+    - {{ bam }}.bai
+    {% endif %}
+    - {{ indel_candidates }}
+    - {{ indel_candidates }}.tbi
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    {% if input_config in ('paired') %}
+    - {{ temp_dir }}/results/variants/somatic.indels.vcf.gz
+    - {{ temp_dir }}/results/variants/somatic.snvs.vcf.gz
+    {% else %}
+    - {{ temp_dir }}/results/variants/variants.vcf.gz
+    {% endif %}
+  cpus: 20
+  mem: 20G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.strelka.container }}
+  digest: {{ constants.tools.strelka.digest }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# Build the Strelka run file #}
+    {% if input_config in ('paired') %}
+    configureStrelkaSomaticWorkflow.py \
+    {% else %}
+    configureStrelkaGermlineWorkflow.py \
+    {% endif %}
+      {% if sample_or_pair.gltype == 'exome' %}
+      --exome \
+      {% endif %}
+      {% if input_config in ('paired') %}
+      --normalBam "{{ normal_bam }}" \
+      --tumorBam "{{ tumor_bam }}" \
+      {% else %}
+      --bam "{{ bam }}" \
+      {% endif %}
+      --indelCandidates "{{ indel_candidates }}" \
+      --ref "{{ constants.grandcanyon[reference].reference_fasta }}" \
+      --runDir "{{ temp_dir }}"
+
+    {# Execute on the local machine with 19 parallel jobs #}
+    "{{ temp_dir }}/runWorkflow.py" -m local -j 19
+
+- name: strelka2_filter_variants_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, strelka2, {{ sample_or_pair.name }}]
+  reset: predecessors
+  input:
+    {% if input_config in ('paired') %}
+    - {{ temp_dir }}/results/variants/somatic.indels.vcf.gz
+    - {{ temp_dir }}/results/variants/somatic.snvs.vcf.gz
+    {% else %}
+    - {{ temp_dir }}/results/variants/variants.vcf.gz
+    {% endif %}
+  output:
+    - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 2G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# Merge the snvs and indels into a final vcf #}
+    {% if input_config in ('paired') %}
+    bcftools concat \
+      --allow-overlaps \
+      --threads 1 \
+      --output-type z \
+      --output "{{ all_vcf }}" \
+      --write-index \
+      "{{ temp_dir }}/results/variants/somatic.indels.vcf.gz" \
+      "{{ temp_dir }}/results/variants/somatic.snvs.vcf.gz"
+    {% else %}
+    mv {{ temp_dir }}/results/variants/variants.vcf.gz {{ all_vcf }}
+    bcftools index --tbi --force "{{ all_vcf }}"
+    {% endif %}
+
+    {# Then filter out the PASS variants to a separate file #}
+    bcftools view \
+      --include 'FILTER == "PASS"' \
+      --output-type z \
+      --output {{ pass_vcf }} \
+      --write-index \
+      {{ all_vcf }}
+
+{% endmacro %}
