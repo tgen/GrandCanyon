@@ -39,6 +39,7 @@
       --local \
       --local-cpus 32 \
       --local-memory 512 \
+      --no-correction \
       --hifi {{ hifi_list | join(' ') }} \
       {% if input.ulong | length > 0 %}
       --nano {{ input.ulong | join(' ') }} \

@@ -12,11 +12,10 @@
 {%- set results_dir %}{{ input.gltype }}/assembly/hifiasm/{{ input.project }}{% endset %}
 
 {% set ont_list = input.duplex + input.corr %}
-{% set hifi_list = input.hifi %}
 {% if ont_list | length > 0 %}
 {% set chopped_ont %}temp/fastqs/{{ input.project }}.chopped.ont.fastq.gz{% endset %}
-{% do hifi_list.append(chopped_ont) %}
 {% endif %}
+{% set hifi_list = input.hifi + [chopped_ont] %}
 
 {# PacBio Hifi reads are consistently between 10kb and 30 kb, and therefore it does not need chopping #}
 {% if ont_list | length > 0 %}
@@ -52,8 +51,6 @@
     - {{ file }}
     {% endfor %}
   output:
-    - {{ results_dir }}/{{ input.project }}.asm.p_ctg.fa
-    - {{ results_dir }}/{{ input.project }}.asm.a_ctg.fa
     - {{ results_dir }}/{{ input.project }}.asm.bp.p_ctg.fa
     - {{ results_dir }}/{{ input.project }}.asm.bp.hap1.p_ctg.fa
     - {{ results_dir }}/{{ input.project }}.asm.bp.hap2.p_ctg.fa
@@ -76,7 +73,6 @@
       -t 32 \
       -o {{ temp_dir }}/{{ input.project }}.asm \
       --telo-m CCCTAA \
-      --primary \
       {% if input.ulong | length > 0 %}
       --ul "{{ input.ulong | join(',') }}" \
       --ul-cut 50000 \
