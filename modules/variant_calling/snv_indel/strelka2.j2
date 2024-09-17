@@ -5,19 +5,19 @@
   {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-  {%- set indel_candidates %}{{ sample_or_pair.gltype }}/somatic_variant_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz{% endset %}
+  {%- set indel_candidates %}{{ sample_or_pair.gltype }}/somatic_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz{% endset %}
   {%- set input_config = "paired" %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
   {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-    {%- set indel_candidates %}{{ sample_or_pair.gltype }}/somatic_variant_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz{% endset %}
+    {%- set indel_candidates %}{{ sample_or_pair.gltype }}/somatic_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz{% endset %}
     {%- set input_config = "tumor_only" %}
   {% else %}
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-    {%- set indel_candidates %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz{% endset %}
+    {%- set indel_candidates %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz{% endset %}
     {%- set input_config = "germline" %}
   {% endif %}
 {% endif %}

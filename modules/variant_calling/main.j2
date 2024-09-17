@@ -5,6 +5,9 @@
 {% from 'modules/variant_calling/snv_indel/clair3.j2' import clair3 with context %}
 {% from 'modules/variant_calling/snv_indel/clairs.j2' import clairs with context %}
 {% from 'modules/variant_calling/snv_indel/longshot.j2' import longshot with context %}
+{% from 'modules/variant_calling/snv_indel/mutect2.j2' import mutect2 with context %}
+{% from 'modules/variant_calling/snv_indel/strelka2.j2' import strelka2 with context %}
+
 {% from 'modules/variant_calling/structural/cutesv.j2' import cutesv with context %}
 {% from 'modules/variant_calling/structural/sniffles.j2' import sniffles with context %}
 {% from 'modules/variant_calling/structural/pbsv.j2' import pbsv with context %}
@@ -12,8 +15,10 @@
 {% from 'modules/variant_calling/structural/dysgu.j2' import dysgu with context %}
 {% from 'modules/variant_calling/structural/manta.j2' import manta with context %}
 {% from 'modules/variant_calling/structural/gridss.j2' import gridss with context %}
+
 {% from 'modules/variant_calling/copy_number/spectre.j2' import spectre with context %}
 {% from 'modules/variant_calling/copy_number/hifi_cnv.j2' import hifi_cnv with context %}
+
 {% from 'utilities/create_ped.j2' import create_ped with context %}
 
 {%- macro constitutional_variant_calling(samples) %}
