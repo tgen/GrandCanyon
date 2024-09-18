@@ -133,6 +133,8 @@ constants:
       digest: e4c48b1470f2524da5734ebd84232446feec0e332b28e08c8997c3f21dffdc8e
     subread:
       container: quay.io/biocontainers/subread:2.0.6--he4a0461_0
+    vardict:
+      container: quay.io/biocontainers/vardict-java:1.8.3--hdfd78af_0
     vep:
       container: ensemblorg/ensembl-vep:release_107.0
     verkko:

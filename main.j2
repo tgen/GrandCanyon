@@ -3,6 +3,10 @@
     {% set tasks = {} %}
 {% endif %}
 
+{% if num_chunks is not defined %}
+    {% set num_chunks = 30 %}
+{% endif %}
+
 {% if reference is not defined or reference == "" %}
     {% set reference = "grch38" %}
     {% set log_msg %}reference not defined, defaulting to grch38{% endset %}

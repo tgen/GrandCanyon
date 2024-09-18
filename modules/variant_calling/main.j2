@@ -7,6 +7,7 @@
 {% from 'modules/variant_calling/snv_indel/longshot.j2' import longshot with context %}
 {% from 'modules/variant_calling/snv_indel/mutect2.j2' import mutect2 with context %}
 {% from 'modules/variant_calling/snv_indel/strelka2.j2' import strelka2 with context %}
+{% from 'modules/variant_calling/snv_indel/vardict.j2' import vardict with context %}
 
 {% from 'modules/variant_calling/structural/cutesv.j2' import cutesv with context %}
 {% from 'modules/variant_calling/structural/sniffles.j2' import sniffles with context %}
@@ -219,6 +220,10 @@
         {{- strelka2(sample, aligner) }}
       {% endif %}
 
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
+        {{- vardict(sample, aligner) }}
+      {% endif %}
+
     {% endif %}
 
     {############
@@ -284,6 +289,10 @@
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
         {{- strelka2(pair, aligner) }}
+      {% endif %}
+
+     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
+        {{- vardict(pair, aligner) }}
       {% endif %}
 
     {% endif %}

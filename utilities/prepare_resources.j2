@@ -1,7 +1,9 @@
 {% macro prepare_resources(reference_fasta=none, gene_model=none) %}
 
+{% set temp_dir %}temp/pipeline_resources{% endset %}
+
 {% if reference_fasta is not none %}
-- name: create_samtools_resources_for_input_reference
+- name: create_samtools_resources_for_{{ reference }}
   input: {{ reference_fasta }}
   output:
     - {{ reference_fasta }}.fai
@@ -18,6 +20,39 @@
     samtools dict \
       -o {{ reference_fasta }}.dict \
       {{ reference_fasta }}
+
+- name: create_chunking_intervals_for_{{ reference }}
+  input: {{ reference_fasta }}
+  output:
+    - {{ reference_fasta }}.fai
+    - {{ reference_fasta }}.dict
+  cpus: 4
+  mem: 16G
+  walltime: "4:00:00"
+  container: {{ constants.tools.gatk.container }}
+  cmd: |
+    set -uev
+
+    mkdir -p {{ temp_dir }}/calling_intervals
+
+    gatk ScatterIntervalsByNs \
+      --REFERENCE {{ reference_fasta }} \
+      --OUTPUT_TYPE ACGT \
+      --OUTPUT {{ temp_dir }}/calling_intervals/{{ reference_fasta }}.ACGT.interval_list
+
+    gatk IntervalListTools \
+      --SCATTER_COUNT {{ num_chunks }} \
+      --SUBDIVISION_MODE BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \
+      --PADDING 100 \
+      --UNIQUE true \
+      --SORT true \
+      --INPUT {{ temp_dir }}/calling_intervals/{{ reference_fasta }}.ACGT.interval_list \
+      --OUTPUT {{ temp_dir }}/calling_intervals/gatk_chunk_intervals
+
+    for interval in {{ temp_dir }}/calling_intervals/gatk_chunk_intervals/temp_00*_of_{{ num_chunks }}/scattered.interval_list ; do
+      chunk=$(echo "$interval" | grep -oP '[0-9]{4}' | sed 's/^0\+//')
+      grep -v '^@' $interval | awk '{ OFS="\t" ; print $1,$2-1,$3 }' > {{ temp_dir }}/calling_intervals/calling_interval_${chunk}.bed
+    done
 
 {% endif %}
 
