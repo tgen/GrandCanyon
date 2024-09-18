@@ -291,7 +291,7 @@
         {{- strelka2(pair, aligner) }}
       {% endif %}
 
-     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
         {{- vardict(pair, aligner) }}
       {% endif %}
 

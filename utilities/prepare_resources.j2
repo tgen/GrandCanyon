@@ -1,13 +1,10 @@
-{% macro prepare_resources(reference_fasta=none, gene_model=none) %}
+{% macro prepare_reference() %}
 
-{% set temp_dir %}temp/pipeline_resources{% endset %}
-
-{% if reference_fasta is not none %}
 - name: create_samtools_resources_for_{{ reference }}
-  input: {{ reference_fasta }}
+  input: {{ constants.grandcanyon[reference].reference_fasta }}
   output:
-    - {{ reference_fasta }}.fai
-    - {{ reference_fasta }}.dict
+    - {{ constants.grandcanyon[reference].reference_fai }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
   cpus: 4
   mem: 16G
   walltime: "4:00:00"
@@ -15,17 +12,26 @@
   cmd: |
     set -uev
 
-    samtools faidx {{ reference_fasta }}
+    [ -e {{ constants.grandcanyon[reference].reference_fai }} ] ||\
+    samtools faidx {{ constants.grandcanyon[reference].reference_fasta }}
 
+    [ -e {{ constants.grandcanyon[reference].reference_dict }} ] ||\
     samtools dict \
-      -o {{ reference_fasta }}.dict \
-      {{ reference_fasta }}
+      -o {{ constants.grandcanyon[reference].reference_dict }} \
+      {{ constants.grandcanyon[reference].reference_fasta }}
+
+{% endmacro %}
+
+{% macro prepare_chunk_intervals(exclusion_list=none) %}
+
+{% set temp_dir %}temp/pipeline_resources{% endset %}
 
 - name: create_chunking_intervals_for_{{ reference }}
-  input: {{ reference_fasta }}
+  input: {{ constants.grandcanyon[reference].reference_fasta }}
   output:
-    - {{ reference_fasta }}.fai
-    - {{ reference_fasta }}.dict
+    {% for chunk in range(1, num_chunks+1) %}
+    - {{ temp_dir }}/calling_intervals/calling_interval_${chunk}.bed
+    {% endfor %}
   cpus: 4
   mem: 16G
   walltime: "4:00:00"
@@ -36,9 +42,9 @@
     mkdir -p {{ temp_dir }}/calling_intervals
 
     gatk ScatterIntervalsByNs \
-      --REFERENCE {{ reference_fasta }} \
+      --REFERENCE {{ constants.grandcanyon[reference].reference_fasta }} \
       --OUTPUT_TYPE ACGT \
-      --OUTPUT {{ temp_dir }}/calling_intervals/{{ reference_fasta }}.ACGT.interval_list
+      --OUTPUT {{ temp_dir }}/calling_intervals/{{ constants.grandcanyon[reference].reference_fasta | basename }}.ACGT.interval_list
 
     gatk IntervalListTools \
       --SCATTER_COUNT {{ num_chunks }} \
@@ -46,7 +52,7 @@
       --PADDING 100 \
       --UNIQUE true \
       --SORT true \
-      --INPUT {{ temp_dir }}/calling_intervals/{{ reference_fasta }}.ACGT.interval_list \
+      --INPUT {{ temp_dir }}/calling_intervals/{{ constants.grandcanyon[reference].reference_fasta | basename }}.ACGT.interval_list \
       --OUTPUT {{ temp_dir }}/calling_intervals/gatk_chunk_intervals
 
     for interval in {{ temp_dir }}/calling_intervals/gatk_chunk_intervals/temp_00*_of_{{ num_chunks }}/scattered.interval_list ; do
@@ -54,15 +60,16 @@
       grep -v '^@' $interval | awk '{ OFS="\t" ; print $1,$2-1,$3 }' > {{ temp_dir }}/calling_intervals/calling_interval_${chunk}.bed
     done
 
-{% endif %}
+{% endmacro %}
 
-{% if gene_model is not none %}
-- name: create_gene_model_resources_for_input_reference
-  input: {{ gene_model }}
+{% macro prepare_gene_model() %}
+
+- name: create_gene_model_resources_for_{{ reference }}
+  input: {{ constants.grandcanyon[reference].gtf }}
   output:
-    - {{ gene_model }}.gene.bed
-    - {{ gene_model }}.exon.bed
-    - {{ gene_model }}.cds.bed
+    - {{ constants.grandcanyon[reference].gtf }}.gene.bed
+    - {{ constants.grandcanyon[reference].gtf }}.exon.bed
+    - {{ constants.grandcanyon[reference].gtf }}.cds.bed
   cpus: 4
   mem: 16G
   walltime: "4:00:00"
@@ -70,15 +77,13 @@
   cmd: |
     set -uev
 
-    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "gene") { OFS = "\t" ; print $1, $4, $5, $10 }}' {{ gene_model }} |\
-      sort -k1,1V -k2,2n -k3,3n > {{ gene_model }}.gene.bed
+    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "gene") { OFS = "\t" ; print $1, $4, $5, $10 }}' {{ constants.grandcanyon[reference].gtf }} |\
+      sort -k1,1V -k2,2n -k3,3n > {{ constants.grandcanyon[reference].gtf }}.gene.bed
 
-    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "exon") { OFS = "\t" ; print $1, $4, $5, $10 }}' {{ gene_model }} |\
-      sort -k1,1V -k2,2n -k3,3n > {{ gene_model }}.exon.bed
+    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "exon") { OFS = "\t" ; print $1, $4, $5, $10 }}' {{ constants.grandcanyon[reference].gtf }} |\
+      sort -k1,1V -k2,2n -k3,3n > {{ constants.grandcanyon[reference].gtf }}.exon.bed
 
-    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "CDS" && $4 < $5) { OFS = "\t" ; print $1, $4, $5, "CDS" }}' {{ gene_model }} |\
-      awk '!dup[$0]++' | sort -k1,1V -k2,2n -k3,3n | bedtools merge -i - > {{ gene_model }}.cds.bed
-
-{% endif %}
+    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "CDS" && $4 < $5) { OFS = "\t" ; print $1, $4, $5, "CDS" }}' {{ constants.grandcanyon[reference].gtf }} |\
+      awk '!dup[$0]++' | sort -k1,1V -k2,2n -k3,3n | bedtools merge -i - > {{ constants.grandcanyon[reference].gtf }}.cds.bed
 
 {% endmacro %}
