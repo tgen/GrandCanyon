@@ -16,8 +16,6 @@ constants:
     bedtools:
       container: ghcr.io/tgen/containers/bedtools:2.29.0-23080313
       digest: cde92d1b69ecfda6e5f115c6b9220a312c380b0d7aa30378437476cd50206ee0
-    busco:
-      container: quay.io/biocontainers/busco:5.7.1--pyhdfd78af_0
     bwa_mem2_samtools:
       container: ghcr.io/tgen/containers/bwa_mem2_samtools:2.2.1-23080315
       digest: 98a83bc2d70fa39755a02c2d81de64ef36dac292cdf6b1fcf02570a3e227b7f6

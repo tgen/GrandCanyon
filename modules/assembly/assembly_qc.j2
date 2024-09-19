@@ -20,31 +20,6 @@
       > {{ results_dir }}/{{ output_prefix }}_assembly-stats.txt
 
 
-- name: busco_{{ input.project }}_{{ assembler }}
-  input:
-    - {{ input_assembly }}
-    - {{ constants.grandcanyon.lineages }}
-  cpus: 8
-  mem: 64G
-  walltime: "4:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.busco.container }}
-  cmd: |
-    set -eu
-
-    busco \
-      -f \
-      -c 8 \
-      -l primates \
-      --offline \
-      --opt-out-run-stats \
-      --download_path {{ constants.grandcanyon.lineages }} \
-      -i {{ input_assembly }} \
-      -m genome \
-      -o busco \
-      --out_path {{ results_dir }}
-
-
 - name: compleasm_{{ input.project }}_{{ assembler }}
   input:
     - {{ input_assembly }}
