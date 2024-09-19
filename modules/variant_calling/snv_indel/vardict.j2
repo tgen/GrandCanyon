@@ -121,12 +121,26 @@
 
     mkdir -p "{{ results_dir }}"
 
+    {% for chunk in range(1, num_chunks+1) %}
+    bcftools view \
+      --output-type z \
+      --output {{ temp_dir }}/{{ chunk }}.vardict.vcf.gz \
+      --write-index \
+      {{ temp_dir }}/{{ chunk }}.vardict.vcf
+    {% endfor %}
+
     bcftools concat \
       --allow-overlaps \
       --output-type z \
       --output "{{ all_vcf }}" \
       --write-index \
-      "{{ temp_dir }}/*.vardict.vcf.gz"
+      {% for chunk in range(1, num_chunks+1) %}
+      {% if not loop.last %}
+      {{ temp_dir }}/{{ chunk }}.vardict.vcf.gz \
+      {% else %}
+      {{ temp_dir }}/{{ chunk }}.vardict.vcf.gz
+      {% endif %}
+      {% endfor %}
 
 - name: vardict_filter_variants_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, VarDict, {{ sample_or_pair.name }}]
@@ -145,12 +159,15 @@
     set -eu
     set -o pipefail
 
-    bcftools filter \
+    bcftools view \
       --output-type z \
+      {% if input_config in ('paired') %}
       --include 'FILTER == "PASS" & INFO/STATUS == "StrongSomatic"' \
+      {% else %}
+      --include 'FILTER == "PASS"' \
+      {% endif %}
+      --write-index \
       "{{ all_vcf }}" \
       > "{{ pass_vcf }}"
-
-    bcftools index --tbi --force "{{ pass_vcf }}"
 
 {% endmacro %}
