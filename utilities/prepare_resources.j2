@@ -1,6 +1,6 @@
 {% macro prepare_reference() %}
 
-- name: create_samtools_resources_for_{{ reference }}
+- name: create_samtools_resources_for_{{ reference | replace('.', '_') }}
   input: {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ constants.grandcanyon[reference].reference_fai }}
@@ -26,11 +26,11 @@
 
 {% set temp_dir %}temp/pipeline_resources{% endset %}
 
-- name: create_chunking_intervals_for_{{ reference }}
+- name: create_chunking_intervals_for_{{ reference | replace('.', '_') }}
   input: {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     {% for chunk in range(1, num_chunks+1) %}
-    - {{ temp_dir }}/calling_intervals/calling_interval_${chunk}.bed
+    - {{ temp_dir }}/calling_intervals/calling_interval_{{ chunk }}.bed
     {% endfor %}
   cpus: 4
   mem: 16G
@@ -64,7 +64,7 @@
 
 {% macro prepare_gene_model() %}
 
-- name: create_gene_model_resources_for_{{ reference }}
+- name: create_gene_model_resources_for_{{ reference | replace('.', '_') }}
   input: {{ constants.grandcanyon[reference].gtf }}
   output:
     - {{ constants.grandcanyon[reference].gtf }}.gene.bed

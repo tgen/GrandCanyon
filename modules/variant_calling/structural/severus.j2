@@ -1,48 +1,4 @@
-{#
-usage: severus [-h] [-v] --target-bam path [path ...] [--control-bam path [path ...]] --out-dir path [-t int] [--min-support int] [--min-reference-flank int] [--bp-cluster-size int] [--min-sv-size int] [--max-read-error float] [--min-mapq int] [--reference-adjacencies] [--write-alignments] [--single-bp] [--max-genomic-len int]
-               [--phasing-vcf path] [--vntr-bed path] [--filter-small-svs] [--TIN-ratio float] [--output-all] [--write-collapsed-dup] [--no-ins-seq] [--inbetween-ins] [--only-somatic] [--output-LOH] [--omit-resolve-overlaps] [--tra-to-ins]
-
-Find breakpoints and build breakpoint graph from a bam file
-
-options:
-  -h, --help            show this help message and exit
-  -v, --version         show program's version number and exit
-  --target-bam path [path ...]
-                        path to one or multiple target bam files (e.g. tumor, must be indexed)
-  --control-bam path [path ...]
-                        path to the control bam file (e.g. normal, must be indexed)
-  --out-dir path        Output directory
-  -t int, --threads int
-                        number of parallel threads [8]
-  --min-support int     minimum reads supporting double breakpoint [3]
-  --min-reference-flank int
-                        minimum distance between a breakpoint and reference ends [10000]
-  --bp-cluster-size int
-                        maximum distance in bp cluster [50]
-  --min-sv-size int     minimim size for sv [50]
-  --max-read-error float
-                        maximum base alignment error [0.005]
-  --min-mapq int        minimum mapping quality for aligned segment [10]
-  --reference-adjacencies
-                        draw reference adjacencies [False]
-  --write-alignments    write read alignments to file [False]
-  --single-bp           Add hagning breakpoints [False]
-  --max-genomic-len int
-                        maximum length of genomic segment to form connected components [50000]
-  --phasing-vcf path    path to vcf file used for phasing (if using haplotype specific SV calling)[None]
-  --vntr-bed path       bed file with tandem repeat locations [None]
-  --filter-small-svs    filters small svs < 5000
-  --TIN-ratio float     Tumor in normal ratio[{CONTROL_VAF}]
-  --output-all          outputs FAIL SVs in addition to PASS SVs
-  --write-collapsed-dup
-                        outputs a bed file with identified collapsed duplication regions
-  --no-ins-seq          do not output insertion sequences to the vcf file
-  --inbetween-ins       report unmapped insertions around breakpoints
-  --only-somatic        omits germline outputs in the somatic mode
-  --output-LOH          outputs a bed file with predicted LOH regions
-  --omit-resolve-overlaps
-  --tra-to-ins          converts insertions to translocations if mapping is known
-#}
+{% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
 
 {% macro severus(sample_or_pair, aligner) %}
 
