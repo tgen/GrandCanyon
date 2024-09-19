@@ -5,6 +5,7 @@
 {% from 'modules/variant_calling/snv_indel/clair3.j2' import clair3 with context %}
 {% from 'modules/variant_calling/snv_indel/clairs.j2' import clairs with context %}
 {% from 'modules/variant_calling/snv_indel/longshot.j2' import longshot with context %}
+{% from 'modules/variant_calling/snv_indel/lancet2.j2' import lancet2 with context %}
 {% from 'modules/variant_calling/snv_indel/mutect2.j2' import mutect2 with context %}
 {% from 'modules/variant_calling/snv_indel/strelka2.j2' import strelka2 with context %}
 {% from 'modules/variant_calling/snv_indel/vardict.j2' import vardict with context %}
@@ -282,6 +283,10 @@
     {% endif %}
 
     {% if pair.glprep not in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_lancet2"]|default(false) %}
+        {{- lancet2(pair, aligner) }}
+      {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_mutect2"]|default(false) %}
         {{- mutect2(pair, aligner) }}
