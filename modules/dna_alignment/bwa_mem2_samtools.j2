@@ -107,7 +107,6 @@
               - |\
             samtools sort \
               -T {{ temp_dir }}/{{ rgid }}/{chunk}_st_sort_temp/{chunk} \
-              -u \
               -m 3G \
               --threads 19 \
               --output-fmt BAM \
@@ -145,13 +144,11 @@
     {# No long options available for the following:
       -c           Combine @RG headers with colliding IDs [alter IDs to be distinct]
       -f           Overwrite the output BAM if exist
-      -l INT       Compression level, from 0 to 9 [-1]
     #}
     samtools merge \
       --threads 4 \
       -c \
       -f \
-      -u \
       {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam \
       {% for rgid in rg %}
       {% if not loop.last %}
