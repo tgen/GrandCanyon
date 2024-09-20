@@ -40,9 +40,14 @@
     set -eu
     set -o pipefail
 
+    rm -rf {{ temp_dir }}
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
     gridss \
       --threads 8 \
       --jvmheap 30g \
+      --steps preprocess,assemble,call \
       -r {{ constants.grandcanyon[reference].reference_fasta }} \
       -a {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.bam \
       -o {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.vcf.gz \
@@ -60,7 +65,7 @@
       --ref {{ constants.grandcanyon[reference].reference_fasta }} \
       --input {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.vcf.gz \
       --output {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.somatic.vcf.gz \
-      --plotdir {{ results_dir }} \
+      --plotdir {{ results_dir }}
     #}
 
 {% endmacro %}

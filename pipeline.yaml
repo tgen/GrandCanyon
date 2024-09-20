@@ -50,7 +50,7 @@ constants:
       container: ghcr.io/dnanexus-rnd/glnexus:v1.4.3
       digest: ce6fecf59dddc6089a8100b31c29c1e6ed50a0cf123da9f2bc589ee4b0c69c8e
     gridss:
-      container: quay.io/biocontainers/gridss:2.13.2--h50ea8bc_3
+      container: gridss/gridss:2.13.2
     herro:
       container: /home/tgenref/containers/herro_010824.sif
     hifiasm:
