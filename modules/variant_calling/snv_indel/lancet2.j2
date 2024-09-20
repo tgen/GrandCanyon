@@ -7,7 +7,8 @@
 {%- set all_vcf %}{{ results_dir }}/{{ pair.name }}.{{ aligner }}.lancet2.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ pair.name }}.{{ aligner }}.lancet2.pass.vcf.gz{% endset %}
 
-- name: lancet2_{{ pair.name }}_{{ aligner }}
+{% for chunk in range(1, num_chunks+1) %}
+- name: lancet2_{{ pair.name }}_{{ aligner }}_{{ chunk }}
   tags: [{{ pair.gltype }}, somatic, snp_indel_caller, lancet2, {{ pair.name }}]
   input:
     - {{ normal_bam }}
@@ -15,28 +16,63 @@
     - {{ tumor_bam }}
     - {{ tumor_bam }}.bai
     - {{ constants.grandcanyon[reference].reference_fasta }}
+    - temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed
   output:
-    - {{ all_vcf }}
-    - {{ all_vcf }}.tbi
-  cpus: 8
+    - {{ temp_dir }}/{{ chunk }}.lancet2.vcf.gz
+  cpus: 4
   mem: 16G
-  walltime: "24:00:00"
+  walltime: "8:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.lancet2.container }}
   cmd: |
     set -eu
 
-    rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
-    mkdir -p {{ results_dir }}
 
     Lancet2 pipeline \
       --num-threads 8 \
       --tumor {{ tumor_bam }} \
       --normal {{ normal_bam }} \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      --graphs-dir {{ results_dir }} \
-      --out-vcfgz {{ all_vcf }}
+      --bed-file temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
+      --out-vcfgz {{ temp_dir }}/{{ chunk }}.lancet2.vcf.gz
+
+{% endfor %}
+
+- name: lancet2_merge_chunks_{{ pair.name }}_{{ aligner }}
+  tags: [{{ pair.gltype }}, somatic, snp_indel_caller, lancet, {{ pair.name }}]
+  reset: predecessors
+  input:
+    {% for chunk in range(1, num_chunks+1) %}
+    - {{ temp_dir }}/{{ chunk }}.lancet2.vcf.gz
+    {% endfor %}
+  output:
+    - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    bcftools concat \
+      --allow-overlaps \
+      --output-type z \
+      --output {{ all_vcf }} \
+      --write-index \
+      {% for chunk in range(1, num_chunks+1) %}
+      {% if not loop.last %}
+      {{ temp_dir }}/{{ chunk }}.lancet2.vcf.gz \
+      {% else %}
+      {{ temp_dir }}/{{ chunk }}.lancet2.vcf.gz
+      {% endif %}
+      {% endfor %}
+
 
 - name: lancet2_filter_variants_{{ pair.name }}_{{ aligner }}
   tags: [{{ pair.gltype }}, somatic, snp_indel_caller, lancet2, {{ pair.name }}]
