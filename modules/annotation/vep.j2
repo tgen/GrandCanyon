@@ -1,5 +1,16 @@
 {% macro vep(sample_or_pair, results_dir, input_vcf, variant_caller, final_vcf_prefix, aligner) %}
 
+{% if constants.grandcanyon[reference].species is defined %}
+  {% if constants.grandcanyon[reference].species in ('homo_sapiens', 'human') %}
+    {% set is_human = true %}
+  {% else %}
+    {% set is_human = false %}
+  {% endif %}
+{% else %}
+  {% set raise_msg %}VEP was enabled, but species is not defined for {{ reference }}. Please define a VEP compatible species or disable the VEP task{% endset %}
+  {{ raise(raise_msg) }}
+{% endif %}
+
 - name: vep_all_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
@@ -24,7 +35,14 @@
         --stats_file "{{ final_vcf_prefix }}.vep.full.stats.html" \
         --vcf \
         --vcf_info_field CSQ \
+        {% if is_human %}
         --species homo_sapiens \
+        --sift b \
+        --polyphen b \
+        --humdiv \
+        {% else %}
+        --species {{ constants.grandcanyon[reference].species }} \
+        {% endif %}
         --force_overwrite \
         --cache \
         --dir_cache "{{ constants.grandcanyon[reference].vep_data }}" \
@@ -36,7 +54,6 @@
         --hgvs \
         --hgvsg \
         --symbol \
-        --humdiv \
         --uniprot \
         --domains \
         --canonical \
@@ -95,7 +112,14 @@
         --stats_file "{{ final_vcf_prefix }}.vep.pick.stats.html" \
         --vcf \
         --vcf_info_field CSQ \
+        {% if is_human %}
         --species homo_sapiens \
+        --sift b \
+        --polyphen b \
+        --humdiv \
+        {% else %}
+        --species {{ constants.grandcanyon[reference].species }} \
+        {% endif %}
         --force_overwrite \
         --cache \
         --dir_cache "{{ constants.grandcanyon[reference].vep_data }}" \
@@ -107,7 +131,6 @@
         --hgvs \
         --hgvsg \
         --symbol \
-        --humdiv \
         --uniprot \
         --domains \
         --canonical \
