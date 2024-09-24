@@ -31,26 +31,33 @@
     set -uev
 
     mkdir -p temp/fastqs/
-    
+
+    {#
+    The number of aux tags that vendors use/add is growing, and instead of including all of them we need
+    to drop a few that result in the inflation of outputs. Here we drop tags added for PacBio kinetics.
+    #}
+    TAGLIST=$(samtools head -h0 -n1 temp/ubams/{{ ubam.basename }} |\
+      cut -f12- | xargs -n1 | grep -vE 'fi|fn|fp|ri|rn|rp' | cut -d':' -f1 | xargs | sed 's/ /,/g')
+
     {# we currently expect ont style input, which isn't paired so we output to -0 #}
     {% if ubam.fastqCode == 'duplex' %}
     samtools fastq \
       --threads 6 \
-      -T '*' \
+      -T $TAGLIST \
       -d dx:1 \
       temp/ubams/{{ ubam.basename }} \
       -0 temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
 
     samtools fastq \
       --threads 6 \
-      -T '*' \
+      -T $TAGLIST \
       -d dx:0 \
       temp/ubams/{{ ubam.basename }} \
       -0 temp/fastqs/{{ ubam.basename | replace(".", "_") }}.simplex.fastq.gz
     {% else %}
     samtools fastq \
       --threads 6 \
-      -T '*' \
+      -T $TAGLIST \
       temp/ubams/{{ ubam.basename }} \
       -0 temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
     {% endif %}
