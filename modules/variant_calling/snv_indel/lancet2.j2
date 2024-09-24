@@ -30,7 +30,7 @@
     mkdir -p {{ temp_dir }}
 
     Lancet2 pipeline \
-      --num-threads 8 \
+      --num-threads 4 \
       --tumor {{ tumor_bam }} \
       --normal {{ normal_bam }} \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
