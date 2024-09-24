@@ -1,15 +1,15 @@
-{% macro quast(pair, input_assembly, assembler) %}
-
-{% set results_dir %}{{ input_assembly | dirname }}{% endset %}
+{% macro quast(pair, results_dir, input_assemblies, assembler) %}
 
 - name: quast_{{ pair.project }}_{{ assembler }}
   input:
-    - {{ input_assembly }}
+    {% for assembly in input_assemblies %}
+    - {{ assembly }}
+    {% endfor %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].gtf }}
   output: {{ results_dir }}/quast_results
-  cpus: 8
-  mem: 64G
+  cpus: 16
+  mem: 96G
   walltime: "8:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.quast.container }}
@@ -19,15 +19,14 @@
     mkdir -p {{ results_dir }}
 
     quast \
-      -t 8 \
+      -t 16 \
       -r {{ constants.grandcanyon[reference].reference_fasta }} \
       -g {{ constants.grandcanyon[reference].gtf }} \
-      -l {{ assembler }} \
       --large \
       --no-snps \
       --no-sv \
       --output-dir {{ results_dir }}/quast_results \
-      {{ input_assembly }}
+      {{ input_assemblies | join(" ") }}
 
 {% endmacro %}
 
