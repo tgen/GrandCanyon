@@ -168,7 +168,7 @@
 
     bcftools index --tbi --force "{{ all_vcf }}"
 
-    bcftools filter \
+    bcftools view \
       --include 'FILTER == "PASS"' \
       --output-type z \
       --output {{ pass_vcf }} \

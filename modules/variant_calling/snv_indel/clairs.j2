@@ -63,7 +63,7 @@
     set -eu
     set -o pipefail
 
-    bcftools filter \
+    bcftools view \
       --include 'FILTER == "PASS"' \
       --output-type z \
       --output {{ pass_vcf }} \

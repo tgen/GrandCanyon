@@ -160,14 +160,14 @@
     set -o pipefail
 
     bcftools view \
-      --output-type z \
       {% if input_config in ('paired') %}
       --include 'FILTER == "PASS" & INFO/STATUS == "StrongSomatic"' \
       {% else %}
       --include 'FILTER == "PASS"' \
       {% endif %}
+      --output-type z \
+      --output {{ pass_vcf }} \
       --write-index \
-      "{{ all_vcf }}" \
-      > "{{ pass_vcf }}"
+      {{ all_vcf }}
 
 {% endmacro %}
