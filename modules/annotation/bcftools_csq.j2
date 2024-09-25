@@ -7,7 +7,9 @@
     - {{ input_vcf }}
     - {{ constants.grandcanyon[reference].gff3 }}
     - {{ constants.grandcanyon[reference].reference_fasta }}
-  output: {{ final_vcf_prefix }}.csq.vcf.gz
+  output:
+    - {{ final_vcf_prefix }}.csq.local.vcf.gz
+    - {{ final_vcf_prefix }}.csq.all_gt.vcf.gz
   walltime: "8:00:00"
   cpus: 4
   mem: 8G
@@ -21,10 +23,22 @@
       --threads 4 \
       --fasta-ref {{ constants.grandcanyon[reference].reference_fasta }} \
       --gff-annot {{ constants.grandcanyon[reference].gff3 }} \
-      --output {{ final_vcf_prefix }}.csq.vcf.gz \
+      --output {{ final_vcf_prefix }}.csq.local.vcf.gz \
       --output-type z \
       --local-csq \
+      --write-index \
       {{ input_vcf }}
+
+    bcftools csq \
+      --threads 4 \
+      --fasta-ref {{ constants.grandcanyon[reference].reference_fasta }} \
+      --gff-annot {{ constants.grandcanyon[reference].gff3 }} \
+      --output {{ final_vcf_prefix }}.csq.all_gt.vcf.gz \
+      --output-type z \
+      --phase a \
+      --write-index \
+      {{ input_vcf }}
+
 {% else %}
   {% set log_msg %}bcftools consequence annotation was enabled, but a gff3 file path is not defined for {{ reference }}. This task is currently skipped.{% endset %}
   {{ log(log_msg, level='WARNING') }}
