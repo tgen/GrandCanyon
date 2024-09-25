@@ -1,4 +1,5 @@
 {% from 'modules/annotation/bcftools_annotate.j2' import bcftools_annotate with context %}
+{% from 'modules/annotation/bcftools_csq.j2' import bcftools_csq with context %}
 {% from 'modules/annotation/vep.j2' import vep with context %}
 
 {% macro annotate_vcfs(sample_or_pair, temp_dir, results_dir, input_vcf, aligner, variant_caller) %}
@@ -17,48 +18,27 @@
   {% set taskPrefix = 'Genome' %}
 {% endif %}
 
-
-{% set annotate_task_prefix = taskPrefix+'_variant_calling_annotate_vcfs_bcftools_' %}
-
-{% set flags = namespace({ 'bcftools': none, 'vep': none }) %}
-
-{% if tasks %}
-  {% for annotate_task in tasks %}
-    {% if annotate_task_prefix in annotate_task and tasks[annotate_task] %}
-      {% set flags.bcftools = true %}
-    {% elif annotate_task_prefix in annotate_task and tasks[annotate_task] is sameas false %}
-      {% if flags.bcftools is not sameas true %}
-        {% set flags.bcftools = false %}
-      {% endif %}
-    {% endif %}
-  {% endfor %}
-
-  {% if flags.bcftools is none %}
-    {% set flags.bcftools = false %}
-  {% endif %}
-
-  {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
-    {% set flags.vep = true %}
-  {% endif %}
-{% else %}
-  {% set flags.bcftools = false %}
-  {% set flags.vep = true %}
-{% endif %}
-
-{% if flags.bcftools %}
+{% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools"]|default(false) %}
 
   {% set bcftools_output %}{{ vcf_prefix }}.db.vcf.gz{% endset %}
   {{- bcftools_annotate(sample_or_pair, temp_dir, input_vcf, taskPrefix, variant_caller, bcftools_output, aligner) }}
 
-  {% set vep_output %}{{ vcf_prefix }}.db.vep.pick.vcf.gz{% endset %}
-  {% if flags.vep %}
+  {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
     {{- vep(sample_or_pair, results_dir, bcftools_output, variant_caller, vcf_prefix+'.db', aligner) }}
+  {% endif %}
+
+  {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_csq"]|default(false) %}
+    {{- bcftools_csq(sample_or_pair, results_dir, bcftools_output, variant_caller, vcf_prefix+'.db', aligner) }}
   {% endif %}
 
 {% else %}
 
-  {% if flags.vep %}
+  {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
     {{- vep(sample_or_pair, results_dir, input_vcf, variant_caller, vcf_prefix, aligner) }}
+  {% endif %}
+
+  {% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_csq"]|default(false) %}
+    {{- bcftools_csq(sample_or_pair, results_dir, input_vcf, variant_caller, vcf_prefix, aligner) }}
   {% endif %}
 
 {% endif %}

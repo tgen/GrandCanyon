@@ -1,0 +1,33 @@
+{% macro bcftools_csq(sample_or_pair, results_dir, input_vcf, variant_caller, final_vcf_prefix, aligner) %}
+
+{% if constants.grandcanyon[reference].gff3 is defined %}
+- name: bcftools_csq_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
+  input:
+    - {{ input_vcf }}
+    - {{ constants.grandcanyon[reference].gff3 }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output: {{ final_vcf_prefix }}.csq.vcf.gz
+  walltime: "8:00:00"
+  cpus: 4
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    bcftools csq \
+      --threads 4 \
+      --fasta-ref {{ constants.grandcanyon[reference].reference_fasta }} \
+      --gff-annot {{ constants.grandcanyon[reference].gff3 }} \
+      --output {{ final_vcf_prefix }}.csq.vcf.gz \
+      --output-type z \
+      --local-csq \
+      {{ input_vcf }}
+{% else %}
+  {% set log_msg %}bcftools consequence annotation was enabled, but a gff3 file path is not defined for {{ reference }}. This task is currently skipped.{% endset %}
+  {{ log(log_msg, level='WARNING') }}
+{% endif %}
+
+{% endmacro %}
