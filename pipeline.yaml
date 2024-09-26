@@ -135,7 +135,7 @@ constants:
       container: quay.io/biocontainers/vardict-java:1.8.3--hdfd78af_0
       digest: 4069c082c97470bce4a07f228dbf74b6ea3fc5c4eaa93ba76d2826a496ca3c44
     vep:
-      container: ensemblorg/ensembl-vep:release_107.0
+      container: ensemblorg/ensembl-vep:release_112.0
     verkko:
       container: quay.io/biocontainers/verkko:2.1--h45dadce_0
     whatshap:
@@ -178,7 +178,7 @@ constants:
       genome_build: grch38_hg38
       genome_subversion_name: hg38
       gene_model_name: ensembl_v103
-      gene_model_version: 103
+      gene_model_version: 112
       capture_kit_path: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/tool_resources/capture_kits
       reference_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_alts_hla_masked.fa
       reference_fai: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_alts_hla_masked.fa.fai
@@ -193,7 +193,8 @@ constants:
       transcriptomeSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/transcriptome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa
       star_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_masked.fa
       starfusion_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/tool_resources/starFusion_gencode_v37/starFusion_Resources/ctat_genome_lib_build_dir
-      vep_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/v103/
+      vep_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/v112/
+      vep_plugin_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/plugins
       ref_flat: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.refFlat.txt
       ribo_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.ribo.interval_list
       annotation_databases:

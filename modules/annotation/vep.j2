@@ -16,6 +16,7 @@
   input:
     - {{ input_vcf }}
     - {{ constants.grandcanyon[reference].vep_data }}
+    - {{ constants.grandcanyon[reference].vep_plugin_data }}
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output: {{ final_vcf_prefix }}.vep.full.vcf
   walltime: "8:00:00"
@@ -49,6 +50,7 @@
         --cache_version {{ constants.grandcanyon[reference].gene_model_version }} \
         --offline \
         --fasta "{{ constants.grandcanyon[reference].reference_fasta }}" \
+        --plugin AlphaMissense,file={{ constants.grandcanyon[reference].vep_plugin_data }}/AlphaMissense/AlphaMissense_hg38.tsv.gz \
         --buffer_size 10000 \
         --terms SO \
         --hgvs \
@@ -93,6 +95,7 @@
   input:
     - {{ input_vcf }}
     - {{ constants.grandcanyon[reference].vep_data }}
+    - {{ constants.grandcanyon[reference].vep_plugin_data }}
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output: {{ final_vcf_prefix }}.vep.pick.vcf
   walltime: "8:00:00"
@@ -101,7 +104,7 @@
   queue_preset: "DEFAULT"
   container: {{ constants.tools.vep.container }}
   cmd: |
-    set -euv
+    set -eu
     set -o pipefail
 
     {# Use VEP to create full annotation file with all transcripts #}
@@ -126,6 +129,7 @@
         --cache_version {{ constants.grandcanyon[reference].gene_model_version }} \
         --offline \
         --fasta "{{ constants.grandcanyon[reference].reference_fasta }}" \
+        --plugin AlphaMissense,file={{ constants.grandcanyon[reference].vep_plugin_data }}/AlphaMissense/AlphaMissense_hg38.tsv.gz \
         --buffer_size 10000 \
         --terms SO \
         --hgvs \
