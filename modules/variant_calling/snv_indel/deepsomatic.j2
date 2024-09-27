@@ -1,5 +1,3 @@
-{% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
-
 {%- macro deepsomatic(sample_or_pair, aligner) %}
 
 {% if sample_or_pair.normal is defined %}
@@ -179,6 +177,7 @@
 
 {% endif %}
 
+{% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
 {{- annotate_vcfs(sample_or_pair, temp_dir, results_dir, pass_vcf, 'minimap2', 'deepsomatic') }}
 
 {% endmacro %}

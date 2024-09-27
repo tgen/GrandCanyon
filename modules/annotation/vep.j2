@@ -33,7 +33,7 @@
         --input_file "{{ input_vcf }}" \
         --format vcf \
         --output_file "{{ final_vcf_prefix }}.vep.full.vcf" \
-        --stats_file "{{ final_vcf_prefix }}.vep.full.stats.html" \
+        --no_stats \
         --vcf \
         --vcf_info_field CSQ \
         {% if is_human %}
@@ -112,7 +112,7 @@
         --input_file "{{ input_vcf }}" \
         --format vcf \
         --output_file "{{ final_vcf_prefix }}.vep.pick.vcf" \
-        --stats_file "{{ final_vcf_prefix }}.vep.pick.stats.html" \
+        --no_stats \
         --vcf \
         --vcf_info_field CSQ \
         {% if is_human %}
