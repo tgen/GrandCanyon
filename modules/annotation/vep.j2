@@ -16,7 +16,9 @@
   input:
     - {{ input_vcf }}
     - {{ constants.grandcanyon[reference].vep_data }}
+    {% if reference == "grch38" %}
     - {{ constants.grandcanyon[reference].vep_plugin_data }}
+    {% endif %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output: {{ final_vcf_prefix }}.vep.full.vcf
   walltime: "8:00:00"
@@ -38,9 +40,11 @@
         --vcf_info_field CSQ \
         {% if is_human %}
         --species homo_sapiens \
+        {% if reference in ('grch38', 'grch37') %}
         --sift b \
         --polyphen b \
         --humdiv \
+        {% endif %}
         {% else %}
         --species {{ constants.grandcanyon[reference].species }} \
         {% endif %}
@@ -50,7 +54,12 @@
         --cache_version {{ constants.grandcanyon[reference].gene_model_version }} \
         --offline \
         --fasta "{{ constants.grandcanyon[reference].reference_fasta }}" \
+        {% if reference == "grch38" %}
         --plugin AlphaMissense,file={{ constants.grandcanyon[reference].vep_plugin_data }}/AlphaMissense/AlphaMissense_hg38.tsv.gz \
+        --tsl \
+        --appris \
+        --mane \
+        {% endif %}
         --buffer_size 10000 \
         --terms SO \
         --hgvs \
@@ -59,7 +68,6 @@
         --uniprot \
         --domains \
         --canonical \
-        --mane \
         --flag_pick_allele_gene
 
 - name: vep_all_bcftools_compress_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
@@ -94,7 +102,9 @@
   input:
     - {{ input_vcf }}
     - {{ constants.grandcanyon[reference].vep_data }}
+    {% if reference == "grch38" %}
     - {{ constants.grandcanyon[reference].vep_plugin_data }}
+    {% endif %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output: {{ final_vcf_prefix }}.vep.pick.vcf
   walltime: "8:00:00"
@@ -116,9 +126,11 @@
         --vcf_info_field CSQ \
         {% if is_human %}
         --species homo_sapiens \
+        {% if reference in ('grch38', 'grch37') %}
         --sift b \
         --polyphen b \
         --humdiv \
+        {% endif %}
         {% else %}
         --species {{ constants.grandcanyon[reference].species }} \
         {% endif %}
@@ -128,7 +140,12 @@
         --cache_version {{ constants.grandcanyon[reference].gene_model_version }} \
         --offline \
         --fasta "{{ constants.grandcanyon[reference].reference_fasta }}" \
+        {% if reference == "grch38" %}
         --plugin AlphaMissense,file={{ constants.grandcanyon[reference].vep_plugin_data }}/AlphaMissense/AlphaMissense_hg38.tsv.gz \
+        --tsl \
+        --appris \
+        --mane \
+        {% endif %}
         --buffer_size 10000 \
         --terms SO \
         --hgvs \
@@ -137,7 +154,6 @@
         --uniprot \
         --domains \
         --canonical \
-        --mane \
         --pick_allele_gene
 
 - name: vep_con_bcftools_compress_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
