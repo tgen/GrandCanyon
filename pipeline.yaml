@@ -36,8 +36,8 @@ constants:
     deepvariant:
       container: google/deepvariant:1.6.0-gpu
     dorado:
-      container: ontresearch/dorado:sha4fa3fd6a5b5ed1b6256500c4368f7dae9c43df97
-      version: 0.7.3
+      container: nanoporetech/dorado:shaae1d5e75f94041e4fd7af4a7ed6e6432b0eaea29
+      version: 0.8.2
     dysgu:
       container: quay.io/biocontainers/dysgu:1.6.2--py310h770aed0_0
     flair:
