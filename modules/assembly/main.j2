@@ -8,6 +8,10 @@
 
 {%- macro assembly() %}
 
+  {% for task in tasks if task.startswith("Genome_assembly") and tasks[task] %}
+    {% set assembly_enabled = true %}
+  {% endfor %}
+  {% if assembly_enabled|default(false) %}
   {% set input = {'project': project} %}
   {% do input.update({'gltype': 'genome'}) %}
   {% do input.update({'ulong': []}) %}
@@ -64,29 +68,19 @@
     {% endif %}
   {% endfor %}
 
-  {% if input.gltype in 'exome' %}
-    {% set taskPrefix = 'Exome' %}
-  {% elif input.gltype in 'genome' %}
-    {% set taskPrefix = 'Genome' %}
-  {% endif %}
-  {% if tasks[taskPrefix+"_assembly_long_read_assembler_flye"]|default(false) %}
-    {% set assembly_enabled = true %}
+  {{- meryl(input) }}
+  {% if tasks.Genome_assembly_long_read_assembler_flye|default(false) %}
     {{- flye(input) }}
   {% endif %}
-  {% if tasks[taskPrefix+"_assembly_long_read_assembler_hifiasm"]|default(false) %}
-    {% set assembly_enabled = true %}
+  {% if tasks.Genome_assembly_long_read_assembler_hifiasm|default(false) %}
     {{- hifiasm(input) }}
   {% endif %}
-  {% if tasks[taskPrefix+"_assembly_long_read_assembler_verkko"]|default(false) %}
-    {% set assembly_enabled = true %}
+  {% if tasks.Genome_assembly_long_read_assembler_verkko|default(false) %}
     {{- verkko(input) }}
   {% endif %}
-  {% if tasks[taskPrefix+"_assembly_long_read_assembler_shasta"]|default(false) %}
-    {% set assembly_enabled = true %}
+  {% if tasks.Genome_assembly_long_read_assembler_shasta|default(false) %}
     {{- shasta(input) }}
   {% endif %}
-  {% if assembly_enabled|default(false) %}
-    {{- meryl(input) }}
   {% endif %}
 
 {% endmacro %}
