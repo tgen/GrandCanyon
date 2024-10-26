@@ -179,7 +179,7 @@
     - {{ input_assembly }}
     - {{ input.gltype }}/assembly/meryl/{{ input.project }}/{{ input.project }}.meryl
   output:
-    - {{ results_dir }}{{ output_prefix }}_merqury
+    - {{ results_dir }}/merqury/{{ output_prefix }}_merqury
   cpus: 8
   mem: 64G
   walltime: "4:00:00"
@@ -190,9 +190,14 @@
 
     OMP_NUM_THREADS=8
 
+    ROOT_DIR=${PWD}
+
+    mkdir -p {{ results_dir }}/merqury
+    cd {{ results_dir }}/merqury
+
     merqury.sh \
-      {{ input.gltype }}/assembly/meryl/{{ input.project }}/{{ input.project }}.meryl \
-      {{ input_assembly }} \
-      {{ results_dir }}/{{ output_prefix }}_merqury
+      ${ROOT_DIR}/{{ input.gltype }}/assembly/meryl/{{ input.project }}/{{ input.project }}.meryl \
+      ${ROOT_DIR}/{{ input_assembly }} \
+      {{ output_prefix }}_merqury
 
 {% endmacro %}
