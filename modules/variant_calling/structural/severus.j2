@@ -51,6 +51,7 @@
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].reference_dict }}
     - {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }}
+    - {{ constants.grandcanyon[reference].tool_resources.severus.pon }}
   output:
     - {{ temp_vcf }}
     - {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
@@ -82,7 +83,8 @@
       --target-bam {{ tumor_bam }} \
       --control-bam {{ normal_bam }} \
       {% endif %}
-      --vntr-bed {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }}
+      --vntr-bed {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }} \
+      --PON {{ constants.grandcanyon[reference].tool_resources.severus.pon }}
 
     mv {{ temp_dir }}/breakpoints_double.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
     mv {{ temp_dir }}/somatic_SVs/breakpoint_clusters.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.tsv
@@ -92,6 +94,8 @@
       --threads 16 \
       --target-bam {{ bam }} \
       --out-dir {{ temp_dir }}
+      --vntr-bed {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }} \
+      --PON {{ constants.grandcanyon[reference].tool_resources.severus.pon }}
 
     mv {{ temp_dir }}/breakpoints_double.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
     mv {{ temp_dir }}/all_SVs/breakpoint_clusters.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.tsv

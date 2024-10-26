@@ -20,13 +20,13 @@ constants:
       container: ghcr.io/tgen/containers/bwa_mem2_samtools:2.2.1-23080315
       digest: 98a83bc2d70fa39755a02c2d81de64ef36dac292cdf6b1fcf02570a3e227b7f6
     clair3:
-      container: hkubal/clair3:v1.0.5
+      container: hkubal/clair3:v1.0.10
     clairs:
-      container: hkubal/clairs:v0.1.7
+      container: hkubal/clairs:v0.4.0
     compleasm:
       container: quay.io/biocontainers/compleasm:0.2.6--pyh7cba7a3_0
     cutesv:
-      container: quay.io/biocontainers/cutesv:2.0.3--pyhdfd78af_0
+      container: quay.io/biocontainers/cutesv:2.1.1--pyhdfd78af_0
     ctat_lr:
       container: trinityctat/ctat_lr_fusion:0.13.0
     deepsomatic:
@@ -39,7 +39,7 @@ constants:
       container: nanoporetech/dorado:shaae1d5e75f94041e4fd7af4a7ed6e6432b0eaea29
       version: 0.8.2
     dysgu:
-      container: quay.io/biocontainers/dysgu:1.6.2--py310h770aed0_0
+      container: quay.io/biocontainers/dysgu:1.6.7--py312hf97d3a1_0
     flair:
       container: quay.io/biocontainers/flair:2.0.0--pyhdfd78af_1
     flye:
@@ -64,7 +64,7 @@ constants:
     lancet2:
       container: us-central1-docker.pkg.dev/nygc-app-c-148c/lancet-public/lancet:v2.8.5-main-c28f7433
     longshot:
-      container: quay.io/biocontainers/longshot:0.4.5--hd175d40_2
+      container: quay.io/biocontainers/longshot:1.0.0--hd4f2111_2
     lorax:
       container: quay.io/biocontainers/lorax:0.3.8--hb7e2ac5_0
     manta:
@@ -77,7 +77,7 @@ constants:
     medaka:
       container: quay.io/biocontainers/medaka:1.11.1--py310h87e71ce_0
     merqury:
-      container: ghcr.io/tgen/containers/merqury:1.4.1-dev
+      container: /home/tgenref/containers/merqury_1.3.sif
     minigraph:
       container: quay.io/biocontainers/minigraph:0.21--he4a0461_1
     minimap2:
@@ -117,7 +117,7 @@ constants:
     seqtk:
       container: quay.io/biocontainers/seqtk:1.4--he4a0461_2
     severus:
-      container: quay.io/biocontainers/severus:1.1--pyhdfd78af_0
+      container: quay.io/biocontainers/severus:1.2--pyhdfd78af_0
     shasta:
       container: quay.io/biocontainers/shasta:0.11.1--h4ac6f70_2
     sniffles:
@@ -153,6 +153,7 @@ constants:
       reference_fastaSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa
       reference_faiSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa.fai
       reference_dict: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.dict
+      gff3: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-genes.gff3.gz
       gtf: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-genes.ucsc.fixed.sorted.gtf
       gtfSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/gene_model/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf
       transcriptome: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-cdna.fa
@@ -170,6 +171,7 @@ constants:
           interval_list: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.primary_contigs_no_chrX_chrY.interval_list
         severus:
           vntrs: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/severus/chm13.bed
+          pon: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/severus/PoN_1000G_chm13.tsv.gz
         spectre:
           mdr: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/spectre/grch38.mdr
           denylist: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/spectre/grch38_blacklist_spectre.bed
@@ -210,6 +212,7 @@ constants:
           interval_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/samtools_stats/GRCh38tempe_decoy_alts_hla_masked_samstats_no_N_1based_primary_contigs_no_chrX_chrY.txt
         severus:
           vntrs: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/severus/human_GRCh38_no_alt_analysis_set.trf.bed
+          pon: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/severus/PoN_1000G_hg38.tsv.gz
         spectre:
           mdr: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38.mdr
           denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38_blacklist_spectre.bed
