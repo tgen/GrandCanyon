@@ -8,10 +8,11 @@
 
 {%- macro assembly() %}
 
+  {% set assembly = namespace(enabled=false) %}
   {% for task in tasks if task.startswith("Genome_assembly") and tasks[task] %}
-    {% set assembly_enabled = true %}
+    {% set assembly.enabled = true %}
   {% endfor %}
-  {% if assembly_enabled|default(false) %}
+  {% if assembly.enabled %}
   {% set input = {'project': project} %}
   {% do input.update({'gltype': 'genome'}) %}
   {% do input.update({'ulong': []}) %}
