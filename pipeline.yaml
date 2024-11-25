@@ -120,6 +120,8 @@ constants:
       container: quay.io/biocontainers/severus:1.2--pyhdfd78af_0
     shasta:
       container: quay.io/biocontainers/shasta:0.11.1--h4ac6f70_2
+    smoove:
+      container: brentp/smoove:v0.2.8
     sniffles:
       container: quay.io/biocontainers/sniffles:2.4--pyhdfd78af_0
     spectre:

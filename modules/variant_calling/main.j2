@@ -17,6 +17,7 @@
 {% from 'modules/variant_calling/structural/dysgu.j2' import dysgu with context %}
 {% from 'modules/variant_calling/structural/manta.j2' import manta with context %}
 {% from 'modules/variant_calling/structural/gridss.j2' import gridss with context %}
+{% from 'modules/variant_calling/structural/smoove.j2' import smoove with context %}
 
 {% from 'modules/variant_calling/copy_number/spectre.j2' import spectre with context %}
 {% from 'modules/variant_calling/copy_number/hifi_cnv.j2' import hifi_cnv with context %}
@@ -245,7 +246,11 @@
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
         {{- manta(sample, aligner) }}
       {% endif %}
-    
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_smoove"]|default(false) %}
+        {{- smoove(sample, aligner) }}
+      {% endif %}
+
     {% endif %}
 
   {% endfor %}

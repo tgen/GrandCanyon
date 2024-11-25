@@ -1,0 +1,36 @@
+{% macro smoove(sample, aligner) %}
+
+{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/somatic_structural_calls/smoove/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/somatic_structural_calls/smoove/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.smoove.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.smoove.pass.vcf.gz{% endset %}
+
+- name: smoove_{{ sample.name }}_{{ aligner }}
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ all_vcf }}
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.smoove.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    smoove call \
+      --processes 8 \
+      --name {{ sample.name }} \
+      --fasta {{ constants.grandcanyon[reference].reference_fasta }} \
+      --outdir {{ temp_dir }} \
+      {{ bam }}
+
+{% endmacro %}
