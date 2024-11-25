@@ -201,13 +201,15 @@ constants:
       ribo_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.ribo.interval_list
       annotation_databases:
         - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/dbsnp/b154/dbSNP_b154_hg38tgen.bcf", "mark_sites": "DB", "columns": "ID"}
-        - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r2.1.1/gnomad.exomes.r2.1.1.sites.liftover_grch38_AnnotationReference.bcf", "mark_sites": "GNOMAD_EXOME", "columns": "GNOMAD_EXOME_AC:=AC,GNOMAD_EXOME_AN:=AN,GNOMAD_EXOME_AF:=AF,GNOMAD_EXOME_n_alt_alleles:=n_alt_alleles"}
-        - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r3.1.2/gnomad.genomes.r3.1.2.sites.pass.reduced.bcf", "mark_sites": "GNOMAD_GENOME", "columns": "GNOMAD_GENOME_AC:=AC,GNOMAD_GENOME_AN:=AN,GNOMAD_GENOME_AF:=AF,GNOMAD_GENOME_n_alt_alleles:=n_alt_alleles"}
+        - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.reduced.bcf", "mark_sites": "GNOMAD", "columns": "GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF"}
         - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/cosmic/v96/CosmicCodingMuts_v96_hg38_tempe.bcf", "mark_sites": "COSMIC", "columns": "COSMIC_CNT:=CNT"}
         - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/cosmic/v96/CosmicNonCodingMuts_v96_hg38_tempe.bcf", "mark_sites": "COSMIC_NC", "columns": "COSMIC_NC_CNT:=CNT"}
         - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/clinvar/20220910/clinvar_20220910_hg38_tempe.bcf", "mark_sites": "CLINVAR", "columns": ""}
         - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/topmed/freeze8/All.BRAVO_TOPMed_Freeze_8.bcf", "mark_sites": "TOPMED", "columns": "TOPMED_AF:=AF,TOPMED_AN:=AN,TOPMED_AC:=AC,TOPMED_HET:=Het,TOPMED_HOM:=Hom"}
       tool_resources:
+        mutect2:
+          germline_reference: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.AnnotationReference.vcf.gz
+          contamination: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.common.vcf.gz
         samtools_stats:
           interval_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/samtools_stats/GRCh38tempe_decoy_alts_hla_masked_samstats_no_N_1based_primary_contigs_no_chrX_chrY.txt
         severus:

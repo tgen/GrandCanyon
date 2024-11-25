@@ -34,6 +34,9 @@
     - {{ bam }}.bai
     {% endif %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
+    {% if constants.grandcanyon[reference].tool_resources.mutect2.germline_reference is defined | default(false) %}
+    - {{ constants.grandcanyon[reference].tool_resources.mutect2.germline_reference }}
+    {% endif %}
   output:
     - {{ temp_dir }}/{{ sample_or_pair.name }}.mutect2.vcf.gz
     - {{ temp_dir }}/{{ sample_or_pair.name }}.mutect2.vcf.gz.stats
@@ -55,6 +58,9 @@
       --java-options "-Xmx63G" \
       --tmp-dir {{ temp_dir }}/temp_mutect2 \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      {% if constants.grandcanyon[reference].tool_resources.mutect2.germline_reference is defined | default(false) %}
+      --germline-resource {{ constants.grandcanyon[reference].tool_resources.mutect2.germline_reference }} \
+      {% endif %}
       {% if input_config in ('paired') %}
       --input "{{ normal_bam }}" \
       --normal-sample "{{ sample_or_pair.normal.rgsm }}" \
@@ -66,7 +72,7 @@
       --f1r2-tar-gz "{{ temp_dir }}/{{ sample_or_pair.name }}.f1r2.tar.gz" \
       --independent-mates true
 
-{% if constants.grandcanyon[reference].gnomad_genome_mutect_contamination is defined | default(false) %}
+{% if constants.grandcanyon[reference].tool_resources.mutect2.contamination is defined | default(false) %}
 - name: mutect2_GetPileupSummaries_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, gatk_mutect2, {{ sample_or_pair.name }}]
   input:
@@ -79,7 +85,7 @@
     - {{ bam }}
     - {{ bam }}.bai
     {% endif %}
-    - {{ constants.grandcanyon[reference].gnomad_genome_mutect_contamination }}
+    - {{ constants.grandcanyon[reference].tool_resources.mutect2.contamination }}
   output: {{ temp_dir }}/{{ sample_or_pair.name }}.tumor-pileups.table
   cpus: 2
   mem: 8G
@@ -101,7 +107,7 @@
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --input "{{ tumor_bam }}" \
       --interval-set-rule UNION \
-      --variant {{ constants.grandcanyon[reference].gnomad_genome_mutect_contamination }} \
+      --variant {{ constants.grandcanyon[reference].tool_resources.mutect2.contamination }} \
       --output {{ temp_dir }}/{{ sample_or_pair.name }}.tumor-pileups.table
 
     {# Normal pileups #}
@@ -110,7 +116,7 @@
       -reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --input "{{ normal_bam }}" \
       --interval-set-rule UNION \
-      --variant {{ constants.grandcanyon[reference].gnomad_genome_mutect_contamination }} \
+      --variant {{ constants.grandcanyon[reference].tool_resources.mutect2.contamination }} \
       --output {{ temp_dir }}/{{ sample_or_pair.name }}.normal-pileups.table
     {% else %}
     mkdir -p "{{ temp_dir }}/temp_GetPileupSummaries_{{ sample_or_pair.name }}"
@@ -121,7 +127,7 @@
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --input "{{ bam }}" \
       --interval-set-rule UNION \
-      --variant {{ constants.grandcanyon[reference].gnomad_genome_mutect_contamination }} \
+      --variant {{ constants.grandcanyon[reference].tool_resources.mutect2.contamination }} \
       --output {{ temp_dir }}/{{ sample_or_pair.name }}.tumor-pileups.table
     {% endif %}
 
@@ -184,7 +190,7 @@
   input:
     - {{ temp_dir }}/{{ sample_or_pair.name }}.mutect2.vcf.gz
     - {{ temp_dir }}/{{ sample_or_pair.name }}.mutect2.vcf.gz.stats
-    {% if constants.grandcanyon[reference].gnomad_genome_mutect_contamination is defined | default(false) %}
+    {% if constants.grandcanyon[reference].tool_resources.mutect2.contamination is defined | default(false) %}
     - {{ temp_dir }}/artifact-priors.tar.gz
     - {{ temp_dir }}/contamination.table
     - {{ temp_dir }}/segments.table
@@ -212,7 +218,7 @@
       --max-alt-allele-count 2 \
       --variant "{{ temp_dir }}/{{ sample_or_pair.name }}.mutect2.vcf.gz" \
       --stats "{{ temp_dir }}/{{ sample_or_pair.name }}.mutect2.vcf.gz.stats" \
-      {% if constants.grandcanyon[reference].gnomad_genome_mutect_contamination is defined | default(false) %}
+      {% if constants.grandcanyon[reference].tool_resources.mutect2.contamination is defined | default(false) %}
       --contamination-table "{{ temp_dir }}/contamination.table" \
       --tumor-segmentation "{{ temp_dir }}/segments.table" \
       --ob-priors "{{ temp_dir }}/artifact-priors.tar.gz" \
