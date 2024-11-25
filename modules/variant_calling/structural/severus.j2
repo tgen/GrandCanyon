@@ -93,7 +93,7 @@
     severus \
       --threads 16 \
       --target-bam {{ bam }} \
-      --out-dir {{ temp_dir }}
+      --out-dir {{ temp_dir }} \
       --vntr-bed {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }} \
       --PON {{ constants.grandcanyon[reference].tool_resources.severus.pon }}
 
