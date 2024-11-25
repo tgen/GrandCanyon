@@ -1,0 +1,88 @@
+{% macro germline_candidate_filters(sample, temp_dir, results_dir, input_vcf, aligner, tool) %}
+
+{% if input_vcf.endswith('.vcf') %}
+  {% set vcf_prefix = input_vcf.split('.')[:-1]|join('.') %}
+{% elif input_vcf.endswith('.vcf.gz') %}
+  {% set vcf_prefix = input_vcf.split('.')[:-2]|join('.') %}
+{% else %}
+  {{ raise('{} does not appear to be a vcf!'.format(input_vcf)) }}
+{% endif %}
+
+{% set output_vcf %}{{ vcf_prefix }}.candidate.germline.vcf.gz{% endif %}
+
+{% if tasks[sample.gltype|capitalize+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
+  {% if reference == 'grch38' %}
+    {% set exclude_filter %}DP<10 | (PS="." & GT="het") | GNOMAD_GENOME_AF>0.001 | GNOMAD_EXOME_AF>0.001 | TOPMED_AF>0.001 | am_pathogenicity<0.6 | SIFT~"tolerated" | PolyPhen~"benign" | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
+    {% set query_format %}'%CHROM\t%POS\t[%GT\t%VAF\t%AD\t%PS\t]%Consequence\t%IMPACT\t%Gene\t%SYMBOL\t%SIFT\t%PolyPhen\t%am_pathogenicity\n'{% endset %}
+  {% elif reference == 'grch37' %}
+    {% set exclude_filter %}DP<10 | (PS="." & GT="het") | GNOMAD_GENOME_AF>0.001 | GNOMAD_EXOME_AF>0.001 | TOPMED_AF>0.001 | SIFT~"tolerated" | PolyPhen~"benign" | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
+    {% set query_format %}'%CHROM\t%POS\t[%GT\t%VAF\t%AD\t%PS\t]%Consequence\t%IMPACT\t%Gene\t%SYMBOL\t%SIFT\t%PolyPhen\n'{% endset %}
+  {% else %}
+    {% set exclude_filter %}DP<10 | (PS="." & GT="het") | GNOMAD_GENOME_AF>0.001 | GNOMAD_EXOME_AF>0.001 | TOPMED_AF>0.001 | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
+    {% set query_format %}'%CHROM\t%POS\t[%GT\t%VAF\t%AD\t%PS\t]%Consequence\t%IMPACT\t%Gene\t%SYMBOL\n'{% endset %}
+  {% endif %}
+
+- name: germline_candidate_filter_bcftools_{{ tool }}_{{ sample.name }}
+  input:
+    - {{ input_vcf }}
+  output:
+    - {{ temp_dir }}/candidate_variants.tsv
+  walltime: "12:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    bcftools +split-vep \
+      -c am_pathogenicity:Float \
+      -e '{{ exclude_filter }}' \
+      -s worst:missense+ -x {{ input_vcf }} | \
+    bcftools +split-vep -H -s worst:missense+ -x -f {{ query_format }} | sed -e '1 s/^#//' -e '1 s/[][0-9]//g' \
+    > {{ temp_dir }}/candidate_variants.tsv
+
+- name: germline_candidate_filter_parse_genotypes_{{ tool }}_{{ sample.name }}
+  input:
+    - {{ temp_dir }}/candidate_variants.tsv
+  output:
+    - {{ temp_dir }}/filtered_candidate_variants.tsv
+    - {{ temp_dir }}/candidate_positions.bed
+  walltime: "12:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.R.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    # {{ required_scripts.germline_variant_filter_Rscript.path }} md5: {{ required_scripts.germline_variant_filter_Rscript.path | md5 }}
+    Rscript {{ required_scripts.germline_variant_filter_Rscript.path }} \
+    {{ temp_dir }}/candidate_variants.tsv \
+    {{ temp_dir }}/filtered_candidate_variants.tsv
+
+    awk 'NR>1 { OFS="\t"; print $1, $2-1, $2 }' {{ temp_dir }}/filtered_candidate_variants.tsv > {{ temp_dir }}/candidate_positions.bed
+
+- name: germline_candidate_filter_bcftools_{{ tool }}_{{ sample.name }}
+  input:
+    - {{ temp_dir }}/candidate_positions.bed
+    - {{ input_vcf }}
+  output:
+    - {{ output_vcf }}
+  walltime: "12:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+
+    bcftools view \
+      -R {{ temp_dir }}/candidate_positions.bed \
+      -O z \
+      -o {{ output_vcf }} \
+      {{ input_vcf }}
+
+{% endif %}
+
+{% endmacro %}

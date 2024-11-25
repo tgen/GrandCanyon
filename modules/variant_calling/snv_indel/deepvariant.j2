@@ -1,6 +1,7 @@
 {% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
 {% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
 {% from 'modules/variant_calling/whatshap.j2' import whatshap_phase with context %}
+{% from 'modules/variant_calling/snv_indel/filtering.j2' import germline_candidate_filters %}
 
 {%- macro deepvariant(sample, aligner) %}
 
@@ -151,5 +152,9 @@
 {{- whatshap_phase(sample, pass_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant', aligner) }}
 {{- whatshap_haplotag(sample, whatshap_phased_vcf, bam, output_dir, output_prefix, 'deepvariant', aligner) }}
 {{- annotate_vcfs(sample, temp_dir, results_dir, whatshap_phased_vcf, 'minimap2', 'deepvariant') }}
+{% if tasks[sample.gltype|capitalize+"_variant_calling_annotate_vcfs_bcftools"]|default(false) and tasks[sample.gltype|capitalize+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
+  {% set annotated_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.whatshap.phased.db.vep.pick.vcf.gz{% endset %}
+  {{- germline_candidate_filters(sample, temp_dir, results_dir, annotated_vcf, 'minimap2', 'deepvariant') }}
+{% endif %}
 
 {% endmacro %}

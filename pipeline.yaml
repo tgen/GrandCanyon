@@ -223,6 +223,7 @@ constants:
     ont_resources: /home/tgenref/instrument_resources/ont
     lineages: /home/tgenref/multi_species_resources/tool_specific_resources/busco_lineages
     required_scripts:
+      germline_variant_filter_Rscript: germline_variant_filter.R
       plotSamStats_Rscript: summarize_samstats.R
       pafr_plot_Rscript: assembly_pafr_plot.R
       stats2json: samStats2json.py
