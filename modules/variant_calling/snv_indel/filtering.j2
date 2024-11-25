@@ -8,7 +8,7 @@
   {{ raise('{} does not appear to be a vcf!'.format(input_vcf)) }}
 {% endif %}
 
-{% set output_vcf %}{{ vcf_prefix }}.candidate.germline.vcf.gz{% endif %}
+{% set output_vcf %}{{ vcf_prefix }}.candidate.germline.vcf.gz{% endset %}
 
 {% if tasks[sample.gltype|capitalize+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
   {% if reference == 'grch38' %}
