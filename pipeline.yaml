@@ -164,13 +164,12 @@ constants:
       vep_data: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/indexed_vep_data
       ref_flat: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-genes.ucsc.fixed.sorted.refFlat.txt
       ribo_locations: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-genes.ucsc.fixed.sorted.ribo.interval_list
+      primary_interval_list: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.primary_contigs_no_chrX_chrY.interval_list
       annotation_databases:
         - {"file": "/home/tgenref/homo_sapiens/t2t_chm13/public_databases/dbsnp/chm13v2.0_dbSNPv155.vcf.gz", "mark_sites": "DB", "columns": "ID"}
         - {"file": "/home/tgenref/homo_sapiens/t2t_chm13/public_databases/gnomad/Homo_sapiens-GCA_009914755.4-2022_10-gnomad.pass.reduced.bcf", "mark_sites": "GNOMAD", "columns": "GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF"}
         - {"file": "/home/tgenref/homo_sapiens/t2t_chm13/public_databases/clinvar/chm13v2.0_ClinVar20220313.vcf.gz", "mark_sites": "CLINVAR", "columns": "CLNDN,CLNDNINCL,CLNDISDB,CLNDISDBINCL,CLNHGVS,CLNREVSTAT,CLNSIG,CLNSIGCONF,CLNSIGINCL,CLNVC,CLNVCSO,CLNVI,CLNORIGIN:=ORIGIN"}
       tool_resources:
-        samtools_stats:
-          interval_list: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.primary_contigs_no_chrX_chrY.interval_list
         severus:
           vntrs: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/severus/chm13.bed
           pon: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/severus/PoN_1000G_chm13.tsv.gz
@@ -201,6 +200,8 @@ constants:
       vep_plugin_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/plugins
       ref_flat: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.refFlat.txt
       ribo_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.ribo.interval_list
+      primary_interval_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/samtools_stats/GRCh38tempe_decoy_alts_hla_masked_samstats_no_N_1based_primary_contigs_no_chrX_chrY.txt
+      encode_denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38_blacklist_spectre.bed
       annotation_databases:
         - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/dbsnp/b154/dbSNP_b154_hg38tgen.bcf", "mark_sites": "DB", "columns": "ID"}
         - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.reduced.bcf", "mark_sites": "GNOMAD", "columns": "GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF"}
@@ -212,8 +213,6 @@ constants:
         mutect2:
           germline_reference: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.AnnotationReference.vcf.gz
           contamination: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.common.vcf.gz
-        samtools_stats:
-          interval_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/samtools_stats/GRCh38tempe_decoy_alts_hla_masked_samstats_no_N_1based_primary_contigs_no_chrX_chrY.txt
         severus:
           vntrs: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/severus/human_GRCh38_no_alt_analysis_set.trf.bed
           pon: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/severus/PoN_1000G_hg38.tsv.gz
@@ -222,6 +221,31 @@ constants:
           denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38_blacklist_spectre.bed
         sqanti3:
           tappas_gff: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sqanti3/human_tappas_gencode_annotation_file.gff3
+        gatk_cnv:
+          mappability_track: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/bismap/k100.umap.no_header.bed
+    canfam4:
+      species: canis_lupus_familiarisgsd
+      genome_build: canfam4
+      genome_subversion_name: UU_Cfam_GSD_1.0
+      gene_model_name: ensembl_v112
+      gene_model_version: 112
+      reference_fasta: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa
+      reference_fai: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa.fai
+      reference_dict: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa.dict
+      gff3: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.gff3.gz
+      gtf: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.gtf
+      transcriptome: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.cdna.all.fa
+      # starfusion_index: /home/tgenref/canis_familiaris/canfam4/tool_resources/STAR-fusion/T2T-CHM13_CTAT_lib_Feb162023.plug-n-play/ctat_genome_lib_build_dir
+      vep_data: /home/tgenref/canis_familiaris/canfam4/gene_model/indexed_vep_cache
+      # ref_flat: /home/tgenref/canis_familiaris/canfam4/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-genes.ucsc.fixed.sorted.refFlat.txt
+      # ribo_locations: /home/tgenref/canis_familiaris/canfam4/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-genes.ucsc.fixed.sorted.ribo.interval_list
+      # annotation_databases:
+      #  - {"file": "/home/tgenref/canis_familiaris/canfam4/public_databases/dbsnp/chm13v2.0_dbSNPv155.vcf.gz", "mark_sites": "DB", "columns": "ID"}
+      #  - {"file": "/home/tgenref/canis_familiaris/canfam4/public_databases/gnomad/Homo_sapiens-GCA_009914755.4-2022_10-gnomad.pass.reduced.bcf", "mark_sites": "GNOMAD", "columns": "GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF"}
+      #  - {"file": "/home/tgenref/canis_familiaris/canfam4/public_databases/clinvar/chm13v2.0_ClinVar20220313.vcf.gz", "mark_sites": "CLINVAR", "columns": "CLNDN,CLNDNINCL,CLNDISDB,CLNDISDBINCL,CLNHGVS,CLNREVSTAT,CLNSIG,CLNSIGCONF,CLNSIGINCL,CLNVC,CLNVCSO,CLNVI,CLNORIGIN:=ORIGIN"}
+      # tool_resources:
+      #   samtools_stats:
+      #     interval_list: /home/tgenref/canis_familiaris/canfam4/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.primary_contigs_no_chrX_chrY.interval_list
     ont_resources: /home/tgenref/instrument_resources/ont
     lineages: /home/tgenref/multi_species_resources/tool_specific_resources/busco_lineages
     required_scripts:
@@ -230,6 +254,7 @@ constants:
       pafr_plot_Rscript: assembly_pafr_plot.R
       stats2json: samStats2json.py
       stats2lims: uploadStats2Lims.py
+      plotCNVplus_Rscript: plotCNVplus.R
     lims_contigs: "chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,
       chrY,
       chrM,
