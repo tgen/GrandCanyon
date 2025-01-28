@@ -21,6 +21,7 @@
 
 {% from 'modules/variant_calling/copy_number/spectre.j2' import spectre with context %}
 {% from 'modules/variant_calling/copy_number/hifi_cnv.j2' import hifi_cnv with context %}
+{% from 'modules/variant_calling/copy_number/gatk_cnv.j2' import gatk_cnv with context %}
 
 {% from 'utilities/create_ped.j2' import create_ped with context %}
 
@@ -333,8 +334,10 @@
     # copy number variant callers
     ############}
 
-    {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
-      {{- gatk_cnv(pair, aligner) }}
+    {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(true) %}
+      {% if sample.gltype in 'genome' %}
+        {{- gatk_cnv(pair, aligner) }}
+      {% endif %}
     {% endif %}
 
   {% endfor %}
