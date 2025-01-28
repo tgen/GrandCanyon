@@ -2,6 +2,8 @@
 
 {% set output_bcf %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.{{ variant_caller }}.db.bcf{% endset %}
 
+{% if constants.grandcanyon[reference].annotation_databases is defined and constants.grandcanyon[reference].annotation_databases | length > 0 %}
+
 - name: bcftools_annotate_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
@@ -60,5 +62,10 @@
     "{{ output_bcf }}"
 
     bcftools index --threads 4 --tbi --force "{{ output_vcf }}"
+
+{% else %}
+  {% set log_msg %}bcftools annotation was enabled, but no annotation databases were found so this task was skipped{% endset %}
+  {{ log(log_msg, level='WARNING') }}
+{% endif %}
 
 {% endmacro -%}
