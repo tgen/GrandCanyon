@@ -5,6 +5,7 @@
   output:
     - {{ constants.grandcanyon[reference].reference_fai }}
     - {{ constants.grandcanyon[reference].reference_dict }}
+    - {{ constants.grandcanyon[reference].primary_interval_list }}
   cpus: 4
   mem: 16G
   walltime: "4:00:00"
@@ -19,6 +20,12 @@
     samtools dict \
       -o {{ constants.grandcanyon[reference].reference_dict }} \
       {{ constants.grandcanyon[reference].reference_fasta }}
+
+    [ -e {{ constants.grandcanyon[reference].primary_interval_list }} ] ||\
+    grep 'SN:\(chr\)\?[0-9]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+      sed 's/SN://;s/LN://' |\
+      awk '{ OFS="\t" ; print $2,1,$3 }' \
+      > {{ constants.grandcanyon[reference].primary_interval_list }}
 
 {% endmacro %}
 

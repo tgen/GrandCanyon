@@ -23,8 +23,10 @@
         {% set reference_fasta = constants.grandcanyon[reference].reference_fasta %}
         {% set reference_fai %}{{ reference_fasta }}.fai{% endset %}
         {% set reference_dict %}{{ reference_fasta }}.dict{% endset %}
+        {% set primary_interval_list %}{{ reference_fasta }}.primary.interval_list{% endset %}
         {% do constants.grandcanyon[reference].update({'reference_fai': reference_fai}) %}
         {% do constants.grandcanyon[reference].update({'reference_dict': reference_dict}) %}
+        {% do constants.grandcanyon[reference].update({'primary_interval_list': primary_interval_list}) %}
         {{- prepare_reference() }}
         {% endif %}
     {% else %}

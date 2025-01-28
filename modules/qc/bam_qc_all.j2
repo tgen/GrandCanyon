@@ -52,7 +52,7 @@
   input:
     - {{ bam }}
     - {{ bam }}.bai
-    - {{ constants.grandcanyon[reference].tool_resources.samtools_stats.interval_list }}
+    - {{ constants.grandcanyon[reference].primary_interval_list }}
     - {{ sample.capture_kit.no_header_targets_interval_list }}
   output:
     - {{ regions }}
@@ -71,7 +71,7 @@
     mkdir -p {{ results_dir }}
 
     bedtools intersect \
-      -a {{ constants.grandcanyon[reference].tool_resources.samtools_stats.interval_list }} \
+      -a {{ constants.grandcanyon[reference].primary_interval_list }} \
       -b {{ sample.capture_kit.no_header_targets_interval_list }} \
       | \
     sort -k1,1 -k2,2n \
@@ -98,7 +98,7 @@
     {% if sample.gltype == 'exome' %}
     - {{ regions }}
     {% else %}
-    - {{ constants.grandcanyon[reference].tool_resources.samtools_stats.interval_list }}
+    - {{ constants.grandcanyon[reference].primary_interval_list }}
     {% endif %}
     - {{ reference_fasta }}
   output:
@@ -138,7 +138,7 @@
       {% if sample.gltype == 'exome' %}
       --target-regions {{ regions }} \
       {% else %}
-      --target-regions {{ constants.grandcanyon[reference].tool_resources.samtools_stats.interval_list }} \
+      --target-regions {{ constants.grandcanyon[reference].primary_interval_list }} \
       {% endif %}
       --reference {{ reference_fasta }} \
       {{ bam }} \
@@ -207,7 +207,7 @@
         --bam={{ bam|basename }} \
         --sample={{ sample.name }} \
         --library={{ sample_lb }} \
-        --readformat={{ sample.readOrientation | replace("-", "") | replace("Inward","PairedEnd") }} \
+        --readformat={{ sample.readOrientation | default("Inward") | replace("-", "") | replace("Inward","PairedEnd") }} \
         --platformModel={{ sample.rgpm }}
 
     {% if libraryCount == 1 %}
@@ -218,7 +218,7 @@
         --bam={{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram \
         --sample={{ sample.name }} \
         --library={{ sample_lb }} \
-        --readformat={{ sample.readOrientation | replace("-", "") | replace("Inward","PairedEnd") }} \
+        --readformat={{ sample.readOrientation | default("Inward") | replace("-", "") | replace("Inward","PairedEnd") }} \
         --platformModel={{ sample.rgpm }}
     {% endif %}
 
