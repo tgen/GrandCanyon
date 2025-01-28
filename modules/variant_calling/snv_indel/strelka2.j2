@@ -112,8 +112,12 @@
       "{{ temp_dir }}/results/variants/somatic.indels.vcf.gz" \
       "{{ temp_dir }}/results/variants/somatic.snvs.vcf.gz"
     {% else %}
-    mv {{ temp_dir }}/results/variants/variants.vcf.gz {{ all_vcf }}
-    bcftools index --tbi --force "{{ all_vcf }}"
+    bcftools view \
+      --threads 1 \
+      --output-type z \
+      --output {{ all_vcf }} \
+      --write-index \
+      {{ temp_dir }}/results/variants/variants.vcf.gz
     {% endif %}
 
     {# Then filter out the PASS variants to a separate file #}
