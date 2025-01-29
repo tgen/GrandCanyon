@@ -340,7 +340,7 @@
     # copy number variant callers
     ############}
 
-    {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(true) %}
+    {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
       {% if pair.gltype in 'genome' %}
         {{- gatk_cnv(pair, aligner) }}
       {% endif %}
