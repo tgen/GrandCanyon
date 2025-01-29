@@ -23,9 +23,38 @@
 {% endif %}
 {% set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.strelka2.all.vcf.gz{% endset %}
 {% set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.strelka2.pass.vcf.gz{% endset %}
+{% set call_regions_bed %}{{ temp_dir }}/callRegions.bed{% endset %}
+
+- name: strelka2_prep_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, strelka2, {{ sample_or_pair.name }}]
+  input:
+    - {{ constants.grandcanyon[reference].reference_dict }}
+  output:
+    - {{ call_regions_bed }}.gz
+  cpus: 1
+  mem: 2G
+  walltime: "0:10:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+      sed 's/SN://;s/LN://' |\
+      awk '{ OFS="\t" ; print $2,0,$3-1 }' \
+      > {{ call_regions_bed }}
+
+    bgzip -f {{ call_regions_bed }}
+    tabix -f -p bed {{ call_regions_bed }}.gz
+
 
 - name: strelka2_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, strelka2, {{ sample_or_pair.name }}]
+  reset: strelka2_prep_{{ sample_or_pair.name }}_{{ aligner }}
   input:
     {% if input_config in ('paired') %}
     - {{ normal_bam }}
@@ -38,6 +67,7 @@
     {% endif %}
     - {{ indel_candidates }}
     - {{ indel_candidates }}.tbi
+    - {{ call_regions_bed }}.gz
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     {% if input_config in ('paired') %}
@@ -66,17 +96,18 @@
       --exome \
       {% endif %}
       {% if input_config in ('paired') %}
-      --normalBam "{{ normal_bam }}" \
-      --tumorBam "{{ tumor_bam }}" \
+      --normalBam {{ normal_bam }} \
+      --tumorBam {{ tumor_bam }} \
       {% else %}
-      --bam "{{ bam }}" \
+      --bam {{ bam }} \
       {% endif %}
-      --indelCandidates "{{ indel_candidates }}" \
-      --ref "{{ constants.grandcanyon[reference].reference_fasta }}" \
-      --runDir "{{ temp_dir }}"
+      --indelCandidates {{ indel_candidates }} \
+      --ref {{ constants.grandcanyon[reference].reference_fasta }} \
+      --callRegions {{ call_regions_bed }}.gz \
+      --runDir {{ temp_dir }}
 
     {# Execute on the local machine with 19 parallel jobs #}
-    "{{ temp_dir }}/runWorkflow.py" -m local -j 19
+    {{ temp_dir }}/runWorkflow.py -m local -j 19
 
 - name: strelka2_filter_variants_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, strelka2, {{ sample_or_pair.name }}]
@@ -101,16 +132,18 @@
     set -eu
     set -o pipefail
 
+    mkdir -p {{ results_dir }}
+
     {# Merge the snvs and indels into a final vcf #}
     {% if input_config in ('paired') %}
     bcftools concat \
       --allow-overlaps \
       --threads 1 \
       --output-type z \
-      --output "{{ all_vcf }}" \
+      --output {{ all_vcf }} \
       --write-index \
-      "{{ temp_dir }}/results/variants/somatic.indels.vcf.gz" \
-      "{{ temp_dir }}/results/variants/somatic.snvs.vcf.gz"
+      {{ temp_dir }}/results/variants/somatic.indels.vcf.gz \
+      {{ temp_dir }}/results/variants/somatic.snvs.vcf.gz
     {% else %}
     bcftools view \
       --threads 1 \
