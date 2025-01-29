@@ -193,10 +193,22 @@
 
 {% macro somatic_variant_calling(samples) %}
 
+{% set pairs = [] %}
+{% set tumors_with_normal = [] %}
+{% for tumor in samples.values() if tumor.subGroup|lower in ('tumor','tumour','case') and tumor.gltype in ('exome','genome') %}
+  {% for normal in samples.values() if normal.subGroup|lower in ('constitutional','germline','normal','control') and normal.gltype == tumor.gltype and normal.assayCode == tumor.assayCode %}
+    {% set pair_name = normal.name + '-' + tumor.name %}
+    {% do pairs.append({'name': pair_name, 'gltype': normal.gltype, 'glprep': normal.glprep, 'normal': normal, 'tumor': tumor}) %}
+    {% do cases_with_control.append(tumor) %}
+  {% endfor %}
+{% endfor %}
+
 {############
 # This generates tasks for true tumor only compatible variant callers
 ############}
 {%- for sample in samples.values() if sample.gltype in ('exome','genome') and sample.subGroup|lower in ('tumor','tumour','case') %}
+
+  {% if sample not in tumors_with_normal or allow_tumor_only|default(false) %}
 
   {% if sample.gltype in 'exome' %}
     {% set taskPrefix = 'Exome' %}
@@ -256,14 +268,8 @@
 
   {% endfor %}
 
-{% endfor %}
+  {% endif %}
 
-{% set pairs = [] %}
-{% for tumor in samples.values() if tumor.subGroup|lower in ('tumor','tumour','case') and tumor.gltype in ('exome','genome') %}
-  {% for normal in samples.values() if normal.subGroup|lower in ('constitutional','germline','normal','control') and normal.gltype == tumor.gltype and normal.assayCode == tumor.assayCode %}
-    {% set pair_name = normal.name + '-' + tumor.name %}
-    {% do pairs.append({'name': pair_name, 'gltype': normal.gltype, 'glprep': normal.glprep, 'normal': normal, 'tumor': tumor}) %}
-  {% endfor %}
 {% endfor %}
 
 {# Start of the macro calls that will actually add the tasks to the workflow #}
@@ -335,7 +341,7 @@
     ############}
 
     {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(true) %}
-      {% if sample.gltype in 'genome' %}
+      {% if pair.gltype in 'genome' %}
         {{- gatk_cnv(pair, aligner) }}
       {% endif %}
     {% endif %}
