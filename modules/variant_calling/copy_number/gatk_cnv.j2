@@ -5,15 +5,15 @@
   {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.tumor.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.tumor.name }}_{{ aligner }}{% endset %}
-  {%- set normal_bam_stats %}{{ sample_or_pair.normal.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/stats/{{ normal_bam|basename }}.cramstats.txt{% endset %}
-  {%- set tumor_bam_stats %}{{ sample_or_pair.tumor.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/stats/{{ tumor_bam|basename }}.cramstats.txt{% endset %}
+  {%- set normal_bam_stats %}{{ sample_or_pair.normal.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/stats/{{ sample_or_pair.normal.name }}.{{ aligner }}.cram.cramstats.txt{% endset %}
+  {%- set tumor_bam_stats %}{{ sample_or_pair.tumor.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/stats/{{ sample_or_pair.tumor.name }}.{{ aligner }}.cram.cramstats.txt{% endset %}
   {%- set deepvariant_vcf %}{{ sample_or_pair.normal.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.deepvariant.pass.vcf.gz{% endset %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set config_sex %}{{ sex|default("Female") }}{% endset %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
-  {%- set bam_stats %}{{ sample_or_pair.normal.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/stats/{{ normal_bam|basename }}.cramstats.txt{% endset %}
+  {%- set bam_stats %}{{ sample_or_pair.normal.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/stats/{{ sample_or_pair.normal.name }}.{{ aligner }}.cram.cramstats.txt{% endset %}
   {%- set deepvariant_vcf %}{{ sample_or_pair.normal.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.deepvariant.pass.vcf.gz{% endset %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
@@ -41,7 +41,6 @@
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.gatk.container }}
-  digest: {{ constants.tools.gatk.digest }}
   cmd: |
     set -eu
     set -o pipefail
@@ -185,7 +184,6 @@
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.bcftools.container }}
-  digest: {{ constants.tools.bcftools.digest }}
   cmd: |
     set -eu
     set -o pipefail
@@ -240,7 +238,6 @@
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.gatk.container }}
-  digest: {{ constants.tools.gatk.digest }}
   cmd: |
     set -eu
     set -o pipefail
@@ -274,7 +271,6 @@
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.gatk.container }}
-  digest: {{ constants.tools.gatk.digest }}
   cmd: |
     set -eu
     set -o pipefail
@@ -306,7 +302,6 @@
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.gatk.container }}
-  digest: {{ constants.tools.gatk.digest }}
   cmd: |
     set -eu
     set -o pipefail
@@ -340,7 +335,6 @@
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.gatk.container }}
-  digest: {{ constants.tools.gatk.digest }}
   cmd: |
     set -eu
     set -o pipefail
@@ -395,7 +389,6 @@
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.gatk.container }}
-  digest: {{ constants.tools.gatk.digest }}
   cmd: |
     set -eu
     set -o pipefail
@@ -501,7 +494,6 @@
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.python3.container }}
-  digest: {{ constants.tools.python3.digest }}
   cmd: |
     set -eu
     set -o pipefail
@@ -531,6 +523,7 @@
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.hets.tsv
     - {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.genderCorrected.seg
     - {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.genderCorrected.tsv
+    - {{ constants.grandcanyon[reference].reference_dict }}
   output:
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.genderCorrected.tsv
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.genderCorrected.seg
@@ -570,7 +563,6 @@
   walltime: "8:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.R.container }}
-  digest: {{ constants.tools.R.digest }}
   cmd: |
     set -eu
     set -o pipefail
@@ -582,11 +574,11 @@
 
     if [ ${SEX} == "Male" ]
     then
-      contig_names_string=$(grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} | sed 's/SN://;s/LN://' | awk '{ OFS="CONTIG_DELIMITER" ; print $2 }')
-      contig_lengths_string=$(grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} | sed 's/SN://;s/LN://' | awk '{ OFS="CONTIG_DELIMITER" ; print $3 }')
+      contig_names_string=$(grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} | sed 's/SN://;s/LN://' | awk '{ ORS="CONTIG_DELIMITER" ; print $2 }')
+      contig_lengths_string=$(grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} | sed 's/SN://;s/LN://' | awk '{ ORS="CONTIG_DELIMITER" ; print $3 }')
     else
-      contig_names_string=$(grep 'SN:\(chr\)\?[0-9X]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} | sed 's/SN://;s/LN://' | awk '{ OFS="CONTIG_DELIMITER" ; print $2 }')
-      contig_lengths_string=$(grep 'SN:\(chr\)\?[0-9X]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} | sed 's/SN://;s/LN://' | awk '{ OFS="CONTIG_DELIMITER" ; print $3 }')
+      contig_names_string=$(grep 'SN:\(chr\)\?[0-9X]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} | sed 's/SN://;s/LN://' | awk '{ ORS="CONTIG_DELIMITER" ; print $2 }')
+      contig_lengths_string=$(grep 'SN:\(chr\)\?[0-9X]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} | sed 's/SN://;s/LN://' | awk '{ ORS="CONTIG_DELIMITER" ; print $3 }')
     fi
 
     Rscript {{ required_scripts.plotCNVplus_Rscript.path }} \
