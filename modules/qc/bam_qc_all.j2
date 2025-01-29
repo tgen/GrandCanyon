@@ -238,6 +238,43 @@
 {% endif %}
 {% endmacro %}
 
+{% macro bam_qc_samtools_markdup(sample, sample_lb, taskPrefix=taskPrefix, aligner=aligner) %}
+{% if tasks[taskPrefix+"_quality_control_stats_samtools_markdup_stats"]|default(false) %}
+
+  {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+  {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
+  {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+
+  {% set output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.samtools.markdup_summary.json{% endset %}
+
+- name: samtools_markdup_stats_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, stats, samtools_markdup, {{ sample.name }}]
+  methods: Quality control metrics for {{ sample.name }} ({{ aligner }}) were generated with samtools stats.
+  input: {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.samtools.markdup.json
+  output: {{ output }}
+  walltime: "4:00:00"
+  cpus: 1
+  mem: 4G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.R.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    cd {{ results_dir }}
+
+    # {{ required_scripts.plotSamStats_Rscript.path }} md5: {{ required_scripts.plotSamStats_Rscript.path | md5 }}
+    Rscript {{ required_scripts.plotSamStats_Rscript.path }} \
+        --samtoolsDuplicatesFile={{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.samtools.markdup.json \
+        --bam={{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam \
+        --sample={{ sample.name }} \
+        --library={{ sample_lb }}
+
+    {{- stats2lims(sample.gltype, sample.name, task, output, "samtools_markdup_summary") }}
+
+{% endif %}
+{% endmacro %}
+
 {% macro bam_qc_samtools_idxstats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=true) %}
 {% if tasks[taskPrefix+"_quality_control_stats_samtools_idxstats"]|default(false) %}
 
