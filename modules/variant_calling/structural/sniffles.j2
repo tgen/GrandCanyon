@@ -41,7 +41,7 @@
   cmd: |
     set -eu
     set -o pipefail
-    
+
     rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}

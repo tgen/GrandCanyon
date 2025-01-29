@@ -199,7 +199,7 @@
   {% for normal in samples.values() if normal.subGroup|lower in ('constitutional','germline','normal','control') and normal.gltype == tumor.gltype and normal.assayCode == tumor.assayCode %}
     {% set pair_name = normal.name + '-' + tumor.name %}
     {% do pairs.append({'name': pair_name, 'gltype': normal.gltype, 'glprep': normal.glprep, 'normal': normal, 'tumor': tumor}) %}
-    {% do cases_with_control.append(tumor) %}
+    {% do tumors_with_normal.append(tumor) %}
   {% endfor %}
 {% endfor %}
 
@@ -245,7 +245,7 @@
     # structural variant callers
     ############}
     {% if sample.glprep in 'longread' %}
-      
+
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
         {{- severus(sample, aligner) }}
       {% endif %}
@@ -285,7 +285,7 @@
     {############
     # snv and indel variant callers
     ############}
-    
+
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
       {{- deepsomatic(pair, aligner) }}
     {% endif %}
@@ -333,7 +333,7 @@
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
         {{- manta(pair, aligner) }}
       {% endif %}
-    
+
     {% endif %}
 
     {############
