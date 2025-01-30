@@ -67,8 +67,8 @@
     mkdir -p "{{ results_dir }}/stats"
     mkdir -p "{{ star_finalcountsdir }}"
 
+    ROOT_DIR=${PWD}
     mkdir -p {{ temp_dir }}/star_index
-
     cd {{ temp_dir }}/star_index
 
     STAR \
@@ -83,9 +83,9 @@
       {% endif %}
       --sjdbGTFfile {{ constants.grandcanyon[reference].gtf }}
 
-    STAR_INDEX=${CURRENT_DIR}/{{ temp_dir }}/star_index
+    STAR_INDEX=${ROOT_DIR}/{{ temp_dir }}/star_index
 
-    cd ${CURRENT_DIR}
+    cd ${ROOT_DIR}
 
     STAR \
       --runMode alignReads \
