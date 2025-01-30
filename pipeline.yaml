@@ -229,6 +229,7 @@ constants:
       genome_subversion_name: UU_Cfam_GSD_1.0
       gene_model_name: ensembl_v112
       gene_model_version: 112
+      capture_kit_path: /home/tgenref/canis_familiaris/canfam4/gene_model/tool_resources/capture_kits
       reference_fasta: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa
       reference_fai: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa.fai
       reference_dict: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa.dict
