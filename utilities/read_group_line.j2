@@ -14,6 +14,13 @@
   {% set rg_line = '\\t'.join(['@RG'] + tags) %}
 {% elif format in ['exec_minimap2', 'exec_bwa'] %}
   {% set rg_line = '\\\\t'.join(['@RG'] + tags) %}
+{% elif format == 'star' %}
+  {# STAR requires one argument per field #}
+  {% set wrapped_tags = [] %}
+  {% for tag in tags %}
+    {% do wrapped_tags.append('"' + tag + '"') %}
+  {% endfor %}
+  {% set rg_line = ' '.join(wrapped_tags) %}
 {% else %}
   {{ raise('Read group line format should be "bwa" or "star"') }}
 {% endif %}

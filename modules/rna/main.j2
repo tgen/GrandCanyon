@@ -14,7 +14,7 @@
     {% else %}
       {% set opt_dup_distance = 2500 %}
       {{- star_quant(sample, opt_dup_distance) }}
-      {{- salmon(sample) }}
+      {{- salmon_sr(sample) }}
     {% endif %}
     {% if sample.glprep in 'kinnex' %}
       {{- isoseq(sample) }}
