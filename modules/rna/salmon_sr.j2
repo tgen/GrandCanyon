@@ -1,0 +1,75 @@
+{% from 'utilities/remove_files.j2' import remove_files with context %}
+
+# Run Salmon RNA Quantification
+{% macro salmon_sr(sample) %}
+{% set temp_dir %}temp/{{ sample.gltype }}/quant/salmon/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/quant/salmon/{{ sample.name }}{% endset %}
+
+{% set r1fqlist = [] %}
+{% set r2fqlist = [] %}
+{% for rgid, rg in sample.read_groups.items() %}
+  {% if rg.data_files|length < 2 %}
+      {{ raise('Read group did not have 2 data files: {}'.format(rgid)) }}
+  {% endif %}
+
+  {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
+  {% do r1fastq.update({"path": "temp/fastqs/" + r1fastq.basename}) %}
+  {% do r1fqlist.append(r1fastq) %}
+
+  {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
+  {% do r2fastq.update({"path": "temp/fastqs/" + r2fastq.basename}) %}
+  {% do r2fqlist.append(r2fastq) %}
+{% endfor %}
+
+- name: salmon_quant_cdna_{{ sample.name }}
+  tags: [{{ sample.gltype }}, transcriptome, quantify_expression, salmon_fastqs, {{ sample.name }}]
+  reset: predecessors
+  input:
+  {% for fq in r1fqlist %}
+    - temp/fastqs/{{ fq.basename }}
+  {% endfor %}
+  {% for fq in r2fqlist %}
+    - temp/fastqs/{{ fq.basename }}
+  {% endfor %}
+    - {{ constants.grandcanyon[reference].transcriptome }}
+    - {{ constants.grandcanyon[reference].gtf }}
+  output:
+    - {{ results_dir }}/{{ sample.name }}.transcripts.sf
+    - {{ results_dir }}/{{ sample.name }}.genes.sf
+    - {{ results_dir }}/{{ sample.name }}.counts.json
+  cpus: 10
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.salmon.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ temp_dir }}"
+    mkdir -p "{{ results_dir }}"
+
+    salmon index \
+      --threads 10 \
+      --transcripts {{ constants.grandcanyon[reference].transcriptome }} \
+      --index {{ temp_dir }}/transcripts_index \
+      --kmerLen 31
+
+    salmon quant \
+      --validateMappings \
+      --seqBias \
+      --gcBias \
+      --threads 10 \
+      --libType A \
+      --index {{ temp_dir }}/transcripts_index \
+      --geneMap "{{ constants.grandcanyon[reference].gtf }}" \
+      -1 "{{ r1fqlist|map(attribute='path')|join('" "') }}" \
+      -2 "{{ r2fqlist|map(attribute='path')|join('" "') }}" \
+      --output "{{ temp_dir }}"
+
+    {# Save back what we need and nuke the rest #}
+    mv "{{ temp_dir }}/quant.sf" "{{ results_dir }}/{{ sample.name }}.transcripts.sf"
+    mv "{{ temp_dir }}/quant.genes.sf" "{{ results_dir }}/{{ sample.name }}.genes.sf"
+    mv "{{ temp_dir }}/lib_format_counts.json" "{{ results_dir }}/{{ sample.name }}.counts.json"
+
+{% endmacro %}

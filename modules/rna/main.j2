@@ -1,6 +1,8 @@
 {% from 'modules/rna/minimap2.j2' import minimap2_rna with context %}
 {% from 'modules/rna/ctat_lr.j2' import ctat_lr with context %}
 {% from 'modules/rna/isoseq.j2' import isoseq with context %}
+{% from 'modules/rna/salmon_sr.j2' import salmon_sr with context %}
+{% from 'modules/rna/star_quant.j2' import star_quant with context %}
 {% from 'modules/qc/main.j2' import bam_qc with context %}
 
 {% macro rna_alignment(samples) %}
@@ -9,6 +11,10 @@
     {% if sample.glprep in ['kinnex', 'longread'] %}
       {{- minimap2_rna(sample) }}
       {{- bam_qc(sample, aligner='minimap2') }}
+    {% else %}
+      {% set opt_dup_distance = 2500 %}
+      {{- star_quant(sample, opt_dup_distance) }}
+      {{- salmon(sample) }}
     {% endif %}
     {% if sample.glprep in 'kinnex' %}
       {{- isoseq(sample) }}
