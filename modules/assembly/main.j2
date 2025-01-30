@@ -69,6 +69,7 @@
     {% endif %}
   {% endfor %}
 
+  {% if dataFiles|selectattr('subGroup', 'eq', 'Constitutional')|selectattr('gltype', 'in', ['genome'])|selectattr('glprep', 'in', ['longread','3c'])|list | length > 0 %}
   {{- meryl(input) }}
   {% if tasks.Genome_assembly_long_read_assembler_flye|default(false) %}
     {{- flye(input) }}
@@ -81,6 +82,7 @@
   {% endif %}
   {% if tasks.Genome_assembly_long_read_assembler_shasta|default(false) %}
     {{- shasta(input) }}
+  {% endif %}
   {% endif %}
   {% endif %}
 
