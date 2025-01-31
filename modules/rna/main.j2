@@ -13,8 +13,12 @@
       {{- bam_qc(sample, aligner='minimap2') }}
     {% else %}
       {% set opt_dup_distance = 2500 %}
-      {{- star_quant(sample, opt_dup_distance) }}
-      {{- salmon_sr(sample) }}
+      {% if tasks['RNA_alignment_rna_alignment_STAR']|default(false) %}
+        {{- star_quant(sample, opt_dup_distance) }}
+      {% endif %}
+      {% if tasks['RNA_transcriptome_quantify_expression_salmon']|default(false) %}
+        {{- salmon_sr(sample) }}
+      {% endif %}
     {% endif %}
     {% if sample.glprep in 'kinnex' %}
       {{- isoseq(sample) }}
