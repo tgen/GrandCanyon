@@ -3,25 +3,31 @@
 {% if sample_or_pair.normal is defined %}
   {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
   {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
-  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.tumor.name }}_{{ aligner }}{% endset %}
-  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.tumor.name }}_{{ aligner }}{% endset %}
   {%- set normal_bam_stats %}{{ sample_or_pair.normal.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/stats/{{ sample_or_pair.normal.name }}.{{ aligner }}.cram.cramstats.txt{% endset %}
   {%- set tumor_bam_stats %}{{ sample_or_pair.tumor.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/stats/{{ sample_or_pair.tumor.name }}.{{ aligner }}.cram.cramstats.txt{% endset %}
   {%- set deepvariant_vcf %}{{ sample_or_pair.normal.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.deepvariant.pass.vcf.gz{% endset %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-  {%- set config_sex %}{{ sex|default("Female") }}{% endset %}
+  {%- set input_config = "paired" %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
-  {%- set bam_stats %}{{ sample_or_pair.normal.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/stats/{{ sample_or_pair.normal.name }}.{{ aligner }}.cram.cramstats.txt{% endset %}
-  {%- set deepvariant_vcf %}{{ sample_or_pair.normal.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.deepvariant.pass.vcf.gz{% endset %}
-  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-  {%- set config_sex %}{{ sex|default("Female") }}{% endset %}
-  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/deepsomatic/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/deepsomatic/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set bam_stats %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/stats/{{ sample_or_pair.name }}.{{ aligner }}.cram.cramstats.txt{% endset %}
+  {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set deepsomatic_vcf %}{{ sample_or_pair.gltype }}/somatic_variant_calls/deepsomatic/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.deepsomatic.pass.vcf.gz{% endset %}
+    {%- set input_config = "tumor_only" %}
+  {% else %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set deepvariant_vcf %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.deepvariant.pass.vcf.gz{% endset %}
+    {%- set input_config = "germline" %}
+  {% endif %}
 {% endif %}
 
+{% set config_sex %}{{ sex|default("Female") }}{% endset %}
+
+{% if input_config == 'paired' %}
 {# Step 1 #}
 - name: gatk_call_cnv_step1_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, gatk, {{ sample_or_pair.name }}]
@@ -603,5 +609,7 @@
 
     {# using cp instead of move because singularity mounts things weird #}
     cp -r {{ temp_dir }}/results/* {{ results_dir }}/
+
+{% endif %}
 
 {% endmacro %}
