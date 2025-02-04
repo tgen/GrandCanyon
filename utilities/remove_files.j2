@@ -29,13 +29,18 @@
     - {{ task }}
     {% endfor %}
     {% endif %}
-  input: {{ directory }}
+  input:
+    {% if files_to_remove == 'null' %}
+    - {{ directory }}
+    {% else %}
+    {% for file in files_to_remove %}
+    - {{ file }}
+    {% endfor %}
+    {% endif %}
   walltime: "1:00:00"
   cpus: 1
   mem: 2G
   queue_preset: "DEFAULT"
-  container: {{ constants.tools.base.container }}
-  digest: {{ constants.tools.base.digest }}
   cmd: |
     set -eu
     set -o pipefail
