@@ -10,6 +10,7 @@
 # Performed on genomes
 
 # Performed on exomes
+{% from 'modules/qc/bam_qc_exome.j2' import bam_qc_gatk_collecthsmetrics with context %}
 
 # Performed on rna
 {% from 'modules/qc/bam_qc_rna.j2' import bam_qc_gatk_collectrnaseqmetrics with context %}
@@ -35,6 +36,7 @@
       {{- bam_qc_gatk_collectrnaseqmetrics(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner) }}
     {% elif sample.gltype == 'exome' %}
       {% set taskPrefix = 'Exome' %}
+      {{- bam_qc_gatk_collecthsmetrics(sample, aligner=aligner) }}
     {% elif sample.gltype == 'genome' %}
       {% set taskPrefix = 'Genome' %}
     {% endif %}
