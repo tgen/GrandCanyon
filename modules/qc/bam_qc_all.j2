@@ -35,7 +35,11 @@
   {% set summaryNumbers_output %}{{ results_dir }}/{{ sample_name_string }}.{{ aligner }}.cram_samtools_summaryNumbers_summary.tsv{% endset %}
   {% set summaryNumbers_output_json %}{{ results_dir }}/{{ sample_name_string }}.{{ aligner }}.cram_samtools_summaryNumbers_summary.json{% endset %}
 
+  {% set insertSize_output %}{{ results_dir }}/{{ sample_name_string }}.{{ aligner }}.cram_samtools_insertSize_summary.tsv{% endset %}
+  {% set insertSize_output_json %}{{ results_dir }}/{{ sample_name_string }}.{{ aligner }}.cram_samtools_insertSize_summary.json{% endset %}
+
 {% if bam_level is sameas true %}
+
   {% set bam_level_baseQuality_output %}{{ results_dir }}/{{ bam|basename }}_samtools_baseQualityYield_summary.tsv{% endset %}
   {% set bam_level_baseQuality_output_json %}{{ results_dir }}/{{ bam|basename }}_samtools_baseQualityYield_summary.json{% endset %}
 
@@ -44,6 +48,10 @@
 
   {% set bam_level_summaryNumbers_output %}{{ results_dir }}/{{ bam|basename }}_samtools_summaryNumbers_summary.tsv{% endset %}
   {% set bam_level_summaryNumbers_output_json %}{{ results_dir }}/{{ bam|basename }}_samtools_summaryNumbers_summary.json{% endset %}
+
+  {% set bam_level_insertSize_output %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram_samtools_insertSize_summary.tsv{% endset %}
+  {% set bam_level_insertSize_output_json %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram_samtools_insertSize_summary.json{% endset %}
+
 {% endif %}
 
 {% if sample.gltype == 'exome' %}

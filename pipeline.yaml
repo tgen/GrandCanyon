@@ -45,7 +45,7 @@ constants:
     flye:
       container: quay.io/biocontainers/flye:2.9.4--py311hc849397_2
     gatk:
-      container: broadinstitute/gatk:4.6.0.0
+      container: broadinstitute/gatk:4.4.0.0
     glnexus:
       container: ghcr.io/dnanexus-rnd/glnexus:v1.4.3
       digest: ce6fecf59dddc6089a8100b31c29c1e6ed50a0cf123da9f2bc589ee4b0c69c8e
@@ -248,9 +248,11 @@ constants:
       #  - {"file": "/home/tgenref/canis_familiaris/canfam4/public_databases/dbsnp/chm13v2.0_dbSNPv155.vcf.gz", "mark_sites": "DB", "columns": "ID"}
       #  - {"file": "/home/tgenref/canis_familiaris/canfam4/public_databases/gnomad/Homo_sapiens-GCA_009914755.4-2022_10-gnomad.pass.reduced.bcf", "mark_sites": "GNOMAD", "columns": "GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF"}
       #  - {"file": "/home/tgenref/canis_familiaris/canfam4/public_databases/clinvar/chm13v2.0_ClinVar20220313.vcf.gz", "mark_sites": "CLINVAR", "columns": "CLNDN,CLNDNINCL,CLNDISDB,CLNDISDBINCL,CLNHGVS,CLNREVSTAT,CLNSIG,CLNSIGCONF,CLNSIGINCL,CLNVC,CLNVCSO,CLNVI,CLNORIGIN:=ORIGIN"}
-      # tool_resources:
+      tool_resources:
       #   samtools_stats:
       #     interval_list: /home/tgenref/canis_familiaris/canfam4/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.primary_contigs_no_chrX_chrY.interval_list
+        mutect2:
+          # germline_reference:
     ont_resources: /home/tgenref/instrument_resources/ont
     lineages: /home/tgenref/multi_species_resources/tool_specific_resources/busco_lineages
     required_scripts:

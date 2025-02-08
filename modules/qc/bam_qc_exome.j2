@@ -5,7 +5,8 @@
 {% if tasks["Exome_quality_control_stats_gatk_CollectHsMetrics"]|default(false) %}
 
   {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
-  {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+  {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+  {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
   {% set output_file %}{{ results_dir }}/{{ bam|basename }}.hs_metrics{% endset %}
   {% set output_file_json %}{{ output_file }}.json{% endset %}
@@ -14,7 +15,7 @@
   tags: [{{ sample.gltype }}, quality_control, stats, gatk_CollectHsMetrics, {{ sample.name }}]
   input:
     - {{ bam }}
-    - {{ bam }}.bai
+    - {{ bam_index }}
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ sample.capture_kit.targets_interval_list }}
     - {{ sample.capture_kit.baits_interval_list }}
@@ -24,7 +25,6 @@
   mem: 16G
   queue_preset: "DEFAULT"
   container: {{ constants.tools.gatk.container }}
-  digest: {{ constants.tools.gatk.digest }}
   cmd: |
     set -eu
     set -o pipefail
