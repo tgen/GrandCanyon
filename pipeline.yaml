@@ -30,11 +30,11 @@ constants:
     ctat_lr:
       container: trinityctat/ctat_lr_fusion:0.13.0
     deepsomatic:
-      container: google/deepsomatic:1.7.0-gpu
+      container: google/deepvariant:deepsomatic-1.8.0-gpu
     deeptrio:
-      container: google/deepvariant:deeptrio-1.6.0-gpu
+      container: google/deepvariant:deeptrio-1.8.0-gpu
     deepvariant:
-      container: google/deepvariant:1.6.0-gpu
+      container: google/deepvariant:1.8.0-gpu
     dorado:
       container: nanoporetech/dorado:shaae1d5e75f94041e4fd7af4a7ed6e6432b0eaea29
       version: 0.8.2
