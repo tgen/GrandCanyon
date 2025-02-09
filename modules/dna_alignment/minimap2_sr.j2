@@ -69,6 +69,9 @@
               -x sr \
               -a \
               -R '{{ read_group_line(rg, format="exec_minimap2") }}' \
+              {% if constants.grandcanyon[reference].reference_alts is defined %}
+              --alt {{ constants.grandcanyon[reference].reference_alts }} \
+              {% endif %}
               {{ constants.grandcanyon[reference].reference_fasta }} \
               temp/fastqs/{{ sample.name }}/{{ rgid }}/{{ r1fastq.basename.split('.fastq.gz')[0] }}.part_{chunk}.fastq.gz \
               temp/fastqs/{{ sample.name }}/{{ rgid }}/{{ r2fastq.basename.split('.fastq.gz')[0] }}.part_{chunk}.fastq.gz |\
