@@ -1,4 +1,4 @@
-{% macro remove_files(directory, before, after, name='null', files_to_remove='null') %}
+{% macro remove_files(before, after, files_to_remove, name='null') %}
 
 {% if name != 'null' %}
   {% set task_name %}{{ name }}{% endset %}
@@ -9,6 +9,12 @@
     {% set task_name %}{{ after[0] }}{% endset %}
   {% endif %}
 {% endif %}
+
+{% for file in files_to_remove %}
+  {% if file.startswith('/') %}
+    {{ raise('Potentially dangerous rm detected - {} starts with / and all rm files should be relative'.format(file)) }}
+  {% endif %}
+{% endfor %}
 
 - name: removing_files_{{ task_name }}
   {% if before is not none %}
@@ -30,27 +36,18 @@
     {% endfor %}
     {% endif %}
   input:
-    {% if files_to_remove == 'null' %}
-    - {{ directory }}
-    {% else %}
     {% for file in files_to_remove %}
     - {{ file }}
     {% endfor %}
-    {% endif %}
   walltime: "1:00:00"
   cpus: 1
   mem: 2G
   queue_preset: "DEFAULT"
   cmd: |
     set -eu
-    set -o pipefail
 
-    {% if files_to_remove == 'null' %}
-    rm -r {{ directory }}
-    {% else %}
     {% for file in files_to_remove %}
-    rm {{ file }}
+    rm -rvf {{ file }}
     {% endfor %}
-    {% endif %}
 
 {% endmacro %}

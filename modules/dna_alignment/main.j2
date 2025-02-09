@@ -57,6 +57,10 @@
       {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
         {% set file %}{{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam{% endset %}
         {% do files_to_remove.append(file) %}
+        {% for rgid in rg %}
+          {% set file %}{{ temp_dir }}/{{ rgid.rgid }}{% endset %}
+          {% do files_to_remove.append(file) %}
+        {% endfor %}
         {% if sample.read_groups.values() | groupby('rglb') | length > 1 %}
           {% set file %}{{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram{% endset %}
           {% do files_to_remove.append(file) %}
@@ -77,10 +81,13 @@
       {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
       {% do r2fastq.update({"path": "temp/fastqs/" + r2fastq.basename}) %}
       {% do files_to_remove.append(r2fastq.path) %}
+
+      {% set file %}temp/fastqs/{{ sample.name }}/{{ rgid }}{% endset %}
+      {% do files_to_remove.append(file) %}
     {% endfor %}
 
     {% set task_name %}{{ sample.name }}_dna_fastqs{% endset %}
-    {{- remove_files('temp/', none, task_list, task_name, files_to_remove) }}
+    {{- remove_files(none, task_list, files_to_remove, task_name) }}
   {% endfor %}
 
   {% for sample in samples.values() if sample.gltype in ['genome', 'exome'] and sample.glprep in ['longread'] %}
