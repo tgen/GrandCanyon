@@ -17,9 +17,9 @@
     - temp/fastqs/{{ r1fastq.basename }}
     - temp/fastqs/{{ r2fastq.basename }}
   output: temp/fastqs/{{ sample.name }}/{{ rgid }}
-  walltime: "24:00:00"
-  cpus: 20
-  mem: 80G
+  walltime: "8:00:00"
+  cpus: 4
+  mem: 16G
   queue_preset: "DEFAULT"
   container: {{ constants.tools.seqkit.container }}
   cmd: |
