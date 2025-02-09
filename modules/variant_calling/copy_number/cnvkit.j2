@@ -5,9 +5,15 @@
   {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/cnvkit/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/cnvkit/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {% if sample_or_pair.gltype == 'exome' %}
+  {%- set capture_kit_bed %}{{ sample_or_pair.tumor.capture_kit.extended_bed }}{% endset %}
+  {% endif %}
   {%- set input_config = "paired" %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {% if sample_or_pair.gltype == 'exome' %}
+  {%- set capture_kit_bed %}{{ sample_or_pair.capture_kit.extended_bed }}{% endset %}
+  {% endif %}
   {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/cnvkit/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/cnvkit/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
@@ -33,7 +39,7 @@
     - {{ constants.grandcanyon[reference].reference_dict }}
     - {{ constants.grandcanyon[reference].gtf }}
     {% if sample_or_pair.gltype == 'exome' %}
-    - {{ sample_or_pair.capture_kit.extended_bed }}
+    - {{ capture_kit_bed }}
     {% endif %}
   cpus: 8
   mem: 32G
@@ -58,7 +64,7 @@
     {% if input_config not in 'paired' %}
     cnvkit.py reference \
       {% if sample_or_pair.gltype == 'exome' %}
-      --targets {{ sample_or_pair.capture_kit.extended_bed }} \
+      --targets {{ capture_kit_bed }} \
       {% else %}
       --targets {{ temp_dir }}/calling_intervals.bed \
       {% endif %}
@@ -81,7 +87,7 @@
       -p 8 \
       {% if sample_or_pair.gltype == 'exome' %}
       --method hybrid \
-      --targets {{ sample_or_pair.capture_kit.extended_bed }} \
+      --targets {{ capture_kit_bed }} \
       {% else %}
       --method wgs \
       {% endif %}
