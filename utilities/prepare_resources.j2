@@ -94,7 +94,9 @@
       awk '!dup[$0]++' | sort -k1,1V -k2,2n -k3,3n | bedtools merge -i - > {{ constants.grandcanyon[reference].gtf }}.cds.bed
 
 - name: create_rnaseq_resources_for_{{ reference | replace('.', '_') }}
-  intput: {{ constants.grandcanyon[reference].gtf }}
+  input:
+    - {{ constants.grandcanyon[reference].gtf }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
   output:
     - {{ constants.grandcanyon[reference].ref_flat }}
     - {{ constants.grandcanyon[reference].ribo_locations }}
@@ -106,12 +108,14 @@
   cmd: |
     set -eu
 
+    [ -e {{ constants.grandcanyon[reference].ref_flat }} ] ||\
     gtfToGenePred -genePredExt \
         -ignoreGroupsWithoutExons \
         {{ constants.grandcanyon[reference].gtf }} \
         /dev/stdout |\
         awk 'BEGIN { OFS="\t"} {print $12, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10}' > {{ constants.grandcanyon[reference].ref_flat }}
 
+    [ -e {{ constants.grandcanyon[reference].ribo_locations }} ] ||\
     grep -w "rRNA" {{ constants.grandcanyon[reference].gtf }} |\
         cut -f1,4,5,7,9 |\
         sed 's/gene_id "//g' |\
@@ -119,6 +123,7 @@
         cut -f1-5 |\
     cat {{ constants.grandcanyon[reference].reference_dict }} - > {{ constants.grandcanyon[reference].ribo_locations }}
 
+    [ -e {{ constants.grandcanyon[reference].gtf }}.refFlat.hugoID.txt ] ||\
     gtfToGenePred -genePredExt \
         -ignoreGroupsWithoutExons \
         -geneNameAsName2 \
