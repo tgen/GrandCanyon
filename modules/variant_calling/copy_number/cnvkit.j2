@@ -44,9 +44,11 @@
     set -eu
     set -o pipefail
 
-    {# Make working and temp directories #}
+    rm -r {{ temp_dir }} || true
     mkdir -p "{{ temp_dir }}"
     mkdir -p "{{ results_dir }}"
+
+    ROOT_DIR=${PWD}
 
     grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
       sed 's/SN://;s/LN://' |\
@@ -64,16 +66,17 @@
       --fasta {{ constants.grandcanyon[reference].reference_fasta }}
     {% endif %}
 
+    cd {{ temp_dir }} && \
     cnvkit.py batch \
       {% if input_config in 'paired' %}
-      {{ tumor_bam }} \
-      --normal {{ normal_bam }} \
-      --output-reference {{ temp_dir }}/{{ sample_or_pair.name }}_reference.cnn \
+      ${ROOT_DIR}/{{ tumor_bam }} \
+      --normal ${ROOT_DIR}/{{ normal_bam }} \
+      --output-reference ${ROOT_DIR}/{{ temp_dir }}/{{ sample_or_pair.name }}_reference.cnn \
       --fasta {{ constants.grandcanyon[reference].reference_fasta }} \
       --annotate {{ constants.grandcanyon[reference].gtf }} \
       {% else %}
-      {{ bam }} \
-      --reference {{ temp_dir }}/{{ sample_or_pair.name }}_reference.cnn \
+      ${ROOT_DIR}/{{ bam }} \
+      --reference ${ROOT_DIR}/{{ temp_dir }}/{{ sample_or_pair.name }}_reference.cnn \
       {% endif %}
       -p 8 \
       {% if sample_or_pair.gltype == 'exome' %}
@@ -82,7 +85,7 @@
       {% else %}
       --method wgs \
       {% endif %}
-      --output-dir {{ results_dir }} \
+      --output-dir ${ROOT_DIR}/{{ results_dir }} \
       --scatter
 
 {% endmacro %}
