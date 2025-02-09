@@ -169,6 +169,7 @@
     - {{ results_dir }}/{{ bam|basename }}_samtools_baseQualityYield_summary.tsv
     - {{ results_dir }}/{{ bam|basename }}_samtools_coverage_summary.tsv
     - {{ results_dir }}/{{ bam|basename }}_samtools_summaryNumbers_summary.tsv
+    - {{ results_dir }}/{{ bam|basename }}_samtools_insertSize_summary.tsv
     - {{ results_dir }}/{{ bam|basename }}_samtools_baseDistribution_linePlot.png
     - {{ results_dir }}/{{ bam|basename }}_samtools_baseQualityDistribution_histogram.png
     - {{ results_dir }}/{{ bam|basename }}_samtools_baseQualityDistribution_histogram.tsv
@@ -184,6 +185,7 @@
     - {{ baseQuality_output }}
     - {{ coverage_output }}
     - {{ summaryNumbers_output }}
+    - {{ insertSize_output }}
     - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_baseDistribution_linePlot.png
     - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_baseQualityDistribution_histogram.png
     - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_baseQualityDistribution_histogram.tsv
