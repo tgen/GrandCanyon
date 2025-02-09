@@ -52,13 +52,13 @@
     set -eu
     set -o pipefail
 
-    mkdir -p "{{ temp_dir }}/temp_mutect2"
+    mkdir -p "{{ temp_dir }}/temp_mutect2_{{ chunk }}"
 
     touch "{{ temp_dir }}/{{ chunk }}.f1r2.tar.gz"
 
     gatk Mutect2 \
       --java-options "-Xmx14G" \
-      --tmp-dir {{ temp_dir }}/temp_mutect2 \
+      --tmp-dir {{ temp_dir }}/temp_mutect2_{{ chunk }} \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       -L temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
       {% if constants.grandcanyon[reference].tool_resources.mutect2.germline_reference is defined | default(false) %}

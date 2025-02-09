@@ -1,0 +1,188 @@
+{% macro haplotypecaller(sample, aligner='bwa') %}
+
+{% set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{% set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/haplotypecaller/{{ sample.name }}_{{ aligner }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/haplotypecaller/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set gvcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.hc.g.vcf.gz{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.hc.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.hc.pass.vcf.gz{% endset %}
+
+{% for chunk in range(1, num_chunks+1) %}
+- name: haplotypecaller_gvcf_{{ sample.name }}_{{ aligner }}_{{ chunk }}
+  tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, gatk_HaplotypeCaller, {{ sample.name }}]
+  input: 
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output: {{ temp_dir }}/{{ chunk }}.g.vcf.gz
+  walltime: "24:00:00"
+  cpus: 2
+  mem: 16G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.gatk.container }}
+  digest: {{ constants.tools.gatk.digest }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ temp_dir }}"
+
+    gatk HaplotypeCaller \
+      --java-options "-Xmx14G" \
+      -ERC GVCF \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --input "{{ bam }}" \
+      -L temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
+      -O "{{ temp_dir }}/{{ chunk }}.g.vcf.gz"
+
+{% endfor %}
+
+- name: haplotypecaller_gvcf_merge_{{ sample.name }}_{{ aligner }}
+  tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, gatk_HaplotypeCaller, {{ sample.name }}]
+  reset: predecessors
+  input:
+    {% for chunk in range(1, num_chunks+1) %}
+    - {{ temp_dir }}/{{ chunk }}.g.vcf.gz
+    {% endfor %}
+  output:
+    - {{ gvcf }}
+    - {{ gvcf }}.tbi
+  walltime: "24:00:00"
+  cpus: 1
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.gatk.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ results_dir }}"
+
+    gatk MergeVcfs \
+      --java-options "-Xmx7G" \
+      {% for chunk in range(1, num_chunks+1) %}
+      --INPUT "{{ temp_dir }}/{{ chunk }}.g.vcf.gz" \
+      {% endfor %}
+      --OUTPUT "{{ gvcf }}"
+
+{% for chunk in range(1, num_chunks+1) %}
+- name: genotypegvcf_{{ sample.name }}_{{ aligner }}_{{ chunk }}
+  tags: [{{ sample.gltype}}, constitutional, genotype_hc_gvcf, gatk_GenotypeGVCFs, {{ sample.name }}]
+  input:
+    - {{ gvcf }}
+    - {{ gvcf }}.tbi
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output: {{ temp_dir }}/{{ chunk }}.vcf.gz
+  walltime: "24:00:00"
+  cpus: 4
+  mem: 16G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.gatk.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ temp_dir }}"
+
+    gatk GenotypeGVCFs \
+      --tmp-dir "temp" \
+      --java-options "-Xmx14G" \
+      --reference "{{ constants.grandcanyon[reference].reference_fasta }}" \
+      -L temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
+      --variant "{{ gvcf }}" \
+      --output "{{ temp_dir }}/{{ chunk }}.vcf.gz"
+
+- name: cnnscorevariants2d_{{ sample.name }}_{{ aligner }}_{{ chunk }}
+  tags: [{{ sample.gltype}}, constitutional, genotype_hc_gvcf, gatk_GenotypeGVCFs, {{ sample.name }}]
+  reset: genotypegvcf_{{ sample.name }}_{{ aligner }}_{{ chunk }}
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ temp_dir }}/{{ chunk }}.vcf.gz
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output: {{ temp_dir }}/{{ chunk }}.scored.vcf.gz
+  after: genotypegvcf_{{ sample.name }}_{{ aligner }}_{{ chunk }}
+  walltime: "24:00:00"
+  cpus: 8
+  mem: 32G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.gatk.container }}
+  cmd: |
+
+    source activate gatk
+
+    gatk CNNScoreVariants \
+      --java-options "-Xmx28G" \
+      --tensor-type read_tensor \
+      -L temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
+      --reference "{{ constants.grandcanyon[reference].reference_fasta }}" \
+      --input "{{ bam }}" \
+      --variant "{{ temp_dir }}/{{ chunk }}.vcf.gz" \
+      --output "{{ temp_dir }}/{{ chunk }}.scored.vcf.gz"
+
+{% endfor %}
+
+- name: haplotypecaller_merge_{{ sample.name }}_{{ aligner }}
+  tags: [{{ sample.gltype}}, constitutional, genotype_hc_gvcf, gatk_GenotypeGVCFs, {{ sample.name }}]
+  reset: predecessors
+  input:
+    {% for chunk in range(1, num_chunks+1) %}
+    - {{ temp_dir }}/{{ chunk }}.scored.vcf.gz
+    {% endfor %}
+  output:
+    - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
+  walltime: "8:00:00"
+  cpus: 1
+  mem: 4G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ results_dir }}"
+
+    bcftools concat \
+      --output-type z \
+      --output "{{ all_vcf }}" \
+      --write-index \
+      {% for chunk in range(1, num_chunks+1) %}
+      {% if not loop.last %}
+      "{{ temp_dir }}/{{ chunk }}.scored.vcf.gz" \
+      {% else %}
+      "{{ temp_dir }}/{{ chunk }}.scored.vcf.gz"
+      {% endif %}
+      {% endfor %}
+
+- name: haplotypecaller_bcftools_filter_variants_{{ sample.name }}_{{ aligner }}
+  tags: [{{ sample.gltype}}, constitutional, genotype_hc_gvcf, gatk_GenotypeGVCFs, {{ sample.name }}]
+  reset: predecessors
+  input:
+    - {{ all_vcf }}
+    {% if sample.gltype == 'exome' %}
+    - {{ sample.capture_kit.extended_bed }}
+    {% endif %}
+  output:
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 4
+  mem: 16G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    bcftools view \
+      --include 'FILTER == "PASS"' \
+      {% if sample.gltype == 'exome' %}
+      --targets-file "{{ sample.capture_kit.extended_bed }}" \
+      {% endif %}
+      --output-type z \
+      --output {{ pass_vcf }} \
+      --write-index \
+      {{ all_vcf }}
+
+{% endmacro %}

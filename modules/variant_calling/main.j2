@@ -4,6 +4,7 @@
 {% from 'modules/variant_calling/snv_indel/glnexus.j2' import glnexus with context %}
 {% from 'modules/variant_calling/snv_indel/clair3.j2' import clair3 with context %}
 {% from 'modules/variant_calling/snv_indel/clairs.j2' import clairs with context %}
+{% from 'modules/variant_calling/snv_indel/haplotypecaller.j2' import haplotypecaller with context %}
 {% from 'modules/variant_calling/snv_indel/longshot.j2' import longshot with context %}
 {% from 'modules/variant_calling/snv_indel/lancet2.j2' import lancet2 with context %}
 {% from 'modules/variant_calling/snv_indel/mutect2.j2' import mutect2 with context %}
@@ -43,6 +44,10 @@
 
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(false) %}
       {{- deepvariant(sample, aligner) }}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_haplotypecaller"]|default(false) %}
+      {{- haplotypecaller(sample, aligner) }}
     {% endif %}
 
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clair3"]|default(false) %}
