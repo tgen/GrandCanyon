@@ -80,6 +80,9 @@
       --output-reference ${ROOT_DIR}/{{ temp_dir }}/{{ sample_or_pair.name }}_reference.cnn \
       --fasta {{ constants.grandcanyon[reference].reference_fasta }} \
       --annotate {{ constants.grandcanyon[reference].gtf }} \
+      {% if sample_or_pair.gltype == 'exome' %}
+      --targets {{ capture_kit_bed }} \
+      {% endif %}
       {% else %}
       ${ROOT_DIR}/{{ bam }} \
       --reference ${ROOT_DIR}/{{ temp_dir }}/{{ sample_or_pair.name }}_reference.cnn \
@@ -87,7 +90,6 @@
       -p 8 \
       {% if sample_or_pair.gltype == 'exome' %}
       --method hybrid \
-      --targets {{ capture_kit_bed }} \
       {% else %}
       --method wgs \
       {% endif %}
