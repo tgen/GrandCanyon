@@ -18,8 +18,9 @@
   {% set taskPrefix = 'Genome' %}
 {% endif %}
 
-{% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools"]|default(false) %}
-
+{% if tasks[taskPrefix+"_variant_calling_annotate_vcfs_bcftools"]|default(false)
+and constants.grandcanyon[reference].annotation_databases is defined
+and constants.grandcanyon[reference].annotation_databases | length > 0 %}
   {% set bcftools_output %}{{ vcf_prefix }}.db.vcf.gz{% endset %}
   {{- bcftools_annotate(sample_or_pair, temp_dir, input_vcf, taskPrefix, variant_caller, bcftools_output, aligner) }}
 
