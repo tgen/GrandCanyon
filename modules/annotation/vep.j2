@@ -35,7 +35,6 @@
         --input_file "{{ input_vcf }}" \
         --format vcf \
         --output_file "{{ final_vcf_prefix }}.vep.full.vcf" \
-        --no_stats \
         --vcf \
         --vcf_info_field CSQ \
         {% if is_human %}
@@ -121,7 +120,6 @@
         --input_file "{{ input_vcf }}" \
         --format vcf \
         --output_file "{{ final_vcf_prefix }}.vep.pick.vcf" \
-        --no_stats \
         --vcf \
         --vcf_info_field CSQ \
         {% if is_human %}
