@@ -53,9 +53,9 @@
 
 
 {% if aligner in ('bwa') %}
-  {% set aligner_prefix = 'bwa_mem2'}
+  {% set aligner_prefix = 'bwa_mem2' %}
 {% else %}
-  {% set aligner_prefix = 'minimap2'}
+  {% set aligner_prefix = 'minimap2' %}
 {% endif %}
 - name: strelka2_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, strelka2, {{ sample_or_pair.name }}]
