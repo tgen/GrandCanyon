@@ -40,6 +40,7 @@
 {% else %}
 - name: deepsomatic_prep_and_make_examples_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, deepsomatic, {{ sample_or_pair.name }}]
+  reset: predecessors
   input:
     {% if sample_or_pair.normal is defined %}
     - {{ tumor_bam }}

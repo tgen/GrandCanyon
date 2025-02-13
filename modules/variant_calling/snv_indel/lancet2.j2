@@ -10,6 +10,7 @@
 {% for chunk in range(1, num_chunks+1) %}
 - name: lancet2_{{ pair.name }}_{{ aligner }}_{{ chunk }}
   tags: [{{ pair.gltype }}, somatic, snp_indel_caller, lancet2, {{ pair.name }}]
+  reset: predecessors
   input:
     - {{ normal_bam }}
     - {{ normal_bam }}.bai

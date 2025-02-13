@@ -18,6 +18,7 @@
 
 - name: gridss_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, structural_caller, gridss, {{ sample_or_pair.name }}]
+  reset: predecessors
   input:
     {% if sample_or_pair.normal is defined %}
     - {{ normal_bam }}

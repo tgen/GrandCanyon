@@ -8,6 +8,7 @@
 {%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.longshot.pass.vcf.gz{% endset %}
 
 - name: longshot_{{ sample.name }}_{{ aligner }}
+  reset: predecessors
   input:
     - {{ bam }}
     - {{ bam }}.bai

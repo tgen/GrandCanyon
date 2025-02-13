@@ -44,6 +44,7 @@
 
 - name: vardict_{{ sample_or_pair.name }}_{{ aligner }}_{{ chunk }}
   tags: [{{ sample_or_pair.gltype }}, snp_indel_caller, VarDict, {{ sample_or_pair.name }}]
+  reset: predecessors
   input:
     {% if input_config in ('paired') %}
     - {{ normal_bam }}

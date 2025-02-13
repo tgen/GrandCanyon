@@ -52,9 +52,21 @@
     tabix -f -p bed {{ call_regions_bed }}.gz
 
 
+{% if aligner in ('bwa') %}
+  {% set aligner_prefix = 'bwa_mem2'}
+{% else %}
+  {% set aligner_prefix = 'minimap2'}
+{% endif %}
 - name: strelka2_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, strelka2, {{ sample_or_pair.name }}]
-  reset: strelka2_prep_{{ sample_or_pair.name }}_{{ aligner }}
+  reset:
+    - strelka2_prep_{{ sample_or_pair.name }}_{{ aligner }}
+    {% if input_config in ('paired') %}
+    - {{ aligner_prefix }}_samtools_create_temp_bam_{{ sample_or_pair.normal.name }}
+    - {{ aligner_prefix }}_samtools_create_temp_bam_{{ sample_or_pair.tumor.name }}
+    {% else %}
+    - {{ aligner_prefix }}_samtools_create_temp_bam_{{ sample_or_pair.name }}
+    {% endif %}
   input:
     {% if input_config in ('paired') %}
     - {{ normal_bam }}

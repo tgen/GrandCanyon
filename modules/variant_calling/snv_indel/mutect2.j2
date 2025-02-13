@@ -24,6 +24,7 @@
 {% for chunk in range(1, num_chunks+1) %}
 - name: mutect2_{{ sample_or_pair.name }}_{{ aligner }}_{{ chunk }}
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, gatk_mutect2, {{ sample_or_pair.name }}]
+  reset: predecessors
   input:
     {% if sample_or_pair.normal is defined %}
     - {{ normal_bam }}

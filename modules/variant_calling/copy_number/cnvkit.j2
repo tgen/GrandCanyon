@@ -28,6 +28,7 @@
 {# Step 1 #}
 - name: cnvkit_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, cnvkit, {{ sample_or_pair.name }}]
+  reset: predecessors
   input:
     {% if input_config in 'paired' %}
     - {{ normal_bam }}

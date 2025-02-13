@@ -5,6 +5,7 @@
 
 - name: deeptrio_prep_and_make_examples_{{ trio.name }}_{{ aligner }}
   tags: [{{ trio.gltype }}, constitutional, snp_indel_caller, deeptrio, {{ trio.name }}]
+  reset: predecessors
   input:
     - temp/{{ trio.child.gltype }}/alignment/{{ aligner }}/{{ trio.child.name }}/{{ trio.child.name }}.{{ aligner }}.bam
     - temp/{{ trio.child.gltype }}/alignment/{{ aligner }}/{{ trio.child.name }}/{{ trio.child.name }}.{{ aligner }}.bam.bai

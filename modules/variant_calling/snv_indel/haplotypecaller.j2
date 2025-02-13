@@ -10,6 +10,7 @@
 {% for chunk in range(1, num_chunks+1) %}
 - name: haplotypecaller_gvcf_{{ sample.name }}_{{ aligner }}_{{ chunk }}
   tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, gatk_HaplotypeCaller, {{ sample.name }}]
+  reset: predecessors
   input: 
     - {{ bam }}
     - {{ bam }}.bai

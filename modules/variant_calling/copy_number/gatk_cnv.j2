@@ -39,6 +39,7 @@
 {# Step 1 #}
 - name: gatk_call_cnv_step1_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, gatk, {{ sample_or_pair.name }}]
+  reset: predecessors
   input:
     - {{ normal_bam }}
     - {{ normal_bam }}.bai

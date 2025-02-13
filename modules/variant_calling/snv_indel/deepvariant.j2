@@ -14,6 +14,7 @@
 
 - name: deepvariant_prep_and_make_examples_{{ sample.name }}_{{ aligner }}
   tags: [{{ sample.gltype }}, constitutional, snp_indel_caller, deepvariant, {{ sample.name }}]
+  reset: predecessors
   input:
     - {{ bam }}
     - {{ bam }}.bai
