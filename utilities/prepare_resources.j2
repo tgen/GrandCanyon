@@ -136,4 +136,24 @@
     # gffread {{ constants.grandcanyon[reference].gtf }} -g {{ constants.grandcanyon[reference].reference_fasta }} -w {{ constants.grandcanyon[reference].gtf }}.transcriptome.fasta
     #}
 
+- name: create_starfusion_resources_for_{{ reference | replace('.', '_') }}
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].gtf }}
+  output: {{ constants.grandcanyon[reference].starfusion_index }}
+  cpus: 16
+  mem: 64G
+  walltime: "72:00:00"
+  container: {{ constants.tools.star_fusion.container }}
+  digest: {{ constants.tools.star_fusion.digest }}
+  cmd: |
+    set -eu
+
+    /usr/local/src/STAR-Fusion/ctat-genome-lib-builder/prep_genome_lib.pl \
+      --genome_fa {{ constants.grandcanyon[reference].reference_fasta }} \
+      --gtf {{ constants.grandcanyon[reference].gtf }} \
+      --pfam_db current \
+      --dfam_db {{ constants.grandcanyon.dfam_db }} \
+      --output_dir {{ constants.grandcanyon[reference].starfusion_index }}
+
 {% endmacro %}

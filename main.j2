@@ -37,14 +37,18 @@
     {% endif %}
     {% if constants.grandcanyon[reference].gtf is defined %}
         {% from 'utilities/prepare_resources.j2' import prepare_gene_model with context %}
-        {% if constants.grandcanyon[reference].ref_flat is not defined 
-        or constants.grandcanyon[reference].ribo_locations is not defined %}
+        {% if constants.grandcanyon[reference].ref_flat is not defined
+        or constants.grandcanyon[reference].ribo_locations is not defined
+        or constants.grandcanyon[reference].starfusion_index is not defined %}
+            {% set gene_model_dir = constants.grandcanyon[reference].gtf | dirname %}
             {% set gene_model_gtf = constants.grandcanyon[reference].gtf %}
             {% set gene_model_prefix = gene_model_gtf.split('.')[:-1]|join('.') %}
             {% set ref_flat %}{{ gene_model_prefix }}.refFlat.txt{% endset %}
             {% set ribo_locations %}{{ gene_model_prefix }}.ribo.interval_list{% endset %}
+            {% set starfusion_index %}{{ gene_model_dir }}/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir{% endset %}
             {% do constants.grandcanyon[reference].update({'ref_flat': ref_flat}) %}
             {% do constants.grandcanyon[reference].update({'ribo_locations': ribo_locations}) %}
+            {% do constants.grandcanyon[reference].update({'starfusion_index': starfusion_index}) %}
             {{- prepare_gene_model() }}
         {% endif %}
     {% else %}

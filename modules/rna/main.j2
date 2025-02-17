@@ -3,6 +3,7 @@
 {% from 'modules/rna/isoseq.j2' import isoseq with context %}
 {% from 'modules/rna/salmon_sr.j2' import salmon_sr with context %}
 {% from 'modules/rna/star_quant.j2' import star_quant with context %}
+{% from 'modules/rna/star_fusion.j2' import star_fusion with context %}
 {% from 'modules/qc/main.j2' import bam_qc with context %}
 
 {% macro rna_alignment(samples) %}
@@ -16,6 +17,9 @@
       {% if tasks['RNA_alignment_rna_alignment_STAR']|default(false) %}
         {{- star_quant(sample, opt_dup_distance) }}
         {{- bam_qc(sample, aligner='star') }}
+      {% endif %}
+      {% if tasks['RNA_transcriptome_fusion_caller_STAR_Fusion']|default(false) %}
+        {{- star_fusion(sample) }}
       {% endif %}
       {% if tasks['RNA_transcriptome_quantify_expression_salmon']|default(false) %}
         {{- salmon_sr(sample) }}

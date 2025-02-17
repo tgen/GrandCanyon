@@ -129,8 +129,8 @@ constants:
     sqanti3:
       container: /home/tgenref/containers/sqanti3_5.2.1.sif
     star_fusion:
-      container: trinityctat/starfusion:1.11.0
-      digest: a3f1bfbb3a7a3b501ecdd1cec4325d00516b73b504afac274d351d20deee44e4
+      container: trinityctat/starfusion:1.14.0
+      digest: b66201d38db7055d84b6af2928c8cf44159254b747adad784250fbaa1230e86d
     strelka:
       container: ghcr.io/tgen/containers/strelka:2.9.10-23080711
       digest: e4c48b1470f2524da5734ebd84232446feec0e332b28e08c8997c3f21dffdc8e
@@ -251,6 +251,7 @@ constants:
         mutect2:
           germline_reference: /home/tgenref/canis_familiaris/UU_Cfam_GSD_1.0/public_databases/dog10k/AutoAndXPAR.SNPs.fill-tags.norm.vcf.gz
           contamination: /home/tgenref/canis_familiaris/UU_Cfam_GSD_1.0/public_databases/dog10k/AutoAndXPAR.SNPs.fill-tags.norm.common.vcf.gz
+    dfam_db: /home/tgenref/multi_species_resources/tool_specific_resources/dfam/3.8/Dfam.hmm
     ont_resources: /home/tgenref/instrument_resources/ont
     lineages: /home/tgenref/multi_species_resources/tool_specific_resources/busco_lineages
     required_scripts:
