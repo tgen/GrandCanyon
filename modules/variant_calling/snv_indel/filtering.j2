@@ -65,7 +65,7 @@
 
     awk 'NR>1 { OFS="\t"; print $1, $2-1, $2 }' {{ temp_dir }}/filtered_candidate_variants.tsv > {{ temp_dir }}/candidate_positions.bed
 
-- name: germline_candidate_filter_bcftools_{{ tool }}_{{ sample.name }}
+- name: germline_candidate_filter_variants_bcftools_{{ tool }}_{{ sample.name }}
   input:
     - {{ temp_dir }}/candidate_positions.bed
     - {{ input_vcf }}
