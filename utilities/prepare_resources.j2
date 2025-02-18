@@ -140,6 +140,7 @@
   input:
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].gtf }}
+    - {{ constants.grandcanyon.dfam_db }}
   output: {{ constants.grandcanyon[reference].starfusion_index }}
   cpus: 16
   mem: 64G
