@@ -150,6 +150,7 @@
   cmd: |
     set -eu
 
+    [ -e {{ constants.grandcanyon[reference].starfusion_index }} ] ||\
     /usr/local/src/STAR-Fusion/ctat-genome-lib-builder/prep_genome_lib.pl \
       --genome_fa {{ constants.grandcanyon[reference].reference_fasta }} \
       --gtf {{ constants.grandcanyon[reference].gtf }} \
