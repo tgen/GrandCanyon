@@ -103,10 +103,10 @@
       -L \
       -Y \
       --secondary=no \
-      {{ constants.grandcanyon[reference].reference_fasta }} \
       {% if constants.grandcanyon[reference].reference_alts is defined %}
       --alt {{ constants.grandcanyon[reference].reference_alts }} \
       {% endif %}
+      {{ constants.grandcanyon[reference].reference_fasta }} \
       {% for file in rg.data_files %}
       temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz \
       {% if file.fastqCode == 'duplex' %}
