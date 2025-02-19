@@ -12,13 +12,13 @@
 
 {% if tasks[sample.gltype|capitalize+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
   {% if reference == 'grch38' %}
-    {% set exclude_filter %}DP<10 | (PS="." & GT="het") | GNOMAD_GENOME_AF>0.001 | GNOMAD_EXOME_AF>0.001 | TOPMED_AF>0.001 | am_pathogenicity<0.6 | SIFT~"tolerated" | PolyPhen~"benign" | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
+    {% set exclude_filter %}DP<10 | (PS="." & GT="het") | GNOMAD_AF>0.001 | TOPMED_AF>0.001 | am_pathogenicity<0.6 | SIFT~"tolerated" | PolyPhen~"benign" | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
     {% set query_format %}'%CHROM\t%POS\t[%GT\t%VAF\t%AD\t%PS\t]%Consequence\t%IMPACT\t%Gene\t%SYMBOL\t%SIFT\t%PolyPhen\t%am_pathogenicity\n'{% endset %}
   {% elif reference == 'grch37' %}
-    {% set exclude_filter %}DP<10 | (PS="." & GT="het") | GNOMAD_GENOME_AF>0.001 | GNOMAD_EXOME_AF>0.001 | TOPMED_AF>0.001 | SIFT~"tolerated" | PolyPhen~"benign" | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
+    {% set exclude_filter %}DP<10 | (PS="." & GT="het") | GNOMAD_AF>0.001 | TOPMED_AF>0.001 | SIFT~"tolerated" | PolyPhen~"benign" | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
     {% set query_format %}'%CHROM\t%POS\t[%GT\t%VAF\t%AD\t%PS\t]%Consequence\t%IMPACT\t%Gene\t%SYMBOL\t%SIFT\t%PolyPhen\n'{% endset %}
   {% else %}
-    {% set exclude_filter %}DP<10 | (PS="." & GT="het") | GNOMAD_GENOME_AF>0.001 | GNOMAD_EXOME_AF>0.001 | TOPMED_AF>0.001 | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
+    {% set exclude_filter %}DP<10 | (PS="." & GT="het") | GNOMAD_AF>0.001 | TOPMED_AF>0.001 | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
     {% set query_format %}'%CHROM\t%POS\t[%GT\t%VAF\t%AD\t%PS\t]%Consequence\t%IMPACT\t%Gene\t%SYMBOL\n'{% endset %}
   {% endif %}
 
