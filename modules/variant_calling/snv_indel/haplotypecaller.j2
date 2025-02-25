@@ -11,13 +11,13 @@
 - name: haplotypecaller_gvcf_{{ sample.name }}_{{ aligner }}_{{ chunk }}
   tags: [{{ sample.gltype}}, constitutional, snp_indel_caller, gatk_HaplotypeCaller, {{ sample.name }}]
   reset: predecessors
-  input: 
+  input:
     - {{ bam }}
     - {{ bam }}.bai
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output: {{ temp_dir }}/{{ chunk }}.g.vcf.gz
   walltime: "24:00:00"
-  cpus: 2
+  cpus: 4
   mem: 16G
   queue_preset: "DEFAULT"
   container: {{ constants.tools.gatk.container }}
@@ -25,10 +25,11 @@
     set -eu
     set -o pipefail
 
-    mkdir -p "{{ temp_dir }}"
+    mkdir -p "{{ temp_dir }}/temp_{{ chunk }}"
 
     gatk HaplotypeCaller \
-      --java-options "-Xmx14G" \
+      --java-options "-Xmx14G -Xms2G -Xss512m -DGATK_STACKTRACE_ON_USER_EXCEPTION=true" \
+      --tmp-dir {{ temp_dir }}/temp_{{ chunk }} \
       -ERC GVCF \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --input "{{ bam }}" \
@@ -85,8 +86,8 @@
     mkdir -p "{{ temp_dir }}"
 
     gatk GenotypeGVCFs \
-      --tmp-dir "temp" \
       --java-options "-Xmx14G" \
+      --tmp-dir "{{ temp_dir }}" \
       --reference "{{ constants.grandcanyon[reference].reference_fasta }}" \
       -L temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
       --variant "{{ gvcf }}" \
