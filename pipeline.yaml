@@ -240,7 +240,7 @@ constants:
       gff3: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.gff3.gz
       gtf: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.gtf
       transcriptome: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.cdna.all.fa
-      # starfusion_index: /home/tgenref/canis_familiaris/canfam4/tool_resources/STAR-fusion/T2T-CHM13_CTAT_lib_Feb162023.plug-n-play/ctat_genome_lib_build_dir
+      starfusion_index: /home/tgenref/canis_familiaris/canfam4/gene_model/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir
       vep_data: /home/tgenref/canis_familiaris/canfam4/gene_model/indexed_vep_cache
       ref_flat: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.refFlat.txt
       ribo_locations: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.ribo.interval_list

@@ -142,7 +142,7 @@
     - {{ constants.grandcanyon[reference].gtf }}
     - {{ constants.grandcanyon.dfam_db }}
   output: {{ constants.grandcanyon[reference].starfusion_index }}
-  cpus: 16
+  cpus: 32
   mem: 64G
   walltime: "72:00:00"
   container: {{ constants.tools.star_fusion.container }}
@@ -152,6 +152,8 @@
 
     [ -e {{ constants.grandcanyon[reference].starfusion_index }} ] ||\
     /usr/local/src/STAR-Fusion/ctat-genome-lib-builder/prep_genome_lib.pl \
+      --CPU 32 \
+      --max_readlength 150 \
       --genome_fa {{ constants.grandcanyon[reference].reference_fasta }} \
       --gtf {{ constants.grandcanyon[reference].gtf }} \
       --pfam_db current \
