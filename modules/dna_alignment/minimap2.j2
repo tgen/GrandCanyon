@@ -57,6 +57,7 @@
 
 {% for rgid, rg in sample.read_groups.items() %}
 - name: minimap2_{{ sample.name }}_{{ rgid | replace("/", "_") }}
+  reset: predecessors
   input:
     - {{ constants.grandcanyon[reference].reference_fasta }}
     {% for file in rg.data_files %}

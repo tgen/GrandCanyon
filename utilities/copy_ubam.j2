@@ -16,6 +16,7 @@
     rsync {{ ubam.path }} temp/ubams/
 
 - name: convert_ubam_to_fastq_{{ ubam.basename | replace(".", "_") }}
+  reset: predecessors
   input:
     - temp/ubams/{{ ubam.basename }}
   output:
