@@ -10,6 +10,7 @@
 {% from 'modules/variant_calling/snv_indel/mutect2.j2' import mutect2 with context %}
 {% from 'modules/variant_calling/snv_indel/strelka2.j2' import strelka2 with context %}
 {% from 'modules/variant_calling/snv_indel/vardict.j2' import vardict with context %}
+{% from 'modules/variant_calling/snv_indel/vcfmerger2.j2' import vcfmerger2 with context %}
 
 {% from 'modules/variant_calling/structural/cutesv.j2' import cutesv with context %}
 {% from 'modules/variant_calling/structural/sniffles.j2' import sniffles with context %}
@@ -214,13 +215,14 @@
 ############}
 {%- for sample in samples.values() if sample.gltype in ('exome','genome') and sample.subGroup|lower in ('tumor','tumour','case') %}
 
-  {% if sample not in tumors_with_normal or allow_tumor_only|default(false) %}
+  {% if sample not in tumors_with_normal or allow_tumor_only|default(true) %}
 
   {% if sample.gltype in 'exome' %}
     {% set taskPrefix = 'Exome' %}
   {% elif sample.gltype in 'genome' %}
     {% set taskPrefix = 'Genome' %}
   {% endif %}
+  {% do sample.update({'callers': []}) %}
 
   {% for aligner in sample.aligners %}
 
@@ -234,15 +236,22 @@
     {% if sample.glprep not in 'longread' %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_mutect2"]|default(false) %}
+        {% do sample.callers.append('mutect2') %}
         {{- mutect2(sample, aligner) }}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
+        {% do sample.callers.append('strelka2') %}
         {{- strelka2(sample, aligner) }}
       {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
+        {% do sample.callers.append('vardict') %}
         {{- vardict(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_merge_vcfs_vcfMerger2"]|default(false) %}
+        {{- vcfmerger2(sample, aligner) }}
       {% endif %}
 
     {% endif %}
@@ -293,6 +302,7 @@
   {% elif pair.gltype in 'genome' %}
     {% set taskPrefix = 'Genome' %}
   {% endif %}
+  {% do pair.update({'callers': []}) %}
 
   {% for aligner in pair.tumor.aligners %}
 
@@ -311,21 +321,28 @@
     {% if pair.glprep not in 'longread' %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_lancet2"]|default(false) %}
+        {% do pair.callers.append('lancet') %}
         {{- lancet2(pair, aligner) }}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_mutect2"]|default(false) %}
+        {% do pair.callers.append('mutect2') %}
         {{- mutect2(pair, aligner) }}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
+        {% do pair.callers.append('strelka2') %}
         {{- strelka2(pair, aligner) }}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
+        {% do pair.callers.append('vardict') %}
         {{- vardict(pair, aligner) }}
       {% endif %}
 
+      {% if tasks[taskPrefix+"_variant_calling_merge_vcfs_vcfMerger2"]|default(false) %}
+        {{- vcfmerger2(pair, aligner) }}
+      {% endif %}
     {% endif %}
 
     {############

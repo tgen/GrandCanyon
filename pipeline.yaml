@@ -139,6 +139,9 @@ constants:
     vardict:
       container: quay.io/biocontainers/vardict-java:1.8.3--hdfd78af_0
       digest: 4069c082c97470bce4a07f228dbf74b6ea3fc5c4eaa93ba76d2826a496ca3c44
+    vcfmerger:
+      container: ghcr.io/tgen/containers/vcfmerger2:0.9.5-23090712
+      digest: 37640beed1f829702dbd8c03a1e4955a205abd8a38e209ea88ffa815c570a8fa
     vep:
       container: ensemblorg/ensembl-vep:release_112.0
     verkko:
