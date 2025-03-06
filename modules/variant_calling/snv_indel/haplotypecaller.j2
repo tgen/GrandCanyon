@@ -15,6 +15,7 @@
     - {{ bam }}
     - {{ bam }}.bai
     - {{ constants.grandcanyon[reference].reference_fasta }}
+    - temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed
   output: {{ temp_dir }}/{{ chunk }}.g.vcf.gz
   walltime: "24:00:00"
   cpus: 4
@@ -33,7 +34,7 @@
       -ERC GVCF \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --input "{{ bam }}" \
-      -L temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
+      -L temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed \
       -O "{{ temp_dir }}/{{ chunk }}.g.vcf.gz"
 
 {% endfor %}
@@ -73,6 +74,7 @@
     - {{ gvcf }}
     - {{ gvcf }}.tbi
     - {{ constants.grandcanyon[reference].reference_fasta }}
+    - temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed
   output: {{ temp_dir }}/{{ chunk }}.vcf.gz
   walltime: "24:00:00"
   cpus: 4
@@ -89,7 +91,7 @@
       --java-options "-Xmx14G" \
       --tmp-dir "{{ temp_dir }}" \
       --reference "{{ constants.grandcanyon[reference].reference_fasta }}" \
-      -L temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
+      -L temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed \
       --variant "{{ gvcf }}" \
       --output "{{ temp_dir }}/{{ chunk }}.vcf.gz"
 
@@ -101,11 +103,12 @@
     - {{ bam }}.bai
     - {{ temp_dir }}/{{ chunk }}.vcf.gz
     - {{ constants.grandcanyon[reference].reference_fasta }}
+    - temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed
   output: {{ temp_dir }}/{{ chunk }}.scored.vcf.gz
   after: genotypegvcf_{{ sample.name }}_{{ aligner }}_{{ chunk }}
   walltime: "24:00:00"
   cpus: 8
-  mem: 32G
+  mem: 48G
   queue_preset: "DEFAULT"
   container: {{ constants.tools.gatk.container }}
   cmd: |
@@ -113,9 +116,9 @@
     source activate gatk
 
     gatk CNNScoreVariants \
-      --java-options "-Xmx28G" \
+      --java-options "-Xmx46G" \
       --tensor-type read_tensor \
-      -L temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
+      -L temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed \
       --reference "{{ constants.grandcanyon[reference].reference_fasta }}" \
       --input "{{ bam }}" \
       --variant "{{ temp_dir }}/{{ chunk }}.vcf.gz" \
