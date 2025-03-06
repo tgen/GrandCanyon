@@ -39,7 +39,7 @@
     {% if constants.grandcanyon[reference].tool_resources.mutect2.germline_reference is defined | default(false) %}
     - {{ constants.grandcanyon[reference].tool_resources.mutect2.germline_reference }}
     {% endif %}
-    - temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed
+    - temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed
   output:
     - {{ temp_dir }}/{{ chunk }}.mutect2.vcf.gz
     - {{ temp_dir }}/{{ chunk }}.mutect2.vcf.gz.stats
@@ -61,7 +61,7 @@
       --java-options "-Xmx14G" \
       --tmp-dir {{ temp_dir }}/temp_mutect2_{{ chunk }} \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      -L temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
+      -L temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed \
       {% if constants.grandcanyon[reference].tool_resources.mutect2.germline_reference is defined | default(false) %}
       --germline-resource {{ constants.grandcanyon[reference].tool_resources.mutect2.germline_reference }} \
       {% endif %}
@@ -178,7 +178,7 @@
     {% endif %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].tool_resources.mutect2.contamination }}
-    - temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed
+    - temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed
   output:
     {% if sample_or_pair.normal is defined %}
     - {{ temp_dir }}/{{ chunk }}.tumor-pileups.table
@@ -204,7 +204,7 @@
     gatk --java-options "-Xmx7G" GetPileupSummaries \
       --tmp-dir {{ temp_dir }}/temp_GetPileupSummaries_tumor_{{ sample_or_pair.name }} \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      -L temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
+      -L temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed \
       --input "{{ tumor_bam }}" \
       --interval-set-rule UNION \
       --variant {{ constants.grandcanyon[reference].tool_resources.mutect2.contamination }} \
@@ -214,7 +214,7 @@
     gatk --java-options "-Xmx7g" GetPileupSummaries \
       --tmp-dir {{ temp_dir }}/temp_GetPileupSummaries_normal_{{ sample_or_pair.name }} \
       -reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      -L temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
+      -L temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed \
       --input "{{ normal_bam }}" \
       --interval-set-rule UNION \
       --variant {{ constants.grandcanyon[reference].tool_resources.mutect2.contamination }} \
@@ -226,7 +226,7 @@
     gatk --java-options "-Xmx7G" GetPileupSummaries \
       --tmp-dir {{ temp_dir }}/temp_GetPileupSummaries_tumor_{{ sample_or_pair.name }} \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      -L temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
+      -L temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed \
       --input "{{ bam }}" \
       --interval-set-rule UNION \
       --variant {{ constants.grandcanyon[reference].tool_resources.mutect2.contamination }} \
@@ -385,8 +385,5 @@
       --output {{ pass_vcf }} \
       --write-index \
       {{ all_vcf }}
-
-{% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
-{{- annotate_vcfs(sample_or_pair, temp_dir, results_dir, pass_vcf, 'minimap2', 'mutect2') }}
 
 {% endmacro %}

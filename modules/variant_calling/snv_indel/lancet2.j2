@@ -17,7 +17,7 @@
     - {{ tumor_bam }}
     - {{ tumor_bam }}.bai
     - {{ constants.grandcanyon[reference].reference_fasta }}
-    - temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed
+    - temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed
   output:
     - {{ temp_dir }}/{{ chunk }}.lancet2.vcf.gz
   cpus: 4
@@ -35,7 +35,7 @@
       --tumor {{ tumor_bam }} \
       --normal {{ normal_bam }} \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      --bed-file temp/pipeline_resources/calling_intervals/calling_interval_{{ chunk }}.bed \
+      --bed-file temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed \
       --out-vcfgz {{ temp_dir }}/{{ chunk }}.lancet2.vcf.gz
 
 {% endfor %}
