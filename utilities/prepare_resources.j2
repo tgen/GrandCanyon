@@ -50,13 +50,20 @@
     mkdir -p $(dirname {{ constants.grandcanyon[reference].bwa_mem2_index }})
     cd $(dirname {{ constants.grandcanyon[reference].bwa_mem2_index }})
 
-    ln -s {{ constants.grandcanyon[reference].reference_fasta }} .
-    ln -s {{ constants.grandcanyon[reference].reference_fai }} .
-    {% if constants.grandcanyon[reference].reference_alts is defined %}
-    rsync {{ constants.grandcanyon[reference].reference_alts }} .
-    {% endif %}
+    if [ ! -e {{ constants.grandcanyon[reference].reference_fasta | basename }}.bwt.2bit.64 ] ; then
+      [ -e {{ constants.grandcanyon[reference].reference_fasta | basename }} ] ||\
+      ln -s {{ constants.grandcanyon[reference].reference_fasta }} .
 
-    bwa-mem2 index {{ constants.grandcanyon[reference].reference_fasta | basename }}
+      [ -e {{ constants.grandcanyon[reference].reference_fai | basename }} ] ||\
+      ln -s {{ constants.grandcanyon[reference].reference_fai }} .
+
+      {% if constants.grandcanyon[reference].reference_alts is defined %}
+      [ -e {{ constants.grandcanyon[reference].reference_alts | basename }} ] ||\
+      rsync {{ constants.grandcanyon[reference].reference_alts }} .
+      {% endif %}
+
+      bwa-mem2 index {{ constants.grandcanyon[reference].reference_fasta | basename }}
+    fi
 
 {% endmacro %}
 
