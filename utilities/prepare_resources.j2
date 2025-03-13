@@ -29,6 +29,38 @@
 
 {% endmacro %}
 
+{% macro prepare_bwa_index() %}
+
+- name: create_bwa_index_for_{{ reference | replace('.', '_') }}
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fai }}
+    {% if constants.grandcanyon[reference].reference_alts is defined %}
+    - {{ constants.grandcanyon[reference].reference_alts }}
+    {% endif %}
+  output:
+    - {{ constants.grandcanyon[reference].bwa_mem2_index }}
+  cpus: 4
+  mem: 16G
+  walltime: "4:00:00"
+  container: {{ constants.tools.bwa_mem2_samtools.container }}
+  cmd: |
+    set -uev
+
+    mkdir -p $(dirname {{ constants.grandcanyon[reference].bwa_mem2_index }})
+    cd $(dirname {{ constants.grandcanyon[reference].bwa_mem2_index }})
+
+    ln -s {{ constants.grandcanyon[reference].reference_fasta }} .
+    ln -s {{ constants.grandcanyon[reference].reference_fai }} .
+    {% if constants.grandcanyon[reference].reference_alts is defined %}
+    rsync {{ constants.grandcanyon[reference].reference_alts }} .
+    {% endif %}
+
+    bwa-mem2 index {{ constants.grandcanyon[reference].reference_fasta | basename }}
+
+{% endmacro %}
+
+
 {% macro prepare_chunk_intervals(exclusion_list=none) %}
 
 {% set temp_dir %}temp/pipeline_resources{% endset %}
