@@ -41,7 +41,7 @@
   output:
     - {{ constants.grandcanyon[reference].bwa_mem2_index }}
   cpus: 4
-  mem: 16G
+  mem: 64G
   walltime: "4:00:00"
   container: {{ constants.tools.bwa_mem2_samtools.container }}
   cmd: |
