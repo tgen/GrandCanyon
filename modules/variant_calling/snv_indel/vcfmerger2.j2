@@ -76,16 +76,21 @@
     set -eu
     set -o pipefail
 
-    bcftools filter \
+    {% if input_config in "paired" %}
+    bcftools view \
+      --samples "{{ sample_or_pair.normal.rgsm }},{{ sample_or_pair.tumor.rgsm }}" \
+      {{ prepped_path }} |\
+    bcftools view \
       --output-type v \
       --output {{ filtered_path }} \
-      {% if input_config in "paired" %}
-      --samples "{{ sample_or_pair.normal.rgsm }},{{ sample_or_pair.tumor.rgsm }}" \
       --exclude "(FMT/DP<10 | FMT/AR[0]>=0.02 | FMT/AR[1]<0.05)" \
-      {% else %}
+    {% else %}
+    bcftools view \
+      --output-type v \
+      --output {{ filtered_path }} \
       --exclude "(FMT/DP<10 | FMT/AR<0.05)" \
-      {% endif %}
       {{ prepped_path }}
+    {% endif %}
 
 {% endfor %}
 
