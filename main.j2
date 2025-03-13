@@ -34,8 +34,9 @@
         {% from 'utilities/prepare_resources.j2' import prepare_bwa_index with context %}
         {% for task in tasks if task.endswith("alignment_dna_alignment_bwa") and tasks[task] %}
           {% if loop.last and constants.grandcanyon[reference].bwa_mem2_index is not defined %}
-            {% set bwa_mem2_index %}{{ constants.grandcanyon[reference].reference_fasta | dirname | dirname }}/tool_resources/bwa_mem2/{{ constants.grandcanyon[reference].reference_fasta | basename }}
+            {% set bwa_mem2_index %}{{ constants.grandcanyon[reference].reference_fasta | dirname | dirname }}/tool_resources/bwa_mem2/{{ constants.grandcanyon[reference].reference_fasta | basename }}{% endset %}
             {% do constants.grandcanyon[reference].update({'bwa_mem2_index': bwa_mem2_index}) %}
+            {{- prepare_bwa_index() }}
           {% endif %}
         {% endfor %}
     {% else %}
