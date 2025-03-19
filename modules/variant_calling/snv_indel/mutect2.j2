@@ -373,6 +373,7 @@
     - {{ pass_vcf }}.tbi
   cpu: 1
   mem: 4G
+  walltime: "1:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.bcftools.container }}
   cmd: |

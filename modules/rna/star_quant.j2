@@ -147,6 +147,7 @@
   output: {{ star_bam_sorted }}
   cpus: 8
   mem: 16G
+  walltime: "8:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.samtools.container }}
   cmd: |
@@ -182,6 +183,7 @@
     - {{ rna_md_metrics }}
   cpus: 10
   mem: 40G
+  walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.gatk.container }}
   cmd: |
@@ -212,6 +214,7 @@
     - {{ star_bam_final }}.bai
   cpus: 10
   mem: 40G
+  walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.samtools.container }}
   cmd: |
