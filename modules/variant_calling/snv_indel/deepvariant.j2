@@ -152,10 +152,10 @@
 {% set whatshap_phased_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.whatshap.phased.vcf.gz{% endset %}
 {{- whatshap_phase(sample, pass_vcf, bam, temp_dir, results_dir, output_prefix, 'deepvariant', aligner) }}
 {{- whatshap_haplotag(sample, whatshap_phased_vcf, bam, output_dir, output_prefix, 'deepvariant', aligner) }}
-{{- annotate_vcfs(sample, temp_dir, results_dir, whatshap_phased_vcf, 'minimap2', 'deepvariant') }}
+{{- annotate_vcfs(sample, temp_dir, results_dir, whatshap_phased_vcf, aligner, 'deepvariant') }}
 {% if tasks[sample.gltype|capitalize+"_variant_calling_annotate_vcfs_bcftools"]|default(false) and tasks[sample.gltype|capitalize+"_variant_calling_annotate_vcfs_vep"]|default(false) and reference in ('grch38', 'grch37') %}
   {% set annotated_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.whatshap.phased.db.vep.pick.vcf.gz{% endset %}
-  {{- germline_candidate_filters(sample, temp_dir, results_dir, annotated_vcf, 'minimap2', 'deepvariant') }}
+  {{- germline_candidate_filters(sample, temp_dir, results_dir, annotated_vcf, aligner, 'deepvariant') }}
 {% endif %}
 
 {% endmacro %}

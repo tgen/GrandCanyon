@@ -148,6 +148,6 @@
     rm -rf {{ temp_dir }}/SummaryPlots_*/sets
     mv {{ temp_dir }}/SummaryPlots_* "{{ results_dir }}"
 
-{{- annotate_vcfs(sample_or_pair, temp_dir, results_dir, merged_vcf_gz, 'minimap2', 'merged') }}
+{{- annotate_vcfs(sample_or_pair, temp_dir, results_dir, merged_vcf_gz, aligner, 'merged') }}
 
 {% endmacro %}

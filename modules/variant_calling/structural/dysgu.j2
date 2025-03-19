@@ -40,15 +40,7 @@
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --output {{ discordant_bam }} \
       --search {{ temp_dir }}/calling_intervals.bed \
-      --compression wb0 \
-      --write_all \
-      --clip-length 15 \
-      --mq 1 \
-      --min-size 30 \
-      --max-cov 200 \
       --procs 8 \
-      --overwrite \
-      --pfix "_tempf_" \
       {% if sample.rgpl in ('ONT') %}
       --pl 'nanopore' \
       {% elif sample.rgpl in ('PACBIO') %}
@@ -58,38 +50,6 @@
       {% endif %}
       {{ temp_dir }} {{ bam }}
 
-
-{#
-#Usage: dysgu fetch [OPTIONS] WORKING_DIRECTORY BAM
-#
-#  Filters input bam/cram for read-pairs that are discordant or have a soft-
-#  clip of length > '--clip-length', saves bam file in WORKING_DIRECTORY
-#
-#Options:
-#  --reference PATH           Reference file for opening cram files
-#  --pfix TEXT                Post-fix to add to temp alignment files
-#  -o, --output TEXT          Output reads, discordant, supplementary and soft-
-#                             clipped reads to file.
-#  --compression TEXT         Set output bam compression level. Default is
-#                             uncompressed  [default: wb0]
-#  -a, --write_all            Write all alignments from SV-read template to
-#                             temp file
-#  --clip-length INTEGER      Minimum soft-clip length, >= threshold are kept.
-#                             Set to -1 to ignore  [default: 15]
-#  --mq INTEGER               Minimum map quality < threshold are discarded
-#                             [default: 1]
-#  --min-size INTEGER         Minimum size of SV to report  [default: 30]
-#  --max-cov FLOAT            Genomic regions with coverage > max-cov are
-#                             discarded. Set to -1 to ignore.  [default: 200]
-#  -p, --procs INTEGER RANGE  Compression threads to use for writing bam
-#                             [default: 1; 1<=x<=40]
-#  --search PATH              .bed file, limit search to regions
-#  --exclude PATH             .bed file, do not search/call SVs within regions.
-#                             Takes precedence over --search
-#  -x, --overwrite            Overwrite temp files
-#  --pl [pe|pacbio|nanopore]  Type of input reads  [default: pe]
-#  --help                     Show this message and exit.
-#}
 
 - name: dysgu_call_{{ sample.name }}_{{ aligner }}
   input:
@@ -112,7 +72,6 @@
       --ibam {{ bam }} \
       --svs-out {{ temp_all_vcf }} \
       --out-format vcf \
-      --pfix "_tempf_" \
       {% if sample.rgpl in ('ONT') %}
       --mode 'nanopore' \
       --pl 'nanopore' \
@@ -123,12 +82,7 @@
       --mode 'pe' \
       --pl 'pe' \
       {% endif %}
-      --clip-length 15 \
-      --mq 1 \
-      --min-size 30 \
-      --max-cov 200 \
       --procs 8 \
-      --overwrite \
       --regions {{ temp_dir }}/calling_intervals.bed \
       --regions-only True \
       --regions-mm-only True \

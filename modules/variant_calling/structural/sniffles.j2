@@ -105,7 +105,7 @@
 
 {% if input.samples is not defined %}
   {% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
-  {{- annotate_vcfs(input, temp_dir, results_dir, pass_vcf, 'minimap2', 'sniffles') }}
+  {{- annotate_vcfs(input, temp_dir, results_dir, pass_vcf, aligner, 'sniffles') }}
 {% endif %}
 
 {% endmacro %}

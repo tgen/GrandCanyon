@@ -190,6 +190,6 @@
       {{ all_vcf }}
 
 {% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
-{{- annotate_vcfs(sample, temp_dir, results_dir, pass_vcf, 'minimap2', 'haplotypecaller') }}
+{{- annotate_vcfs(sample, temp_dir, results_dir, pass_vcf, aligner, 'haplotypecaller') }}
 
 {% endmacro %}
