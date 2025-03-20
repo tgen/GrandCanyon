@@ -151,15 +151,16 @@
     {% if input_config in ('paired') %}
     bcftools concat \
       --allow-overlaps \
-      --threads 1 \
+      {{ temp_dir }}/results/variants/somatic.indels.vcf.gz \
+      {{ temp_dir }}/results/variants/somatic.snvs.vcf.gz |\
+    bcftools reheader \
+      -s <(echo -e "NORMAL {{ sample_or_pair.normal.name }}\nTUMOR {{ sample_or_pair.tumor.name }}") |\
+    bcftools view \
       --output-type z \
       --output {{ all_vcf }} \
-      --write-index \
-      {{ temp_dir }}/results/variants/somatic.indels.vcf.gz \
-      {{ temp_dir }}/results/variants/somatic.snvs.vcf.gz
+      --write-index
     {% else %}
     bcftools view \
-      --threads 1 \
       --output-type z \
       --output {{ all_vcf }} \
       --write-index \
