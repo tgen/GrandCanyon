@@ -154,7 +154,7 @@
       {{ temp_dir }}/results/variants/somatic.indels.vcf.gz \
       {{ temp_dir }}/results/variants/somatic.snvs.vcf.gz |\
     bcftools reheader \
-      -s <(echo -e "NORMAL {{ sample_or_pair.normal.name }}\nTUMOR {{ sample_or_pair.tumor.name }}") |\
+      -s <(echo -e "NORMAL {{ sample_or_pair.normal.rgsm }}\nTUMOR {{ sample_or_pair.tumor.rgsm }}") |\
     bcftools view \
       --output-type z \
       --output {{ all_vcf }} \
