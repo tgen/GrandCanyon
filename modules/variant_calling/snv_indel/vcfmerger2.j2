@@ -28,6 +28,9 @@
 # paths. Callers add themselves to the sample_or_pair object when their macro is used.
 #}
 {% for caller in sample_or_pair.callers %}
+{% if input_config in ("paired") %}
+{% set bam %}temp/{{ sample_or_pair.tumor.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+{% endif %}
 {% set gzipped_path %}{{ sample_or_pair.gltype }}/somatic_variant_calls/{{ caller }}/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.{{ caller }}.pass.vcf.gz{% endset %}
 {% set unzipped_path %}{{ temp_dir }}/{{ caller }}.vcf{% endset %}
 {% set prepped_path %}{{ temp_dir }}/{{ caller }}.prepz.vcf{% endset %}
@@ -43,24 +46,48 @@
   tags: [{{ sample_or_pair.gltype }}, somatic, merge_vcfs, vcfMerger2, {{ sample_or_pair.name }}]
   input:
     - {{ gzipped_path }}
+    {% if input_config in ("paired") %}
+    - {{ bam }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    {% endif %}
   output: {{ prepped_path }}
   cpus: 4
   mem: 8G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
+  {% if input_config in "paired" %}
+  container: {{ constants.tools.vcfmerger.container }}
+  digest: {{ constants.tools.vcfmerger.digest }}
+  {% else %}
   container: {{ constants.tools.bcftools.container }}
+  {% endif %}
   cmd: |
     set -eu
     set -o pipefail
 
     mkdir -p "{{ temp_dir }}"
+    {% if input_config in "paired" %}
+    gunzip -c "{{ gzipped_path }}" > "{{ unzipped_path }}"
 
+    {# Locate the prep_vcf.sh script relative to vcfMerger2.py #}
+    PREPVCF="$(dirname $(dirname $(which vcfMerger2.py)))"/prep_vcfs_somatic/prep_vcf_somatic.sh
+
+    ${PREPVCF} \
+      --ref-genome "{{ constants.grandcanyon[reference].reference_fasta }}" \
+      --dir-work "{{ temp_dir }}" \
+      --bam ${PWD}/{{ bam }} \
+      --toolname "{{ caller }}" \
+      --normal-sname "{{ sample_or_pair.normal.rgsm }}" \
+      --tumor-sname "{{ sample_or_pair.tumor.rgsm }}" \
+      --vcf "{{ unzipped_path }}" \
+      -o "{{ prepped_path }}"
+    {% else %}
     bcftools +fill-tags \
       {{ gzipped_path }} \
       -O v \
       -o {{ prepped_path }} \
       -- -t 'FORMAT/AR:1=FORMAT/AF'
-
+    {% endif %}
 
 - name: vcfmerger2_filter_{{ caller }}_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, merge_vcfs, vcfMerger2, {{ sample_or_pair.name }}]
@@ -106,7 +133,7 @@
     - {{ constants.grandcanyon[reference].reference_dict }}
   output: {{ merged_vcf_gz }}
   cpus: 4
-  mem: 8G
+  mem: 16G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.vcfmerger.container }}

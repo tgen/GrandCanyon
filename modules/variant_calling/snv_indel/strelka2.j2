@@ -160,11 +160,16 @@
       --output {{ all_vcf }} \
       --write-index
     {% else %}
-    bcftools view \
+    bcftools +fill-tags \
+      {{ temp_dir }}/results/variants/variants.vcf.gz \
+      -- -t FORMAT/VAF |\
+    bcftools +fill-tags \
+      -- -t 'FORMAT/AF=FORMAT/VAF' |\
+    bcftools annotate \
+      --remove 'FORMAT/VAF' \
       --output-type z \
       --output {{ all_vcf }} \
-      --write-index \
-      {{ temp_dir }}/results/variants/variants.vcf.gz
+      --write-index
     {% endif %}
 
     {# Then filter out the PASS variants to a separate file #}
