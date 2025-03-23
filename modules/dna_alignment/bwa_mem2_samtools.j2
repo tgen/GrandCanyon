@@ -287,5 +287,6 @@
       --write-index \
       {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
 
+    samtools index -@8 {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
 
 {% endmacro %}

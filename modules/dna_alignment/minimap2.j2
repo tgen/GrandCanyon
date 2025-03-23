@@ -198,5 +198,6 @@
       --write-index \
       {{ results_dir }}/{{ sample.name }}.minimap2.cram
 
+    samtools index -@8 {{ temp_dir }}/{{ sample.name }}.minimap2.bam
 
 {% endmacro %}
