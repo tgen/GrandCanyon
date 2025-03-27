@@ -140,7 +140,11 @@
     - {{ constants.grandcanyon[reference].reference_dict }}
   output: {{ merged_vcf_gz }}
   cpus: 4
+  {% if input_config in "tumor_only" %}
+  mem: 32G
+  {% else %}
   mem: 16G
+  {% endif %}
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.vcfmerger.container }}
