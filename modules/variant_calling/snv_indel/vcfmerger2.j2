@@ -29,6 +29,11 @@
 {% for caller in sample_or_pair.callers %}
 {% if input_config in ("paired") %}
 {% set bam %}temp/{{ sample_or_pair.tumor.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+{% if aligner in "minimap2" %}
+{% set aligner_task %}{{ aligner }}_samtools_create_temp_bam_{{ sample_or_pair.tumor.name }}{% endset %}
+{% elif aligner in "bwa" %}
+{% set aligner_task %}bwa_mem2_samtools_create_temp_bam_{{ sample_or_pair.tumor.name }}{% endset %}
+{% endif %}
 {% endif %}
 {% set gzipped_path %}{{ sample_or_pair.gltype }}/somatic_variant_calls/{{ caller }}/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.{{ caller }}.pass.vcf.gz{% endset %}
 {% set unzipped_path %}{{ temp_dir }}/{{ caller }}.vcf{% endset %}
@@ -50,6 +55,9 @@
     - {{ constants.grandcanyon[reference].reference_fasta }}
     {% endif %}
   output: {{ prepped_path }}
+  {% if input_config in ("paired") %}
+  reset: {{ aligner_task }}
+  {% endif %}
   cpus: 4
   mem: 8G
   walltime: "4:00:00"
