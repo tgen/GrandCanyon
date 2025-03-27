@@ -17,9 +17,8 @@
     {%- set input_config = "germline" %}
   {% endif %}
 {% endif %}
-{% set merged_vcf %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.merged.vcf{% endset %}
-{% set merged_vcf_gz %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.merged.vcf.gz{% endset %}
-{% set output_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.merged.vcf.gz{% endset %}
+{% set merged_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.merged.vcf{% endset %}
+{% set merged_vcf_gz %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.merged.vcf.gz{% endset %}
 
 {% set vcfs_to_merge=[] %}
 
