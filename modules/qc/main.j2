@@ -5,6 +5,7 @@
 {% from 'modules/qc/bam_qc_all.j2' import bam_qc_samtools_stats with context %}
 {% from 'modules/qc/bam_qc_all.j2' import bam_qc_samtools_idxstats with context %}
 {% from 'modules/qc/bam_qc_all.j2' import bam_qc_gatk_collectmultiplemetrics with context %}
+{% from 'modules/qc/bam_qc_all.j2' import bam_qc_snpsniffer_geno with context %}
 {% from 'modules/qc/bam_qc_all.j2' import bam_qc_samtools_markdup with context %}
 
 # Performed on genomes
@@ -52,6 +53,7 @@
     {{- bam_qc_samtools_stats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner) }}
     {{- bam_qc_samtools_idxstats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner) }}
     {{- bam_qc_gatk_collectmultiplemetrics(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner) }}
+    {{- bam_qc_snpsniffer_geno(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner) }}
 
     {% if libraryCount > 1 %}
       {% for sample_lb, sample_rgs in sample.read_groups.values()|groupby('rglb') %}
@@ -67,6 +69,7 @@
         {{- bam_qc_samtools_stats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=false) }}
         {{- bam_qc_samtools_idxstats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=false) }}
         {{- bam_qc_gatk_collectmultiplemetrics(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=false) }}
+        {{- bam_qc_snpsniffer_geno(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=false) }}
       {% endfor %}
     {% endif %}
 {% endmacro %}

@@ -203,6 +203,8 @@ constants:
       transcriptomeSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/transcriptome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa
       star_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_masked.fa
       starfusion_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/tool_resources/starFusion_gencode_v37/starFusion_Resources/ctat_genome_lib_build_dir
+      snpSniffer_sites: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/snpSniffer/positions_387_hg38_ucsc.txt
+      snpSniffer_database: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/snpSniffer/databaseV5_hg38_ucsc.ini
       vep_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/v112/
       vep_plugin_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/plugins
       ref_flat: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.refFlat.txt
@@ -245,6 +247,8 @@ constants:
       gtf: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.gtf
       transcriptome: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.cdna.all.fa
       starfusion_index: /home/tgenref/canis_familiaris/canfam4/gene_model/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir
+      snpSniffer_sites: /home/tgenref/canis_familiaris/canfam4/tool_resources/snpSniffer/positions_393_CanFam4.txt
+      snpSniffer_database: /home/tgenref/canis_familiaris/canfam4/tool_resources/snpSniffer/databaseV6_CanFam4_ucsc.ini
       vep_data: /home/tgenref/canis_familiaris/canfam4/gene_model/indexed_vep_cache
       ref_flat: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.refFlat.txt
       ribo_locations: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.ribo.interval_list

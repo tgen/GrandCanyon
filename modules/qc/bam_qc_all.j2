@@ -492,3 +492,86 @@
 {% endif %}
 {% endmacro %}
 
+{% macro bam_qc_snpsniffer_geno(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=true) %}
+{% if tasks[taskPrefix+"_quality_control_genotype_concordance_snpSniffer"]|default(false) and constants.grandcanyon[reference].snpSniffer_sites is defined %}
+
+  {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+
+  {% if bam_level is sameas false %}
+    {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
+    {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
+    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram{% endset %}
+  {% else %}
+    {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
+    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+  {% endif %}
+
+  {% set output %}{{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv{% endset %}
+  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer_HetRate_Summary.tsv{% endset %}
+  {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer_HetRate_Summary.json{% endset %}
+
+- name: snpsniffer_geno_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, genotype_concordance, snpSniffer, {{ sample.name }}]
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].snpSniffer_sites }}
+  output:
+    - {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf
+    - {{ output }}
+    {% if libraryCount == 1 %}
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer.vcf
+    - {{ sample_lb_output }}
+    {% endif %}
+  {% if bam_level is sameas false %}
+  reset: predecessors
+  {% endif %}
+  cpus: 2
+  mem: 4G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    bcftools mpileup \
+      --no-BAQ \
+      --max-depth 5000 \
+      --min-MQ 0 \
+      --min-BQ 13 \
+      --fasta-ref "{{ constants.grandcanyon[reference].reference_fasta }}" \
+      --regions-file "{{ constants.grandcanyon[reference].snpSniffer_sites }}" \
+      {{ bam }} \
+      | \
+    bcftools call \
+      --consensus-caller \
+      --skip-variants indels \
+      | \
+    bcftools sort \
+      | \
+    bcftools view \
+      --include 'INFO/DP >= 5' \
+      --output-type v \
+      --output "{{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf"
+
+    TESTED_GENOTYPES=`bcftools view -H --include 'GT!="mis"' {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf | wc -l`
+    HOMOZYGOUS_TOTAL=`bcftools view -H --include 'GT="hom"' {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf | wc -l`
+    HETEROZYGOUS_TOTAL=`bcftools view -H --include 'GT="het"' {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf | wc -l`
+    HET_RATIO=$(echo "$HETEROZYGOUS_TOTAL $TESTED_GENOTYPES" | awk '{ print $1/$2 }')
+
+    echo -e "SAMPLE\tLIBRARY\tHomozygous\tHeterozygous\tTotal\thetRatio" > {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv
+    echo -e "{{ sample.name }}\t{{ sample_lb }}\t${HOMOZYGOUS_TOTAL}\t${HETEROZYGOUS_TOTAL}\t${TESTED_GENOTYPES}\t${HET_RATIO}" >> {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv
+    {% if libraryCount == 1 %}
+      cp {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer.vcf
+      cp {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer_HetRate_Summary.tsv
+    {% endif %}
+
+  {% if libraryCount == 1 %}
+    {{- stats2json(sample.gltype, sample.name, task, sample_lb_output, json, "snpsniffer_summary", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+  {% elif bam_level is sameas false %}
+    {{- stats2json(sample.gltype, sample.name, task, output, json, "snpsniffer_summary", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+  {% endif %}
+
+{% endif %}
+{% endmacro %}
