@@ -500,10 +500,18 @@
   {% if bam_level is sameas false %}
     {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
     {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
+    {% if sample.gltype in 'rna' %}
+    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam{% endset %}
+    {% else %}
     {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram{% endset %}
+    {% endif %}
   {% else %}
     {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
+    {% if sample.gltype in 'rna' %}
+    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+    {% else %}
     {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+    {% endif %}
   {% endif %}
 
   {% set output %}{{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv{% endset %}
