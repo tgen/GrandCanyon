@@ -507,8 +507,8 @@
   {% endif %}
 
   {% set output %}{{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv{% endset %}
-  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer_HetRate_Summary.tsv{% endset %}
-  {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer_HetRate_Summary.json{% endset %}
+  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.snpSniffer_HetRate_Summary.tsv{% endset %}
+  {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.snpSniffer_HetRate_Summary.json{% endset %}
 
 - name: snpsniffer_geno_{{ task }}
   tags: [{{ sample.gltype }}, quality_control, genotype_concordance, snpSniffer, {{ sample.name }}]
