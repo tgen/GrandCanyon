@@ -7,6 +7,9 @@
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set indel_candidates %}{{ sample_or_pair.gltype }}/somatic_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz{% endset %}
   {%- set input_config = "paired" %}
+  {% if sample_or_pair.gltype == 'exome' %}
+  {%- set capture_kit_bed %}{{ sample_or_pair.tumor.capture_kit.extended_bed }}{% endset %}
+  {% endif %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
   {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
@@ -19,6 +22,9 @@
     {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/strelka2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set indel_candidates %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/manta/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz{% endset %}
     {%- set input_config = "germline" %}
+  {% endif %}
+  {% if sample_or_pair.gltype == 'exome' %}
+  {%- set capture_kit_bed %}{{ sample_or_pair.capture_kit.extended_bed }}{% endset %}
   {% endif %}
 {% endif %}
 {% set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.strelka2.all.vcf.gz{% endset %}
@@ -176,6 +182,9 @@
     bcftools view \
       --include 'FILTER == "PASS"' \
       --output-type z \
+      {% if sample_or_pair.gltype == 'exome' %}
+      --targets-file {{ capture_kit_bed }} \
+      {% endif %}
       --output {{ pass_vcf }} \
       --write-index \
       {{ all_vcf }}

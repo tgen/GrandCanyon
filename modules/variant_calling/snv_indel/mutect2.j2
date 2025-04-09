@@ -6,6 +6,9 @@
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/mutect2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/mutect2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set input_config = "paired" %}
+  {% if sample_or_pair.gltype == 'exome' %}
+  {%- set capture_kit_bed %}{{ sample_or_pair.tumor.capture_kit.extended_bed }}{% endset %}
+  {% endif %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
   {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
@@ -16,6 +19,9 @@
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_variant_calls/mutect2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/mutect2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set input_config = "germline" %}
+  {% endif %}
+  {% if sample_or_pair.gltype == 'exome' %}
+  {%- set capture_kit_bed %}{{ sample_or_pair.capture_kit.extended_bed }}{% endset %}
   {% endif %}
 {% endif %}
 {% set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.mutect2.all.vcf.gz{% endset %}
@@ -382,6 +388,9 @@
 
     bcftools view \
       --include 'FILTER == "PASS"' \
+      {% if sample_or_pair.gltype == 'exome' %}
+      --targets-file {{ capture_kit_bed }} \
+      {% endif %}
       --output-type z \
       --output {{ pass_vcf }} \
       --write-index \
