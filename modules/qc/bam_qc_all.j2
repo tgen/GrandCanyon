@@ -60,7 +60,7 @@
   methods: Quality control metrics for {{ sample.name }} ({{ aligner }}) were generated with samtools stats.
   input:
     - {{ bam }}
-    - {{ bam }}.bai
+    - {{ bam_index }}
     - {{ constants.grandcanyon[reference].primary_interval_list }}
     - {{ sample.capture_kit.no_header_targets_interval_list }}
   output:
@@ -502,15 +502,19 @@
     {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
     {% if sample.gltype in 'rna' %}
     {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam{% endset %}
+    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.bai{% endset %}
     {% else %}
     {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram{% endset %}
+    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.crai{% endset %}
     {% endif %}
   {% else %}
     {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
     {% if sample.gltype in 'rna' %}
     {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam.bai{% endset %}
     {% else %}
     {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
     {% endif %}
   {% endif %}
 
@@ -522,7 +526,7 @@
   tags: [{{ sample.gltype }}, quality_control, genotype_concordance, snpSniffer, {{ sample.name }}]
   input:
     - {{ bam }}
-    - {{ bam }}.bai
+    - {{ bam_index }}
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].snpSniffer_sites }}
   output:
