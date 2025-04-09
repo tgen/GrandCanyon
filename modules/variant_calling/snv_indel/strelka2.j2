@@ -127,7 +127,7 @@
     {# Execute on the local machine with 19 parallel jobs #}
     {{ temp_dir }}/runWorkflow.py -m local -j 19
 
-- name: strelka2_filter_variants_{{ sample_or_pair.name }}_{{ aligner }}
+- name: strelka2_prep_variants_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, strelka2, {{ sample_or_pair.name }}]
   reset: predecessors
   input:
@@ -140,8 +140,6 @@
   output:
     - {{ all_vcf }}
     - {{ all_vcf }}.tbi
-    - {{ pass_vcf }}
-    - {{ pass_vcf }}.tbi
   cpus: 1
   mem: 2G
   walltime: "1:00:00"
@@ -178,7 +176,23 @@
       --write-index
     {% endif %}
 
-    {# Then filter out the PASS variants to a separate file #}
+- name: strelka2_filter_variants_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, strelka2, {{ sample_or_pair.name }}]
+  input:
+    - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
+  output:
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 2G
+  walltime: "1:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
     bcftools view \
       --include 'FILTER == "PASS"' \
       --output-type z \
