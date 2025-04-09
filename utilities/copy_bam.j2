@@ -1,23 +1,101 @@
-{% macro copy_bam(bam) %}
+{% macro copy_bam(sample) %}
 
-- name: copy_bams_{{ bam.basename | replace(".", "_") }}
-  input: {{ bam.path }}
-  output: temp/fastqs/{{ bam.basename | replace(".", "_") }}.fastq.gz
-  retry: 2
+{% if sample.glprep not in ['longread'] %}
+  {% if sample.aligners | length > 1 %}
+    {% set log_msg %}Unsupported input configuration! More than one aligner enabled for {{ sample.name }}, this is not compatible with bam input{% endset %}
+    {{ log(log_msg, level='WARNING') }}
+  {% elif sample.aligners | length == 0 %}
+    {% set aligner = 'bwa' %}
+  {% else %}
+    {% set aligner = sample.aligners | first %}
+  {% endif %}
+{% else %}
+  {% set aligner = 'minimap2' %}
+{% endif %}
+
+{% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+
+{% set bam_list = [] %}
+{% for bam in sample.read_groups.values() | selectattr('aligned_files') %}
+  {% do bam_list.append(bam) %}
+{% endfor %}
+
+- name: copy_bams_{{ sample.name }}
+  input:
+    {% for bam in bam_list %}
+    - {{ bam.path }}
+    {% endfor %}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
   cpus: 6
   walltime: "4:00:00"
   queue_preset: "DATA-MOVER"
+  {% if bam_list | length == 1 and bam_list[0].path.endswith('.cram') %}
+  {% else %}
   container: {{ constants.tools.samtools.container }}
+  {% endif %}
   cmd: |
     set -uev
 
-    mkdir -p temp/fastqs/
-
-    samtools fastq \
+  {% if bam_list | length == 1 %}
+    {% set input_bam = bam_list | first %}
+    {% if input_bam.path.endswith('.cram') %}
+    rsync {{ input_bam.path }} {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    {% else %}
+    samtools view \
       --threads 6 \
-      -T '*' \
-      {{ bam.path }} \
-      > /temp/fastqs/{{ bam.basename | replace(".", "_") }}.fastq.gz
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      -O CRAM \
+      -o {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
+      {{ input_bam.path }}
+    {% endif %}
+  {% else %}
+    samtools merge \
+      --threads 4 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      -c \
+      -f \
+      --write-index \
+      -O CRAM \
+      -o {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
+    {% for input_bam in bam_list %}
+      {% if not loop.last %}
+        {{ input_bam.path }} \
+      {% else %}
+        {{ input_bam.path }}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+{% if aligner in ('bwa') %}
+  {% set aligner_prefix = 'bwa_mem2' %}
+{% else %}
+  {% set aligner_prefix = 'minimap2' %}
+{% endif %}
+- name: {{ aligner_prefix }}_samtools_create_temp_bam_{{ sample.name }}
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+  output:
+    - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
+    - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam.bai
+  walltime: "4:00:00"
+  cpus: 8
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+
+    samtools view \
+      -@ 8 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --no-PG \
+      -o {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam \
+      --write-index \
+      {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+
+    samtools index -@8 {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
 
 {% endmacro %}
-

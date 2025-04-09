@@ -142,17 +142,28 @@
         {% do samples[name].update({'read_groups': {}}) %}
     {% endif %}
 
+    {% set alignable_files = [] %}
+    {% set aligned_files = [] %}
+    {% for file in data_files %}
+      {% if file.fileType in ('fastq', 'ubam') %}
+        {% do alignable_files.append(file) %}
+      {% elif file.fileType in ('bam') %}
+        {% do aligned_files.append(file) %}
+      {% else %}
+        {% set log_msg %}Unsupported data file type provided - {{ file.fileType }}. It will not be processed.{% endset %}
+        {{ log(log_msg, level='WARNING') }}
+      {% endif %}
+    {% endfor %}
     {% do samples[name]['read_groups'].update({rgid: {}}) %}
     {% do samples[name]['read_groups'][rgid].update(rg) %}
-    {% do samples[name]['read_groups'][rgid].update({'data_files': data_files}) %}
+    {% do samples[name]['read_groups'][rgid].update({'data_files': alignable_files}) %}
+    {% do samples[name]['read_groups'][rgid].update({'aligned_files': aligned_files}) %}
 
     {% for file in data_files %}
       {% if file.fileType in ["fastq", "fasterq"] %}
         {{- copy_fastq(file) }}
       {% elif file.fileType == "ubam" %}
         {{- copy_ubam(file) }}
-      {% elif file.fileType == "bam" %}
-        {{- copy_bam(file) }}
       {% endif %}
     {% endfor %}
 
@@ -208,6 +219,17 @@
     {% set rnaStrandDirection=sample.rnaStrandDirection|default('notapplicable')|lower|replace('-','') %}
     {% set strandedness %}{{ readOrientation }}-{{ rnaStrandType }}-{{ rnaStrandDirection }}{% endset %}
     {% do sample.update({'strandedness': strandedness}) %}
+{% endfor %}
+
+{% for sample in samples.values() %}
+  {% if sample.read_groups.values() | selectattr('aligned_files') | list | length > 0 %}
+    {% if sample.read_groups.values() | selectattr('data_files') | list | length > 0 %}
+      {% set log_msg %}Unsupported input configuration! {{ sample.name }} has both aligned_files and unaligned_files{% endset %}
+      {{ log(log_msg, level='WARNING') }}
+    {% else %}
+      {{- copy_bam(sample) }}
+    {% endif %}
+  {% endif %}
 {% endfor %}
 
 {# Start of module calls #}

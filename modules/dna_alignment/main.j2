@@ -7,6 +7,15 @@
 {% macro dna_alignment(samples) %}
 
   {% for sample in samples.values() if sample.gltype in ['genome', 'exome'] and sample.glprep not in ['longread'] %}
+    {% if sample.read_groups.values() | selectattr('data_files') | list | length > 0 %}
+    {#
+    {% for data_file in sample.read_groups.values() | selectattr('data_files') %}
+      {% if data_file.fileType not in ('fastq', 'ubam') %}
+        {% set log_msg %}unsupported data file type! {{ data_file.fileType }}{% endset %}
+        {{ log(log_msg, level='WARNING') }}
+      {% endif %}
+    {% endfor %}
+    #}
     {% set task_list = [] %}
     {% set files_to_remove = [] %}
     {% set platform = (sample.read_groups.values()|first).rgpm|default('') %}
@@ -88,6 +97,7 @@
 
     {% set task_name %}{{ sample.name }}_dna_fastqs{% endset %}
     {{- remove_files(none, task_list, files_to_remove, task_name) }}
+    {% endif %}
   {% endfor %}
 
   {% for sample in samples.values() if sample.gltype in ['genome', 'exome'] and sample.glprep in ['longread'] %}
