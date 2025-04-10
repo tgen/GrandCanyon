@@ -181,6 +181,9 @@
   input:
     - {{ all_vcf }}
     - {{ all_vcf }}.tbi
+    {% if sample_or_pair.gltype == 'exome' %}
+    - {{ capture_kit_bed }} \
+    {% endif %}
   output:
     - {{ pass_vcf }}
     - {{ pass_vcf }}.tbi
