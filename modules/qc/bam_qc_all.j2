@@ -497,34 +497,26 @@
 
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
 
+  {% if sample.gltype in 'rna' %}
+  {% set alignment_format = 'bam' %}
+  {% set index_format = 'bai' %}
+  {% else %}
+  {% set alignment_format = 'cram' %}
+  {% set index_format = 'crai' %}
+  {% endif %}
   {% if bam_level is sameas false %}
     {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
     {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
-    {% if sample.gltype in 'rna' %}
-    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam{% endset %}
-    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.bai{% endset %}
-    {% else %}
-    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram{% endset %}
-    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.crai{% endset %}
-    {% endif %}
+    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}{% endset %}
+    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.{{ index_format }}{% endset %}
   {% else %}
     {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
-    {% if sample.gltype in 'rna' %}
-    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
-    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam.bai{% endset %}
-    {% else %}
-    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
-    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
-    {% endif %}
+    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.{{ alignment_format }}{% endset %}
+    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.{{ alignment_format }}.{{ index_format }}{% endset %}
   {% endif %}
 
-  {% if sample.gltype in 'rna' %}
-  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer_HetRate_Summary.tsv{% endset %}
-  {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer_HetRate_Summary.json{% endset %}
-  {% else %}
-  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.snpSniffer_HetRate_Summary.tsv{% endset %}
-  {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.snpSniffer_HetRate_Summary.json{% endset %}
-  {% endif %}
+  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer_HetRate_Summary.tsv{% endset %}
+  {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer_HetRate_Summary.json{% endset %}
   {% set output %}{{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv{% endset %}
 
 - name: snpsniffer_geno_{{ task }}
@@ -538,7 +530,7 @@
     - {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf
     - {{ output }}
     {% if libraryCount == 1 %}
-    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer.vcf
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer.vcf
     - {{ sample_lb_output }}
     {% endif %}
   {% if bam_level is sameas false %}
@@ -580,8 +572,8 @@
     echo -e "SAMPLE\tLIBRARY\tHomozygous\tHeterozygous\tTotal\thetRatio" > {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv
     echo -e "{{ sample.name }}\t{{ sample_lb }}\t${HOMOZYGOUS_TOTAL}\t${HETEROZYGOUS_TOTAL}\t${TESTED_GENOTYPES}\t${HET_RATIO}" >> {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv
     {% if libraryCount == 1 %}
-      cp {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer.vcf
-      cp {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer_HetRate_Summary.tsv
+      cp {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer.vcf
+      cp {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer_HetRate_Summary.tsv
     {% endif %}
 
   {% if libraryCount == 1 %}
