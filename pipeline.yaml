@@ -1,8 +1,8 @@
 __pipeline__:
   name: grandcanyon
   main: main.j2
-  description: Human CHM13 genomics suite
-  version: 0.0.1.dev3
+  description: Adaptable genomics suite supporting short and long read sequencing data
+  version: 0.1.0
   bin: required_scripts/
 constants:
   tools:
