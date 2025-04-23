@@ -1,46 +1,62 @@
 {%- macro cnvkit(sample_or_pair, aligner) %}
 
 {% if sample_or_pair.normal is defined %}
+  {% if controlDataFiles is defined %}
+    {% set cnvkit_reference = controlDataFiles|selectattr('assayCode', 'eq', sample_or_pair.tumor.assayCode)|map(attribute='cnvkit_reference')|first|default(none) %}
+    {% if cnvkit_reference is not none %}
+      {%- set cnvkit_name="cnvkit_pooled_ref" %}
+    {% else %}
+      {%- set cnvkit_name="cnvkit" %}
+    {% endif %}
+  {% endif %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
   {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
-  {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
-  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/cnvkit/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/cnvkit/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/{{ cnvkit_name }}/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/{{ cnvkit_name }}/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {% if sample_or_pair.gltype == 'exome' %}
   {%- set capture_kit_bed %}{{ sample_or_pair.tumor.capture_kit.extended_bed }}{% endset %}
   {% endif %}
   {%- set input_config = "paired" %}
 {% else %}
+  {% if controlDataFiles is defined %}
+    {% set cnvkit_reference = controlDataFiles|selectattr('assayCode', 'eq', sample_or_pair.assayCode)|map(attribute='cnvkit_reference')|first|default(none) %}
+    {% if cnvkit_reference is not none %}
+      {%- set cnvkit_name="cnvkit_pooled_ref" %}
+    {% else %}
+      {%- set cnvkit_name="cnvkit" %}
+    {% endif %}
+  {% endif %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
   {% if sample_or_pair.gltype == 'exome' %}
   {%- set capture_kit_bed %}{{ sample_or_pair.capture_kit.extended_bed }}{% endset %}
   {% endif %}
   {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
-    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/cnvkit/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-    {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/cnvkit/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/{{ cnvkit_name }}/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/{{ cnvkit_name }}/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set input_config = "tumor_only" %}
   {% else %}
-    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_copy_number/cnvkit/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-    {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_copy_number/cnvkit/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_copy_number/{{ cnvkit_name }}/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_copy_number/{{ cnvkit_name }}/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set input_config = "germline" %}
   {% endif %}
 {% endif %}
 
-{# Step 1 #}
-- name: cnvkit_{{ sample_or_pair.name }}_{{ aligner }}
+- name: {{ cnvkit_name }}_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, cnvkit, {{ sample_or_pair.name }}]
   reset: predecessors
   input:
     {% if input_config in 'paired' %}
     - {{ normal_bam }}
-    - {{ tumor_bam }}
-    {% else %}
-    - {{ bam }}
     {% endif %}
+    - {{ bam }}
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].reference_dict }}
     - {{ constants.grandcanyon[reference].gtf }}
     {% if sample_or_pair.gltype == 'exome' %}
     - {{ capture_kit_bed }}
+    {% endif %}
+    {% if cnvkit_reference is not none %}
+    - {{ cnvkit_reference }}
     {% endif %}
   cpus: 8
   mem: 32G
@@ -57,44 +73,31 @@
 
     ROOT_DIR=${PWD}
 
-    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
-      sed 's/SN://;s/LN://' |\
-      awk '{ OFS="\t" ; print $2,1,$3 }' \
-      > {{ temp_dir }}/calling_intervals.bed
-
-    {% if input_config not in 'paired' %}
-    cnvkit.py reference \
-      {% if sample_or_pair.gltype == 'exome' %}
-      --targets {{ capture_kit_bed }} \
-      {% else %}
-      --targets {{ temp_dir }}/calling_intervals.bed \
-      {% endif %}
-      --output {{ temp_dir }}/{{ sample_or_pair.name }}_reference.cnn \
-      --fasta {{ constants.grandcanyon[reference].reference_fasta }}
-    {% endif %}
-
     cd {{ temp_dir }} && \
     cnvkit.py batch \
-      {% if input_config in 'paired' %}
-      ${ROOT_DIR}/{{ tumor_bam }} \
-      --normal ${ROOT_DIR}/{{ normal_bam }} \
+      ${ROOT_DIR}/{{ bam }} \
+      {% if cnvkit_reference is not none %}
+      --reference {{ cnvkit_reference }} \
+      {% else %}
       --output-reference ${ROOT_DIR}/{{ temp_dir }}/{{ sample_or_pair.name }}_reference.cnn \
       --fasta {{ constants.grandcanyon[reference].reference_fasta }} \
       --annotate {{ constants.grandcanyon[reference].gtf }} \
+      {% if input_config in 'paired' %}
+      --normal ${ROOT_DIR}/{{ normal_bam }} \
+      {% else %}
+      --normal \
+      {% endif %}
       {% if sample_or_pair.gltype == 'exome' %}
       --targets {{ capture_kit_bed }} \
       {% endif %}
-      {% else %}
-      ${ROOT_DIR}/{{ bam }} \
-      --reference ${ROOT_DIR}/{{ temp_dir }}/{{ sample_or_pair.name }}_reference.cnn \
       {% endif %}
-      -p 8 \
       {% if sample_or_pair.gltype == 'exome' %}
       --method hybrid \
       {% else %}
       --method wgs \
       {% endif %}
       --output-dir ${ROOT_DIR}/{{ results_dir }} \
+      -p 8 \
       --scatter
 
 {% endmacro %}
