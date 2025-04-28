@@ -193,7 +193,7 @@
     paftools.js gff2bed {{ constants.grandcanyon[reference].gtf }} > {{ temp_dir }}/{{ sample.name }}_anno.bed
 
     minimap2 \
-      {% if sample.glprep in 'kinnex' %}
+      {% if sample.glprep.startswith('kinnex') %}
       -ax splice:hq \
       -uf \
       {% else %}

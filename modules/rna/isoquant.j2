@@ -40,7 +40,7 @@
       --reference {{ reference_fasta }} \
       -o {{ temp_dir }}/ \
       -g {{ gtf }} \
-      {% if sample.glprep in 'kinnex' %}
+      {% if sample.glprep.startswith('kinnex') %}
       -d pacbio \
       {% else %}
       -d nanopore \
