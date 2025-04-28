@@ -22,7 +22,7 @@
   {% do input.update({'hic_r1': []}) %}
   {% do input.update({'hic_r2': []}) %}
 
-  {% for file in dataFiles|selectattr('subGroup', 'eq', 'Constitutional')|selectattr('gltype', 'in', ['genome']) %}
+  {% for file in dataFiles|selectattr('gltype', 'in', ['genome']) %}
     {% if file.glprep == '3c' %}
       {% set hic_file %}temp/fastqs/{{ file.basename }}{% endset %}
       {% if file.fastqCode == 'R1' %}
@@ -69,7 +69,7 @@
     {% endif %}
   {% endfor %}
 
-  {% if dataFiles|selectattr('subGroup', 'eq', 'Constitutional')|selectattr('gltype', 'in', ['genome'])|selectattr('glprep', 'in', ['longread','3c'])|list | length > 0 %}
+  {% if dataFiles|selectattr('gltype', 'in', ['genome'])|selectattr('glprep', 'in', ['longread','3c'])|list | length > 0 %}
   {{- meryl(input) }}
   {% if tasks.Genome_assembly_long_read_assembler_flye|default(false) %}
     {{- flye(input) }}

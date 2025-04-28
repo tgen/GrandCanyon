@@ -11,11 +11,12 @@
 {%- set temp_dir %}temp/{{ input.gltype }}/assembly/hifiasm/{{ input.project }}{% endset %}
 {%- set results_dir %}{{ input.gltype }}/assembly/hifiasm/{{ input.project }}{% endset %}
 
+{% set hifi_list = input.hifi %}
 {% set ont_list = input.duplex + input.corr %}
 {% if ont_list | length > 0 %}
 {% set chopped_ont %}temp/fastqs/{{ input.project }}.chopped.ont.fastq.gz{% endset %}
-{% endif %}
 {% set hifi_list = input.hifi + [chopped_ont] %}
+{% endif %}
 
 {# PacBio Hifi reads are consistently between 10kb and 30 kb, and therefore it does not need chopping #}
 {% if ont_list | length > 0 %}
