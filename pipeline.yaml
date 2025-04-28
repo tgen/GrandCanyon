@@ -2,7 +2,7 @@ __pipeline__:
   name: grandcanyon
   main: main.j2
   description: Adaptable genomics suite supporting short and long read sequencing data
-  version: 0.1.0
+  version: 0.2.0.dev
   bin: required_scripts/
 constants:
   tools:
