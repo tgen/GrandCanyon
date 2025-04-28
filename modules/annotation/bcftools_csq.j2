@@ -1,5 +1,9 @@
 {% macro bcftools_csq(sample_or_pair, results_dir, input_vcf, variant_caller, final_vcf_prefix, aligner) %}
 
+{% if variant_caller in 'severus' %}
+  {% set log_msg %}Skipping bcftools csq for {{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }} as outputs are not compatible due to REF allele masking{% endset %}
+  {{ log(log_msg, level='WARNING') }}
+{% else %}
 {% if constants.grandcanyon[reference].gff3 is defined %}
 - name: bcftools_csq_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
@@ -42,6 +46,7 @@
 {% else %}
   {% set log_msg %}bcftools consequence annotation was enabled, but a gff3 file path is not defined for {{ reference }}. This task is currently skipped.{% endset %}
   {{ log(log_msg, level='WARNING') }}
+{% endif %}
 {% endif %}
 
 {% endmacro %}
