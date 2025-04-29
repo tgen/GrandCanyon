@@ -41,10 +41,11 @@
       --output {{ discordant_bam }} \
       --search {{ temp_dir }}/calling_intervals.bed \
       --procs 8 \
+      --overwrite \
       {% if sample.rgpl in ('ONT') %}
-      --pl 'nanopore' \
+      --pl 'nanopore-r10' \
       {% elif sample.rgpl in ('PACBIO') %}
-      --pl 'pacbio' \
+      --pl 'pacbio-revio' \
       {% else %}
       --pl 'pe' \
       {% endif %}
@@ -90,104 +91,6 @@
       {{ temp_dir }} \
       {{ discordant_bam }}
 
-{#
-#Usage: dysgu call [OPTIONS] REFERENCE WORKING_DIRECTORY [SV_ALIGNS]
-#
-#  Call structural variants from bam alignment file/stdin
-#
-#Options:
-#  -b, --ibam PATH                 Original input file usef with 'fetch'
-#                                  command, used for calculating insert size
-#                                  parameters
-#  -o, --svs-out PATH              Output file [default: stdout]
-#  -f, --out-format [csv|vcf]      Output format  [default: vcf]
-#  --sites PATH                    A vcf file of known variant sites. Matching
-#                                  output variants are labelled with 'PASS'
-#                                  plus the ID from --sites
-#  --sites-prob FLOAT RANGE        Prior probability that a matching variant in
-#                                  --sites is true  [default: 0.6; 0<=x<=1]
-#  --sites-pass-only [True|False]  Only add variants from sites that have PASS
-#                                  [default: True]
-#  --parse-probs [True|False]      Parse INFO:MeanPROB or FORMAT:PROB instead
-#                                  of using --sites-p  [default: False]
-#  --all-sites [True|False]        Output a genotype for all variants in
-#                                  --sites (including homozygous reference 0/0)
-#  --pfix TEXT                     Post-fix of temp alignment file (used when a
-#                                  working-directory is provided instead of sv-
-#                                  aligns)
-#  --mode [pe|pacbio|nanopore]     Type of input reads. Multiple options are
-#                                  set, overrides other options
-#                                  pacbio/nanopore: --mq 20 --paired False
-#                                  --min-support 3 --max-cov 150  [default: pe]
-#  --pl [pe|pacbio|nanopore]       Type of input reads  [default: pe]
-#  --clip-length INTEGER           Minimum soft-clip length, >= threshold are
-#                                  kept. Set to -1 to ignore  [default: 15]
-#  --max-cov TEXT                  Regions with > max-cov that do no overlap
-#                                  'include' are discarded. Use 'auto' to
-#                                  estimate a value from the alignment index
-#                                  file [default: 200]. Regions with > max-cov
-#                                  that do no overlap 'include' are discarded.
-#                                  Set to -1 to ignore.
-#  --max-tlen INTEGER              Maximum template length to consider when
-#                                  calculating paired-end template size
-#                                  [default: 1000]
-#  --min-support INTEGER           Minimum number of reads per SV  [default: 3]
-#  --min-size INTEGER              Minimum size of SV to report  [default: 30]
-#  --mq INTEGER                    Minimum map quality < threshold are
-#                                  discarded  [default: 1]
-#  --dist-norm FLOAT               Distance normalizer  [default: 100]
-#  --spd FLOAT                     Span position distance  [default: 0.3]
-#  --trust-ins-len TEXT            Trust insertion length from cigar, for high
-#                                  error rate reads use False  [default: True]
-#  --length-extend INTEGER         Extend SV length if any nearby gaps found
-#                                  with length >= length-extend. Ignored for
-#                                  paired-end reads  [default: 15]
-#  --divergence TEXT               Threshold used for ignoring divergent end-
-#                                  regions of alignments. Ignored for paired-
-#                                  end reads  [default: 0.02]
-#  -I, --template-size TEXT        Manually set insert size, insert stdev,
-#                                  read_length as 'INT,INT,INT'
-#  --regions PATH                  bed file of target regions, used for
-#                                  labelling events
-#  --regions-only [True|False]     If --regions is provided, call only events
-#                                  within target regions  [default: False]
-#  --regions-mm-only [True|False]  If --regions is provided, only use minimizer
-#                                  clustering within --regions. Useful for high
-#                                  coverage targeted sequencing  [default:
-#                                  False]
-#  -p, --procs INTEGER RANGE       Processors to use  [default: 1; 1<=x<=40]
-#  --buffer-size INTEGER           Number of alignments to buffer  [default: 0]
-#  --merge-within [True|False]     Try and merge similar events, recommended
-#                                  for most situations  [default: True]
-#  --drop-gaps [True|False]        Drop SVs near gaps +/- 250 bp of Ns in
-#                                  reference  [default: True]
-#  --merge-dist INTEGER            Attempt merging of SVs below this distance
-#                                  threshold, default is (insert-median +
-#                                  5*insert_std) for pairedreads, or 500 bp for
-#                                  single-end reads
-#  --paired [True|False]           Paired-end reads or single  [default: True]
-#  --contigs [True|False]          Generate consensus contigs for each side of
-#                                  break and use sequence-based metrics in
-#                                  model scoring  [default: True]
-#  -v, --verbosity [0|1|2]         0 = no contigs in output, 1 = output contigs
-#                                  for variants without ALT sequence called, 2
-#                                  = output all contigs  [default: 1]
-#  --diploid [True|False]          Use diploid model for scoring variants. Use
-#                                  'False' for non-diploid or poly clonal
-#                                  samples  [default: True]
-#  --remap TEXT                    Try and remap anomalous contigs to find
-#                                  additional small SVs  [default: True]
-#  --metrics                       Output additional metrics for each SV
-#  --no-gt                         Skip adding genotype to SVs
-#  --keep-small                    Keep SVs < min-size found during re-mapping
-#  --low-mem                       Use less memory but more temp disk space
-#  -x, --overwrite                 Overwrite temp files
-#  -c, --clean                     Remove temp files when finished
-#  --thresholds TEXT               Probability threshold to label as PASS for
-#                                  'DEL,INS,INV,DUP,TRA'  [default:
-#                                  0.45,0.45,0.45,0.45,0.45]
-#  --help                          Show this message and exit.
-#}
 
 - name: dysgu_filter_{{ sample.name }}_{{ aligner }}
   input:
@@ -210,38 +113,6 @@
       {{ temp_all_vcf }} \
       > {{ temp_pass_vcf }}
 
-{#
-#Usage: dysgu filter [OPTIONS] INPUT_VCF [NORMAL_BAMS]...
-#
-#  Filter a vcf generated by dysgu. Unique SVs can be found in the input_vcf by
-#  supplying a --normal-vcf (single or multi-sample), and normal bam files.
-#  Bam/vcf samples with the same name as the input_vcf will be ignored
-#
-#Options:
-#  --reference PATH              Reference for cram input files
-#  -o, --svs-out PATH            Output file, [default: stdout]
-#  -n, --normal-vcf PATH         Vcf file for normal sample, or panel of
-#                                normals. The SM tag of input bams is used to
-#                                ignore the input_vcf for multi-sample vcfs
-#  -p, --procs INTEGER RANGE     Reading threads for normal_bams  [default: 1; 1<=x<=40]
-#  -f, --support-fraction FLOAT  Minimum threshold support fraction / coverage
-#                                (SU/COV)  [default: 0.1]
-#  --target-sample TEXT          If input_vcf if multi-sample, use target-
-#                                sample as input
-#  --keep-all                    All SVs classified as normal will be kept in
-#                                the output, labelled as filter=normal
-#  --ignore-read-groups          Ignore ReadGroup RG tags when parsing sample
-#                                names. Filenames will be used instead
-#  --min-prob FLOAT              Remove SVs with PROB value < min-prob
-#                                [default: 0.1]
-#  --pass-prob FLOAT             Re-label SVs as PASS if PROB value >= pass-
-#                                prob  [default: 1.0]
-#  --interval-size INTEGER       Interval size for searching normal-vcf/normal-
-#                                bams  [default: 1000]
-#  --random-bam-sample INTEGER   Choose N random normal-bams to search. Use -1
-#                                to ignore  [default: -1]
-#  --help                        Show this message and exit.
-#}
 
 - name: dysgu_samtools_compress_{{ sample.name }}_{{ aligner }}
   input:

@@ -39,7 +39,7 @@ constants:
       container: nanoporetech/dorado:shaae1d5e75f94041e4fd7af4a7ed6e6432b0eaea29
       version: 0.8.2
     dysgu:
-      container: quay.io/biocontainers/dysgu:1.6.7--py312hf97d3a1_0
+      container: quay.io/biocontainers/dysgu:1.8.2--py312h9c9b0c2_1
     flair:
       container: quay.io/biocontainers/flair:2.0.0--pyhdfd78af_1
     flye:
