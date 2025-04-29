@@ -43,9 +43,9 @@
       --procs 8 \
       --overwrite \
       {% if sample.rgpl in ('ONT') %}
-      --pl 'nanopore-r10' \
+      --pl 'nanopore' \
       {% elif sample.rgpl in ('PACBIO') %}
-      --pl 'pacbio-revio' \
+      --pl 'pacbio' \
       {% else %}
       --pl 'pe' \
       {% endif %}
@@ -74,10 +74,10 @@
       --svs-out {{ temp_all_vcf }} \
       --out-format vcf \
       {% if sample.rgpl in ('ONT') %}
-      --mode 'nanopore' \
+      --mode 'nanopore-r10' \
       --pl 'nanopore' \
       {% elif sample.rgpl in ('PACBIO') %}
-      --mode 'pacbio' \
+      --mode 'pacbio-revio' \
       --pl 'pacbio' \
       {% else %}
       --mode 'pe' \
