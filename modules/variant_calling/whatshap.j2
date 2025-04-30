@@ -5,7 +5,7 @@
 {%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/{{ variant_caller }}/{{ sample.name }}_{{ aligner }}{% endset %}
 {%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/{{ variant_caller }}/{{ sample.name }}_{{ aligner }}{% endset %}
 {%- set output_prefix %}{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.whatshap{% endset %}
-{%- set phased_vcf %}{{ results_dir }}/{{ output_prefix }}.phased.vcf.gz{% endif %}
+{%- set phased_vcf %}{{ results_dir }}/{{ output_prefix }}.phased.vcf.gz{% endset %}
 {% do sample.update({'phased_vcf': phased_vcf}) %}
 
 - name: whatshap_phase_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
@@ -113,7 +113,7 @@
 {% else %}
   {%- set output_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
 {% endif %}
-{% set phased_bam %}{{ output_dir }}/{{ output_prefix }}.haplotagged.bam{% endif %}
+{% set phased_bam %}{{ output_dir }}/{{ output_prefix }}.haplotagged.bam{% endset %}
 {% do sample.update({'phased_bam': phased_bam}) %}
 
 - name: whatshap_haplotag_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
