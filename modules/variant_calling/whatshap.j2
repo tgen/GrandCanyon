@@ -1,4 +1,12 @@
-{% macro whatshap_phase(sample, input_vcf, input_bam, temp_dir, results_dir, output_prefix, variant_caller, aligner) %}
+{% macro whatshap_phase(sample, aligner, variant_caller) %}
+
+{%- set input_bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set input_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.pass.vcf.gz{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/{{ variant_caller }}/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/{{ variant_caller }}/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set output_prefix %}{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.whatshap{% endset %}
+{%- set phased_vcf %}{{ results_dir }}/{{ output_prefix }}.phased.vcf.gz{% endif %}
+{% do sample.update({'phased_vcf': phased_vcf}) %}
 
 - name: whatshap_phase_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
@@ -7,7 +15,7 @@
     - {{ input_bam }}.bai
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
-    - {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
+    - {{ phased_vcf }}
   cpus: 2
   mem: 32G
   walltime: "8:00:00"
@@ -21,17 +29,17 @@
 
     whatshap phase \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      --output {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz \
+      --output {{ phased_vcf }} \
       --ignore-read-groups \
       --use-supplementary \
       {{ input_vcf }} \
       {{ input_bam }}
 
-    tabix --threads 2 -C {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
+    tabix --threads 2 -C {{ phased_vcf }}
 
 - name: whatshap_stats_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
-    - {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
+    - {{ phased_vcf }}
   output:
     - {{ results_dir }}/{{ output_prefix }}.phased_stats.tsv
     - {{ results_dir }}/{{ output_prefix }}.phased.gtf
@@ -93,11 +101,24 @@
 
 {% endmacro %}
 
-{% macro whatshap_haplotag(sample, input_vcf, input_bam, output_dir, output_prefix, variant_caller, aligner) %}
+{% macro whatshap_haplotag(sample, aligner, variant_caller, phased_vcf='none' ) %}
+
+{% if phased_vcf == 'none' %}
+{%- set phased_vcf %}{{ sample.phased_vcf }}{% endset %}
+{% endif %}
+{%- set input_bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set output_prefix %}{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.whatshap{% endset %}
+{% if tasks['keep_phased_bam']|default(false) %}
+  {%- set output_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+{% else %}
+  {%- set output_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+{% endif %}
+{% set phased_bam %}{{ output_dir }}/{{ output_prefix }}.haplotagged.bam{% endif %}
+{% do sample.update({'phased_bam': phased_bam}) %}
 
 - name: whatshap_haplotag_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
-    - {{ input_vcf }}
+    - {{ phased_vcf }}
     - {{ input_bam }}
     - {{ input_bam }}.bai
     - {{ constants.grandcanyon[reference].reference_fasta }}
@@ -124,7 +145,7 @@
         --tag-supplementary \
         --skip-missing-contigs \
         --output-threads=4 \
-        {{ input_vcf }} \
+        {{ phased_vcf }} \
         {{ input_bam }}
     fi
 

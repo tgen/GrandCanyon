@@ -1,14 +1,37 @@
-{% macro dysgu(sample, aligner) %}
+{% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
 
-{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/dysgu/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/dysgu/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set discordant_bam %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.discordant.bam{% endset %}
-{%- set discordant_cram %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.discordant.cram{% endset %}
-{%- set temp_all_vcf %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.dysgu.all.vcf{% endset %}
-{%- set temp_pass_vcf %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.dysgu.pass.vcf{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.dysgu.all.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.dysgu.pass.vcf.gz{% endset %}
+{% macro dysgu(sample_or_pair, aligner) %}
+
+{% if sample_or_pair.normal is defined %}
+  {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_snp_indel_caller_deepvariant"]|default(false)  %}
+    {{- whatshap_haplotag(sample_or_pair.tumor, aligner, 'deepvariant', sample_or_pair.normal.phased_vcf) }}
+    {%- set normal_bam %}{{ sample_or_pair.normal.phased_bam }}{% endset %}
+    {%- set bam %}{{ sample_or_pair.tumor.phased_bam }}{% endset %}
+  {% else %}
+    {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+    {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {% endif %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set normal_vcf %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.dysgu.all.vcf{% endset %}
+{% else %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set input_config = "tumor_only" %}
+  {% else %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set input_config = "germline" %}
+  {% endif %}
+{% endif %}
+{%- set discordant_bam %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.discordant.bam{% endset %}
+{%- set discordant_cram %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.discordant.cram{% endset %}
+{%- set temp_all_vcf %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.dysgu.all.vcf{% endset %}
+{%- set temp_pass_vcf %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.dysgu.pass.vcf{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.dysgu.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.dysgu.pass.vcf.gz{% endset %}
 
 - name: dysgu_fetch_{{ sample.name }}_{{ aligner }}
   input:
@@ -87,6 +110,7 @@
       --regions {{ temp_dir }}/calling_intervals.bed \
       --regions-only True \
       --regions-mm-only True \
+      --metrics \
       {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ temp_dir }} \
       {{ discordant_bam }}
@@ -110,7 +134,13 @@
       --min-prob 0.1 \
       --support-fraction 0.1 \
       --pass-prob 0.3 \
+      {% if input_config == 'paired' %}
+      --normal_vcf {{ normal_vcf }} \
       {{ temp_all_vcf }} \
+      {{ normal_bam }} \
+      {% else %}
+      {{ temp_all_vcf }} \
+      {% endif %}
       > {{ temp_pass_vcf }}
 
 
