@@ -1,6 +1,4 @@
 {% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
-{% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
-{% from 'modules/variant_calling/whatshap.j2' import whatshap_phase with context %}
 {% from 'modules/variant_calling/snv_indel/filtering.j2' import germline_candidate_filters with context %}
 
 {%- macro deepvariant(sample, aligner) %}

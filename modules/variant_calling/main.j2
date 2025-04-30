@@ -26,6 +26,9 @@
 {% from 'modules/variant_calling/copy_number/gatk_cnv.j2' import gatk_cnv with context %}
 {% from 'modules/variant_calling/copy_number/cnvkit.j2' import cnvkit with context %}
 
+{% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
+{% from 'modules/variant_calling/whatshap.j2' import whatshap_phase with context %}
+
 {% from 'utilities/create_ped.j2' import create_ped with context %}
 
 {%- macro constitutional_variant_calling(samples) %}
