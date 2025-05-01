@@ -1,10 +1,10 @@
 {% macro whatshap_phase(sample, aligner, variant_caller) %}
 
 {%- set input_bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
-{%- set input_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.pass.vcf.gz{% endset %}
 {%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/{{ variant_caller }}/{{ sample.name }}_{{ aligner }}{% endset %}
 {%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/{{ variant_caller }}/{{ sample.name }}_{{ aligner }}{% endset %}
 {%- set output_prefix %}{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.whatshap{% endset %}
+{%- set input_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.pass.vcf.gz{% endset %}
 {%- set phased_vcf %}{{ results_dir }}/{{ output_prefix }}.phased.vcf.gz{% endset %}
 {% do sample.update({'phased_vcf': phased_vcf}) %}
 
@@ -148,5 +148,21 @@
         {{ phased_vcf }} \
         {{ input_bam }}
     fi
+
+- name: whatshap_haplotag_index_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
+  input:
+    - {{ output_dir }}/{{ output_prefix }}.haplotagged.bam
+  output:
+    - {{ output_dir }}/{{ output_prefix }}.haplotagged.bam.bai
+  cpus: 8
+  mem: 8G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    samtools index -@8 {{ output_dir }}/{{ output_prefix }}.haplotagged.bam
 
 {% endmacro %}

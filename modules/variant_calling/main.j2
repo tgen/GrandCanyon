@@ -49,9 +49,9 @@
 
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(false) %}
       {{- deepvariant(sample, aligner) }}
+      {% do sample.update({'phased_bam': '', 'phased_vcf': ''}) %}
       {{- whatshap_phase(sample, aligner, 'deepvariant') }}
       {{- whatshap_haplotag(sample, aligner, 'deepvariant') }}
-      {% do sample.update({'phased_bam': '', 'phased_vcf': ''}) %}
     {% endif %}
 
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_haplotypecaller"]|default(false) %}

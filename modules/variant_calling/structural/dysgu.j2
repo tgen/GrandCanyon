@@ -21,6 +21,9 @@
     {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set input_config = "tumor_only" %}
   {% else %}
+    {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_snp_indel_caller_deepvariant"]|default(false)  %}
+      {%- set bam %}{{ sample_or_pair.phased_bam }}{% endset %}
+    {% endif %}
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set input_config = "germline" %}
@@ -33,7 +36,14 @@
 {%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.dysgu.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.dysgu.pass.vcf.gz{% endset %}
 
-- name: dysgu_fetch_{{ sample.name }}_{{ aligner }}
+{#
+{% if sample_or_pair.rgpl in ['ONT', 'PACBIO'] %}
+  {%- set input_type = "long_read" %}
+{% else %}
+  {%- set input_type = "short_read" %}
+{% endif %}
+{% if input_type == "short_read" %}
+- name: dysgu_fetch_{{ sample_or_pair.name }}_{{ aligner }}
   input:
     - {{ bam }}
     - {{ bam }}.bai
@@ -53,7 +63,6 @@
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
-    {# creating calling_intervals on the fly based on reference_dict, this should also accept a user supplied value in the future #}
     grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
       sed 's/SN://;s/LN://' |\
       awk '{ OFS="\t" ; print $2,0,$3-1 }' \
@@ -65,21 +74,16 @@
       --search {{ temp_dir }}/calling_intervals.bed \
       --procs 8 \
       --overwrite \
-      {% if sample.rgpl in ('ONT') %}
-      --pl 'nanopore' \
-      {% elif sample.rgpl in ('PACBIO') %}
-      --pl 'pacbio' \
-      {% else %}
       --pl 'pe' \
-      {% endif %}
       {{ temp_dir }} {{ bam }}
 
+{% endif %}
+#}
 
-- name: dysgu_call_{{ sample.name }}_{{ aligner }}
+- name: dysgu_call_{{ sample_or_pair.name }}_{{ aligner }}
   input:
     - {{ bam }}
     - {{ bam }}.bai
-    - {{ discordant_bam }}
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ temp_all_vcf }}
@@ -92,31 +96,27 @@
     set -eu
     set -o pipefail
 
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+      sed 's/SN://;s/LN://' |\
+      awk '{ OFS="\t" ; print $2,0,$3-1 }' \
+      > {{ temp_dir }}/calling_intervals.bed
+
     dysgu call \
-      --ibam {{ bam }} \
       --svs-out {{ temp_all_vcf }} \
       --out-format vcf \
-      {% if sample.rgpl in ('ONT') %}
+      {% if sample_or_pair.rgpl in ('ONT') %}
       --mode 'nanopore-r10' \
-      --pl 'nanopore' \
-      {% elif sample.rgpl in ('PACBIO') %}
+      {% elif sample_or_pair.rgpl in ('PACBIO') %}
       --mode 'pacbio-revio' \
-      --pl 'pacbio' \
-      {% else %}
-      --mode 'pe' \
-      --pl 'pe' \
       {% endif %}
       --procs 8 \
-      --regions {{ temp_dir }}/calling_intervals.bed \
-      --regions-only True \
-      --regions-mm-only True \
-      --metrics \
+      --overwrite \
       {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ temp_dir }} \
-      {{ discordant_bam }}
+      {{ bam }}
 
 
-- name: dysgu_filter_{{ sample.name }}_{{ aligner }}
+- name: dysgu_filter_{{ sample_or_pair.name }}_{{ aligner }}
   input:
     - {{ temp_all_vcf }}
   output:
@@ -144,34 +144,7 @@
       > {{ temp_pass_vcf }}
 
 
-- name: dysgu_samtools_compress_{{ sample.name }}_{{ aligner }}
-  input:
-    - {{ constants.grandcanyon[reference].reference_fasta }}
-    - {{ discordant_bam }}
-  output:
-    - {{ discordant_cram }}
-    - {{ discordant_cram }}.crai
-  walltime: "8:00:00"
-  cpus: 8
-  mem: 8G
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.samtools.container }}
-  cmd: |
-    set -eu
-    set -o pipefail
-
-    {# Convert to compressed VCF #}
-    samtools view \
-      -@ 8 \
-      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      --no-PG \
-      -o {{ discordant_cram }} \
-      --write-index \
-      {{ discordant_bam }}
-
-    rm {{ discordant_bam }}
-
-- name: dysgu_bcftools_compress_{{ sample.name }}_{{ aligner }}
+- name: dysgu_bcftools_compress_{{ sample_or_pair.name }}_{{ aligner }}
   input:
     - {{ temp_all_vcf }}
     - {{ temp_pass_vcf }}

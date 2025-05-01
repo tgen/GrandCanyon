@@ -147,7 +147,7 @@ constants:
     verkko:
       container: quay.io/biocontainers/verkko:2.1--h45dadce_0
     whatshap:
-      container: quay.io/biocontainers/whatshap:2.3--py310h0dbaff4_0
+      container: quay.io/biocontainers/whatshap:2.6--py312hf731ba3_0
   grandcanyon:
     chm13:
       species: homo_sapiens
