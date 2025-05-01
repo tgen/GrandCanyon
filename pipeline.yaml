@@ -123,7 +123,7 @@ constants:
     smoove:
       container: brentp/smoove:v0.2.8
     sniffles:
-      container: quay.io/biocontainers/sniffles:2.4--pyhdfd78af_0
+      container: quay.io/biocontainers/sniffles:2.6.2--pyhdfd78af_0
     spectre:
       container: /home/tgenref/containers/spectre-cnv_0.2.1.sif
     sqanti3:
