@@ -26,7 +26,7 @@ constants:
     compleasm:
       container: quay.io/biocontainers/compleasm:0.2.6--pyh7cba7a3_0
     cutesv:
-      container: quay.io/biocontainers/cutesv:2.1.1--pyhdfd78af_0
+      container: quay.io/biocontainers/cutesv:2.1.2--pyhdfd78af_0
     ctat_lr:
       container: trinityctat/ctat_lr_fusion:0.13.0
     deepsomatic:
