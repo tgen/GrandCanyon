@@ -117,7 +117,7 @@ constants:
     seqtk:
       container: quay.io/biocontainers/seqtk:1.4--he4a0461_2
     severus:
-      container: quay.io/biocontainers/severus:1.2--pyhdfd78af_0
+      container: quay.io/biocontainers/severus:1.5--pyhdfd78af_0
     shasta:
       container: quay.io/biocontainers/shasta:0.11.1--h4ac6f70_2
     smoove:

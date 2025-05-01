@@ -3,27 +3,23 @@
 {% macro severus(sample_or_pair, aligner) %}
 
 {% if sample_or_pair.normal is defined %}
-  {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_snp_indel_caller_deepvariant"]|default(false)  %}
-    {%- set phased_vcf %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.deepvariant.whatshap.phased.vcf.gz{% endset %}
-    {%- set phased_normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
-    {%- set phased_tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
-    {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
-    {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
-    {%- set haplotag_output_dir %}temp/{{ sample_or_pair.tumor.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}{% endset %}
-    {%- set haplotag_output_prefix %}{{ sample_or_pair.tumor.name }}.{{ aligner }}.deepvariant.whatshap{% endset %}
-    {{- whatshap_haplotag(sample_or_pair.tumor, phased_vcf, tumor_bam, haplotag_output_dir, haplotag_output_prefix, 'deepvariant', aligner) }}
+  {% if sample_or_pair.normal.phased_vcf is defined %}
+    {{- whatshap_haplotag(sample_or_pair.tumor, aligner, 'deepvariant', sample_or_pair.normal.phased_vcf) }}
+    {%- set phased_vcf %}{{ sample_or_pair.normal.phased_vcf }}{% endset %}
+    {%- set normal_bam %}{{ sample_or_pair.normal.phased_bam }}{% endset %}
+    {%- set bam %}{{ sample_or_pair.tumor.phased_bam }}{% endset %}
   {% else %}
-  {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
-  {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+    {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+    {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
   {% endif %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set temp_vcf %}{{ temp_dir }}/somatic_SVs/severus_somatic.vcf{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
-  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set temp_vcf %}{{ temp_dir }}/all_SVs/severus_all.vcf{% endset %}
-  {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
 {% endif %}
 {%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.severus.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.severus.pass.vcf.gz{% endset %}
@@ -31,23 +27,15 @@
 - name: severus_{{ sample_or_pair.name }}_{{ aligner }}
   reset: predecessors
   input:
-    {% if sample_or_pair.normal is defined %}
-    {% if phased_vcf %}
+    {% if phased_vcf is defined %}
     - {{ phased_vcf }}
-    - {{ phased_tumor_bam }}
-    - {{ phased_tumor_bam }}.bai
-    - {{ phased_normal_bam }}
-    - {{ phased_normal_bam }}.bai
-    {% else %}
-    - {{ tumor_bam }}
-    - {{ tumor_bam }}.bai
+    {% endif %}
+    {% if normal_bam is defined %}
     - {{ normal_bam }}
     - {{ normal_bam }}.bai
     {% endif %}
-    {% else %}
     - {{ bam }}
     - {{ bam }}.bai
-    {% endif %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].reference_dict }}
     - {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }}
@@ -77,12 +65,9 @@
       --out-dir {{ temp_dir }} \
       {% if phased_vcf %}
       --phasing-vcf {{ phased_vcf }} \
-      --target-bam {{ phased_tumor_bam }} \
-      --control-bam {{ phased_normal_bam }} \
-      {% else %}
-      --target-bam {{ tumor_bam }} \
-      --control-bam {{ normal_bam }} \
       {% endif %}
+      --control-bam {{ normal_bam }} \
+      --target-bam {{ bam }} \
       --vntr-bed {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }} \
       --PON {{ constants.grandcanyon[reference].tool_resources.severus.pon }}
 
