@@ -1,14 +1,14 @@
 {% macro sniffles(input, aligner) %}
 
 {% if input.samples is defined %}
-  {%- set temp_dir %}temp/{{ input.gltype }}/joint_variant_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
-  {%- set results_dir %}{{ input.gltype }}/joint_variant_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
+  {%- set temp_dir %}temp/{{ input.gltype }}/joint_structural_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ input.gltype }}/joint_structural_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
   {%- set all_vcf %}{{ results_dir }}/{{ input.name }}.{{ aligner }}.sniffles.all.vcf.gz{% endset %}
   {%- set pass_vcf %}{{ results_dir }}/{{ input.name }}.{{ aligner }}.sniffles.pass.vcf.gz{% endset %}
 {% else %}
   {%- set bam %}temp/{{ input.gltype }}/alignment/{{ aligner }}/{{ input.name }}/{{ input.name }}.{{ aligner }}.bam{% endset %}
-  {%- set temp_dir %}temp/{{ input.gltype }}/constitutional_variant_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
-  {%- set results_dir %}{{ input.gltype }}/constitutional_variant_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
+  {%- set temp_dir %}temp/{{ input.gltype }}/constitutional_structural_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ input.gltype }}/constitutional_structural_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
   {%- set all_vcf %}{{ results_dir }}/{{ input.name }}.{{ aligner }}.sniffles.all.vcf.gz{% endset %}
   {%- set all_snf %}{{ results_dir }}/{{ input.name }}.{{ aligner }}.sniffles.all.snf{% endset %}
   {%- set pass_vcf %}{{ results_dir }}/{{ input.name }}.{{ aligner }}.sniffles.pass.vcf.gz{% endset %}
@@ -19,7 +19,7 @@
   input:
     {% if input.samples is defined %}
     {% for sample in input.samples %}
-    - {{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_{{ aligner }}/{{ sample.name }}.{{ aligner }}.sniffles.all.snf
+    - {{ sample.gltype }}/constitutional_structural_calls/sniffles/{{ sample.name }}_{{ aligner }}/{{ sample.name }}.{{ aligner }}.sniffles.all.snf
     {% endfor %}
     {% else %}
     - {{ bam }}
@@ -56,7 +56,7 @@
     TAB=$'\t'
     cat << EOF > {{ temp_dir }}/{{ input.name }}.tsv
     {% for sample in input.samples %}
-    {{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_{{ aligner }}/{{ sample.name }}.{{ aligner }}.sniffles.all.snf${TAB}{{ sample.name }}
+    {{ sample.gltype }}/constitutional_structural_calls/sniffles/{{ sample.name }}_{{ aligner }}/{{ sample.name }}.{{ aligner }}.sniffles.all.snf${TAB}{{ sample.name }}
     {% endfor %}
     EOF
     {% endif %}

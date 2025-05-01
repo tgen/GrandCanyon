@@ -12,9 +12,9 @@
     {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
     {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
   {% endif %}
-  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set temp_vcf %}{{ temp_dir }}/somatic_SVs/severus_somatic.vcf{% endset %}
-  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}

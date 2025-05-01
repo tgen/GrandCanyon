@@ -357,6 +357,10 @@
 
     {% if pair.glprep in 'longread' %}
 
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(false) %}
+        {{- dysgu(pair, aligner) }}
+      {% endif %}
+
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
         {{- severus(pair, aligner) }}
       {% endif %}

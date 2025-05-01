@@ -11,8 +11,8 @@
     {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
     {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
   {% endif %}
-  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set normal_vcf %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.dysgu.all.vcf{% endset %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}

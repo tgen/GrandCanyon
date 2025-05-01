@@ -1,8 +1,8 @@
 {% macro cutesv(sample, aligner) %}
 
 {%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/cutesv/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/cutesv/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_structural_calls/cutesv/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_structural_calls/cutesv/{{ sample.name }}_{{ aligner }}{% endset %}
 {%- set temp_vcf %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.cutesv.all.vcf{% endset %}
 {%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cutesv.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cutesv.pass.vcf.gz{% endset %}

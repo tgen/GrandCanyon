@@ -1,8 +1,8 @@
 {% macro pbsv(sample, aligner) %}
 
 {%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/pbsv/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/pbsv/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_structural_calls/pbsv/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_structural_calls/pbsv/{{ sample.name }}_{{ aligner }}{% endset %}
 {%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.pbsv.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.pbsv.pass.vcf.gz{% endset %}
 
