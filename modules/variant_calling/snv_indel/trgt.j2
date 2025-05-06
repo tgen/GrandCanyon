@@ -9,9 +9,9 @@
   {%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/trgt/{{ sample.name }}_{{ aligner }}{% endset %}
 {% endif %}
 {% set temp_vcf %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.trgt.vcf.gz{% endset %}
-{% set temp_bam %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.trgt.bam{% endset %}
+{% set temp_bam %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.trgt.spanning.bam{% endset %}
 {% set trgt_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.trgt.vcf.gz{% endset %}
-{% set trgt_bam %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.trgt.bam{% endset %}
+{% set trgt_bam %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.trgt.spanning.bam{% endset %}
 
 - name: trgt_{{ sample.name }}_{{ aligner }}
   tags: [{{ sample.gltype }}, snp_indel_caller, trgt, {{ sample.name }}]
