@@ -1,34 +1,48 @@
+{# general snv callers #}
 {% from 'modules/variant_calling/snv_indel/deepvariant.j2' import deepvariant with context %}
 {% from 'modules/variant_calling/snv_indel/deepsomatic.j2' import deepsomatic with context %}
 {% from 'modules/variant_calling/snv_indel/deeptrio.j2' import deeptrio with context %}
 {% from 'modules/variant_calling/snv_indel/glnexus.j2' import glnexus with context %}
 {% from 'modules/variant_calling/snv_indel/clair3.j2' import clair3 with context %}
 {% from 'modules/variant_calling/snv_indel/clairs.j2' import clairs with context %}
+
+{# short-read snv callers #}
 {% from 'modules/variant_calling/snv_indel/haplotypecaller.j2' import haplotypecaller with context %}
-{% from 'modules/variant_calling/snv_indel/longshot.j2' import longshot with context %}
 {% from 'modules/variant_calling/snv_indel/lancet2.j2' import lancet2 with context %}
 {% from 'modules/variant_calling/snv_indel/mutect2.j2' import mutect2 with context %}
 {% from 'modules/variant_calling/snv_indel/strelka2.j2' import strelka2 with context %}
 {% from 'modules/variant_calling/snv_indel/vardict.j2' import vardict with context %}
 {% from 'modules/variant_calling/snv_indel/vcfmerger2.j2' import vcfmerger2 with context %}
 
-{% from 'modules/variant_calling/structural/cutesv.j2' import cutesv with context %}
-{% from 'modules/variant_calling/structural/sniffles.j2' import sniffles with context %}
-{% from 'modules/variant_calling/structural/pbsv.j2' import pbsv with context %}
-{% from 'modules/variant_calling/structural/severus.j2' import severus with context %}
+{# long-read snv callers #}
+{% from 'modules/variant_calling/snv_indel/longshot.j2' import longshot with context %}
+{% from 'modules/variant_calling/snv_indel/trgt.j2' import trgt with context %}
+
+{# general sv callers #}
 {% from 'modules/variant_calling/structural/dysgu.j2' import dysgu with context %}
+
+{# short-read sv callers #}
 {% from 'modules/variant_calling/structural/manta.j2' import manta with context %}
 {% from 'modules/variant_calling/structural/gridss.j2' import gridss with context %}
 {% from 'modules/variant_calling/structural/smoove.j2' import smoove with context %}
 
+{# long-read sv callers #}
+{% from 'modules/variant_calling/structural/cutesv.j2' import cutesv with context %}
+{% from 'modules/variant_calling/structural/sniffles.j2' import sniffles with context %}
+{% from 'modules/variant_calling/structural/pbsv.j2' import pbsv with context %}
+{% from 'modules/variant_calling/structural/severus.j2' import severus with context %}
+
+{# copy number callers #}
 {% from 'modules/variant_calling/copy_number/spectre.j2' import spectre with context %}
 {% from 'modules/variant_calling/copy_number/hifi_cnv.j2' import hifi_cnv with context %}
 {% from 'modules/variant_calling/copy_number/gatk_cnv.j2' import gatk_cnv with context %}
 {% from 'modules/variant_calling/copy_number/cnvkit.j2' import cnvkit with context %}
 
+{# variant phasing #}
 {% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
 {% from 'modules/variant_calling/whatshap.j2' import whatshap_phase with context %}
 
+{# utilities #}
 {% from 'utilities/create_ped.j2' import create_ped with context %}
 
 {%- macro constitutional_variant_calling(samples) %}
@@ -65,6 +79,11 @@
     {% if sample.glprep in 'longread' %}
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_longshot"]|default(false) %}
         {{- longshot(sample, aligner) }}
+      {% endif %}
+      {% if sample.rgpl in ('PACBIO') %}
+        {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_trgt"]|default(false) %}
+          {{- trgt(sample, aligner) }}
+        {% endif %}
       {% endif %}
     {% endif %}
 
@@ -260,6 +279,14 @@
         {{- vcfmerger2(sample, aligner) }}
       {% endif %}
 
+    {% endif %}
+
+    {% if sample.glprep in 'longread' %}
+      {% if sample.rgpl in ('PACBIO') %}
+        {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_trgt"]|default(false) %}
+          {{- trgt(sample, aligner) }}
+        {% endif %}
+      {% endif %}
     {% endif %}
 
     {############

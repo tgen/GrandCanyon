@@ -1,0 +1,91 @@
+{% macro trgt(sample, aligner) %}
+
+{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{% if sample.subGroup|lower in ('tumor','tumour','case') %}
+  {%- set temp_dir %}temp/{{ sample.gltype }}/somatic_variant_calls/trgt/{{ sample.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample.gltype }}/somatic_variant_calls/trgt/{{ sample.name }}_{{ aligner }}{% endset %}
+{% else %}
+  {%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/trgt/{{ sample.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/trgt/{{ sample.name }}_{{ aligner }}{% endset %}
+{% endif %}
+{% set temp_vcf %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.trgt.vcf.gz{% endset %}
+{% set temp_bam %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.trgt.bam{% endset %}
+{% set trgt_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.trgt.vcf.gz{% endset %}
+{% set trgt_bam %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.trgt.bam{% endset %}
+
+- name: trgt_{{ sample.name }}_{{ aligner }}
+  tags: [{{ sample.gltype }}, snp_indel_caller, trgt, {{ sample.name }}]
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].tool_resources.trgt.strchive }}
+  output:
+    - {{ temp_vcf }}
+    - {{ temp_bam }}
+  cpus: 1
+  mem: 2G
+  walltime: "1:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.trgt.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ temp_dir }}"
+
+    trgt genotype \
+      --genome {{ constants.grandcanyon[reference].reference_fasta }} \
+      --repeats {{ constants.grandcanyon[reference].tool_resources.trgt.strchive }} \
+      --reads {{ bam }} \
+      --output-prefix {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.trgt
+
+- name: trgt_bcftools_sort_variants_{{ sample.name }}_{{ aligner }}
+  tags: [{{ sample.gltype }}, snp_indel_caller, trgt, {{ sample.name }}]
+  input:
+    - {{ temp_vcf }}
+  output:
+    - {{ trgt_vcf }}
+    - {{ trgt_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    bcftools sort \
+      --output-type z \
+      --output {{ trgt_vcf }} \
+      --write-index \
+      {{ temp_vcf }}
+
+- name: trgt_samtools_sort_{{ sample.name }}_{{ aligner }}
+  tags: [{{ sample.gltype }}, snp_indel_caller, trgt, {{ sample.name }}]
+  input:
+    - {{ temp_bam }}
+  output:
+    - {{ trgt_bam }}
+    - {{ trgt_bam }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    samtools sort \
+      -o {{ trgt_bam }} \
+      --write-index \
+      {{ temp_bam }}
+
+
+{% endmacro %}
