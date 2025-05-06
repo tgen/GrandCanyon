@@ -40,6 +40,8 @@
       {{ temp_vcf }} \
       {{ temp_dir }} \
       -include_bed {{ temp_dir }}/calling_intervals.bed \
+      --sample {{ sample.rgsm }} \
+      --genotype \
       {% if sample.rgpl in ('ONT') %}
       --max_cluster_bias_INS 100 \
       --diff_ratio_merging_INS 0.3 \
