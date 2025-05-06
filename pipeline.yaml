@@ -185,7 +185,7 @@ constants:
           mdr: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/spectre/grch38.mdr
           denylist: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/spectre/grch38_blacklist_spectre.bed
         trgt:
-          strchive_bed: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/trgt/STRchive-disease-loci.T2T-chm13.TRGT.bed
+          strchive: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/trgt/STRchive-disease-loci.T2T-chm13.TRGT.bed
     grch38:
       species: homo_sapiens
       genome_build: grch38_hg38
@@ -235,7 +235,7 @@ constants:
         sqanti3:
           tappas_gff: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sqanti3/human_tappas_gencode_annotation_file.gff3
         trgt:
-          strchive_bed: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/trgt/STRchive-disease-loci.hg38.TRGT.bed
+          strchive: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/trgt/STRchive-disease-loci.hg38.TRGT.bed
         gatk_cnv:
           mappability_track: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/bismap/k100.umap.no_header.bed
     canfam4:
