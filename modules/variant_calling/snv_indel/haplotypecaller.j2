@@ -70,6 +70,7 @@
 {% for chunk in range(1, num_chunks+1) %}
 - name: genotypegvcf_{{ sample.name }}_{{ aligner }}_{{ chunk }}
   tags: [{{ sample.gltype}}, constitutional, genotype_hc_gvcf, gatk_GenotypeGVCFs, {{ sample.name }}]
+  reset: create_chunking_intervals_for_{{ reference | replace('.', '_') }}
   input:
     - {{ gvcf }}
     - {{ gvcf }}.tbi
