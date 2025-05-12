@@ -179,6 +179,8 @@
     set -eu
     set -o pipefail
 
+    bcftools filter \
+      {{ all_vcf }} | \
     bcftools view \
       --include 'FILTER == "PASS"' \
       {% if sample.gltype == 'exome' %}
@@ -186,8 +188,7 @@
       {% endif %}
       --output-type z \
       --output {{ pass_vcf }} \
-      --write-index \
-      {{ all_vcf }}
+      --write-index
 
 {% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
 {{- annotate_vcfs(sample, temp_dir, results_dir, pass_vcf, aligner, 'haplotypecaller') }}
