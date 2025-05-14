@@ -51,10 +51,8 @@ constants:
       digest: ce6fecf59dddc6089a8100b31c29c1e6ed50a0cf123da9f2bc589ee4b0c69c8e
     gridss:
       container: gridss/gridss:2.13.2
-    herro:
-      container: /home/tgenref/containers/herro_010824.sif
     hifiasm:
-      container: quay.io/biocontainers/hifiasm:0.19.9--h43eeafb_0
+      container: quay.io/biocontainers/hifiasm:0.25.0--h5ca1c30_0
     hificnv:
       container: quay.io/biocontainers/hificnv:0.1.7--h9ee0642_0
     isoquant:
@@ -93,7 +91,7 @@ constants:
     pafr:
       container: /home/tgenref/containers/pafr.sif
     pbmm2:
-      container: quay.io/biocontainers/pbmm2:1.13.1--h9ee0642_0 
+      container: quay.io/biocontainers/pbmm2:1.13.1--h9ee0642_0
     pbpigeon:
       container: quay.io/biocontainers/pbpigeon:1.2.0--h4ac6f70_0
     pbsv:
@@ -105,7 +103,7 @@ constants:
     python3_with_modules:
       container: ghcr.io/tgen/jetstream_containers/python:3.7.2-v1-with_modules
     quast:
-      container: quay.io/biocontainers/quast:5.2.0--py39pl5321h4e691d4_3
+      container: quay.io/biocontainers/quast:5.3.0--py312pl5321hdcc493e_1
     R:
       container: ghcr.io/tgen/containers/r_with_modules:4.1.2-23080815
     salmon:
@@ -147,7 +145,7 @@ constants:
     vep:
       container: ensemblorg/ensembl-vep:release_112.0
     verkko:
-      container: quay.io/biocontainers/verkko:2.1--h45dadce_0
+      container: quay.io/biocontainers/verkko:2.2.1--h45dadce_0
     whatshap:
       container: quay.io/biocontainers/whatshap:2.6--py312hf731ba3_0
   grandcanyon:
