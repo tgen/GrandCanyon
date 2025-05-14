@@ -49,8 +49,6 @@ constants:
     glnexus:
       container: ghcr.io/dnanexus-rnd/glnexus:v1.4.3
       digest: ce6fecf59dddc6089a8100b31c29c1e6ed50a0cf123da9f2bc589ee4b0c69c8e
-    gridss:
-      container: gridss/gridss:2.13.2
     hifiasm:
       container: quay.io/biocontainers/hifiasm:0.25.0--h5ca1c30_0
     hificnv:
@@ -197,7 +195,6 @@ constants:
       reference_fastaSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa
       reference_faiSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa.fai
       reference_dict: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_alts_hla_masked.dict
-      bwa_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/bwa_0.7.17/GRCh38tempe_decoy_alts_hla_masked.fa
       bwa_mem2_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/bwa_2.2.1/GRCh38tempe_decoy_alts_hla_masked.fa
       gff3: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.gff3.gz
       gtf: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.noheader.sorted.gtf

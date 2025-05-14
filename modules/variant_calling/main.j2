@@ -23,7 +23,6 @@
 
 {# short-read sv callers #}
 {% from 'modules/variant_calling/structural/manta.j2' import manta with context %}
-{% from 'modules/variant_calling/structural/gridss.j2' import gridss with context %}
 {% from 'modules/variant_calling/structural/smoove.j2' import smoove with context %}
 
 {# long-read sv callers #}
@@ -112,10 +111,6 @@
       {% endif %}
 
     {% else %}
-
-      {% if tasks[taskPrefix+"_variant_calling_structural_caller_gridss"]|default(false) %}
-        {{- gridss(sample, aligner) }}
-      {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
         {{- manta(sample, aligner) }}
@@ -300,10 +295,6 @@
 
     {% else %}
 
-      {% if tasks[taskPrefix+"_variant_calling_structural_caller_gridss"]|default(false) %}
-        {{- gridss(sample, aligner) }}
-      {% endif %}
-
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
         {{- manta(sample, aligner) }}
       {% endif %}
@@ -393,10 +384,6 @@
       {% endif %}
 
     {% else %}
-
-      {% if tasks[taskPrefix+"_variant_calling_structural_caller_gridss"]|default(false) %}
-        {{- gridss(pair, aligner) }}
-      {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
         {{- manta(pair, aligner) }}
