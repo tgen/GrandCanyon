@@ -2,7 +2,7 @@
 
 {% if sample_or_pair.normal is defined %}
   {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
-  {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/gridss/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
 {% else %}
@@ -23,13 +23,10 @@
     {% if sample_or_pair.normal is defined %}
     - {{ normal_bam }}
     - {{ normal_bam }}.bai
-    - {{ tumor_bam }}
-    - {{ tumor_bam }}.bai
-    {% else %}
+    {% endif %}
     - {{ bam }}
     - {{ bam }}.bai
-    {% endif %}
-    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].bwa_index }}
   output:
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.vcf.gz
   cpus: 8
@@ -49,17 +46,15 @@
       --threads 8 \
       --jvmheap 30g \
       --steps preprocess,assemble,call \
-      -r {{ constants.grandcanyon[reference].reference_fasta }} \
+      -r {{ constants.grandcanyon[reference].bwa_index }} \
       -a {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.bam \
       -o {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.vcf.gz \
       -w {{ temp_dir }} \
       --skipsoftcliprealignment \
       {% if sample_or_pair.normal is defined %}
       {{ normal_bam }} \
-      {{ tumor_bam }}
-      {% else %}
-      {{ bam }}
       {% endif %}
+      {{ bam }}
 
     {#
     gridss_somatic_filter
@@ -68,8 +63,5 @@
       --output {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.gridss.sv.somatic.vcf.gz \
       --plotdir {{ results_dir }}
     #}
-
-{% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
-{{- annotate_vcfs(sample_or_pair, temp_dir, results_dir, pass_vcf, aligner, 'gridss') }}
 
 {% endmacro %}
