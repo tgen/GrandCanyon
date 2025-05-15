@@ -75,6 +75,14 @@
       {{- clair3(sample, aligner) }}
     {% endif %}
 
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
+      {{- strelka2(sample, aligner) }}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
+      {{- vardict(sample, aligner) }}
+    {% endif %}
+
     {% if sample.glprep in 'longread' %}
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_longshot"]|default(false) %}
         {{- longshot(sample, aligner) }}
@@ -96,12 +104,12 @@
         {{- cutesv(sample, aligner) }}
       {% endif %}
 
-      {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(false) %}
-        {{- sniffles(sample, aligner) }}
-      {% endif %}
-
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(false) %}
         {{- dysgu(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(false) %}
+        {{- sniffles(sample, aligner) }}
       {% endif %}
 
       {% if sample.rgpl in ('PACBIO') %}
@@ -288,6 +296,14 @@
     # structural variant callers
     ############}
     {% if sample.glprep in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_cutesv"]|default(false) %}
+        {{- cutesv(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(false) %}
+        {{- dysgu(sample, aligner) }}
+      {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
         {{- severus(sample, aligner) }}
