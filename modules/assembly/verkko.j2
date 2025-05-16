@@ -49,7 +49,7 @@
       --hic1 {{ input.hic_r1 | sort | join(' ') }} \
       --hic2 {{ input.hic_r2 | sort | join(' ') }} \
       {% endif %}
-      --screen human \
+      --screen-human-contaminants \
       -d {{ temp_dir }}
 
     mv {{ temp_dir }}/assembly* {{ results_dir }}
