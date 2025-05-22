@@ -28,7 +28,7 @@ constants:
     cutesv:
       container: quay.io/biocontainers/cutesv:2.1.2--pyhdfd78af_0
     ctat_lr:
-      container: trinityctat/ctat_lr_fusion:0.13.0
+      container: trinityctat/ctat_lr_fusion:1.1.0
     deepsomatic:
       container: google/deepvariant:deepsomatic-1.9.0-gpu
     deeptrio:
