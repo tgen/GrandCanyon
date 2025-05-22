@@ -6,7 +6,9 @@
     - {{ assembly }}
     {% endfor %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
+    {% if constants.grandcanyon[reference].gtf is defined %}
     - {{ constants.grandcanyon[reference].gtf }}
+    {% endif %}
   output: {{ results_dir }}/quast_results
   cpus: 16
   mem: 160G
@@ -21,7 +23,9 @@
     quast \
       -t 16 \
       -r {{ constants.grandcanyon[reference].reference_fasta }} \
+      {% if constants.grandcanyon[reference].gtf is defined %}
       -g {{ constants.grandcanyon[reference].gtf }} \
+      {% endif %}
       --large \
       --no-snps \
       --no-sv \

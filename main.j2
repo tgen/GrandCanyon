@@ -61,7 +61,7 @@
         {% endif %}
     {% else %}
         {% set raise_msg %}gene_model gtf not defined! constants.grandcanyon.{{ reference }}.gtf is not in pipeline.yaml or user supplied input{% endset %}
-        {{ raise(raise_msg) }}
+        {{ log(raise_msg) }}
     {% endif %}
 {% endif %}
 

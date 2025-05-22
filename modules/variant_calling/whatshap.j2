@@ -60,6 +60,7 @@
       {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
 
 
+{% if constants.grandcanyon[reference].gtf is defined %}
 - name: whatshap_stats_extended_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
     - {{ constants.grandcanyon[reference].gtf }}
@@ -99,6 +100,7 @@
     echo -e "SOURCE\tPHASED_GENES\tTOTAL_GENES\tPERCENT_PHASED_GENES\tPERCENT_PHASED_CDS_BASES" > {{ results_dir }}/{{ output_prefix }}.phased_gene_stats.tsv
     echo -e "{{ output_prefix }}\t${PHASED_GENES}\t${TOTAL_GENES}\t${PERCENT_GENES}\t${PERCENT_CDS}" >> {{ results_dir }}/{{ output_prefix }}.phased_gene_stats.tsv
 
+{% endif %}
 {% endmacro %}
 
 {% macro whatshap_haplotag(sample, aligner, variant_caller, phased_vcf='none' ) %}

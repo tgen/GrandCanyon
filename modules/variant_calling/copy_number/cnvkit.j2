@@ -51,7 +51,9 @@
     - {{ bam }}
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].reference_dict }}
+    {% if constants.grandcanyon[reference].gtf is defined %}
     - {{ constants.grandcanyon[reference].gtf }}
+    {% endif %}
     {% if sample_or_pair.gltype == 'exome' %}
     - {{ capture_kit_bed }}
     {% endif %}
@@ -81,7 +83,9 @@
       {% else %}
       --output-reference ${ROOT_DIR}/{{ temp_dir }}/{{ sample_or_pair.name }}_reference.cnn \
       --fasta {{ constants.grandcanyon[reference].reference_fasta }} \
+      {% if constants.grandcanyon[reference].gtf is defined %}
       --annotate {{ constants.grandcanyon[reference].gtf }} \
+      {% endif %}
       {% if input_config in 'paired' %}
       --normal ${ROOT_DIR}/{{ normal_bam }} \
       {% else %}
