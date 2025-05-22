@@ -98,7 +98,12 @@
 {% set samples = {} %}
 
 {% for file in dataFiles %}
-    {% set bn = file.fastqPath | basename %}
+    {% if file.fastqPath is defined %}
+        {% set path = file.fastqPath %}
+    {% elif file.path is defined %}
+        {% set path = file.path %}
+    {% endset %}
+    {% set bn = path | basename %}
     {% set gltype = file.glType | lower | replace("genomephased", "genome") %}
     {% set glprep = file.glPrep | lower %}
     {% if 'sampleMergeKey' in file %}
@@ -111,7 +116,7 @@
     {% do file.update({'basename': bn}) %}
     {% do file.update({'gltype': gltype}) %}
     {% do file.update({'glprep': glprep}) %}
-    {% do file.update({'path': file.fastqPath}) %}
+    {% do file.update({'path': path}) %}
 
     {% if 'subGroup' not in file %}
         {% do file.update({'subGroup': 'constitutional'}) %}
