@@ -54,16 +54,22 @@
 
 
 {% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
-{{- assembly_qc(input, input_assembly, 'flye') }}
-{{- quast(input, input_assembly, 'flye') }}
 
-{% if tasks.assembly_align_minimap2 | default(false) %}
+{% if tasks.Genome_assembly_metrics_assembly_qc|default(false) %}
+{{- assembly_qc(input, input_assembly, 'flye') }}
+{% endif %}
+
+{% if tasks.Genome_assembly_metrics_quast|default(false) %}
+{{- quast(input, input_assembly, 'flye') }}
+{% endif %}
+
+{% if tasks.Genome_assembly_metrics_align_minimap2|default(false) %}
 {{- minimap2_asm(input, input_assembly, 'flye') }}
 {% endif %}
-{% if tasks.assembly_align_mashmap | default(false) %}
+{% if tasks.Genome_assembly_metrics_align_mashmap | default(false) %}
 {{- mashmap(input, input_assembly, 'flye') }}
 {% endif %}
-{% if tasks.assembly_moddotplot | default(false) %}
+{% if tasks.Genome_assembly_metrics_moddotplot | default(false) %}
 {{- moddotplot(input, input_assembly, 'flye') }}
 {% endif %}
 

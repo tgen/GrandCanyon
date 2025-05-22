@@ -86,13 +86,13 @@
 {{- assembly_qc(pair, input_assembly, 'shasta') }}
 {{- quast(pair, input_assembly, 'shasta') }}
 
-{% if tasks.assembly_align_minimap2 | default(false) %}
+{% if tasks.Genome_assembly_metrics_align_minimap2 | default(false) %}
 {{- minimap2_asm(pair, input_assembly, 'shasta') }}
 {% endif %}
-{% if tasks.assembly_align_mashmap | default(false) %}
+{% if tasks.Genome_assembly_metrics_align_mashmap | default(false) %}
 {{- mashmap(pair, input_assembly, 'shasta') }}
 {% endif %}
-{% if tasks.assembly_moddotplot | default(false) %}
+{% if tasks.Genome_assembly_metrics_moddotplot | default(false) %}
 {{- moddotplot(pair, input_assembly, 'shasta') }}
 {% endif %}
 
