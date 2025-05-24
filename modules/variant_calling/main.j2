@@ -75,23 +75,28 @@
       {{- clair3(sample, aligner) }}
     {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
-      {{- strelka2(sample, aligner) }}
-    {% endif %}
-
-    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
-      {{- vardict(sample, aligner) }}
-    {% endif %}
-
     {% if sample.glprep in 'longread' %}
+
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_longshot"]|default(false) %}
         {{- longshot(sample, aligner) }}
       {% endif %}
+
       {% if sample.rgpl in ('PACBIO') %}
         {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_trgt"]|default(false) %}
           {{- trgt(sample, aligner) }}
         {% endif %}
       {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
+        {{- strelka2(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
+        {{- vardict(sample, aligner) }}
+      {% endif %}
+
     {% endif %}
 
     {############
