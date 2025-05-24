@@ -102,7 +102,7 @@
         {% set path = file.fastqPath %}
     {% elif file.path is defined %}
         {% set path = file.path %}
-    {% endset %}
+    {% endif %}
     {% set bn = path | basename %}
     {% set gltype = file.glType | lower | replace("genomephased", "genome") %}
     {% set glprep = file.glPrep | lower %}
