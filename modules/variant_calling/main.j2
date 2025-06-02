@@ -1,5 +1,6 @@
 {# general snv callers #}
 {% from 'modules/variant_calling/snv_indel/deepvariant.j2' import deepvariant with context %}
+{% from 'modules/variant_calling/snv_indel/deepvariant_pangenome.j2' import deepvariant_pangenome with context %}
 {% from 'modules/variant_calling/snv_indel/deepsomatic.j2' import deepsomatic with context %}
 {% from 'modules/variant_calling/snv_indel/deeptrio.j2' import deeptrio with context %}
 {% from 'modules/variant_calling/snv_indel/glnexus.j2' import glnexus with context %}
@@ -65,6 +66,12 @@
       {% do sample.update({'phased_bam': '', 'phased_vcf': ''}) %}
       {{- whatshap_phase(sample, aligner, 'deepvariant') }}
       {{- whatshap_haplotag(sample, aligner, 'deepvariant') }}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant_pangenome"]|default(false) %}
+      {% if constants.grandcanyon[reference].reference_gbz is defined %}
+        {{- deepvariant_pangenome(sample, aligner) }}
+      {% endif %}
     {% endif %}
 
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_haplotypecaller"]|default(false) %}

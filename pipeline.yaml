@@ -35,6 +35,8 @@ constants:
       container: google/deepvariant:deeptrio-1.9.0-gpu
     deepvariant:
       container: google/deepvariant:1.9.0-gpu
+    deepvariant_pangenome:
+      container: google/deepvariant:pangenome_aware_deepvariant-1.9.0-gpu
     dorado:
       container: nanoporetech/dorado:shaae1d5e75f94041e4fd7af4a7ed6e6432b0eaea29
       version: 0.8.2
@@ -195,6 +197,7 @@ constants:
       reference_fastaSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa
       reference_faiSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa.fai
       reference_dict: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_alts_hla_masked.dict
+      reference_gbz: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/vg/hprc-v1.1-mc-grch38.gbz
       bwa_mem2_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/bwa_2.2.1/GRCh38tempe_decoy_alts_hla_masked.fa
       gff3: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.gff3.gz
       gtf: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.noheader.sorted.gtf
