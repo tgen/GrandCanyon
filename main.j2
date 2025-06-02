@@ -150,7 +150,7 @@
     {% set alignable_files = [] %}
     {% set aligned_files = [] %}
     {% for file in data_files %}
-      {% if file.fileType in ('fastq', 'ubam') %}
+      {% if file.fileType in ('fastq', 'fasterq', 'ubam') %}
         {% do alignable_files.append(file) %}
       {% elif file.fileType in ('bam') %}
         {% do aligned_files.append(file) %}
