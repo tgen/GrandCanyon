@@ -497,12 +497,15 @@
 
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
 
-  {% if sample.gltype in 'rna' and sample.glprep not in ['longread'] %}
-  {% set alignment_format = 'bam' %}
-  {% set index_format = 'bai' %}
+  {% if sample.glprep.startswith('kinnex') %}
+    {% set alignment_format = 'cram' %}
+    {% set index_format = 'crai' %}
+  {% elif sample.gltype not in 'rna' %}
+    {% set alignment_format = 'cram' %}
+    {% set index_format = 'crai' %}
   {% else %}
-  {% set alignment_format = 'cram' %}
-  {% set index_format = 'crai' %}
+    {% set alignment_format = 'bam' %}
+    {% set index_format = 'bai' %}
   {% endif %}
   {% if bam_level is sameas false %}
     {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}

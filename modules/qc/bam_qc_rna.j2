@@ -8,12 +8,12 @@
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
   {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
 
-  {% if sample.glprep not in ['longread'] %}
-  {% set alignment_format = 'bam' %}
-  {% set index_format = 'bai' %}
+  {% if sample.glprep.startswith('kinnex') %}
+    {% set alignment_format = 'cram' %}
+    {% set index_format = 'crai' %}
   {% else %}
-  {% set alignment_format = 'cram' %}
-  {% set index_format = 'crai' %}
+    {% set alignment_format = 'bam' %}
+    {% set index_format = 'bai' %}
   {% endif %}
   {% if bam_level is sameas false %}
     {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
