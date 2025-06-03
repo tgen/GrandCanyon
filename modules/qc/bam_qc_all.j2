@@ -508,8 +508,8 @@
     {% set bam_index %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam.bai{% endset %}
   {% endif %}
 
-  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer_HetRate_Summary.tsv{% endset %}
-  {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer_HetRate_Summary.json{% endset %}
+  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer_HetRate_Summary.tsv{% endset %}
+  {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer_HetRate_Summary.json{% endset %}
   {% set output %}{{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv{% endset %}
 
 - name: snpsniffer_geno_{{ task }}
@@ -523,7 +523,7 @@
     - {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf
     - {{ output }}
     {% if libraryCount == 1 %}
-    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer.vcf
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer.vcf
     - {{ sample_lb_output }}
     {% endif %}
   reset: predecessors
@@ -563,8 +563,8 @@
     echo -e "SAMPLE\tLIBRARY\tHomozygous\tHeterozygous\tTotal\thetRatio" > {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv
     echo -e "{{ sample.name }}\t{{ sample_lb }}\t${HOMOZYGOUS_TOTAL}\t${HETEROZYGOUS_TOTAL}\t${TESTED_GENOTYPES}\t${HET_RATIO}" >> {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv
     {% if libraryCount == 1 %}
-      cp {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer.vcf
-      cp {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer_HetRate_Summary.tsv
+      cp {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer.vcf
+      cp {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.snpSniffer_HetRate_Summary.tsv
     {% endif %}
 
   {% if libraryCount == 1 %}
