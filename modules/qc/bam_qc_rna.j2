@@ -15,8 +15,8 @@
     {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.bai{% endset %}
   {% else %}
     {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
-    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
-    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam.bai{% endset %}
+    {% set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+    {% set bam_index %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam.bai{% endset %}
   {% endif %}
 
   {% set rna_metrics %}{{ results_dir }}/{{ bam|basename }}.rna_metrics{% endset %}

@@ -497,22 +497,15 @@
 
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
 
-  {% if sample.gltype in 'rna' %}
-  {% set alignment_format = 'bam' %}
-  {% set index_format = 'bai' %}
-  {% else %}
-  {% set alignment_format = 'cram' %}
-  {% set index_format = 'crai' %}
-  {% endif %}
   {% if bam_level is sameas false %}
     {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
     {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
-    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}{% endset %}
-    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.{{ index_format }}{% endset %}
+    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam{% endset %}
+    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.bai{% endset %}
   {% else %}
     {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
-    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.{{ alignment_format }}{% endset %}
-    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.{{ alignment_format }}.{{ index_format }}{% endset %}
+    {% set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+    {% set bam_index %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam.bai{% endset %}
   {% endif %}
 
   {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer_HetRate_Summary.tsv{% endset %}
@@ -533,9 +526,7 @@
     - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer.vcf
     - {{ sample_lb_output }}
     {% endif %}
-  {% if bam_level is sameas false %}
   reset: predecessors
-  {% endif %}
   cpus: 2
   mem: 4G
   queue_preset: "DEFAULT"
