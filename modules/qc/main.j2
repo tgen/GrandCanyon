@@ -9,6 +9,9 @@
 {% from 'modules/qc/bam_qc_all.j2' import bam_qc_samtools_markdup with context %}
 
 # Performed on genomes
+{% from 'modules/qc/bam_qc_genome.j2' import bam_qc_gatk_collectwgsmetrics with context %}
+{% from 'modules/qc/bam_qc_genome.j2' import bam_qc_gatk_collectwgsmetricswithnonzerocoverage with context %}
+{% from 'modules/qc/bam_qc_genome.j2' import bam_qc_gatk_collectrawwgsmetrics with context %}
 
 # Performed on exomes
 {% from 'modules/qc/bam_qc_exome.j2' import bam_qc_gatk_collecthsmetrics with context %}
@@ -40,6 +43,9 @@
       {{- bam_qc_gatk_collecthsmetrics(sample, aligner=aligner) }}
     {% elif sample.gltype == 'genome' %}
       {% set taskPrefix = 'Genome' %}
+      {{- bam_qc_gatk_collectwgsmetrics(sample, libraryCount, sample_lb, aligner=aligner) }}
+      {{- bam_qc_gatk_collectwgsmetricswithnonzerocoverage(sample, libraryCount, sample_lb, aligner=aligner) }}
+      {{- bam_qc_gatk_collectrawwgsmetrics(sample, libraryCount, sample_lb, aligner=aligner) }}
     {% endif %}
 
     {% for sample_lb, sample_rgs in sample.read_groups.values()|groupby('rglb') %}
@@ -63,6 +69,9 @@
         {% if sample.gltype == 'rna' %}
           {{- bam_qc_gatk_collectrnaseqmetrics(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=false) }}
         {% elif sample.gltype == 'genome' %}
+          {{- bam_qc_gatk_collectwgsmetrics(sample, libraryCount, sample_lb, aligner=aligner, bam_level=false) }}
+          {{- bam_qc_gatk_collectwgsmetricswithnonzerocoverage(sample, libraryCount, sample_lb, aligner=aligner, bam_level=false) }}
+          {{- bam_qc_gatk_collectrawwgsmetrics(sample, libraryCount, sample_lb, aligner=aligner, bam_level=false) }}
         {% endif %}
 
         {# Tasks performed on all bams #}
