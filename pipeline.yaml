@@ -58,7 +58,7 @@ constants:
     isoquant:
       container: quay.io/biocontainers/isoquant:3.4.1--hdfd78af_0
     isoseq:
-      container: quay.io/biocontainers/isoseq:4.0.0--h9ee0642_0
+      container: quay.io/biocontainers/isoseq:4.3.0--h9ee0642_0
     lancet2:
       container: us-central1-docker.pkg.dev/nygc-app-c-148c/lancet-public/lancet:v2.8.6-main-6b2317c8
     longshot:
@@ -93,9 +93,9 @@ constants:
     pbmm2:
       container: quay.io/biocontainers/pbmm2:1.13.1--h9ee0642_0
     pbpigeon:
-      container: quay.io/biocontainers/pbpigeon:1.2.0--h4ac6f70_0
+      container: quay.io/biocontainers/pbpigeon:1.4.0--h9948957_0
     pbsv:
-      container: quay.io/biocontainers/pbsv:2.9.0--h9ee0642_0
+      container: quay.io/biocontainers/pbsv:2.11.0--h9ee0642_0
     pbtk:
       container: quay.io/biocontainers/pbtk:3.5.0--h9ee0642_0
     pychopper:
