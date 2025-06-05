@@ -174,9 +174,21 @@ constants:
       ribo_locations: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-genes.ucsc.fixed.sorted.ribo.interval_list
       primary_interval_list: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.primary_contigs_no_chrX_chrY.interval_list
       annotation_databases:
-        - {"file": "/home/tgenref/homo_sapiens/t2t_chm13/public_databases/dbsnp/chm13v2.0_dbSNPv155.vcf.gz", "mark_sites": "DB", "columns": "ID"}
-        - {"file": "/home/tgenref/homo_sapiens/t2t_chm13/public_databases/gnomad/Homo_sapiens-GCA_009914755.4-2022_10-gnomad.pass.reduced.bcf", "mark_sites": "GNOMAD", "columns": "GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF"}
-        - {"file": "/home/tgenref/homo_sapiens/t2t_chm13/public_databases/clinvar/chm13v2.0_ClinVar20220313.vcf.gz", "mark_sites": "CLINVAR", "columns": "CLNDN,CLNDNINCL,CLNDISDB,CLNDISDBINCL,CLNHGVS,CLNREVSTAT,CLNSIG,CLNSIGCONF,CLNSIGINCL,CLNVC,CLNVCSO,CLNVI,CLNORIGIN:=ORIGIN"}
+        - {
+            "file": "/home/tgenref/homo_sapiens/t2t_chm13/public_databases/dbsnp/chm13v2.0_dbSNPv155.vcf.gz",
+            "mark_sites": "DB",
+            "columns": "ID",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/t2t_chm13/public_databases/gnomad/Homo_sapiens-GCA_009914755.4-2022_10-gnomad.pass.reduced.bcf",
+            "mark_sites": "GNOMAD",
+            "columns": "GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/t2t_chm13/public_databases/clinvar/chm13v2.0_ClinVar20220313.vcf.gz",
+            "mark_sites": "CLINVAR",
+            "columns": "CLNDN,CLNDNINCL,CLNDISDB,CLNDISDBINCL,CLNHGVS,CLNREVSTAT,CLNSIG,CLNSIGCONF,CLNSIGINCL,CLNVC,CLNVCSO,CLNVI,CLNORIGIN:=ORIGIN",
+          }
       tool_resources:
         severus:
           vntrs: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/severus/chm13.bed
@@ -217,12 +229,36 @@ constants:
       primary_interval_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/samtools_stats/GRCh38tempe_decoy_alts_hla_masked_samstats_no_N_1based_primary_contigs_no_chrX_chrY.txt
       encode_denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38_blacklist_spectre.bed
       annotation_databases:
-        - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/dbsnp/b154/dbSNP_b154_hg38tgen.bcf", "mark_sites": "DB", "columns": "ID"}
-        - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.reduced.bcf", "mark_sites": "GNOMAD", "columns": "GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF"}
-        - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/cosmic/v96/CosmicCodingMuts_v96_hg38_tempe.bcf", "mark_sites": "COSMIC", "columns": "COSMIC_CNT:=CNT"}
-        - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/cosmic/v96/CosmicNonCodingMuts_v96_hg38_tempe.bcf", "mark_sites": "COSMIC_NC", "columns": "COSMIC_NC_CNT:=CNT"}
-        - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/clinvar/20220910/clinvar_20220910_hg38_tempe.bcf", "mark_sites": "CLINVAR", "columns": ""}
-        - {"file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/topmed/freeze8/All.BRAVO_TOPMed_Freeze_8.bcf", "mark_sites": "TOPMED", "columns": "TOPMED_AF:=AF,TOPMED_AN:=AN,TOPMED_AC:=AC,TOPMED_HET:=Het,TOPMED_HOM:=Hom"}
+        - {
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/dbsnp/b154/dbSNP_b154_hg38tgen.bcf",
+            "mark_sites": "DB",
+            "columns": "ID",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.reduced.bcf",
+            "mark_sites": "GNOMAD",
+            "columns": "GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/cosmic/v96/CosmicCodingMuts_v96_hg38_tempe.bcf",
+            "mark_sites": "COSMIC",
+            "columns": "COSMIC_CNT:=CNT",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/cosmic/v96/CosmicNonCodingMuts_v96_hg38_tempe.bcf",
+            "mark_sites": "COSMIC_NC",
+            "columns": "COSMIC_NC_CNT:=CNT",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/clinvar/20220910/clinvar_20220910_hg38_tempe.bcf",
+            "mark_sites": "CLINVAR",
+            "columns": "",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/topmed/freeze8/All.BRAVO_TOPMed_Freeze_8.bcf",
+            "mark_sites": "TOPMED",
+            "columns": "TOPMED_AF:=AF,TOPMED_AN:=AN,TOPMED_AC:=AC,TOPMED_HET:=Het,TOPMED_HOM:=Hom",
+          }
       tool_resources:
         mutect2:
           germline_reference: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.AnnotationReference.vcf.gz
@@ -261,7 +297,11 @@ constants:
       ribo_locations: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.ribo.interval_list
       primary_interval_list: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa.primary.interval_list
       annotation_databases:
-        - {"file": "/home/tgenref/canis_familiaris/UU_Cfam_GSD_1.0/public_databases/dog10k/AutoAndXPAR.SNPs.fill-tags.norm.vcf.gz", "mark_sites": "DOG10K", "columns": "DOG10K_AC:=AC,DOG10K_AN:=AN,DOG10K_AF:=AF"}
+        - {
+            "file": "/home/tgenref/canis_familiaris/UU_Cfam_GSD_1.0/public_databases/dog10k/AutoAndXPAR.SNPs.fill-tags.norm.vcf.gz",
+            "mark_sites": "DOG10K",
+            "columns": "DOG10K_AC:=AC,DOG10K_AN:=AN,DOG10K_AF:=AF",
+          }
       tool_resources:
         mutect2:
           germline_reference: /home/tgenref/canis_familiaris/UU_Cfam_GSD_1.0/public_databases/dog10k/AutoAndXPAR.SNPs.fill-tags.norm.vcf.gz
@@ -276,7 +316,8 @@ constants:
       stats2json: samStats2json.py
       stats2lims: uploadStats2Lims.py
       plotCNVplus_Rscript: plotCNVplus.R
-    lims_contigs: "chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,
+    lims_contigs:
+      "chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,
       chrY,
       chrM,
       chrUn_GL000220v1,
