@@ -41,7 +41,7 @@ constants:
       container: nanoporetech/dorado:shaae1d5e75f94041e4fd7af4a7ed6e6432b0eaea29
       version: 0.8.2
     dysgu:
-      container: quay.io/biocontainers/dysgu:1.8.3--py312h9c9b0c2_0
+      container: quay.io/biocontainers/dysgu:1.8.5--py312h9c9b0c2_0
     flair:
       container: quay.io/biocontainers/flair:2.0.0--pyhdfd78af_1
     flye:
@@ -60,7 +60,7 @@ constants:
     isoseq:
       container: quay.io/biocontainers/isoseq:4.0.0--h9ee0642_0
     lancet2:
-      container: us-central1-docker.pkg.dev/nygc-app-c-148c/lancet-public/lancet:v2.8.5-main-c28f7433
+      container: us-central1-docker.pkg.dev/nygc-app-c-148c/lancet-public/lancet:v2.8.6-main-6b2317c8
     longshot:
       container: quay.io/biocontainers/longshot:1.0.0--hd4f2111_2
     lorax:
