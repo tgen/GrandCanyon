@@ -96,6 +96,8 @@ constants:
       container: quay.io/biocontainers/pbpigeon:1.2.0--h4ac6f70_0
     pbsv:
       container: quay.io/biocontainers/pbsv:2.9.0--h9ee0642_0
+    pbtk:
+      container: quay.io/biocontainers/pbtk:3.5.0--h9ee0642_0
     pychopper:
       container: quay.io/biocontainers/pychopper:2.5.0--py_0
     python3:

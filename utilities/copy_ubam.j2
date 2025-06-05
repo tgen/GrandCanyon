@@ -15,6 +15,25 @@
 
     rsync {{ ubam.path }} temp/ubams/
 
+{% if ubam.glPrep.lower().startswith('kinnex') %}
+- name: pbindex_ubam_{{ ubam.basename | replace(".", "_") }}
+  reset: predecessors
+  input:
+    - temp/ubams/{{ ubam.basename }}
+  output:
+    - temp/ubams/{{ ubam.basename }}.pbi
+  cpus: 2
+  mem: 8G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.pbtk.container }}
+  cmd: |
+    set -e
+
+    pbindex temp/ubams/{{ ubam.basename }}
+
+{% endif %}
+
 - name: convert_ubam_to_fastq_{{ ubam.basename | replace(".", "_") }}
   reset: predecessors
   input:

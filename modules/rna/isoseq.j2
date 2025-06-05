@@ -31,6 +31,7 @@
     - {{ constants.grandcanyon[reference].reference_fasta }}
     {% for file in longfqlist %}
     - {{ file.path }}
+    - {{ file.path }}.pbi
     {% endfor %}
   output:
     - {{ temp_dir }}/{{ sample.name }}.clustered.bam
