@@ -18,7 +18,7 @@
 
   {% set output %}{{ results_dir }}/{{ bam|basename }}.wgs_metrics{% endset %}
   {% if libraryCount == 1 %}
-  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.wgs_metrics
+  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.wgs_metrics{% endset %}
   {% endif %}
 
 - name: gatk_collectwgsmetrics_{{ task }}
