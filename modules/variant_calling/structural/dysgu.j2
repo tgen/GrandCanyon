@@ -14,12 +14,15 @@
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set normal_vcf %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.dysgu.all.vcf{% endset %}
+  {%- set input_config = "paired" %}
+  {%- set rgpl %}{{ sample_or_pair.tumor.rgpl }}{% endset %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
   {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set input_config = "tumor_only" %}
+    {%- set rgpl %}{{ sample_or_pair.rgpl }}{% endset %}
   {% else %}
     {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_snp_indel_caller_deepvariant"]|default(false)  %}
       {%- set bam %}{{ sample_or_pair.phased_bam }}{% endset %}
@@ -27,6 +30,7 @@
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set input_config = "germline" %}
+    {%- set rgpl %}{{ sample_or_pair.rgpl }}{% endset %}
   {% endif %}
 {% endif %}
 {%- set discordant_bam %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.discordant.bam{% endset %}
@@ -37,7 +41,7 @@
 {%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.dysgu.pass.vcf.gz{% endset %}
 
 {#
-{% if sample_or_pair.rgpl in ['ONT', 'PACBIO'] %}
+{% if rgpl in ['ONT', 'PACBIO'] %}
   {%- set input_type = "long_read" %}
 {% else %}
   {%- set input_type = "short_read" %}
@@ -104,9 +108,9 @@
     dysgu call \
       --svs-out {{ temp_all_vcf }} \
       --out-format vcf \
-      {% if sample_or_pair.rgpl in ('ONT') %}
+      {% if rgpl in ('ONT') %}
       --mode 'nanopore-r10' \
-      {% elif sample_or_pair.rgpl in ('PACBIO') %}
+      {% elif rgpl in ('PACBIO') %}
       --mode 'pacbio-revio' \
       {% endif %}
       --procs 8 \
@@ -135,7 +139,7 @@
       --support-fraction 0.1 \
       --pass-prob 0.3 \
       {% if input_config == 'paired' %}
-      --normal_vcf {{ normal_vcf }} \
+      --normal-vcf {{ normal_vcf }} \
       {{ temp_all_vcf }} \
       {{ normal_bam }} \
       {% else %}
