@@ -54,5 +54,7 @@
       --check_canonical \
       -t 20
 
+    mv {{ temp_dir }}/{{ sample.name }}/{{ sample.name }}* {{ results_dir }}/
+
 {% endmacro %}
 

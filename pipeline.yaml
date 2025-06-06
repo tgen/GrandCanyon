@@ -43,7 +43,7 @@ constants:
     dysgu:
       container: quay.io/biocontainers/dysgu:1.8.5--py312h9c9b0c2_0
     flair:
-      container: quay.io/biocontainers/flair:2.0.0--pyhdfd78af_1
+      container: quay.io/biocontainers/flair:2.2.0--pyhdfd78af_0
     flye:
       container: quay.io/biocontainers/flye:2.9.4--py311hc849397_2
     gatk:
@@ -56,7 +56,7 @@ constants:
     hificnv:
       container: quay.io/biocontainers/hificnv:0.1.7--h9ee0642_0
     isoquant:
-      container: quay.io/biocontainers/isoquant:3.4.1--hdfd78af_0
+      container: quay.io/biocontainers/isoquant:3.7.0--hdfd78af_0
     isoseq:
       container: quay.io/biocontainers/isoseq:4.3.0--h9ee0642_0
     lancet2:
@@ -85,7 +85,7 @@ constants:
     mosdepth:
       container: quay.io/biocontainers/mosdepth:0.3.8--hd299d5a_0
     oarfish:
-      container: quay.io/biocontainers/oarfish:0.5.0--h4349ce8_1
+      container: quay.io/biocontainers/oarfish:0.8.1--h5ca1c30_0
     pafplot:
       container: /home/tgenref/containers/pafplot.sif
     pafr:
@@ -127,7 +127,7 @@ constants:
     spectre:
       container: /home/tgenref/containers/spectre-cnv_0.2.1.sif
     sqanti3:
-      container: /home/tgenref/containers/sqanti3_5.2.1.sif
+      container: anaconesalab/sqanti3:v5.4
     star_fusion:
       container: trinityctat/starfusion:1.14.0
       digest: b66201d38db7055d84b6af2928c8cf44159254b747adad784250fbaa1230e86d
