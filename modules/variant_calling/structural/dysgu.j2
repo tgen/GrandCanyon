@@ -15,14 +15,17 @@
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set normal_vcf %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.dysgu.all.vcf{% endset %}
   {%- set input_config = "paired" %}
-  {%- set rgpl %}{{ sample_or_pair.tumor.rgpl }}{% endset %}
+  {% if sample_or_pair.normal.rgpl == 'PACBIO' %}
+    {%- set mode_type = 'pacbio-revio' %}
+  {% elif sample_or_pair.normal.rgpl == 'ONT' %}
+    {%- set mode_type = 'nanopore-r10' %}
+  {% endif %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
   {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set input_config = "tumor_only" %}
-    {%- set rgpl %}{{ sample_or_pair.rgpl }}{% endset %}
   {% else %}
     {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_snp_indel_caller_deepvariant"]|default(false)  %}
       {%- set bam %}{{ sample_or_pair.phased_bam }}{% endset %}
@@ -30,7 +33,11 @@
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set input_config = "germline" %}
-    {%- set rgpl %}{{ sample_or_pair.rgpl }}{% endset %}
+  {% endif %}
+  {% if sample_or_pair.rgpl == 'PACBIO' %}
+    {%- set mode_type = 'pacbio-revio' %}
+  {% elif sample_or_pair.rgpl == 'ONT' %}
+    {%- set mode_type = 'nanopore-r10' %}
   {% endif %}
 {% endif %}
 {%- set discordant_bam %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.discordant.bam{% endset %}
@@ -108,11 +115,7 @@
     dysgu call \
       --svs-out {{ temp_all_vcf }} \
       --out-format vcf \
-      {% if rgpl in ('ONT') %}
-      --mode 'nanopore-r10' \
-      {% elif rgpl in ('PACBIO') %}
-      --mode 'pacbio-revio' \
-      {% endif %}
+      --mode "{{ mode_type }}" \
       --procs 8 \
       --overwrite \
       {{ constants.grandcanyon[reference].reference_fasta }} \
