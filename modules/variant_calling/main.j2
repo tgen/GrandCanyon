@@ -31,6 +31,7 @@
 {% from 'modules/variant_calling/structural/sniffles.j2' import sniffles with context %}
 {% from 'modules/variant_calling/structural/pbsv.j2' import pbsv with context %}
 {% from 'modules/variant_calling/structural/severus.j2' import severus with context %}
+{% from 'modules/variant_calling/structural/savana.j2' import savana with context %}
 
 {# copy number callers #}
 {% from 'modules/variant_calling/copy_number/spectre.j2' import spectre with context %}
@@ -317,6 +318,10 @@
         {{- dysgu(sample, aligner) }}
       {% endif %}
 
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_savana"]|default(false) %}
+        {{- savana(sample, aligner) }}
+      {% endif %}
+
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
         {{- severus(sample, aligner) }}
       {% endif %}
@@ -405,6 +410,10 @@
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(false) %}
         {{- dysgu(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_savana"]|default(false) %}
+        {{- savana(pair, aligner) }}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
