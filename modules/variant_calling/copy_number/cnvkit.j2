@@ -1,5 +1,6 @@
 {%- macro cnvkit(sample_or_pair, aligner) %}
 
+{% set cnvkit_reference = none %}
 {% if sample_or_pair.normal is defined %}
   {% if controlDataFiles is defined %}
     {% set cnvkit_reference = controlDataFiles|selectattr('assayCode', 'eq', sample_or_pair.tumor.assayCode)|map(attribute='cnvkit_reference')|first|default(none) %}
@@ -8,6 +9,8 @@
     {% else %}
       {%- set cnvkit_name="cnvkit" %}
     {% endif %}
+  {% else %}
+    {%- set cnvkit_name="cnvkit" %}
   {% endif %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
   {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
@@ -25,6 +28,8 @@
     {% else %}
       {%- set cnvkit_name="cnvkit" %}
     {% endif %}
+  {% else %}
+    {%- set cnvkit_name="cnvkit" %}
   {% endif %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
   {% if sample_or_pair.gltype == 'exome' %}
