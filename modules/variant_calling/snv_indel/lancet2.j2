@@ -100,9 +100,9 @@
       --write-index \
       {{ all_vcf }}
 
-{% if not tasks[sample_or_pair.gltype|capitalize+"_variant_calling_merge_vcfs_vcfMerger2"]|default(false) %}
+{% if not tasks[pair.gltype|capitalize+"_variant_calling_merge_vcfs_vcfMerger2"]|default(false) %}
 {% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
-{{- annotate_vcfs(sample_or_pair, temp_dir, results_dir, pass_vcf, aligner, 'lancet2') }}
+{{- annotate_vcfs(pair, temp_dir, results_dir, pass_vcf, aligner, 'lancet2') }}
 {% endif %}
 
 {% endmacro %}
