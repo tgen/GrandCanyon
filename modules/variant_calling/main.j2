@@ -318,9 +318,11 @@
         {{- dysgu(sample, aligner) }}
       {% endif %}
 
+      {#
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_savana"]|default(false) %}
         {{- savana(sample, aligner) }}
       {% endif %}
+      #}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
         {{- severus(sample, aligner) }}

@@ -5,6 +5,7 @@
 {% if sample_or_pair.normal is defined %}
   {% if sample_or_pair.normal.phased_vcf is defined %}
     {{- whatshap_haplotag(sample_or_pair.tumor, aligner, 'deepvariant', sample_or_pair.normal.phased_vcf) }}
+    {%- set phased_vcf %}{{ sample_or_pair.normal.phased_vcf }}{% endset %}
     {%- set normal_bam %}{{ sample_or_pair.normal.phased_bam }}{% endset %}
     {%- set bam %}{{ sample_or_pair.tumor.phased_bam }}{% endset %}
   {% else %}
@@ -14,17 +15,30 @@
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/savana/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/savana/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set input_config = "paired" %}
+  {% if sample_or_pair.normal.rgpl == 'PACBIO' %}
+    {%- set mode_type = '--pb' %}
+  {% elif sample_or_pair.normal.rgpl == 'ONT' %}
+    {%- set mode_type = '--ont' %}
+  {% endif %}
 {% else %}
   {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/savana/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/savana/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set input_config = "tumor_only" %}
+  {% if sample_or_pair.rgpl == 'PACBIO' %}
+    {%- set mode_type = '--pb' %}
+  {% elif sample_or_pair.rgpl == 'ONT' %}
+    {%- set mode_type = '--ont' %}
+  {% endif %}
 {% endif %}
 {%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.savana.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.savana.pass.vcf.gz{% endset %}
 
 - name: savana_{{ sample_or_pair.name }}_{{ aligner }}
   input:
+    {% if phased_vcf is defined %}
+    - {{ phased_vcf }}
+    {% endif %}
     {% if normal_bam is defined %}
     - {{ normal_bam }}
     - {{ normal_bam }}.bai
@@ -33,10 +47,8 @@
     - {{ bam }}.bai
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].reference_dict }}
-  output:
-    - {{ temp_vcf }}
   cpus: 8
-  mem: 32G
+  mem: 64G
   walltime: "12:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.savana.container }}
@@ -44,22 +56,21 @@
     set -eu
     set -o pipefail
 
-    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
-      sed 's/SN://;s/LN://' |\
-      awk '{ OFS="\t" ; print $2,0,$3-1 }' \
-      > {{ temp_dir }}/calling_intervals.bed
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
 
+    {% if input_config in ('paired') %}
     savana \
       --tumour {{ bam }} \
-      {% if input_config in ('paired') %}
       --normal {{ normal_bam }} \
-      {% endif %}
+      --snp_vcf {{ phased_vcf }} \
+    {% else %}
+    savana to \
+      --tumour {{ bam }} \
+    {% endif %}
       --outdir {{ temp_dir }} \
-      {% if sample_or_pair.rgpl in ('ONT') %}
-      --ont \
-      {% results_dir sample_or_pair.rgpl in ('PACBIO') %}
-      --pb \
-      {% endif %}
+      {{ mode_type }} \
       --threads 8 \
       --ref {{ constants.grandcanyon[reference].reference_fasta }}
 
