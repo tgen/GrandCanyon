@@ -48,7 +48,7 @@
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].reference_dict }}
   cpus: 8
-  mem: 64G
+  mem: 128G
   walltime: "12:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.savana.container }}
@@ -60,18 +60,27 @@
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+      sed 's/SN://;s/LN://' |\
+      awk '{ print $2 }' \
+      > {{ temp_dir }}/calling_contigs.txt
+
     {% if input_config in ('paired') %}
     savana \
+      --sample {{ sample_or_pair.tumor.rgsm }}
       --tumour {{ bam }} \
       --normal {{ normal_bam }} \
       --snp_vcf {{ phased_vcf }} \
     {% else %}
     savana to \
+      --sample {{ sample_or_pair.rgsm }}
       --tumour {{ bam }} \
     {% endif %}
       --outdir {{ temp_dir }} \
       {{ mode_type }} \
       --threads 8 \
+      --cna_threads 8 \
+      --contigs {{ temp_dir }}/calling_contigs.txt \
       --ref {{ constants.grandcanyon[reference].reference_fasta }}
 
 {% endmacro %}
