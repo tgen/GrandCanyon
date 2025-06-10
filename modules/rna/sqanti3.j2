@@ -63,7 +63,7 @@
     EOF
     {% endif %}
 
-    sqanti3_qc.py \
+    conda run -n sqanti3 sqanti3_qc.py \
       {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff \
       {{ constants.grandcanyon[reference].gtf }} \
       {{ constants.grandcanyon[reference].reference_fasta }} \
@@ -82,7 +82,7 @@
 
     mv {{ temp_dir }}/{{ sample.name }}* {{ results_dir }}
 
-    sqanti3_filter.py rules \
+    conda run -n sqanti3 sqanti3_filter.py rules \
       {{ results_dir }}/{{ sample.name }}_classification.txt \
       -o {{ sample.name }} \
       -d {{ results_dir }} \
@@ -134,7 +134,7 @@
     }
     EOF
 
-    sqanti3_filter.py rules \
+    conda run -n sqanti3 sqanti3_filter.py rules \
       {{ results_dir }}/{{ sample.name }}_classification.txt \
       -o {{ sample.name }}_strict_filter \
       -d {{ results_dir }} \
