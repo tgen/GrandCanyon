@@ -63,12 +63,15 @@
     EOF
     {% endif %}
 
+    CAGE_PEAK=$(ls /opt2/sqanti3/*/SQANTI3*/data/ref_TSS_annotation/human.refTSS_v3.1.hg38.bed)
+    POLYA_MOTIF=$(ls /opt2/sqanti3/*/SQANTI3*/data/polyA_motifs/mouse_and_human.polyA_motif.txt)
+
     conda run -n sqanti3 sqanti3_qc.py \
       {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff \
       {{ constants.grandcanyon[reference].gtf }} \
       {{ constants.grandcanyon[reference].reference_fasta }} \
-      --CAGE_peak /opt2/sqanti3/5.2.1/SQANTI3-5.2.1/data/ref_TSS_annotation/human.refTSS_v3.1.hg38.bed \
-      --polyA_motif_list /opt2/sqanti3/5.2.1/SQANTI3-5.2.1/data/polyA_motifs/mouse_and_human.polyA_motif.txt \
+      --CAGE_peak ${CAGE_PEAK} \
+      --polyA_motif_list ${POLYA_MOTIF} \
       --gff3 {{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }} \
       --isoAnnotLite \
       -o {{ sample.name }} \
