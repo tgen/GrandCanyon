@@ -92,6 +92,7 @@
 #}
 
 - name: dysgu_call_{{ sample_or_pair.name }}_{{ aligner }}
+  reset: predecessors
   input:
     - {{ bam }}
     - {{ bam }}.bai
