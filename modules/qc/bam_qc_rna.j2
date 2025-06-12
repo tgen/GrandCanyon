@@ -36,6 +36,7 @@
     - {{ bam_index }}
     - {{ constants.grandcanyon[reference].ref_flat }}
     - {{ constants.grandcanyon[reference].ribo_locations }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ rna_metrics }}
     - {{ rna_metrics }}.pdf
@@ -61,6 +62,7 @@
       {% if reference == "grch38" %}
       --IGNORE_SEQUENCE chrEBV \
       {% endif %}
+      --REFERENCE_SEQUENCE {{ constants.grandcanyon[reference].reference_fasta }} \
       --STRAND_SPECIFICITY {{ constants.grandcanyon.strandedness_options[sample.strandedness].collectrnaseqmetrics }} \
       --VALIDATION_STRINGENCY LENIENT \
       --REF_FLAT "{{ constants.grandcanyon[reference].ref_flat }}" \
