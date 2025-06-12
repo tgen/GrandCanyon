@@ -8,6 +8,11 @@
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
   {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
 
+  {% if constants.grandcanyon[reference].star_fasta is defined %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].star_fasta }}{% endset %}
+  {% else %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+  {% endif %}
   {% if sample.glprep.startswith('kinnex') %}
     {% set alignment_format = 'cram' %}
     {% set index_format = 'crai' %}
@@ -36,7 +41,7 @@
     - {{ bam_index }}
     - {{ constants.grandcanyon[reference].ref_flat }}
     - {{ constants.grandcanyon[reference].ribo_locations }}
-    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ reference_fasta }}
   output:
     - {{ rna_metrics }}
     - {{ rna_metrics }}.pdf
@@ -62,7 +67,7 @@
       {% if reference == "grch38" %}
       --IGNORE_SEQUENCE chrEBV \
       {% endif %}
-      --REFERENCE_SEQUENCE {{ constants.grandcanyon[reference].reference_fasta }} \
+      --REFERENCE_SEQUENCE {{ reference_fasta }} \
       --STRAND_SPECIFICITY {{ constants.grandcanyon.strandedness_options[sample.strandedness].collectrnaseqmetrics }} \
       --VALIDATION_STRINGENCY LENIENT \
       --REF_FLAT "{{ constants.grandcanyon[reference].ref_flat }}" \
