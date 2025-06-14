@@ -32,7 +32,21 @@
   {% endif %}
 {% endfor %}
 
+{% if r1fqlist | length > 0 %}
+  {% if r1fqlist | length > 1 %}
+    {% set r1_fastq %}{{ temp_dir }}/{{ sample.name }}_sr_concat_R1.fastq.gz{% endset %}
+    {% set r2_fastq %}{{ temp_dir }}/{{ sample.name }}_sr_concat_R2.fastq.gz{% endset %}
+  {% else %}
+    {% set r1_fastq %}{{ r1fqlist|map(attribute='path')|list|first }}{% endset %}
+    {% set r2_fastq %}{{ r2fqlist|map(attribute='path')|list|first }}{% endset %}
+  {% endif %}
+{% endif %}
 {% if longfqlist | length > 0 %}
+  {% if longfqlist | length > 1 %}
+    {% set lr_fastq %}{{ temp_dir }}/{{ sample.name }}_lr_concat.fastq.gz{% endset %}
+  {% else %}
+    {% set lr_fastq %}{{ longfqlist|map(attribute='path')|list|first }}{% endset %}
+  {% endif %}
 
 - name: ctat_lr_{{ sample.name }}
   input:
@@ -63,14 +77,21 @@
     rm -rf {{ temp_dir }}
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
+    {% if longfqlist | length > 1 %}
+    cat {{ longfqlist|map(attribute='path')|join(' ')}} > {{ lr_fastq }}
+    {% endif %}
+    {% if r1fqlist | length > 1 %}
+    cat {{ r1fqlist|map(attribute='path')|join(' ') }} > {{ r1_fastq }}
+    cat {{ r2fqlist|map(attribute='path')|join(' ') }} > {{ r2_fastq }}
+    {% endif %}
 
     ctat-LR-fusion \
       --CPU 10 \
       --genome_lib_dir {{ constants.grandcanyon[reference].starfusion_index }} \
-      -T "{{ longfqlist|map(attribute='path')|join(',') }}" \
+      -T "{{ lr_fastq }}" \
       {% if r1fqlist | length > 0 %}
-      --left_fq "{{ r1fqlist|map(attribute='path')|list|first }}" \
-      --right_fq "{{ r2fqlist|map(attribute='path')|list|first }}" \
+      --left_fq "{{ r1_fastq }}" \
+      --right_fq "{{ r2_fastq }}" \
       {% endif %}
       --output {{ temp_dir }} \
       --vis
