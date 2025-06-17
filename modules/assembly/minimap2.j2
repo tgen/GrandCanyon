@@ -1,16 +1,20 @@
 {% from 'modules/assembly/plotting.j2' import pafplot with context %}
 {% from 'modules/assembly/plotting.j2' import pafr with context %}
 
-{% macro minimap2_asm(pair, input_assembly, assembler) %}
+{% macro minimap2_asm(pair, input_assemblies, assembler) %}
 
-{% set results_dir %}{{ input_assembly | dirname }}{% endset %}
-{% set paf_output %}{{ input_assembly }}.minimap2.paf{% endset %}
+{% set results_dir %}{{ input_assemblies | first | dirname }}{% endset %}
 
 - name: minimap2_asm_{{ pair.project }}_{{ assembler }}
   input:
+    {% for input_assembly in input_assemblies %}
     - {{ input_assembly }}
+    {% endfor %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
-  output: {{ paf_output }}
+  output:
+    {% for input_assembly in input_assemblies %}
+    - {{ input_assembly }}.minimap2.paf
+    {% endfor %}
   cpus: 20
   mem: 80G
   walltime: "8:00:00"
@@ -20,11 +24,13 @@
     set -eu
     set -o pipefail
 
+    {% for input_assembly in input_assemblies %}
     minimap2 \
       -t 20 \
       -cx asm5 \
       {{ constants.grandcanyon[reference].reference_fasta }} \
-      {{ input_assembly }} > {{ paf_output }}
+      {{ input_assembly }} > {{ input_assembly }}.minimap2.paf
+    {% endfor %}
 
 
 {% if tasks.plot_assembly_pafplot | default(false) %}

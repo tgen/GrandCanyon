@@ -65,7 +65,7 @@
 {% endif %}
 
 {% if tasks.Genome_assembly_metrics_align_minimap2|default(false) %}
-{{- minimap2_asm(input, input_assembly, 'verkko') }}
+{{- minimap2_asm(input, input_assemblies, 'verkko') }}
 {% endif %}
 {% if tasks.Genome_assembly_metrics_align_mashmap|default(false) %}
 {{- mashmap(input, input_assembly, 'verkko') }}

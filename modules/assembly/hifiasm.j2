@@ -89,10 +89,12 @@
     done
     mv {{ temp_dir }}/{{ input.project }}.asm.bp.* {{ results_dir }}/
 
+{% set raw_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.r_utg.fa{% endset %}
 {% set primary_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.p_ctg.fa{% endset %}
 {% set haplotype1_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.hap1.p_ctg.fa{% endset %}
 {% set haplotype2_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.hap2.p_ctg.fa{% endset %}
 {% set input_assemblies = [primary_assembly, haplotype1_assembly, haplotype2_assembly] %}
+{% set align_assemblies = [raw_assembly, primary_assembly] %}
 
 {% if tasks.Genome_assembly_metrics_assembly_qc|default(false) %}
 {{- assembly_qc(input, primary_assembly, 'hifiasm') }}
@@ -103,7 +105,7 @@
 {% endif %}
 
 {% if tasks.Genome_assembly_metrics_align_minimap2|default(false) %}
-{{- minimap2_asm(input, primary_assembly, 'hifiasm') }}
+{{- minimap2_asm(input, align_assemblies, 'hifiasm') }}
 {% endif %}
 {% if tasks.Genome_assembly_metrics_align_mashmap|default(false) %}
 {{- mashmap(input, primary_assembly, 'hifiasm') }}
