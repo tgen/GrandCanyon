@@ -21,6 +21,7 @@
 
 {# general sv callers #}
 {% from 'modules/variant_calling/structural/dysgu.j2' import dysgu with context %}
+{% from 'modules/variant_calling/structural/truvari.j2' import truvari with context %}
 
 {# short-read sv callers #}
 {% from 'modules/variant_calling/structural/manta.j2' import manta with context %}
@@ -264,6 +265,7 @@
     {% set taskPrefix = 'Genome' %}
   {% endif %}
   {% do sample.update({'callers': []}) %}
+  {% do sample.update({'sv_callers': []}) %}
 
   {% for aligner in sample.aligners %}
 
@@ -311,31 +313,41 @@
     {% if sample.glprep in 'longread' %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_cutesv"]|default(false) %}
+        {% do sample.sv_callers.append('cutesv') %}
         {{- cutesv(sample, aligner) }}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(false) %}
+        {% do sample.sv_callers.append('dysgu') %}
         {{- dysgu(sample, aligner) }}
       {% endif %}
 
       {#
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_savana"]|default(false) %}
+        {% do sample.sv_callers.append('savana') %}
         {{- savana(sample, aligner) }}
       {% endif %}
       #}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
+        {% do sample.sv_callers.append('severus') %}
         {{- severus(sample, aligner) }}
       {% endif %}
 
     {% else %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
+        {% do sample.sv_callers.append('manta') %}
         {{- manta(sample, aligner) }}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_smoove"]|default(false) %}
+        {% do sample.sv_callers.append('smoove') %}
         {{- smoove(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_merge_structural_vcfs_truvari"]|default(false) %}
+        {{- truvari(sample, aligner) }}
       {% endif %}
 
     {% endif %}
@@ -362,6 +374,7 @@
     {% set taskPrefix = 'Genome' %}
   {% endif %}
   {% do pair.update({'callers': []}) %}
+  {% do pair.update({'sv_callers': []}) %}
 
   {% for aligner in pair.tumor.aligners %}
 
@@ -411,23 +424,31 @@
     {% if pair.glprep in 'longread' %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(false) %}
+        {% do pair.sv_callers.append('dysgu') %}
         {{- dysgu(pair, aligner) }}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_savana"]|default(false) %}
+        {% do pair.sv_callers.append('savana') %}
         {{- savana(pair, aligner) }}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
+        {% do pair.sv_callers.append('severus') %}
         {{- severus(pair, aligner) }}
       {% endif %}
 
     {% else %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
+        {% do pair.sv_callers.append('manta') %}
         {{- manta(pair, aligner) }}
       {% endif %}
 
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_merge_structural_vcfs_truvari"]|default(false) %}
+      {{- truvari(pair, aligner) }}
     {% endif %}
 
     {############
