@@ -52,6 +52,7 @@
     - {{ file }}
     {% endfor %}
   output:
+    - {{ results_dir }}/{{ input.project }}.asm.bp.r_utg.fa
     - {{ results_dir }}/{{ input.project }}.asm.bp.p_ctg.fa
     - {{ results_dir }}/{{ input.project }}.asm.bp.hap1.p_ctg.fa
     - {{ results_dir }}/{{ input.project }}.asm.bp.hap2.p_ctg.fa
