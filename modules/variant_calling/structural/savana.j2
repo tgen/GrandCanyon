@@ -35,6 +35,7 @@
 {%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.savana.pass.vcf.gz{% endset %}
 
 - name: savana_{{ sample_or_pair.name }}_{{ aligner }}
+  reset: predecessors
   input:
     {% if phased_vcf is defined %}
     - {{ phased_vcf }}
