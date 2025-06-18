@@ -35,7 +35,10 @@
 
 - name: truvari_bcftools_merge_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, merge_vcfs, truvari, {{ sample_or_pair.name }}]
-  input: {{ gzipped_path }}
+  input:
+    {% for vcf in vcfs_to_merge|map(attribute='gzipped_path')|list %}
+    - {{ vcf }}
+    {% endfor %}
   output: {{ bcftools_merged_vcf }}
   cpus: 4
   mem: 8G
@@ -47,14 +50,20 @@
 
     mkdir -p "{{ temp_dir }}"
 
-    bcftools merge -m none "{{ vcfs_to_merge|map(attribute='gzipped_path')|join(' ') }}" \
-    | bgzip > {{ bcftools_merged_vcf }}
+    bcftools merge \
+      -m none \
+      -O z \
+      -o {{ bcftools_merged_vcf }} \
+      --write-index=tbi \
+      {{ vcfs_to_merge|map(attribute='gzipped_path')|join(' ') }}
 
 - name: truvari_collapse_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, merge_vcfs, truvari, {{ sample_or_pair.name }}]
   reset: predecessors
   input: {{ bcftools_merged_vcf }}
-  output: {{ merged_vcf_gz }}
+  output:
+    - {{ merged_vcf }}
+    - {{ collapse_vcf }}
   cpus: 4
   mem: 16G
   walltime: "4:00:00"
