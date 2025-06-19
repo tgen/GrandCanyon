@@ -14,6 +14,7 @@
 {% set trgt_bam %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.trgt.spanning.bam{% endset %}
 
 - name: trgt_{{ sample.name }}_{{ aligner }}
+  reset: predecessors
   tags: [{{ sample.gltype }}, snp_indel_caller, trgt, {{ sample.name }}]
   input:
     - {{ bam }}
@@ -41,6 +42,7 @@
       --output-prefix {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.trgt
 
 - name: trgt_bcftools_sort_variants_{{ sample.name }}_{{ aligner }}
+  reset: predecessors
   tags: [{{ sample.gltype }}, snp_indel_caller, trgt, {{ sample.name }}]
   input:
     - {{ temp_vcf }}
@@ -65,6 +67,7 @@
       {{ temp_vcf }}
 
 - name: trgt_samtools_sort_{{ sample.name }}_{{ aligner }}
+  reset: predecessors
   tags: [{{ sample.gltype }}, snp_indel_caller, trgt, {{ sample.name }}]
   input:
     - {{ temp_bam }}
