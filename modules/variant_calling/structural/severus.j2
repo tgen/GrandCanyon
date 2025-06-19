@@ -68,7 +68,7 @@
       {% endif %}
       --control-bam {{ normal_bam }} \
       --target-bam {{ bam }} \
-      --normal-sample {{ sample_or_pair.normal.rgsm }} \
+      --control-sample {{ sample_or_pair.normal.rgsm }} \
       --target-sample {{ sample_or_pair.tumor.rgsm }} \
       --vntr-bed {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }} \
       --PON {{ constants.grandcanyon[reference].tool_resources.severus.pon }}
