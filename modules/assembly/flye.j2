@@ -12,6 +12,7 @@
 {%- set results_dir %}{{ input.gltype }}/assembly/flye/{{ input.project }}{% endset %}
 
 - name: flye_{{ input.project }}
+  reset: predecessors
   input:
     {% for ontfq in input.hifi %}
     - {{ ontfq }}

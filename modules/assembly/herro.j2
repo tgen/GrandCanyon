@@ -5,6 +5,7 @@
 {% set filtered_fastq %}{{ temp_dir }}/{{ fastq | basename | replace('.fastq.gz', '.filtered.fastq') }}{% endset %}
 
 - name: herro_preprocess_{{ fastq | basename | replace('.', '_') }}
+  reset: predecessors
   input: {{ fastq }}
   output: {{ filtered_fastq }}
   cpus: 4

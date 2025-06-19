@@ -6,6 +6,7 @@
 {% set fastqs = input.hifi + input.corr %}
 
 - name: meryl_{{ input.project }}
+  reset: predecessors
   input:
     {% for fastq in fastqs %}
     - {{ fastq }}

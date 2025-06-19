@@ -21,6 +21,7 @@
 {# PacBio Hifi reads are consistently between 10kb and 30 kb, and therefore it does not need chopping #}
 {% if ont_list | length > 0 %}
 - name: prep_hifiasm_input_{{ input.project }}
+  reset: predecessors
   input:
     {% for file in ont_list %}
     - {{ file }}
@@ -47,6 +48,7 @@
 
 {% if hifi_list | length > 0 %}
 - name: hifiasm_{{ input.project }}
+  reset: predecessors
   input:
     {% for file in hifi_list + input.ulong %}
     - {{ file }}

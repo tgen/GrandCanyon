@@ -15,6 +15,7 @@
 
 {% if hifi_list | length > 0 %}
 - name: verkko_{{ input.project }}
+  reset: predecessors
   input:
     {% for file in hifi_list + input.ulong %}
     - {{ file }}
