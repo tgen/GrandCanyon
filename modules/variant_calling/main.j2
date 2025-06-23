@@ -334,6 +334,10 @@
         {{- severus(sample, aligner) }}
       {% endif %}
 
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(false) %}
+        {{- sniffles(sample, aligner) }}
+      {% endif %}
+
     {% else %}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}

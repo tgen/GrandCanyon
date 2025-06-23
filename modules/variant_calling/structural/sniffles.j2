@@ -6,9 +6,16 @@
   {%- set all_vcf %}{{ results_dir }}/{{ input.name }}.{{ aligner }}.sniffles.all.vcf.gz{% endset %}
   {%- set pass_vcf %}{{ results_dir }}/{{ input.name }}.{{ aligner }}.sniffles.pass.vcf.gz{% endset %}
 {% else %}
+  {% if input.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set temp_dir %}temp/{{ input.gltype }}/somatic_structural_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ input.gltype }}/somatic_structural_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
+    {%- set input_config = "tumor_only" %}
+  {% else %}
+    {%- set temp_dir %}temp/{{ input.gltype }}/constitutional_structural_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ input.gltype }}/constitutional_structural_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
+    {%- set input_config = "germline" %}
+  {% endif %}
   {%- set bam %}temp/{{ input.gltype }}/alignment/{{ aligner }}/{{ input.name }}/{{ input.name }}.{{ aligner }}.bam{% endset %}
-  {%- set temp_dir %}temp/{{ input.gltype }}/constitutional_structural_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
-  {%- set results_dir %}{{ input.gltype }}/constitutional_structural_calls/sniffles/{{ input.name }}_{{ aligner }}{% endset %}
   {%- set all_vcf %}{{ results_dir }}/{{ input.name }}.{{ aligner }}.sniffles.all.vcf.gz{% endset %}
   {%- set all_snf %}{{ results_dir }}/{{ input.name }}.{{ aligner }}.sniffles.all.snf{% endset %}
   {%- set pass_vcf %}{{ results_dir }}/{{ input.name }}.{{ aligner }}.sniffles.pass.vcf.gz{% endset %}
@@ -72,7 +79,7 @@
       --sample-id {{ input.name }} \
       --vcf {{ all_vcf }} \
       --snf {{ all_snf }} \
-      {% if input.subGroup|lower == 'tumor' %}
+      {% if input_config in ("tumor_only") %}
       --mosaic \
       {% endif %}
       {% endif %}

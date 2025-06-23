@@ -1,13 +1,32 @@
-{% macro cutesv(sample, aligner) %}
+{% macro cutesv(sample_or_pair, aligner) %}
 
-{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
-{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_structural_calls/cutesv/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set results_dir %}{{ sample.gltype }}/constitutional_structural_calls/cutesv/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set temp_vcf %}{{ temp_dir }}/{{ sample.name }}.{{ aligner }}.cutesv.all.vcf{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cutesv.all.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cutesv.pass.vcf.gz{% endset %}
+{% if sample_or_pair.normal is defined %}
+  {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/cutesv/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/cutesv/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set normal_vcf %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/cutesv/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.cutesv.all.vcf{% endset %}
+  {%- set rgpl %}{{ sample_or_pair.tumor.rgpl }}{% endset %}
+  {%- set input_config = "paired" %}
+{% else %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/cutesv/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/cutesv/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set rgpl %}{{ sample_or_pair.rgpl }}{% endset %}
+    {%- set input_config = "tumor_only" %}
+  {% else %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/cutesv/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/cutesv/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set rgpl %}{{ sample_or_pair.rgpl }}{% endset %}
+    {%- set input_config = "germline" %}
+  {% endif %}
+{% endif %}
+{%- set temp_vcf %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cutesv.all.vcf{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cutesv.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cutesv.pass.vcf.gz{% endset %}
 
-- name: cutesv_{{ sample.name }}_{{ aligner }}
+- name: cutesv_{{ sample_or_pair.name }}_{{ aligner }}
   reset: predecessors
   input:
     - {{ bam }}
@@ -40,14 +59,14 @@
       {{ temp_vcf }} \
       {{ temp_dir }} \
       -include_bed {{ temp_dir }}/calling_intervals.bed \
-      --sample {{ sample.rgsm }} \
+      --sample {{ sample_or_pair.rgsm }} \
       --genotype \
-      {% if sample.rgpl in ('ONT') %}
+      {% if rgpl in ('ONT') %}
       --max_cluster_bias_INS 100 \
       --diff_ratio_merging_INS 0.3 \
       --max_cluster_bias_DEL 100 \
       --diff_ratio_merging_DEL 0.3 \
-      {% elif sample.rgpl in ('PACBIO') %}
+      {% elif rgpl in ('PACBIO') %}
       --max_cluster_bias_INS 1000 \
       --diff_ratio_merging_INS 0.9 \
       --max_cluster_bias_DEL 1000 \
@@ -56,7 +75,7 @@
       --threads 8
 
 
-- name: cutesv_filter_variants_{{ sample.name }}_{{ aligner }}
+- name: cutesv_filter_variants_{{ sample_or_pair.name }}_{{ aligner }}
   input:
     - {{ temp_vcf }}
   output:
