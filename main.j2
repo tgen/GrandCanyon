@@ -59,6 +59,14 @@
             {% do constants.grandcanyon[reference].update({'starfusion_index': starfusion_index}) %}
             {{- prepare_gene_model() }}
         {% endif %}
+        {% from 'utilities/prepare_resources.j2' import prepare_transcriptome with context %}
+        {% if constants.grandcanyon[reference].transcriptome is not defined %}
+            {% set gene_model_gtf = constants.grandcanyon[reference].gtf %}
+            {% set gene_model_prefix = gene_model_gtf.split('.')[:-1]|join('.') %}
+            {% set transcriptome %}{{ gene_model_prefix }}.transcriptome.fasta{% endset %}
+            {% do constants.grandcanyon[reference].update({'transcriptome': transcriptome}) %}
+            {{- prepare_transcriptome() }}
+        {% endif %}
     {% else %}
         {% set raise_msg %}gene_model gtf not defined! constants.grandcanyon.{{ reference }}.gtf is not in pipeline.yaml or user supplied input{% endset %}
         {{ log(raise_msg) }}

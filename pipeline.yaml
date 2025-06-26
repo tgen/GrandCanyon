@@ -292,7 +292,7 @@ constants:
       bwa_mem2_index: /home/tgenref/canis_familiaris/canfam4/tool_resources/bwa_mem2/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa
       gff3: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.gff3.gz
       gtf: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.gtf
-      transcriptome: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.cdna.all.fa
+      transcriptome: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.transcriptome.fasta
       starfusion_index: /home/tgenref/canis_familiaris/canfam4/gene_model/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir
       snpSniffer_sites: /home/tgenref/canis_familiaris/canfam4/tool_resources/snpSniffer/positions_393_CanFam4.txt
       snpSniffer_database: /home/tgenref/canis_familiaris/canfam4/tool_resources/snpSniffer/databaseV6_CanFam4_ucsc.ini
