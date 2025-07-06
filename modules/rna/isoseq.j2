@@ -137,8 +137,12 @@
       {{ temp_dir }}/{{ sample.name }}.fofn \
       {{ results_dir }}/{{ sample.name }}.collapsed.gff
 
-{{- pigeon(sample) }}
-{{- sqanti3(sample) }}
+{% if tasks['RNA_transcriptome_isoform_discovery_pigeon']|default(false) %}
+  {{- pigeon(sample) }}
+{% endif %}
+{% if tasks['RNA_transcriptome_isoform_discovery_sqanti3']|default(false) %}
+  {{- sqanti3(sample) }}
+{% endif %}
 
 {% endif %}
 

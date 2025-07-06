@@ -159,7 +159,7 @@
 
     samtools index -@8 {{ phased_bam }}
 
-{% if tasks[sample.gltype|capitalize+'_variant_calling_keep_phased_cram']|default(true) %}
+{% if tasks[sample.gltype|capitalize+'_variant_calling_phasing_keep_phased_cram']|default(true) %}
 {% set output_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
 {% set phased_bam %}temp/{{ output_dir }}/{{ output_prefix }}.haplotagged.bam{% endset %}
 {% set phased_cram %}{{ output_dir }}/{{ output_prefix }}.haplotagged.cram{% endset %}

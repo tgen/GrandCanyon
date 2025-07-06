@@ -65,9 +65,11 @@
 
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(false) %}
       {{- deepvariant(sample, aligner) }}
-      {% do sample.update({'phased_bam': '', 'phased_vcf': ''}) %}
-      {{- whatshap_phase(sample, aligner, 'deepvariant') }}
-      {{- whatshap_haplotag(sample, aligner, 'deepvariant') }}
+      {% if tasks[taskPrefix+"_variant_calling_phasing_whatshap"]|default(false) %}
+        {% do sample.update({'phased_bam': '', 'phased_vcf': ''}) %}
+        {{- whatshap_phase(sample, aligner, 'deepvariant') }}
+        {{- whatshap_haplotag(sample, aligner, 'deepvariant') }}
+      {% endif %}
     {% endif %}
 
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant_pangenome"]|default(false) %}
