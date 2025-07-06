@@ -18,16 +18,16 @@
     {% endif %}
 
     {% if sample.rgpl in ('PACBIO') %}
-      {% if tasks[taskPrefix+"_methylation_caller_pb_cpg_tools"]|default(false) %}
+      {% if tasks[taskPrefix+"_methylation_methylation_caller_pb_cpg_tools"]|default(false) %}
         {{- pb_cpg_tools(sample, aligner) }}
       {% endif %}
 
-      {% if tasks[taskPrefix+"_methylation_caller_methbat"]|default(false) %}
+      {% if tasks[taskPrefix+"_methylation_methylation_caller_methbat"]|default(false) %}
         {{- methbat(sample, aligner) }}
       {% endif %}
     {% endif %}
 
-    {% if tasks[taskPrefix+"_methylation_caller_modkit"]|default(false) %}
+    {% if tasks[taskPrefix+"_methylation_methylation_caller_modkit"]|default(false) %}
       {{- modkit(sample, aligner) }}
     {% endif %}
 
