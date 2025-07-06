@@ -10,12 +10,18 @@
 
   {% for sample in samples.values() if sample.gltype in ['rna'] %}
     {% if sample.rgpm|lower in known_long_read_platforms %}
-      {{- minimap2_rna(sample) }}
-      {{- bam_qc(sample, aligner='minimap2') }}
+      {% if tasks['RNA_alignment_rna_alignment_minimap2']|default(false) %}
+        {{- minimap2_rna(sample) }}
+        {{- bam_qc(sample, aligner='minimap2') }}
+      {% endif %}
       {% if sample.glprep.startswith('kinnex') %}
+      {% if tasks['RNA_transcriptome_isoform_discovery_isoseq']|default(false) %}
         {{- isoseq(sample) }}
       {% endif %}
-      {{- ctat_lr(sample) }}
+      {% endif %}
+      {% if tasks['RNA_transcriptome_fusion_caller_STAR_Fusion']|default(false) %}
+        {{- ctat_lr(sample) }}
+      {% endif %}
     {% else %}
       {% set opt_dup_distance = 2500 %}
       {% if tasks['RNA_alignment_rna_alignment_STAR']|default(false) %}
