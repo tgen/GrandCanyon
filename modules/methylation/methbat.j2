@@ -1,0 +1,27 @@
+{% macro methbat(sample, aligner) %}
+
+{%- set results_dir %}{{ sample.gltype }}/methylation/methbat/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set pb_cpg_prefix %}{{ sample.gltype }}/methylation/pb_cpg_tools/{{ sample.name }}_{{ aligner }}/{{ sample.name }}.{{ aligner }}{% endset %}
+
+- name: methbat_{{ sample.name }}_{{ aligner }}
+  reset: predecessors
+  input:
+    - {{ pb_cpg_prefix }}
+  output:
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.methbat.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    methbat segment \
+      --input-prefix {{ pb_cpg_prefix }} \
+      --output-prefix {{ results_dir }}/{{ sample.name }}.{{ aligner }}
+
+{% endmacro %}

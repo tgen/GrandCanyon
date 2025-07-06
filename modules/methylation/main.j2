@@ -1,0 +1,38 @@
+{# general methylation callers #}
+{% from 'modules/methylation/modkit.j2' import modkit with context %}
+
+{# pacbio specific callers #}
+{% from 'modules/methylation/pb_cpg_tools.j2' import pb_cpg_tools with context %}
+{% from 'modules/methylation/methbat.j2' import methbat with context %}
+
+{%- macro methylation_calling(samples) %}
+
+{%- for sample in samples.values() if sample.gltype in ('exome','genome') and sample.glprep in 'longread' %}
+
+  {% for aligner in sample.aligners %}
+
+    {% if sample.gltype in 'exome' %}
+      {% set taskPrefix = 'Exome' %}
+    {% elif sample.gltype in 'genome' %}
+      {% set taskPrefix = 'Genome' %}
+    {% endif %}
+
+    {% if sample.rgpl in ('PACBIO') %}
+      {% if tasks[taskPrefix+"_methylation_caller_pb_cpg_tools"]|default(false) %}
+        {{- pb_cpg_tools(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_methylation_caller_methbat"]|default(false) %}
+        {{- methbat(sample, aligner) }}
+      {% endif %}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_methylation_caller_modkit"]|default(false) %}
+      {{- modkit(sample, aligner) }}
+    {% endif %}
+
+  {% endfor %}
+
+{% endfor %}
+
+{% endmacro %}

@@ -99,6 +99,7 @@
 {% from 'modules/rna/main.j2' import rna_alignment with context %}
 {% from 'modules/variant_calling/main.j2' import constitutional_variant_calling with context %}
 {% from 'modules/variant_calling/main.j2' import somatic_variant_calling with context %}
+{% from 'modules/methylation/main.j2' import methylation_calling with context %}
 {% from 'modules/assembly/main.j2' import assembly with context %}
 
 {{- prepare_chunk_intervals() }}
@@ -253,6 +254,8 @@
 {{- constitutional_variant_calling(samples) }}
 
 {{- somatic_variant_calling(samples) }}
+
+{{- methylation_calling(samples) }}
 
 {{- assembly() }}
 

@@ -76,12 +76,16 @@ constants:
       container: quay.io/biocontainers/medaka:1.11.1--py310h87e71ce_0
     merqury:
       container: /home/tgenref/containers/merqury_1.3.sif
+    methbat:
+      container: quay.io/biocontainers/methbat:0.14.1--h9ee0642_0
     minigraph:
       container: quay.io/biocontainers/minigraph:0.21--he4a0461_1
     minimap2:
       container: /home/tgenref/containers/minimap2-samtools_2.28_1.20.sif
     moddotplot:
       container: /home/tgenref/containers/moddotplot_latest.sif
+    modkit:
+      container: quay.io/biocontainers/ont-modkit:0.5.0--hcdda2d0_0
     mosdepth:
       container: quay.io/biocontainers/mosdepth:0.3.8--hd299d5a_0
     oarfish:
@@ -98,6 +102,8 @@ constants:
       container: quay.io/biocontainers/pbsv:2.11.0--h9ee0642_0
     pbtk:
       container: quay.io/biocontainers/pbtk:3.5.0--h9ee0642_0
+    pb_cpg_tools:
+      container: quay.io/biocontainers/pb-cpg-tools:3.0.0--h9ee0642_0
     pychopper:
       container: quay.io/biocontainers/pychopper:2.5.0--py_0
     python3:

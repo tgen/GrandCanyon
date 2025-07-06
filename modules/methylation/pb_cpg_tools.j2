@@ -1,0 +1,28 @@
+{% macro pb_cpg_tools(sample, aligner) %}
+
+{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/methylation/pb_cpg_tools/{{ sample.name }}_{{ aligner }}{% endset %}
+
+- name: pb_cpg_tools_{{ sample.name }}_{{ aligner }}
+  reset: predecessors
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+  output: {{ results_dir }}/{{ sample.name }}.{{ aligner }}
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.pb_cpg_tools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    aligned_bam_to_cpg_scores \
+      --bam {{ bam }} \
+      --output-prefix {{ results_dir }}/{{ sample.name }}.{{ aligner }} \
+      --threads 8
+
+{% endmacro %}
