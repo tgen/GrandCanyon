@@ -20,6 +20,8 @@
 {% from 'modules/qc/bam_qc_rna.j2' import bam_qc_gatk_collectrnaseqmetrics with context %}
 
 # Performed on constitutional dna
+{% from 'modules/qc/bam_qc_constitutional_dna.j2' import bam_qc_verifybamid2 with context %}
+{% from 'modules/qc/bam_qc_constitutional_dna.j2' import sex_check with context %}
 
 {% macro bam_qc(sample, aligner='minimap2') %}
 
@@ -48,6 +50,12 @@
       {{- bam_qc_gatk_collectrawwgsmetrics(sample, libraryCount, sample_lb, aligner=aligner) }}
     {% endif %}
 
+    {# Constitutional dna specific tasks #}
+    {% if sample.subGroup|lower == 'constitutional' and ( sample.gltype|lower == 'genome' or sample.gltype|lower == 'exome' )  %}
+      {{- bam_qc_verifybamid2(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner) }}
+      {{- sex_check(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner) }}
+    {% endif %}
+
     {% for sample_lb, sample_rgs in sample.read_groups.values()|groupby('rglb') %}
       {# Tasks performed on dna bams #}
       {% if sample.gltype not in ['rna',] and sample.glprep not in 'longread' and sample.umiType is defined and sample.umiType != "Inline_Duplex" %}
@@ -72,6 +80,12 @@
           {{- bam_qc_gatk_collectwgsmetrics(sample, libraryCount, sample_lb, aligner=aligner, bam_level=false) }}
           {{- bam_qc_gatk_collectwgsmetricswithnonzerocoverage(sample, libraryCount, sample_lb, aligner=aligner, bam_level=false) }}
           {{- bam_qc_gatk_collectrawwgsmetrics(sample, libraryCount, sample_lb, aligner=aligner, bam_level=false) }}
+        {% endif %}
+
+        {# Constitutional dna specific tasks #}
+        {% if sample.subGroup|lower == 'constitutional' and ( sample.gltype|lower == 'genome' or sample.gltype|lower == 'exome' )  %}
+          {{- bam_qc_verifybamid2(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=false) }}
+          {{- sex_check(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=false) }}
         {% endif %}
 
         {# Tasks performed on all bams #}

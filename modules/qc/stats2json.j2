@@ -22,13 +22,13 @@
     # {{ required_scripts.stats2json.path }} md5: {{ required_scripts.stats2json.path | md5 }}
     python3 {{ required_scripts.stats2json.path }} \
       --output {{ output_file }} \
-      {% if sample_name is not none %}
+      {% if sample_name is defined %}
       --samplename {{ sample_name }} \
       {% endif %}
-      {% if library_name is not none %}
+      {% if library_name is defined %}
       --libraryname {{ library_name }} \
       {% endif %}
-      {% if read_group_name is not none %}
+      {% if read_group_name is defined %}
       --readgroupname {{ read_group_name }} \
       {% endif %}
       {{ input_file }} \

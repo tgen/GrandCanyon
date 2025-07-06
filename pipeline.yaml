@@ -46,6 +46,8 @@ constants:
       container: quay.io/biocontainers/flair:2.2.0--pyhdfd78af_0
     flye:
       container: quay.io/biocontainers/flye:2.9.4--py311hc849397_2
+    freebayes:
+      container: quay.io/biocontainers/freebayes:1.3.10--hbefcdb2_0
     gatk:
       container: broadinstitute/gatk:4.5.0.0
     glnexus:
@@ -156,6 +158,8 @@ constants:
       digest: 37640beed1f829702dbd8c03a1e4955a205abd8a38e209ea88ffa815c570a8fa
     vep:
       container: ensemblorg/ensembl-vep:release_112.0
+    verifybamid2:
+      container: griffan/verifybamid2:v2.0.1
     verkko:
       container: quay.io/biocontainers/verkko:2.2.1--h45dadce_0
     whatshap:
@@ -270,12 +274,17 @@ constants:
             "columns": "TOPMED_AF:=AF,TOPMED_AN:=AN,TOPMED_AC:=AC,TOPMED_HET:=Het,TOPMED_HOM:=Hom",
           }
       tool_resources:
+        gatk_cnv:
+          mappability_track: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/bismap/k100.umap.no_header.bed
         mutect2:
           germline_reference: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.AnnotationReference.vcf.gz
           contamination: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.common.vcf.gz
         severus:
           vntrs: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/severus/human_GRCh38_no_alt_analysis_set.trf.bed
           pon: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/severus/PoN_1000G_hg38.tsv.gz
+        sex_check:
+          sex_check_targets: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/tgen_gender_check/chrx_common_dbSNPv152_snv_exons.bed
+          sex_check_vcf: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/tgen_gender_check/chrx_common_dbSNPv152_snv_exons.vcf.gz
         spectre:
           mdr: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38.mdr
           denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38_blacklist_spectre.bed
@@ -283,8 +292,8 @@ constants:
           tappas_gff: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sqanti3/human_tappas_gencode_annotation_file.gff3
         trgt:
           strchive: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/trgt/STRchive-disease-loci.hg38.TRGT.bed
-        gatk_cnv:
-          mappability_track: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/bismap/k100.umap.no_header.bed
+        verifybamid:
+          verifybamid_resources: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/VerifyBamID_2.0.1
     canfam4:
       species: canis_lupus_familiarisgsd
       genome_build: canfam4
@@ -326,6 +335,7 @@ constants:
       stats2json: samStats2json.py
       stats2lims: uploadStats2Lims.py
       plotCNVplus_Rscript: plotCNVplus.R
+      verifybamid_plot: verifybamid_plot.R
     lims_contigs:
       "chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,
       chrY,
