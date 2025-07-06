@@ -1,3 +1,5 @@
+{% from 'modules/qc/somalier.jst' import somalier with context %}
+
 {% macro glnexus(family, aligner) %}
 
 {% set temp_dir %}temp/{{ family.gltype }}/joint_variant_calls/glnexus/deepvariant/{{ family.name }}{% endset %}
@@ -9,7 +11,7 @@
   {% set config_type = 'DeepVariantWES' %}
 {% elif family.gltype in 'genome' %}
   {% set taskPrefix = 'Genome' %}
-  {% set config_type = 'DeepVariantWGS' %}
+  {% set config_type = 'DeepVariant' %}
 {% endif %}
 
 - name: glnexus_{{ family.name }}_deepvariant_{{ family.gltype }}
@@ -49,6 +51,10 @@
       -
 
     bcftools index {{ output_vcf }}
+
+{% if tasks[taskPrefix+"_joint_variant_calling_glnexus_somalier"] | default(true) %}
+  {{- somalier(family, 'glnexus', output_vcf) }}
+{% endif %}
 
 {% set filtered_vcf %}{{ results_dir }}/{{ family.name }}.glnexus.filtered.vcf.gz{% endset %}
 {% set ped_file %}{{ family.gltype }}/joint_variant_calls/{{ family.name }}.ped{% endset %}

@@ -1,0 +1,43 @@
+{% macro somalier(family, tool, input_vcf) %}
+
+{% set temp_dir %}temp/{{ family.gltype }}/joint_variant_calling/qc/somalier/{{ tool }}/{{ family.name }}{% endset %}
+{% set results_dir %}{{ family.gltype }}/joint_variant_calling/qc/somalier/{{ tool }}/{{ family.name }}{% endset %}
+{% set ped_file %}{{ family.gltype }}/joint_variant_calling/{{ family.name }}.ped{% endset %}
+
+- name: somalier_{{ family.name }}_{{ tool }}
+  input:
+    - {{ input_vcf }}
+    - {{ ped_file }}
+  output:
+    - {{ results_dir }}/{{ family.name }}.groups.tsv
+    - {{ results_dir }}/{{ family.name }}.html
+    - {{ results_dir }}/{{ family.name }}.pairs.tsv
+    - {{ results_dir }}/{{ family.name }}.samples.tsv
+  tags: [somalier, relatedness, ancestry, ]
+  cpus: 4
+  mem: 8G
+  walltime: "1-00:00:00"
+  container: {{ constants.tools.somalier.container }}
+  digest: {{ constants.tools.somalier.digest }}
+  cmd: |
+    set -euo pipefail
+
+    rm -rf {{ temp_dir }}
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    wget {{ constants.grandcanyon[reference].somalier_sites }} -O {{ temp_dir }}/sites.vcf.gz
+
+    somalier extract \
+      --out-dir {{ temp_dir }}/extracted \
+      --sites {{ temp_dir }}/sites.vcf.gz \
+      --fasta {{ constants.grandcanyon[reference].reference_fa }} \
+      {{ input_vcf }}
+
+    somalier relate \
+      --infer \
+      --ped {{ ped_file }} \
+      --output-prefix {{ results_dir }}/{{ family.name }} \
+      {{ temp_dir }}/extracted/*.somalier
+
+{% endmacro %}
