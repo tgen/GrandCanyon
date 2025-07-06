@@ -3,7 +3,7 @@
 {% macro dysgu(sample_or_pair, aligner) %}
 
 {% if sample_or_pair.normal is defined %}
-  {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_snp_indel_caller_deepvariant"]|default(false)  %}
+  {% if sample_or_pair.normal.phased_vcf is defined %}
     {{- whatshap_haplotag(sample_or_pair.tumor, aligner, 'deepvariant', sample_or_pair.normal.phased_vcf) }}
     {%- set normal_bam %}{{ sample_or_pair.normal.phased_bam }}{% endset %}
     {%- set bam %}{{ sample_or_pair.tumor.phased_bam }}{% endset %}

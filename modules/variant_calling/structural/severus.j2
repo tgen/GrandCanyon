@@ -63,7 +63,7 @@
     severus \
       --threads 16 \
       --out-dir {{ temp_dir }} \
-      {% if phased_vcf %}
+      {% if phased_vcf is defined %}
       --phasing-vcf {{ phased_vcf }} \
       {% endif %}
       --control-bam {{ normal_bam }} \

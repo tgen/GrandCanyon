@@ -5,12 +5,13 @@
 {% if sample_or_pair.normal is defined %}
   {% if sample_or_pair.normal.phased_vcf is defined %}
     {{- whatshap_haplotag(sample_or_pair.tumor, aligner, 'deepvariant', sample_or_pair.normal.phased_vcf) }}
-    {%- set phased_vcf %}{{ sample_or_pair.normal.phased_vcf }}{% endset %}
     {%- set normal_bam %}{{ sample_or_pair.normal.phased_bam }}{% endset %}
     {%- set bam %}{{ sample_or_pair.tumor.phased_bam }}{% endset %}
+    {%- set snp_vcf %}{{ sample_or_pair.normal.phased_vcf }}{% endset %}
   {% else %}
     {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
     {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+    {%- set snp_vcf %}{{ sample_or_pair.normal.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.deepvariant.pass.vcf.gz{% endset %}
   {% endif %}
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/savana/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/savana/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
@@ -71,7 +72,9 @@
       --sample {{ sample_or_pair.tumor.rgsm }} \
       --tumour {{ bam }} \
       --normal {{ normal_bam }} \
-      --snp_vcf {{ phased_vcf }} \
+      {% if input_vcf is defined %}
+      --snp_vcf {{ snp_vcf }} \
+      {% endif %}
     {% else %}
     savana to \
       --sample {{ sample_or_pair.rgsm }} \
