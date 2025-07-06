@@ -110,11 +110,7 @@
 {% endif %}
 {%- set input_bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
 {%- set output_prefix %}{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.whatshap{% endset %}
-{% if tasks['keep_phased_bam']|default(false) %}
-  {%- set output_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
-{% else %}
-  {%- set output_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
-{% endif %}
+{%- set output_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
 {% set phased_bam %}{{ output_dir }}/{{ output_prefix }}.haplotagged.bam{% endset %}
 {% do sample.update({'phased_bam': phased_bam}) %}
 
@@ -125,7 +121,7 @@
     - {{ input_bam }}.bai
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
-    - {{ output_dir }}/{{ output_prefix }}.haplotagged.bam
+    - {{ phased_bam }}
   cpus: 8
   mem: 32G
   walltime: "8:00:00"
@@ -137,25 +133,21 @@
 
     mkdir -p {{ output_dir }}
 
-    if ls {{ output_dir }}/{{ output_prefix }}.haplotagged.bam ; then
-      echo "{{ output_dir }}/{{ output_prefix }}.haplotagged.bam already exists! Skipping whatshap haplotagging!"
-    else
-      whatshap haplotag \
-        --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-        -o {{ output_dir }}/{{ output_prefix }}.haplotagged.bam \
-        --ignore-read-groups \
-        --tag-supplementary \
-        --skip-missing-contigs \
-        --output-threads=4 \
-        {{ phased_vcf }} \
-        {{ input_bam }}
-    fi
+    whatshap haplotag \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      -o {{ phased_bam }} \
+      --ignore-read-groups \
+      --tag-supplementary \
+      --skip-missing-contigs \
+      --output-threads=4 \
+      {{ phased_vcf }} \
+      {{ input_bam }}
 
 - name: whatshap_haplotag_index_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
-    - {{ output_dir }}/{{ output_prefix }}.haplotagged.bam
+    - {{ phased_bam }}
   output:
-    - {{ output_dir }}/{{ output_prefix }}.haplotagged.bam.bai
+    - {{ phased_bam }}.bai
   cpus: 8
   mem: 8G
   walltime: "4:00:00"
@@ -165,6 +157,39 @@
     set -eu
     set -o pipefail
 
-    samtools index -@8 {{ output_dir }}/{{ output_prefix }}.haplotagged.bam
+    samtools index -@8 {{ phased_bam }}
+
+{% if tasks[sample.gltype|capitalize+'_variant_calling_keep_phased_cram']|default(true) %}
+{% set output_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+{% set phased_bam %}temp/{{ output_dir }}/{{ output_prefix }}.haplotagged.bam{% endset %}
+{% set phased_cram %}{{ output_dir }}/{{ output_prefix }}.haplotagged.cram{% endset %}
+
+- name: whatshap_hapolotag_samtools_compress_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
+  input:
+    - {{ phased_bam }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ phased_cram }}
+    - {{ phased_cram }}.crai
+  cpus: 8
+  mem: 32G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ output_dir }}
+
+    samtools view \
+      -@ 8 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --no-PG \
+      -o {{ phased_cram }} \
+      --write-index \
+      {{ phased_bam }}
+
+{% endif %}
 
 {% endmacro %}
