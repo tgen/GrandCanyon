@@ -35,11 +35,13 @@
 {%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.savana.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.savana.pass.vcf.gz{% endset %}
 
+{% set 1000g_dict = {'grch38': '1000g_hg38', 'grch37': '1000g_hg19', 'chm13': '1000g_t2t'} %}
+
 - name: savana_{{ sample_or_pair.name }}_{{ aligner }}
   reset: predecessors
   input:
-    {% if phased_vcf is defined %}
-    - {{ phased_vcf }}
+    {% if snp_vcf is defined %}
+    - {{ snp_vcf }}
     {% endif %}
     {% if normal_bam is defined %}
     - {{ normal_bam }}
@@ -72,13 +74,14 @@
       --sample {{ sample_or_pair.tumor.rgsm }} \
       --tumour {{ bam }} \
       --normal {{ normal_bam }} \
-      {% if input_vcf is defined %}
+      {% if snp_vcf is defined %}
       --snp_vcf {{ snp_vcf }} \
       {% endif %}
     {% else %}
     savana to \
       --sample {{ sample_or_pair.rgsm }} \
       --tumour {{ bam }} \
+      --g1000_vcf {{ 1000g_dict[reference] }} \
     {% endif %}
       --outdir {{ temp_dir }} \
       {{ mode_type }} \
