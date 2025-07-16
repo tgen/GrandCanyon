@@ -334,6 +334,22 @@ constants:
         mutect2:
           germline_reference: /home/tgenref/canis_familiaris/UU_Cfam_GSD_1.0/public_databases/dog10k/AutoAndXPAR.SNPs.fill-tags.norm.vcf.gz
           contamination: /home/tgenref/canis_familiaris/UU_Cfam_GSD_1.0/public_databases/dog10k/AutoAndXPAR.SNPs.fill-tags.norm.common.vcf.gz
+    grcm39:
+      species: mus_musculus
+      genome_build: grcm39_mm39
+      genome_subversion_name: mm39
+      gene_model_name: ensembl_v112
+      gene_model_version: 112
+      reference_fasta: /home/tgenref/mus_musculus/grcm39_mm39/genome_reference/Mus_musculus.GRCm39.dna.toplevel.fa
+      reference_fai: /home/tgenref/mus_musculus/grcm39_mm39/genome_reference/Mus_musculus.GRCm39.dna.toplevel.fa.fai
+      reference_dict: /home/tgenref/mus_musculus/grcm39_mm39/genome_reference/Mus_musculus.GRCm39.dna.toplevel.fa.dict
+      gtf: /home/tgenref/mus_musculus/grcm39_mm39/gene_model/Mus_musculus.GRCm39.112.gtf
+      transcriptome: /home/tgenref/mus_musculus/grcm39_mm39/gene_model/Mus_musculus.GRCm39.112.transcriptome.fasta
+      starfusion_index: /home/tgenref/mus_musculus/grcm39_mm39/gene_model/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir
+      vep_data: /home/tgenref/mus_musculus/grcm39_mm39/gene_model/indexed_vep_cache
+      ref_flat: /home/tgenref/mus_musculus/grcm39_mm39/gene_model/Mus_musculus.GRCm39.112.refFlat.txt
+      ribo_locations: /home/tgenref/mus_musculus/grcm39_mm39/gene_model/Mus_musculus.GRCm39.112.ribo.interval_list
+      primary_interval_list: /home/tgenref/mus_musculus/grcm39_mm39/genome_reference/Mus_musculus.GRCm39.dna.toplevel.fa.primary.interval_list
     dfam_db: /home/tgenref/multi_species_resources/tool_specific_resources/dfam/3.8/Dfam.hmm
     ont_resources: /home/tgenref/instrument_resources/ont
     lineages: /home/tgenref/multi_species_resources/tool_specific_resources/busco_lineages
