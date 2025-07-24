@@ -5,6 +5,7 @@
 {% from 'modules/assembly/herro.j2' import herro with context %}
 {% from 'modules/assembly/meryl.j2' import meryl with context %}
 {% from 'modules/assembly/ul_filter.j2' import ul_filter with context %}
+{% from 'modules/assembly/yak.j2' import yak with context %}
 
 {%- macro assembly() %}
 
@@ -13,6 +14,36 @@
     {% set assembly.enabled = true %}
   {% endfor %}
   {% if assembly.enabled %}
+    {% set trio = {} %}
+    {% if sampleRelations is defined %}
+      {% for sample in sampleRelations if sample.paternalID != '' or sample.maternalID != '' %}
+        {% if sample.paternalID is defined %}
+          {% set paternal = sampleRelations|selectattr('patientID', 'eq', sample.paternalID)|first|default(none) %}
+          {% set paternal_datafiles = [] %}
+          {% for rgsm in paternal.rgsm %}
+            {% for file in dataFiles|selectattr('rgsm', 'eq', rgsm) %}
+              {% do paternal_datafiles.append(file) %}
+            {% endfor %}
+          {% endfor %}
+        {% endif %}
+        {% if sample.maternalID is defined %}
+          {% set maternal = sampleRelations|selectattr('patientID', 'eq', sample.maternalID)|first|default(none) %}
+          {% set maternal_datafiles = [] %}
+          {% for rgsm in maternal.rgsm %}
+            {% for file in dataFiles|selectattr('rgsm', 'eq', rgsm) %}
+              {% do maternal_datafiles.append(file) %}
+            {% endfor %}
+          {% endfor %}
+        {% endif %}
+        {% set child_datafiles = [] %}
+        {% for rgsm in sample.rgsm %}
+          {% for file in dataFiles|selectattr('rgsm', 'eq', rgsm) %}
+            {% do child_datafiles.append(file) %}
+          {% endfor %}
+        {% endfor %}
+        {% do trio.update({'sample_ped': sample, 'child': child_datafiles, 'paternal': paternal_datafiles, 'maternal': maternal_datafiles}) %}
+      {% endfor %}
+    {% endif %}
     {% set input = {'project': project} %}
     {% do input.update({'gltype': 'genome'}) %}
     {% do input.update({'ulong': []}) %}
@@ -21,8 +52,22 @@
     {% do input.update({'duplex': []}) %}
     {% do input.update({'hic_r1': []}) %}
     {% do input.update({'hic_r2': []}) %}
+    {% do input.update({'yak_pat': []}) %}
+    {% do input.update({'yak_mat': []}) %}
 
-    {% for file in dataFiles|selectattr('gltype', 'in', ['genome']) %}
+    {% if trio | length > 0 %}
+      {% set assembly_dataFiles = trio.child %}
+      {% set paternal_yak %}temp/genome/assembly/yak/{{ trio.sample_ped.paternalID }}.yak{% endset %}
+      {% set maternal_yak %}temp/genome/assembly/yak/{{ trio.sample_ped.maternalID }}.yak{% endset %}
+      {{- yak(trio.sample_ped.paternalID, trio.paternal, paternal_yak) }}
+      {{- yak(trio.sample_ped.maternalID, trio.maternal, maternal_yak) }}
+      {% do input.yak_pat.append(paternal_yak) %}
+      {% do input.yak_mat.append(maternal_yak) %}
+    {% else %}
+      {% set assembly_dataFiles = dataFiles %}
+    {% endif %}
+
+    {% for file in assembly_dataFiles|selectattr('gltype', 'in', ['genome']) %}
       {% if file.glprep == '3c' %}
         {% set hic_file %}temp/fastqs/{{ file.basename }}{% endset %}
         {% if file.fastqCode == 'R1' %}
@@ -32,7 +77,7 @@
         {% endif %}
       {% elif file.rgpl in ('ONT') %}
         {% if file.fastqCode == 'simplex' %}
-          {% set duplex_matches = dataFiles|selectattr('fastqCode', 'eq', 'duplex')|selectattr('sampleName', 'eq', file.sampleName)|selectattr('rgid', 'eq', file.rgid)|list %}
+          {% set duplex_matches = assembly_dataFiles|selectattr('fastqCode', 'eq', 'duplex')|selectattr('sampleName', 'eq', file.sampleName)|selectattr('rgid', 'eq', file.rgid)|list %}
           {% if not duplex_matches | length > 0 %}
             {% set simplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
             {% set ul_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.ul.filtered.fastq.gz{% endset %}
@@ -69,7 +114,7 @@
       {% endif %}
     {% endfor %}
 
-    {% if dataFiles|selectattr('gltype', 'in', ['genome'])|selectattr('glprep', 'in', ['longread','3c'])|list | length > 0 %}
+    {% if assembly_dataFiles|selectattr('gltype', 'in', ['genome'])|selectattr('glprep', 'in', ['longread','3c'])|list | length > 0 %}
       {{- meryl(input) }}
       {% if tasks.Genome_assembly_long_read_assembler_flye|default(false) %}
         {{- flye(input) }}
@@ -87,4 +132,3 @@
   {% endif %}
 
 {% endmacro %}
-

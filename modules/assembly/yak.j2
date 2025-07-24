@@ -1,0 +1,29 @@
+{% macro yak(name, input, output) %}
+
+{% set input_paths = [] %}
+{% for file in input %}
+  {% do input_paths.append(temp/fastqs/{{ file.basename }}) %}
+{% endfor %}
+
+- name: yak_{{ name }}
+  input:
+   {% for file in input %}
+   - temp/fastqs/{{ file.basename }}
+   {% endfor %}
+  output: {{ output }}
+  cpus: 16
+  mem: 32G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.yak.container }}
+  cmd: |
+    set -eu
+
+    yak count \
+      -b37 \
+      -t16 \
+      -o {{ output }} \
+      <(cat {{ input_paths | join(" ") }}) \
+      <(cat {{ input_paths | join(" ") }})
+
+{% endmacro %}

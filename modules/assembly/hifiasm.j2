@@ -50,7 +50,7 @@
 - name: hifiasm_{{ input.project }}
   reset: predecessors
   input:
-    {% for file in hifi_list + input.ulong %}
+    {% for file in hifi_list + input.ulong + input.yak_pat + input.yak_mat %}
     - {{ file }}
     {% endfor %}
   output:
@@ -85,6 +85,10 @@
       --h1 "{{ input.hic_r1 | sort | join(',') }}" \
       --h2 "{{ input.hic_r2 | sort | join(',') }}" \
       {% endif %}
+      {% if input.yak_pat | length > 0 %}
+      -1 {{ input.yak_pat }} \
+      -2 {{ input.yak_mat }} \
+      {% end %}
       {{ hifi_list | join(' ') }}
 
     for graph in {{ temp_dir }}/{{ input.project }}.asm.*.gfa ; do
