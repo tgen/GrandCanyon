@@ -86,9 +86,9 @@
       --h2 "{{ input.hic_r2 | sort | join(',') }}" \
       {% endif %}
       {% if input.yak_pat | length > 0 %}
-      -1 {{ input.yak_pat }} \
-      -2 {{ input.yak_mat }} \
-      {% end %}
+      -1 {{ input.yak_pat | first }} \
+      -2 {{ input.yak_mat | first }} \
+      {% endif %}
       {{ hifi_list | join(' ') }}
 
     for graph in {{ temp_dir }}/{{ input.project }}.asm.*.gfa ; do
