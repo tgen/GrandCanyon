@@ -2,7 +2,8 @@
 
 {% set input_paths = [] %}
 {% for file in input %}
-  {% do input_paths.append("temp/fastqs/" + {{ file.basename }}) %}
+  {% set input_path %}temp/fastqs/{{ file.basename }}{% endset %}
+  {% do input_paths.append(input_path) %}
 {% endfor %}
 
 - name: yak_{{ name }}
