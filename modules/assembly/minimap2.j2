@@ -34,10 +34,10 @@
 
 
 {% if tasks.plot_assembly_pafplot | default(false) %}
-{{- pafplot(pair, paf_output, 'minimap2', assembler) }}
+{{- pafplot(pair, input_assemblies, 'minimap2', assembler) }}
 {% endif %}
 {% if tasks.plot_assembly_pafr | default(false) %}
-{{- pafr(pair, paf_output, 'minimap2', assembler) }}
+{{- pafr(pair, input_assemblies, 'minimap2', assembler) }}
 {% endif %}
 
 {% endmacro %}

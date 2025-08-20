@@ -26,16 +26,20 @@
 
 {% endmacro %}
 
-{% macro pafplot(pair, input_paf, aligner, assembler) %}
+{% macro pafplot(pair, input_assemblies, aligner, assembler) %}
 
-{% set results_dir %}{{ input_paf | dirname }}{% endset %}
-{% set output_plot %}{{ input_paf | basename }}.pafplot.png{% endset %}
+{% set results_dir %}{{ input_assemblies | first | dirname }}{% endset %}
 
 - name: pafplot_{{ aligner }}_{{ pair.project }}_{{ assembler }}
   input:
-    - {{ input_paf }}
+    {% for input_assembly in input_assemblies %}
+    - {{ input_assembly }}.minimap2.paf
+    {% endfor %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
-  output: {{ results_dir }}/{{ output_plot }}
+  output:
+    {% for input_assembly in input_assemblies %}
+    - {{ results_dir }}/{{ input_assembly | basename }}.pafplot.png
+    {% endfor %}
   cpus: 4
   mem: 20G
   walltime: "8:00:00"
@@ -45,18 +49,25 @@
     set -eu
     set -o pipefail
 
+    {% for input_assembly in input_assemblies %}
     pafplot \
-      -p {{ results_dir }}/{{ output_plot }} \
-      {{ input_paf }}
+      -p {{ results_dir }}/{{ input_assembly | basename }}.pafplot.png \
+      {{ input_assembly }}.minimap2.paf
+    {% endfor %}
 
 {% endmacro %}
 
-{% macro pafr(pair, input_paf, aligner, assembler) %}
+{% macro pafr(pair, input_assemblies, aligner, assembler) %}
 
 - name: pafr_{{ aligner }}_{{ pair.project }}_{{ assembler }}
   input:
-    - {{ input_paf }}
-  output: {{ input_paf }}_dotplot.png
+    {% for input_assembly in input_assemblies %}
+    - {{ input_assembly }}.minimap2.paf
+    {% endfor %}
+  output:
+    {% for input_assembly in input_assemblies %}
+    - {{ input_assembly }}.minimap2.paf_dotplot.png
+    {% endfor %}
   cpus: 2
   mem: 8G
   walltime: "1:00:00"
@@ -66,8 +77,10 @@
     set -eu
     set -o pipefail
 
+    {% for input_assembly in input_assemblies %}
     Rscript --vanilla {{ required_scripts.pafr_plot_Rscript.path }} \
-      -i {{ input_paf }}
+      -i {{ input_assembly }}.minimap2.paf
+    {% endfor %}
 
 {% endmacro %}
 

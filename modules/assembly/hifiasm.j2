@@ -46,6 +46,26 @@
       -
 {% endif %}
 
+
+{% if input.hic_r1 | length > 0 %}
+  {% set asm_str = "hic" %}
+{% else %}
+  {% set asm_str = "bp" %}
+{% endif %}
+
+{% set raw_assembly %}{{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.r_utg.fa{% endset %}
+{% set raw_collapsed_assembly %}{{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.p_utg.fa{% endset %}
+{% set primary_assembly %}{{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.p_ctg.fa{% endset %}
+{% if input.yak_pat | length > 0 %}
+  {% set haplotype1_assembly %}{{ results_dir }}/{{ input.project }}.asm.dip.hap1.p_ctg.fa{% endset %}
+  {% set haplotype2_assembly %}{{ results_dir }}/{{ input.project }}.asm.dip.hap2.p_ctg.fa{% endset %}
+{% else %}
+  {% set haplotype1_assembly %}{{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.hap1.p_ctg.fa{% endset %}
+  {% set haplotype2_assembly %}{{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.hap2.p_ctg.fa{% endset %}
+{% endif %}
+{% set input_assemblies = [primary_assembly, haplotype1_assembly, haplotype2_assembly] %}
+{% set align_assemblies = [raw_assembly, raw_collapsed_assembly, primary_assembly, haplotype1_assembly, haplotype2_assembly] %}
+
 {% if hifi_list | length > 0 %}
 - name: hifiasm_{{ input.project }}
   reset: predecessors
@@ -54,10 +74,15 @@
     - {{ file }}
     {% endfor %}
   output:
-    - {{ results_dir }}/{{ input.project }}.asm.bp.r_utg.fa
-    - {{ results_dir }}/{{ input.project }}.asm.bp.p_ctg.fa
-    - {{ results_dir }}/{{ input.project }}.asm.bp.hap1.p_ctg.fa
-    - {{ results_dir }}/{{ input.project }}.asm.bp.hap2.p_ctg.fa
+    {% if input.yak_pat | length > 0 %}
+    - {{ results_dir }}/{{ input.project }}.asm.dip.hap1.p_ctg.fa
+    - {{ results_dir }}/{{ input.project }}.asm.dip.hap2.p_ctg.fa
+    {% else %}
+    - {{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.hap1.p_ctg.fa
+    - {{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.hap2.p_ctg.fa
+    {% endif %}
+    - {{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.r_utg.fa
+    - {{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.p_ctg.fa
   cpus: 32
   mem: 600G
   walltime: "48:00:00"
@@ -85,24 +110,23 @@
       --h1 "{{ input.hic_r1 | sort | join(',') }}" \
       --h2 "{{ input.hic_r2 | sort | join(',') }}" \
       {% endif %}
-      {% if input.yak_pat | length > 0 %}
+      {{ hifi_list | join(' ') }}
+
+    {% if input.yak_pat | length > 0 %}
+    hifiasm \
+      -t 32 \
+      -o {{ temp_dir }}/{{ input.project }}.asm \
       -1 {{ input.yak_pat | first }} \
       -2 {{ input.yak_mat | first }} \
-      {% endif %}
-      {{ hifi_list | join(' ') }}
+      /dev/null
+    {% endif %}
 
     for graph in {{ temp_dir }}/{{ input.project }}.asm.*.gfa ; do
       awk '/^S/{print ">"$2;print $3}' ${graph} > {{ results_dir }}/$(basename ${graph%.gfa}.fa)
     done
-    mv {{ temp_dir }}/{{ input.project }}.asm.bp.* {{ results_dir }}/
+    mv {{ temp_dir }}/{{ input.project }}.asm.*.gfa {{ results_dir }}/
+    mv {{ temp_dir }}/{{ input.project }}.asm.*.lowQ.bed {{ results_dir }}/
 
-{% set raw_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.r_utg.fa{% endset %}
-{% set raw_collapsed_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.p_utg.fa{% endset %}
-{% set primary_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.p_ctg.fa{% endset %}
-{% set haplotype1_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.hap1.p_ctg.fa{% endset %}
-{% set haplotype2_assembly %}{{ results_dir }}/{{ input.project }}.asm.bp.hap2.p_ctg.fa{% endset %}
-{% set input_assemblies = [primary_assembly, haplotype1_assembly, haplotype2_assembly] %}
-{% set align_assemblies = [raw_assembly, raw_collapsed_assembly, primary_assembly, haplotype1_assembly, haplotype2_assembly] %}
 
 {% if tasks.Genome_assembly_metrics_assembly_qc|default(false) %}
 {{- assembly_qc(input, primary_assembly, 'hifiasm') }}
