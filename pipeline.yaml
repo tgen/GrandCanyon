@@ -23,6 +23,8 @@ constants:
       container: hkubal/clair3:v1.0.10
     clairs:
       container: hkubal/clairs:v0.4.0
+    cnvkit:
+      container: quay.io/biocontainers/cnvkit:0.9.12--pyhdfd78af_0
     compleasm:
       container: quay.io/biocontainers/compleasm:0.2.6--pyh7cba7a3_0
     cutesv:

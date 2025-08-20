@@ -69,7 +69,7 @@
   mem: 32G
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
-  container: quay.io/biocontainers/cnvkit:0.9.12--pyhdfd78af_0
+  container: {{ constants.tools.cnvkit.container }}
   cmd: |
     set -eu
     set -o pipefail
