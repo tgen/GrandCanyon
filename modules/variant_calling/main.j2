@@ -160,6 +160,12 @@
 
     {% else %}
 
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
+        {% if sample.gltype in 'genome' %}
+          {{- gatk_cnv(sample, aligner) }}
+        {% endif %}
+      {% endif %}
+
     {% endif %}
 
   {% endfor %}
@@ -361,6 +367,12 @@
     {############
     # copy number variant callers
     ############}
+
+    {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
+      {% if sample.gltype in 'genome' %}
+        {{- gatk_cnv(sample, aligner) }}
+      {% endif %}
+    {% endif %}
 
     {% if tasks[taskPrefix+"_variant_calling_cna_caller_cnvkit"]|default(false) %}
       {{- cnvkit(sample, aligner) }}

@@ -19,25 +19,34 @@
   {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
-    {%- set deepsomatic_vcf %}{{ sample_or_pair.gltype }}/somatic_variant_calls/deepsomatic/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.deepsomatic.pass.vcf.gz{% endset %}
     {%- set input_config = "tumor_only" %}
   {% else %}
     {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_snp_indel_caller_deepvariant"]|default(false)  %}
-      {%- set input_vcf %}{{ sample_or_pair.normal.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.deepvariant.pass.vcf.gz{% endset %}
+      {%- set input_vcf %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.deepvariant.pass.vcf.gz{% endset %}
     {% elif tasks[sample_or_pair.gltype|capitalize+"_variant_calling_snp_indel_caller_haplotypecaller"]|default(false)  %}
-      {%- set input_vcf %}{{ sample_or_pair.normal.gltype }}/constitutional_variant_calls/haplotypecaller/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.hc.pass.vcf.gz{% endset %}
+      {%- set input_vcf %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/haplotypecaller/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.hc.pass.vcf.gz{% endset %}
     {% endif %}
     {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_copy_number/gatk/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
     {%- set input_config = "germline" %}
   {% endif %}
+  {% if controlDataFiles is defined %}
+    {% if input_vcf is not defined %}
+      {% set input_vcf = controlDataFiles|selectattr('assayCode', 'eq', sample_or_pair.assayCode)|map(attribute='gatkCnvSnps')|first|default(none) %}
+    {% endif %}
+    {% set cnvIntervals = controlDataFiles|selectattr('assayCode', 'eq', sample_or_pair.assayCode)|map(attribute='gatkCnvPonIntervals')|first|default(none) %}
+    {% set cnvPon = controlDataFiles|selectattr('assayCode', 'eq', sample_or_pair.assayCode)|map(attribute='gatkCnvPon')|first|default(none) %}
+  {% endif %}
 {% endif %}
 
 {% set config_sex %}{{ sex|default("Female") }}{% endset %}
+{% set enable_plot = false %}
 
 {% if input_config == 'paired' and reference in 'grch38' and input_vcf is defined %}
-{# Step 1 #}
-- name: gatk_call_cnv_step1_{{ sample_or_pair.name }}_{{ aligner }}
+
+{% set enable_plot = true %}
+
+- name: gatk_call_cnv_identify_intervals_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, gatk, {{ sample_or_pair.name }}]
   reset: predecessors
   input:
@@ -184,8 +193,7 @@
       --reference {{ constants.grandcanyon[reference].reference_fasta }}
 
 
-{# Step 1 continued #}
-- name: gatk_call_cnv_step1_extract_hets_{{ sample_or_pair.name }}_{{ aligner }}
+- name: gatk_call_cnv_extract_hets_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, gatk, {{ sample_or_pair.name }}]
   input:
     - {{ input_vcf }}
@@ -238,10 +246,10 @@
     {# Remove preFilt.snps.vcf #}
     rm {{ temp_dir }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.preFilt.snps.vcf
 
-{# Step 2a #}
-- name: gatk_call_cnv_step2a_{{ sample_or_pair.name }}_{{ aligner }}
+
+- name: gatk_call_cnv_normal_collectreadcounts_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, gatk, {{ sample_or_pair.name }}]
-  reset: gatk_call_cnv_step1_{{ sample_or_pair.name }}_{{ aligner }}
+  reset: gatk_call_cnv_identify_intervals_{{ sample_or_pair.name }}_{{ aligner }}
   input:
     - {{ normal_bam }}
     - {{ normal_bam }}.bai
@@ -270,10 +278,9 @@
       --output {{ temp_dir }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.counts.hdf5
 
 
-{# Step 2b #}
-- name: gatk_call_cnv_step2b_{{ sample_or_pair.name }}_{{ aligner }}
+- name: gatk_call_cnv_normal_collectalleliccounts_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, gatk, {{ sample_or_pair.name }}]
-  reset: gatk_call_cnv_step1_extract_hets_{{ sample_or_pair.name }}_{{ aligner }}
+  reset: gatk_call_cnv_extract_hets_{{ sample_or_pair.name }}_{{ aligner }}
   input:
     - {{ normal_bam }}
     - {{ normal_bam }}.bai
@@ -302,10 +309,9 @@
       --output {{ results_dir }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.allelicCounts.tsv
 
 
-{# Step 2c #}
-- name: gatk_call_cnv_step2c_{{ sample_or_pair.name }}_{{ aligner }}
+- name: gatk_call_cnv_tumor_collectreadcounts_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, gatk, {{ sample_or_pair.name }}]
-  reset: gatk_call_cnv_step1_{{ sample_or_pair.name }}_{{ aligner }}
+  reset: gatk_call_cnv_identify_intervals_{{ sample_or_pair.name }}_{{ aligner }}
   input:
     - {{ tumor_bam }}
     - {{ tumor_bam }}.bai
@@ -335,9 +341,9 @@
 
 
 {# Step 2d #}
-- name: gatk_call_cnv_step2d_{{ sample_or_pair.name }}_{{ aligner }}
+- name: gatk_call_cnv_tumor_collectalleliccounts_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, gatk, {{ sample_or_pair.name }}]
-  reset: gatk_call_cnv_step1_extract_hets_{{ sample_or_pair.name }}_{{ aligner }}
+  reset: gatk_call_cnv_extract_hets_{{ sample_or_pair.name }}_{{ aligner }}
   input:
     - {{ tumor_bam }}
     - {{ tumor_bam }}.bai
@@ -366,14 +372,13 @@
       --output {{ results_dir }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.allelicCounts.tsv
 
 
-{# Step 3 #}
-- name: gatk_call_cnv_step3_{{ sample_or_pair.name }}_{{ aligner }}
+- name: gatk_call_cnv_model_segments_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, gatk, {{ sample_or_pair.name }}]
   reset:
-    - gatk_call_cnv_step2a_{{ sample_or_pair.name }}_{{ aligner }}
-    - gatk_call_cnv_step2b_{{ sample_or_pair.name }}_{{ aligner }}
-    - gatk_call_cnv_step2c_{{ sample_or_pair.name }}_{{ aligner }}
-    - gatk_call_cnv_step2d_{{ sample_or_pair.name }}_{{ aligner }}
+    - gatk_call_cnv_normal_collectreadcounts_{{ sample_or_pair.name }}_{{ aligner }}
+    - gatk_call_cnv_normal_collectalleliccounts_{{ sample_or_pair.name }}_{{ aligner }}
+    - gatk_call_cnv_tumor_collectreadcounts_{{ sample_or_pair.name }}_{{ aligner }}
+    - gatk_call_cnv_tumor_collectalleliccounts_{{ sample_or_pair.name }}_{{ aligner }}
   input:
     - {{ temp_dir }}/anno_preprocessed.interval_list
     - {{ temp_dir }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.counts.hdf5
@@ -492,48 +497,169 @@
       --input {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cr.seg \
       --output {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.called.seg
 
+{% elif input_config in ('tumor_only', 'germline')
+and reference in 'grch38'
+and input_vcf is defined
+and input_vcf is not none %}
 
-{# Step 4 #}
-- name: gatk_call_cnv_step4_{{ sample_or_pair.name }}_{{ aligner }}
-  tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, gatk, {{ sample_or_pair.name }}]
-  reset: gatk_call_cnv_step3_{{ sample_or_pair.name }}_{{ aligner }}
+{% set enable_plot = true %}
+
+- name: gatk_call_cnv_model_segments_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, tumor_only, cna_caller, gatk, {{ sample_or_pair.name }}]
   input:
-    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.tsv
-    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.seg
-    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.hets.tsv
+    - {{ bam }}
+    - {{ bam }}.bai
+    {% if cnvPon is not none %}
+    - {{ cnvPon }}
+    {% endif %}
+    {% if cnvIntervals is not none %}
+    - {{ cnvIntervals }}
+    {% endif %}
+    - {{ input_vcf }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+    - {{ constants.grandcanyon[reference].tool_resources.gatk_cnv.mappability_track }}
   output:
-    - {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.genderCorrected.seg
-    - {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.genderCorrected.tsv
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.allelicCounts.tsv
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.standardizedCR.tsv
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.tsv
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.hets.normal.tsv
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.hets.tsv
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.modelBegin.seg
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.modelBegin.cr.param
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.modelBegin.af.param
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.seg
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.cr.param
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.af.param
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cr.seg
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cr.igv.seg
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.af.igv.seg
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.called.seg
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.called.igv.seg
   cpus: 1
   mem: 16G
   walltime: "24:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.python3.container }}
+  container: {{ constants.tools.gatk.container }}
   cmd: |
     set -eu
     set -o pipefail
 
     {# Make working and temp directories #}
-    mkdir -p "{{ temp_dir }}"
+    mkdir -p "{{ temp_dir }}/temp"
+    mkdir -p "{{ results_dir }}"
 
+    {% if cnvIntervals is none %}
     SEX={{ config_sex }}
+    BIN_LENGTH=2000
 
-    if [ ${SEX} == "Male" ]
+    if [ ${SEX} == "Female" ]
     then
-      awk -F'\t' '{ if ($1 == "chrX" || $1 == "chrY") { $4 = $4-1} ; { OFS = "\t" ; print $0 }}' {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.tsv > \
-        {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.genderCorrected.tsv
-
-      awk -F'\t' '{ if ($1 == "chrX" || $1 == "chrY") { $6 = $6-1 ; $7 = $7-1 ; $8 = $8-1 } ; { OFS = "\t" ; print $0 }}' {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.seg > \
-        {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.genderCorrected.seg
+      cat {{ constants.grandcanyon[reference].reference_dict }} > {{ temp_dir }}/gatk_cnv_primary_contigs.interval_list
+      grep 'SN:\(chr\)\?[0-9X]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+        sed 's/SN://;s/LN://' |\
+        awk '{ OFS="\t" ; print $2,1,$3,"+",$2 }' \
+        >> {{ temp_dir }}/gatk_cnv_primary_contigs.interval_list
+      INTERVALS={{ temp_dir }}/gatk_cnv_primary_contigs.interval_list
     else
-      touch {{ temp_dir }}/results/plots/{{ sample_or_pair.name }}.{{ aligner }}_chrY.png
-      cp {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.tsv {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.genderCorrected.tsv
-      cp {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.seg {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.genderCorrected.seg
+      cat {{ constants.grandcanyon[reference].reference_dict }} > {{ temp_dir }}/gatk_cnv_primary_contigs.interval_list
+      grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+        sed 's/SN://;s/LN://' |\
+        awk '{ OFS="\t" ; print $2,1,$3,"+",$2 }' \
+        >> {{ temp_dir }}/gatk_cnv_primary_contigs.interval_list
+      INTERVALS={{ temp_dir }}/gatk_cnv_primary_contigs.interval_list
     fi
 
-- name: gatk_call_cnv_step4_plot_cnv_{{ sample_or_pair.name }}_{{ aligner }}
+    {# Generate an intervals list to perform CNA on #}
+    gatk --java-options "-Xmx12g" PreprocessIntervals \
+      --tmp-dir {{ temp_dir }}/temp/ \
+      --intervals ${INTERVALS} \
+      --bin-length ${BIN_LENGTH} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --output {{ temp_dir }}/preprocessed.interval_list \
+      --interval-merging-rule OVERLAPPING_ONLY
+
+    gatk --java-options "-Xmx12g" AnnotateIntervals \
+      --tmp-dir {{ temp_dir }}/temp/ \
+      --mappability-track {{ constants.grandcanyon[reference].tool_resources.gatk_cnv.mappability_track }} \
+      --intervals {{ temp_dir }}/preprocessed.interval_list \
+      --output {{ temp_dir }}/PreFilter_anno_preprocessed.interval_list \
+      --interval-merging-rule OVERLAPPING_ONLY \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }}
+
+    gatk --java-options "-Xmx12g" FilterIntervals \
+      --tmp-dir {{ temp_dir }}/temp/ \
+      --intervals {{ temp_dir }}/preprocessed.interval_list \
+      --interval-merging-rule OVERLAPPING_ONLY \
+      --minimum-gc-content 0.1 \
+      --maximum-gc-content 0.9 \
+      --minimum-mappability 0.9 \
+      --maximum-mappability 1.0 \
+      --annotated-intervals {{ temp_dir }}/PreFilter_anno_preprocessed.interval_list \
+      --output {{ temp_dir }}/preprocessed_filt_map.interval_list
+
+    {% set cnvIntervals %}{{ temp_dir }}/preprocessed_filt_map.interval_list{% endset %}
+
+    {% endif %}
+
+    {# CollectReadCounts for the tumor using the intervals provided to the config that matches the PON #}
+    gatk --java-options "-Xmx12g" CollectReadCounts \
+      --tmp-dir {{ temp_dir }}/temp/ \
+      --input {{ bam }} \
+      --intervals {{ cnvIntervals }} \
+      --interval-merging-rule OVERLAPPING_ONLY \
+      --read-filter FirstOfPairReadFilter \
+      --output {{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.counts.hdf5
+
+    {# CollectAllelicCounts for the tumor using the snps provided to the config #}
+    gatk --java-options "-Xmx12g" CollectAllelicCounts \
+      --tmp-dir {{ temp_dir }}/temp/ \
+      --input {{ bam }} \
+      --intervals {{ input_vcf }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --output {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.allelicCounts.tsv
+
+    {# Denoise the tumor using the panel of normals provided to in the configuration #}
+    gatk --java-options "-Xmx12g" DenoiseReadCounts \
+      --tmp-dir {{ temp_dir }}/temp/ \
+      --input {{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.counts.hdf5 \
+      {% if cnvPon is not none %}
+      --count-panel-of-normals {{ cnvPon }} \
+      {% endif %}
+      --standardized-copy-ratios {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.standardizedCR.tsv \
+      --denoised-copy-ratios {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.tsv
+
+    gatk --java-options "-Xmx12g" ModelSegments \
+      --tmp-dir {{ temp_dir }}/temp/ \
+      --number-of-smoothing-iterations-per-fit 1 \
+      --number-of-changepoints-penalty-factor 0.05 \
+      --kernel-variance-allele-fraction 0.0 \
+      --kernel-scaling-allele-fraction 0.0 \
+      --smoothing-credible-interval-threshold-copy-ratio 3.5 \
+      --smoothing-credible-interval-threshold-allele-fraction 3.5 \
+      --window-size 4 \
+      --window-size 8 \
+      --window-size 16 \
+      --window-size 32 \
+      --window-size 64 \
+      --window-size 128 \
+      --window-size 256 \
+      --denoised-copy-ratios {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.tsv \
+      --allelic-counts {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.allelicCounts.tsv \
+      --output {{ results_dir }} \
+      --output-prefix {{ sample_or_pair.name }}.{{ aligner }}
+
+    gatk --java-options "-Xmx12g" CallCopyRatioSegments \
+      --tmp-dir {{ temp_dir }}/temp/ \
+      --input {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cr.seg \
+      --output {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.called.seg
+
+{% endif %}
+
+{% if enable_plot %}
+
+- name: gatk_call_cnv_plot_cnv_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, gatk, {{ sample_or_pair.name }}]
-  reset: gatk_call_cnv_step4_{{ sample_or_pair.name }}_{{ aligner }}
+  reset: gatk_call_cnv_model_segments_{{ sample_or_pair.name }}_{{ aligner }}
   input:
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.hets.tsv
     - {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.genderCorrected.seg
@@ -582,8 +708,27 @@
     set -eu
     set -o pipefail
 
+    {# Make working and temp directories #}
+    mkdir -p "{{ temp_dir }}/results/plots"
+    mkdir -p "{{ temp_dir }}/results/recentered_plots"
+
+    SEX={{ config_sex }}
+
+    if [ ${SEX} == "Male" ]
+    then
+      awk -F'\t' '{ if ($1 == "chrX" || $1 == "chrY") { $4 = $4-1} ; { OFS = "\t" ; print $0 }}' {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.tsv > \
+        {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.genderCorrected.tsv
+
+      awk -F'\t' '{ if ($1 == "chrX" || $1 == "chrY") { $6 = $6-1 ; $7 = $7-1 ; $8 = $8-1 } ; { OFS = "\t" ; print $0 }}' {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.seg > \
+        {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.genderCorrected.seg
+    else
+      touch {{ temp_dir }}/results/plots/{{ sample_or_pair.name }}.{{ aligner }}_chrY.png
+      cp {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.tsv {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.genderCorrected.tsv
+      cp {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.seg {{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.genderCorrected.seg
+    fi
+
     {# getting some weird IO behavior adding a ps if we fail to rm #}
-    rm -r {{ results_dir }}/plots || true
+    rm -r {{ results_dir }}/{plots,recentered_plots} || true
 
     SEX={{ config_sex }}
 
@@ -605,9 +750,37 @@
       --UpperCNvalidatePeakOffset 0.125 \
       --lowerCNcenteringPeakOffset 0.125 \
       --UpperCNcenteringPeakOffset 0.125 \
+      {% if input_config == 'paired' %}
       --sample_name={{ sample_or_pair.tumor.name }} \
+      {% else %}
+      --sample_name={{ sample_or_pair.name }} \
+      {% endif %}
       --output_prefix={{ sample_or_pair.name }}.{{ aligner }} \
       --plots_directory={{ temp_dir }}/results/plots \
+      --re_center_CNA=FALSE \
+      --re_centered_seg_directory={{ temp_dir }}/results \
+      --contig_names_string=${contig_names_string} \
+      --contig_lengths_string=${contig_lengths_string} \
+      --denoised_copy_ratios_file={{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.denoisedCR.genderCorrected.tsv \
+      --allelic_counts_file={{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.hets.tsv \
+      --modeled_segments_file={{ temp_dir }}/results/{{ sample_or_pair.name }}.{{ aligner }}.modelFinal.genderCorrected.seg
+
+    Rscript {{ required_scripts.plotCNVplus_Rscript.path }} \
+      --hetDPfilter 1 \
+      --hetAFlow 0.45 \
+      --hetAFhigh 0.55 \
+      --hetMAFposteriorOffset 0.01 \
+      --lowerCNvalidatePeakOffset 0.125 \
+      --UpperCNvalidatePeakOffset 0.125 \
+      --lowerCNcenteringPeakOffset 0.125 \
+      --UpperCNcenteringPeakOffset 0.125 \
+      {% if input_config == 'paired' %}
+      --sample_name={{ sample_or_pair.tumor.name }} \
+      {% else %}
+      --sample_name={{ sample_or_pair.name }} \
+      {% endif %}
+      --output_prefix={{ sample_or_pair.name }}.{{ aligner }} \
+      --plots_directory={{ temp_dir }}/results/recentered_plots \
       --re_center_CNA=TRUE \
       --re_centered_seg_directory={{ temp_dir }}/results \
       --contig_names_string=${contig_names_string} \
