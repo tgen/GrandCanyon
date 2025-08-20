@@ -249,7 +249,7 @@ constants:
       ref_flat: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.refFlat.txt
       ribo_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.ribo.interval_list
       primary_interval_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/samtools_stats/GRCh38tempe_decoy_alts_hla_masked_samstats_no_N_1based_primary_contigs_no_chrX_chrY.txt
-      encode_denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38_blacklist_spectre.bed
+      encode_denylist: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/ncbi/Encode_deny_list_with_ncbi_centromere.merged.bed
       annotation_databases:
         - {
             "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/dbsnp/b154/dbSNP_b154_hg38tgen.bcf",
