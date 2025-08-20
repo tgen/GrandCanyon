@@ -20,9 +20,9 @@ constants:
       container: ghcr.io/tgen/containers/bwa_mem2_samtools:2.2.1-23080315
       digest: 98a83bc2d70fa39755a02c2d81de64ef36dac292cdf6b1fcf02570a3e227b7f6
     clair3:
-      container: hkubal/clair3:v1.0.10
+      container: hkubal/clair3:v1.2.0
     clairs:
-      container: hkubal/clairs:v0.4.0
+      container: hkubal/clairs:v0.4.3
     cnvkit:
       container: quay.io/biocontainers/cnvkit:0.9.12--pyhdfd78af_0
     compleasm:
@@ -30,7 +30,7 @@ constants:
     cutesv:
       container: quay.io/biocontainers/cutesv:2.1.2--pyhdfd78af_0
     ctat_lr:
-      container: trinityctat/ctat_lr_fusion:1.1.0
+      container: trinityctat/ctat_lr_fusion:1.1.2
     deepsomatic:
       container: google/deepvariant:deepsomatic-1.9.0-gpu
     deeptrio:
@@ -129,7 +129,7 @@ constants:
     seqtk:
       container: quay.io/biocontainers/seqtk:1.4--he4a0461_2
     severus:
-      container: quay.io/biocontainers/severus:1.5--pyhdfd78af_0
+      container: quay.io/biocontainers/severus:1.6--pyhdfd78af_0
     shasta:
       container: quay.io/biocontainers/shasta:0.11.1--h4ac6f70_2
     sigprofiler:
