@@ -96,7 +96,9 @@
     {% endfor %}
 
     {% set task_name %}{{ sample.name }}_dna_fastqs{% endset %}
-    {{- remove_files(none, task_list, files_to_remove, task_name) }}
+    {% if sample.aligners | length > 0 %}
+      {{- remove_files(none, task_list, files_to_remove, task_name) }}
+    {% endif %}
     {% endif %}
   {% endfor %}
 
@@ -104,6 +106,36 @@
     {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minimap2"]|default(false) %}
       {{- minimap2(sample) }}
       {{- bam_qc(sample, aligner='minimap2')}}
+    {% endif %}
+    {% set task_list = [] %}
+    {% set files_to_remove = [] %}
+    {% set temp_dir %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}{% endset %}
+    {% for rgid, rg in sample.read_groups.items() %}
+      {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
+        {% set file %}{{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}{% endset %}
+        {% set task %}minimap2_samtools_merge_rgids_{{ sample.name }}{% endset %}
+        {% do files_to_remove.append(file) %}
+        {% do task_list.append(task) %}
+      {% else %}
+        {% set task %}minimap2_{{ sample.name }}_{{ rgid | replace("/", "_") }}{% endset %}
+        {% do task_list.append(task) %}
+      {% endif %}
+      {% for file in rg.data_files %}
+        {% set ubam %}temp/ubams/{{ file.basename }}{% endset %}
+        {% do files_to_remove.append(ubam) %}
+
+        {% set fastq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+        {% do files_to_remove.append(fastq) %}
+        {% if file.fastqCode == 'duplex' %}
+          {% set fastq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz{% endset %}
+          {% do files_to_remove.append(fastq) %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+
+    {% set task_name %}{{ sample.name }}_longread_dna_datafiles{% endset %}
+    {% if sample.aligners | length > 0 %}
+      {{- remove_files(none, task_list, files_to_remove, task_name) }}
     {% endif %}
   {% endfor %}
 
