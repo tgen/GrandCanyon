@@ -282,6 +282,8 @@ constants:
             "columns": "TOPMED_AF:=AF,TOPMED_AN:=AN,TOPMED_AC:=AC,TOPMED_HET:=Het,TOPMED_HOM:=Hom",
           }
       tool_resources:
+        ascat:
+          ascat_resources: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/ascat
         gatk_cnv:
           mappability_track: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/bismap/k100.umap.no_header.bed
         mutect2:

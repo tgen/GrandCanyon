@@ -39,6 +39,7 @@
 {% from 'modules/variant_calling/copy_number/hifi_cnv.j2' import hifi_cnv with context %}
 {% from 'modules/variant_calling/copy_number/gatk_cnv.j2' import gatk_cnv with context %}
 {% from 'modules/variant_calling/copy_number/cnvkit.j2' import cnvkit with context %}
+{% from 'modules/variant_calling/copy_number/ascat.j2' import ascat with context %}
 
 {# variant phasing #}
 {% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
@@ -330,12 +331,10 @@
         {{- dysgu(sample, aligner) }}
       {% endif %}
 
-      {#
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_savana"]|default(false) %}
         {% do sample.sv_callers.append('savana') %}
         {{- savana(sample, aligner) }}
       {% endif %}
-      #}
 
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
         {% do sample.sv_callers.append('severus') %}
@@ -376,6 +375,10 @@
 
     {% if tasks[taskPrefix+"_variant_calling_cna_caller_cnvkit"]|default(false) %}
       {{- cnvkit(sample, aligner) }}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_cna_caller_ascat"]|default(false) %}
+      {{- ascat(sample, aligner) }}
     {% endif %}
 
   {% endfor %}
@@ -481,6 +484,10 @@
 
     {% if tasks[taskPrefix+"_variant_calling_cna_caller_cnvkit"]|default(false) %}
       {{- cnvkit(pair, aligner) }}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_cna_caller_ascat"]|default(false) %}
+      {{- ascat(pair, aligner) }}
     {% endif %}
 
   {% endfor %}
