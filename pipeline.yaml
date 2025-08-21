@@ -6,6 +6,10 @@ __pipeline__:
   bin: required_scripts/
 constants:
   tools:
+    allelecounter:
+      container: quay.io/biocontainers/cancerit-allelecount:4.3.0--h8bd2d3b_7
+    ascat:
+      container: quay.io/biocontainers/ascat:3.2.0--r44hdfd78af_1
     assembly_stats:
       container: quay.io/biocontainers/assembly-stats:1.0.1--h4ac6f70_7
     base:

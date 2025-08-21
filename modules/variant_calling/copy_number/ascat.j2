@@ -57,9 +57,9 @@
       -l {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/loci/G1000_loci_hg38_chr${i}.txt \
       -b {{ bam }} \
       {% if input_config in 'paired' %}
-      -o {{ sample_or_pair.tumor.name }}_alleles.txt \
+      -o {{ temp_dir }}/{{ sample_or_pair.tumor.name }}_alleleFrequencies_chr${i}.txt \
       {% else %}
-      -o {{ sample_or_pair.name }}_alleles.txt \
+      -o {{ temp_dir }}/{{ sample_or_pair.name }}_alleleFrequencies_chr${i}.txt \
       {% endif %}
       -r {{ constants.grandcanyon[reference].reference_fasta }}.fai
 
@@ -67,7 +67,7 @@
     alleleCounter \
       -l {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/loci/G1000_loci_hg38_chr${i}.txt \
       -b {{ normal_bam }} \
-      -o {{ sample_or_pair.normal.name }}_alleles.txt \
+      -o {{ temp_dir }}/{{ sample_or_pair.normal.name }}_alleleFrequencies_chr${i}.txt \
       -r {{ constants.grandcanyon[reference].reference_fasta }}.fai
     {% endif %}
     done
@@ -113,6 +113,7 @@
     cat <<EOF > "{{ temp_dir }}/run_ascat.R"
     library(ASCAT)
 
+    {#
     ascat.prepareHTS(
       {% if input_config in 'paired' %}
       tumourseqfile = "{{ bam }}",
@@ -121,7 +122,7 @@
       normalname = "{{ sample_or_pair.normal.name }}",
       {% else %}
       tumourseqfile = "{{ bam }}",
-      tumourname = "{{ sample_or_pair.tumor.name }}",
+      tumourname = "{{ sample_or_pair.name }}",
       {% endif %}
       skip_allele_counting_tumour = TRUE,
       skip_allele_counting_normal = TRUE,
@@ -133,6 +134,41 @@
       tumourBAF_file = "{{ temp_dir }}/Tumor_BAF.txt",
       normalLogR_file = "{{ temp_dir }}/Germline_LogR.txt",
       normalBAF_file = "{{ temp_dir }}/Germline_BAF.txt")
+    #}
+
+    ascat.getBAFsAndLogRs(
+                        {% if input_config in 'paired' %}
+                        samplename="{{ sample_or_pair.tumor.name }}",
+                        tumourAlleleCountsFile.prefix="{{ temp_dir }}/{{ sample_or_pair.tumor.name }}_alleleFrequencies_chr"),
+                        normalAlleleCountsFile.prefix="{{ temp_dir }}/{{ sample_or_pair.normal.name }}_alleleFrequencies_chr"),
+                        tumourLogR_file = "{{ temp_dir }}/Tumor_LogR.txt",
+                        tumourBAF_file = "{{ temp_dir }}/Tumor_BAF.txt",
+                        normalLogR_file = "{{ temp_dir }}/Germline_LogR.txt",
+                        normalBAF_file = "{{ temp_dir }}/Germline_BAF.txt",
+                        tumour_only_mode=FALSE,
+                        {% else %}
+                        samplename="{{ sample_or_pair.name }}",
+                        tumourAlleleCountsFile.prefix="{{ temp_dir }}/{{ sample_or_pair.name }}_alleleFrequencies_chr"),
+                        tumourLogR_file = "{{ temp_dir }}/Tumor_LogR.txt",
+                        tumourBAF_file = "{{ temp_dir }}/Tumor_BAF.txt",
+                        tumour_only_mode=TRUE,
+                        {% endif %}
+                        alleles.prefix = "{{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/alleles/G1000_alleles_hg38_chr",
+                        gender = "$GENDER",
+                        genomeVersion = "{{ constants.grandcanyon[reference].genome_subversion_name }}",
+                        seed=as.integer(Sys.time()))
+
+    # Synchronise all information
+    ascat.synchroniseFiles(
+                        {% if input_config in 'paired' %}
+                        samplename = "{{ sample_or_pair.tumor.name }}",
+                        {% else %}
+                        samplename = "{{ sample_or_pair.name }}",
+                        {% endif %}
+                        tumourLogR_file = "{{ temp_dir }}/Tumor_LogR.txt",
+                        tumourBAF_file = "{{ temp_dir }}/Tumor_BAF.txt",
+                        normalLogR_file = "{{ temp_dir }}/Germline_LogR.txt",
+                        normalBAF_file = "{{ temp_dir }}/Germline_BAF.txt")
 
     ascat.bc = ascat.loadData(
       Tumor_LogR_file = "{{ temp_dir }}/Tumor_LogR.txt",
