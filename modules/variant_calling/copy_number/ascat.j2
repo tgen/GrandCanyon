@@ -139,8 +139,8 @@
     ascat.getBAFsAndLogRs(
                         {% if input_config in 'paired' %}
                         samplename="{{ sample_or_pair.tumor.name }}",
-                        tumourAlleleCountsFile.prefix="{{ temp_dir }}/{{ sample_or_pair.tumor.name }}_alleleFrequencies_chr"),
-                        normalAlleleCountsFile.prefix="{{ temp_dir }}/{{ sample_or_pair.normal.name }}_alleleFrequencies_chr"),
+                        tumourAlleleCountsFile.prefix="{{ temp_dir }}/{{ sample_or_pair.tumor.name }}_alleleFrequencies_chr",
+                        normalAlleleCountsFile.prefix="{{ temp_dir }}/{{ sample_or_pair.normal.name }}_alleleFrequencies_chr",
                         tumourLogR_file = "{{ temp_dir }}/Tumor_LogR.txt",
                         tumourBAF_file = "{{ temp_dir }}/Tumor_BAF.txt",
                         normalLogR_file = "{{ temp_dir }}/Germline_LogR.txt",
@@ -148,7 +148,7 @@
                         tumour_only_mode=FALSE,
                         {% else %}
                         samplename="{{ sample_or_pair.name }}",
-                        tumourAlleleCountsFile.prefix="{{ temp_dir }}/{{ sample_or_pair.name }}_alleleFrequencies_chr"),
+                        tumourAlleleCountsFile.prefix="{{ temp_dir }}/{{ sample_or_pair.name }}_alleleFrequencies_chr",
                         tumourLogR_file = "{{ temp_dir }}/Tumor_LogR.txt",
                         tumourBAF_file = "{{ temp_dir }}/Tumor_BAF.txt",
                         tumour_only_mode=TRUE,
