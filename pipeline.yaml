@@ -8,6 +8,8 @@ constants:
   tools:
     allelecounter:
       container: quay.io/biocontainers/cancerit-allelecount:4.3.0--h8bd2d3b_7
+    amplicon_architect:
+      container: ghcr.io/tgen/containers/amplicon_architect:1.2.9
     ascat:
       container: quay.io/biocontainers/ascat:3.2.0--r44hdfd78af_1
     assembly_stats:
@@ -288,6 +290,9 @@ constants:
       tool_resources:
         ascat:
           ascat_resources: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/ascat
+        amplicon_architect:
+          data_repo: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/amplicon_architect
+          mosek: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/amplicon_architect/mosek
         gatk_cnv:
           mappability_track: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/bismap/k100.umap.no_header.bed
         mutect2:

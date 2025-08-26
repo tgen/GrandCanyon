@@ -65,6 +65,14 @@
     {% if cnvkit_reference is not none %}
     - {{ cnvkit_reference }}
     {% endif %}
+  output:
+    {% if input_config in 'paired' %}
+    - {{ results_dir }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.cns
+    - {{ results_dir }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.cnr
+    {% else %}
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cns
+    - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cnr
+    {% endif %}
   cpus: 8
   mem: 32G
   walltime: "24:00:00"
@@ -108,5 +116,15 @@
       --output-dir ${ROOT_DIR}/{{ results_dir }} \
       -p 8 \
       --scatter
+
+{% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_cna_caller_amplicon_architect"]|default(false) %}
+  {% if input_config in 'paired' %}
+    {% set cnvkit_cns %}{{ results_dir }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.cns{% endset %}
+  {% else %}
+    {% set cnvkit_cns %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cns{% endset %}
+  {% endif %}
+  {% from 'modules/variant_calling/copy_number/amplicon_architect.j2' import amplicon_architect with context %}
+  {{- amplicon_architect(sample_or_pair, cnvkit_cns, aligner) }}
+{% endif %}
 
 {% endmacro %}
