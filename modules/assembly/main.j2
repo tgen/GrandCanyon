@@ -49,6 +49,7 @@
     {% do input.update({'ulong': []}) %}
     {% do input.update({'corr': []}) %}
     {% do input.update({'hifi': []}) %}
+    {% do input.update({'simplex': []}) %}
     {% do input.update({'duplex': []}) %}
     {% do input.update({'hic_r1': []}) %}
     {% do input.update({'hic_r2': []}) %}
@@ -89,12 +90,14 @@
               {{- herro(input, simplex_file, corrected_file) }}
               {% do input.corr.append(corrected_file) %}
             {% endif %}
+            {% do input.simplex.append(simplex_file) %}
           {% endif %}
         {% elif file.fastqCode == 'duplex' %}
           {% set simplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.simplex.fastq.gz{% endset %}
           {% set ul_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.ul.simplex.filtered.fastq.gz{% endset %}
           {{- ul_filter(simplex_file, ul_file) }}
           {% do input.ulong.append(ul_file) %}
+          {% do input.simplex.append(simplex_file) %}
 
           {% set duplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
           {% do input.duplex.append(duplex_file) %}

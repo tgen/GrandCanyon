@@ -3,7 +3,7 @@
 {%- set temp_dir %}temp/{{ input.gltype }}/assembly/meryl/{{ input.project }}{% endset %}
 {%- set results_dir %}{{ input.gltype }}/assembly/meryl/{{ input.project }}{% endset %}
 
-{% set fastqs = input.hifi + input.corr %}
+{% set fastqs = input.hifi + input.corr + input.simplex %}
 
 - name: meryl_{{ input.project }}
   reset: predecessors

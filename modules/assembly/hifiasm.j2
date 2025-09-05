@@ -13,13 +13,18 @@
 
 {% set hifi_list = input.hifi %}
 {% set ont_list = input.duplex + input.corr %}
-{% if ont_list | length > 0 %}
-{% set chopped_ont %}temp/fastqs/{{ input.project }}.chopped.ont.fastq.gz{% endset %}
-{% set hifi_list = input.hifi + [chopped_ont] %}
+{% set input_config = 'pb_only' %}
+{% if input.hifi | length == 0 and input.simplex | length > 0 %}
+  {% set hifi_list = input.simplex %}
+  {% set input_config = 'ont_only' %}
+{% elif ont_list | length > 0 %}
+  {% set chopped_ont %}temp/fastqs/{{ input.project }}.chopped.ont.fastq.gz{% endset %}
+  {% set hifi_list = input.hifi + [chopped_ont] %}
+  {% set input_config = 'mixed' %}
 {% endif %}
 
 {# PacBio Hifi reads are consistently between 10kb and 30 kb, and therefore it does not need chopping #}
-{% if ont_list | length > 0 %}
+{% if ont_list | length > 0 and input_config in ('mixed') %}
 - name: prep_hifiasm_input_{{ input.project }}
   reset: predecessors
   input:
@@ -102,13 +107,17 @@
       -t 32 \
       -o {{ temp_dir }}/{{ input.project }}.asm \
       --telo-m CCCTAA \
-      {% if input.ulong | length > 0 %}
+      {% if input.ulong | length > 0 and input_config not in ('ont_only') %}
       --ul "{{ input.ulong | join(',') }}" \
       --ul-cut 50000 \
       {% endif %}
       {% if input.hic_r1 | length > 0 %}
       --h1 "{{ input.hic_r1 | sort | join(',') }}" \
       --h2 "{{ input.hic_r2 | sort | join(',') }}" \
+      {% endif %}
+      --dual-scaf \
+      {% if input_config in ('ont_only') %}
+      --ont \
       {% endif %}
       {{ hifi_list | join(' ') }}
 
