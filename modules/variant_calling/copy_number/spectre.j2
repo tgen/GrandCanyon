@@ -7,7 +7,7 @@
 {% set taskPrefix %}{{ sample.gltype | capitalize }}{% endset %}
 
 {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(false) %}
-{%- set sniffles_snf %}{{ sample.gltype }}/constitutional_variant_calls/sniffles/{{ sample.name }}_{{ aligner }}/{{ sample.name }}.{{ aligner }}.sniffles.all.snf{% endset %}
+{%- set sniffles_snf %}{{ sample.gltype }}/constitutional_structural_calls/sniffles/{{ sample.name }}_{{ aligner }}/{{ sample.name }}.{{ aligner }}.sniffles.all.snf{% endset %}
 {% endif %}
 
 - name: spectre_mosdepth_{{ sample.name }}_{{ aligner }}
