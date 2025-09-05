@@ -160,7 +160,24 @@
     {% set aligned_files = [] %}
     {% for file in data_files %}
       {% if file.fileType in ('fastq', 'fasterq', 'ubam') %}
-        {% do alignable_files.append(file) %}
+        {% if file.fileType in ('ubam') and file.glPrep|lower not in ('longread') %}
+          {% set r1fastq = file | to_json | from_json %}
+          {% set r2fastq = file | to_json | from_json %}
+
+          {% set r1fastq_basename %}{{ file.basename | replace(".", "_") }}_R1.fastq.gz{% endset %}
+          {% set r2fastq_basename %}{{ file.basename | replace(".", "_") }}_R2.fastq.gz{% endset %}
+
+          {% set r1fastq_path %}temp/fastqs/{{ r1fastq_basename }}{% endset %}
+          {% set r2fastq_path %}temp/fastqs/{{ r2fastq_basename }}{% endset %}
+
+          {% do r1fastq.update({"path": r1fastq_path, "basename": r1fastq_basename, "fastqCode": "R1", fileType: "fastq"}) %}
+          {% do r2fastq.update({"path": r2fastq_path, "basename": r2fastq_basename, "fastqCode": "R2", fileType: "fastq"}) %}
+
+          {% do alignable_files.append(r1fastq) %}
+          {% do alignable_files.append(r2fastq) %}
+        {% else %}
+          {% do alignable_files.append(file) %}
+        {% endif %}
       {% elif file.fileType in ('bam') %}
         {% do aligned_files.append(file) %}
       {% else %}

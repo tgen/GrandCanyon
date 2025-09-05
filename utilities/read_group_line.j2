@@ -1,12 +1,12 @@
 {% macro read_group_line(rg, format='minimap2') -%}
 {% set tags = [
-  'ID:{}'.format(rg.rgid),
-  'LB:{}'.format(rg.rglb),
-  'PU:{}'.format(rg.rgpu),
+  'ID:{}'.format(rg.rgid|default('unknown')),
+  'LB:{}'.format(rg.rglb|default('unknown')),
+  'PU:{}'.format(rg.rgpu|default('unknown')),
   'SM:{}'.format(rg.rgsm|default(rg.sampleName)),
-  'PL:{}'.format(rg.rgpl),
+  'PL:{}'.format(rg.rgpl|default('unknown')),
   'CN:{}'.format(rg.rgcn|default('TGen')),
-  'PM:{}'.format(rg.rgpm),
+  'PM:{}'.format(rg.rgpm|default('unknown')),
   'BC:{}'.format(rg.rgbc|default('unknown'))
 ] %}
 {% if format in ['minimap2','bwa'] %}

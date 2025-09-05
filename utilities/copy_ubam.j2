@@ -39,11 +39,17 @@
   input:
     - temp/ubams/{{ ubam.basename }}
   output:
+    {% if ubam.glPrep|lower not in ['longread'] %}
+    - temp/fastqs/{{ ubam.basename | replace(".", "_") }}_R1.fastq.gz
+    - temp/fastqs/{{ ubam.basename | replace(".", "_") }}_R2.fastq.gz
+    {% else %}
     - temp/fastqs/{{ ubam.basename | replace(".", "_") }}.fastq.gz
     {% if ubam.fastqCode == 'duplex' %}
     - temp/fastqs/{{ ubam.basename | replace(".", "_") }}.simplex.fastq.gz
     {% endif %}
+    {% endif %}
   cpus: 6
+  mem: 40G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.samtools.container }}
@@ -52,8 +58,18 @@
 
     mkdir -p temp/fastqs/
 
+    {% if ubam.glPrep|lower not in ['longread'] %}
+    samtools collate \
+      -u \
+      -O \
+      -T temp/fastqs/collate_{{ ubam.basename | replace(".", "_") }} \
+      temp/ubams/{{ ubam.basename }} | \
+    samtools fastq \
+      -1 temp/fastqs/{{ ubam.basename | replace(".", "_") }}_R1.fastq.gz \
+      -2 temp/fastqs/{{ ubam.basename | replace(".", "_") }}_R2.fastq.gz \
+      -0 /dev/null -s /dev/null -n
+    {% elif ubam.fastqCode == 'duplex' %}
     {# long-read is not paired end, so we output to -0 #}
-    {% if ubam.fastqCode == 'duplex' %}
     samtools view \
       --threads 6 \
       -d dx:1 \
