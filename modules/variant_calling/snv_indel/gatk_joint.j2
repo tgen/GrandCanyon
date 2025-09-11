@@ -1,0 +1,154 @@
+{% from 'modules/qc/somalier.j2' import somalier with context %}
+
+{% macro gatk_joint_genotype(family, input_type) %}
+
+{% set temp_dir %}temp/{{ family.gltype }}/joint_variant_calling/gatk/{{ family.name }}{% endset %}
+{% set results_dir %}{{ family.gltype }}/joint_variant_calling/gatk/{{ family.name }}{% endset %}
+{% set combined_vcf %}{{ results_dir }}/{{ family.name }}.hc.vcf.gz{% endset %}
+{% set cnn_vcf %}{{ results_dir }}/{{ family.name }}.hc.cnn.vcf.gz{% endset %}
+{% set vqsr_vcf %}{{ results_dir }}/{{ family.name }}.hc.vqsr.vcf.gz{% endset %}
+{% set vqsr_recal %}{{ results_dir }}/{{ family.name }}.hc.recal{% endset %}
+{% set vqsr_tranches %}{{ results_dir }}/{{ family.name }}.hc.tranches{% endset %}
+{% set vqsr_rscript %}{{ results_dir }}/{{ family.name }}.hc.output.plots.R{% endset %}
+
+{% if family.gltype in 'exome' %}
+  {% set taskPrefix = 'Exome' %}
+{% elif family.gltype in 'genome' %}
+  {% set taskPrefix = 'Genome' %}
+{% endif %}
+
+- name: gatk_combine_gvcfs_{{ family.name }}_{{ family.gltype }}
+  input:
+    - {{ family.child.gltype }}/constitutional_variant_calls/haplotypecaller/{{ family.child.name }}_{{ aligner }}/{{ family.child.name }}.{{ aligner }}.hc.g.vcf.gz
+    {% for member in family.parents %}
+    - {{ member.gltype }}/constitutional_variant_calls/haplotypecaller/{{ member.name }}_{{ aligner }}/{{ member.name }}.{{ aligner }}.hc.g.vcf.gz
+    {% endfor %}
+  output: {{ temp_dir }}/{{ family.name }}.g.vcf.gz
+  cpus: 4
+  mem: 16G
+  walltime: "1-00:00:00"
+  container: {{ constants.tools.gatk.container }}
+  digest: {{ constants.tools.gatk.digest }}
+  cmd: |
+    set -euo pipefail
+
+    mkdir -p {{ temp_dir }}
+
+    gatk --java-options "-Xmx16g" CombineGVCFs \
+      -V {{ family.child.gltype }}/constitutional_variant_calls/haplotypecaller/{{ family.child.name }}_{{ aligner }}/{{ family.child.name }}.{{ aligner }}.hc.g.vcf.gz \
+      {% for member in family.parents %}
+      -V {{ member.gltype }}/constitutional_variant_calls/haplotypecaller/{{ member.name }}_{{ aligner }}/{{ member.name }}.{{ aligner }}.hc.g.vcf.gz \
+      {% endfor %}
+      -R {{ constants.grandcanyon[reference].reference_fasta }} \
+      -O {{ temp_dir }}/{{ family.name }}.g.vcf.gz
+
+- name: gatk_genotype_combined_gvcf_{{ family.name }}_{{ family.gltype }}
+  input: {{ temp_dir }}/{{ family.name }}.g.vcf.gz
+  output: {{ combined_vcf }}
+  cpus: 4
+  mem: 16G
+  walltime: "1-00:00:00"
+  container: {{ constants.tools.gatk.container }}
+  digest: {{ constants.tools.gatk.digest }}
+  cmd: |
+    set -euo pipefail
+
+    mkdir -p {{ results_dir }}
+
+    gatk --java-options "-Xmx16g" GenotypeGVCFs \
+      -R {{ constants.grandcanyon[reference].reference_fasta }} \
+      -V {{ temp_dir }}/{{ family.name }}.g.vcf.gz \
+      -O {{ combined_vcf }}
+
+{% if tasks[taskPrefix+"_joint_variant_calling_gatk_vqsr"] | default(true) %}
+
+- name: gatk_vqsr_{{ family.name }}_{{ family.gltype }}
+  input: {{ combined_vcf }}
+  output:
+    - {{ vqsr_vcf }}
+    - {{ vqsr_recal }}
+    - {{ vqsr_tranches }}
+    - {{ vqsr_rscript }}
+  cpus: 8
+  mem: 32G
+  walltime: "1-00:00:00"
+  container: {{ constants.tools.gatk.container }}
+  digest: {{ constants.tools.gatk.digest }}
+  cmd: |
+    set -euo pipefail
+
+    gatk VariantRecalibrator \
+      -R {{ constants.grandcanyon[reference].reference_fasta }} \
+      -V {{ combined_vcf }} \
+      {% for resource in constants.grandcanyon[reference].vqsr_resources %}
+      --resource:{{ resource.config }} {{ resource.location }} \
+      {% endfor %}
+      -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR \
+      -mode BOTH \
+      -O {{ vqsr_recal }} \
+      --tranches-file {{ vqsr_tranches }} \
+      --rscript-file {{ vqsr_rscript }}
+
+    gatk ApplyVQSR \
+      -R {{ constants.grandcanyon[reference].reference_fa }} \
+      -mode BOTH \
+      -V {{ combined_vcf }} \
+      -O {{ vqsr_vcf }} \
+      --truth-sensitivity-filter-level 99.0 \
+      --tranches-file {{ vqsr_tranches }} \
+      --recal-file {{ vqsr_recal }}
+
+{% endif %}
+
+{% if tasks[taskPrefix+"_joint_variant_calling_gatk_cnnscorevariants"] | default(true) %}
+
+- name: gatk_cnnscorevariants_{{ family.name }}_{{ family.gltype }}
+  input: {{ combined_vcf }}
+  output: {{ cnn_vcf }}
+  cpus: 8
+  mem: 32G
+  walltime: "1-00:00:00"
+  container: {{ constants.tools.gatk.container }}
+  digest: {{ constants.tools.gatk.digest }}
+  cmd: |
+
+    source activate gatk
+
+    gatk CNNScoreVariants \
+      --java-options "-Xmx28G" \
+      --reference {{ constants.grandcanyon[reference].reference_fa }} \
+      --variant {{ combined_vcf }} \
+      --output {{ cnn_vcf }}
+
+{% endif %}
+
+{% if tasks[taskPrefix+"_joint_variant_calling_gatk_somalier"] | default(true) %}
+  {{- somalier(family, 'gatk', combined_vcf) }}
+{% endif %}
+
+{% set filtered_vcf %}{{ results_dir }}/{{ family.name }}.hc.filtered.bcf{% endset %}
+{% set ped_file %}{{ family.gltype }}/joint_variant_calls/{{ family.name }}.ped{% endset %}
+
+{% if family.parents | length > 1 %}
+- name: bcftools_filter_gatk_{{ family.name }}_{{ family.gltype }}
+  input:
+    - {{ combined_vcf }}
+    - {{ ped_file }}
+  output: {{ filtered_vcf }}
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -euo pipefail
+
+    bcftools +trio-dnm2 --with-pAD -P {{ ped_file }} {{ combined_vcf }} | \
+      bcftools view \
+        -i '(FMT/GT[0]="ref" && FMT/GT[1]="ref") && (FMT/GT[2]="het" & FMT/VAF[2]>30 & FMT/VAF[2]<70)' - | \
+      bcftools view \
+        -e 'FMT/DP[2]>98 || FMT/DP<=20 || FMT/AD[0-1:1]>1' -O z -o {{ filtered_vcf }} -
+
+{% endif %}
+
+{% endmacro %}

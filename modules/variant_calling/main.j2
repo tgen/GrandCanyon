@@ -2,8 +2,6 @@
 {% from 'modules/variant_calling/snv_indel/deepvariant.j2' import deepvariant with context %}
 {% from 'modules/variant_calling/snv_indel/deepvariant_pangenome.j2' import deepvariant_pangenome with context %}
 {% from 'modules/variant_calling/snv_indel/deepsomatic.j2' import deepsomatic with context %}
-{% from 'modules/variant_calling/snv_indel/deeptrio.j2' import deeptrio with context %}
-{% from 'modules/variant_calling/snv_indel/glnexus.j2' import glnexus with context %}
 {% from 'modules/variant_calling/snv_indel/clair3.j2' import clair3 with context %}
 {% from 'modules/variant_calling/snv_indel/clairs.j2' import clairs with context %}
 
@@ -18,6 +16,11 @@
 {# long-read snv callers #}
 {% from 'modules/variant_calling/snv_indel/longshot.j2' import longshot with context %}
 {% from 'modules/variant_calling/snv_indel/trgt.j2' import trgt with context %}
+
+{# joint snv variant callers #}
+{% from 'modules/variant_calling/snv_indel/deeptrio.j2' import deeptrio with context %}
+{% from 'modules/variant_calling/snv_indel/glnexus.j2' import glnexus with context %}
+{% from 'modules/variant_calling/snv_indel/gatk_joint.j2' import gatk_joint_genotype with context %}
 
 {# general sv callers #}
 {% from 'modules/variant_calling/structural/dysgu.j2' import dysgu with context %}
@@ -236,12 +239,16 @@
 
   {% for aligner in trio.child.aligners %}
 
-    {% if tasks[trio.gltype|capitalize+"_variant_calling_snp_indel_caller_deeptrio"]|default(false) %}
+    {% if tasks[trio.gltype|capitalize+"_variant_calling_joint_variant_caller_deeptrio"]|default(false) %}
       {{- deeptrio(trio, aligner) }}
     {% endif %}
 
-    {% if tasks[trio.gltype|capitalize+"_variant_calling_snp_indel_caller_glnexus"]|default(false) %}
+    {% if tasks[trio.gltype|capitalize+"_variant_calling_joint_variant_caller_glnexus"]|default(false) %}
       {{- glnexus(trio, aligner) }}
+    {% endif %}
+
+    {% if tasks[trio.gltype|capitalize+"_variant_calling_joint_variant_caller_gatk"]|default(false) %}
+      {{- gatk_joint_genotype(trio, aligner) }}
     {% endif %}
 
   {% endfor %}
@@ -266,7 +273,7 @@
 ############}
 {%- for sample in samples.values() if sample.gltype in ('exome','genome') and sample.subGroup|lower in ('tumor','tumour','case') %}
 
-  {% if sample not in tumors_with_normal or allow_tumor_only|default(true) %}
+  {% if sample not in tumors_with_normal or allow_tumor_only|default(false) %}
 
   {% if sample.gltype in 'exome' %}
     {% set taskPrefix = 'Exome' %}
