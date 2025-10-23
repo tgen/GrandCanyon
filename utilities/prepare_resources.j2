@@ -93,7 +93,7 @@
       --OUTPUT_TYPE ACGT \
       --OUTPUT {{ temp_dir }}/calling_intervals/{{ constants.grandcanyon[reference].reference_fasta | basename }}.ACGT.interval_list
 
-    grep '^\(@SQ\sSN:\)\?\(chr\)\?[0-9XY]\+' {{ temp_dir }}/calling_intervals/{{ constants.grandcanyon[reference].reference_fasta | basename }}.ACGT.interval_list \
+    grep '^\(@SQ\sSN:\)\?\(chr\)\?[0-9XY]\+\s' {{ temp_dir }}/calling_intervals/{{ constants.grandcanyon[reference].reference_fasta | basename }}.ACGT.interval_list \
     > {{ temp_dir }}/calling_intervals/{{ constants.grandcanyon[reference].reference_fasta | basename }}.ACGT.primary_interval_list
 
     gatk IntervalListTools \
