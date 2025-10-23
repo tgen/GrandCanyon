@@ -145,7 +145,7 @@ constants:
     sniffles:
       container: quay.io/biocontainers/sniffles:2.6.2--pyhdfd78af_0
     somalier:
-      container: brentp/somalier:v0.2.19
+      container: brentp/somalier:v0.3.0
     spectre:
       container: /home/tgenref/containers/spectre-cnv_0.2.1.sif
     sqanti3:
@@ -221,6 +221,8 @@ constants:
         severus:
           vntrs: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/severus/chm13.bed
           pon: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/severus/PoN_1000G_chm13.tsv.gz
+        somalier:
+          sites: https://github.com/brentp/somalier/files/9954286/sites.chm13v2.T2T.vcf.gz
         spectre:
           mdr: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/spectre/grch38.mdr
           denylist: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/spectre/grch38_blacklist_spectre.bed
@@ -322,6 +324,8 @@ constants:
           sbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sigprofiler/COSMIC_v3.4_SBS_GRCh38.txt
           dbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sigprofiler/COSMIC_v3.4_DBS_GRCh38.txt
           sv: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sigprofiler/COSMIC_v3.4_SV_GRCh38.txt
+        somalier:
+          sites: https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz
         spectre:
           mdr: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38.mdr
           denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38_blacklist_spectre.bed

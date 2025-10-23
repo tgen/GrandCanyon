@@ -8,6 +8,7 @@
   input:
     - {{ input_vcf }}
     - {{ ped_file }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ results_dir }}/{{ family.name }}.groups.tsv
     - {{ results_dir }}/{{ family.name }}.html
@@ -18,7 +19,6 @@
   mem: 8G
   walltime: "1-00:00:00"
   container: {{ constants.tools.somalier.container }}
-  digest: {{ constants.tools.somalier.digest }}
   cmd: |
     set -euo pipefail
 
@@ -26,12 +26,12 @@
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
-    wget {{ constants.grandcanyon[reference].somalier_sites }} -O {{ temp_dir }}/sites.vcf.gz
+    wget {{ constants.grandcanyon[reference].tool_resources.somalier.sites }} -O {{ temp_dir }}/sites.vcf.gz
 
     somalier extract \
       --out-dir {{ temp_dir }}/extracted \
       --sites {{ temp_dir }}/sites.vcf.gz \
-      --fasta {{ constants.grandcanyon[reference].reference_fa }} \
+      --fasta {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ input_vcf }}
 
     somalier relate \
