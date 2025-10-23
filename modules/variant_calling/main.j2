@@ -247,8 +247,14 @@
       {{- glnexus(trio, aligner) }}
     {% endif %}
 
-    {% if tasks[trio.gltype|capitalize+"_variant_calling_joint_variant_caller_gatk"]|default(false) %}
-      {{- gatk_joint_genotype(trio, aligner) }}
+    {% if trio.child.glprep in 'longread' %}
+
+    {% else %}
+
+      {% if tasks[trio.gltype|capitalize+"_variant_calling_joint_variant_caller_gatk"]|default(false) %}
+        {{- gatk_joint_genotype(trio, aligner) }}
+      {% endif %}
+
     {% endif %}
 
   {% endfor %}
