@@ -94,6 +94,7 @@
 {% from 'utilities/copy_ubam.j2' import copy_ubam with context %}
 {% from 'utilities/copy_bam.j2' import copy_bam with context %}
 {% from 'utilities/fastq_stats.j2' import fastq_stats with context %}
+{% from 'utilities/finalize.j2' import finalize with context %}
 {% from 'utilities/prepare_resources.j2' import prepare_chunk_intervals with context %}
 {% from 'modules/dna_alignment/main.j2' import dna_alignment with context %}
 {% from 'modules/rna/main.j2' import rna_alignment with context %}
@@ -276,6 +277,8 @@
 {{- methylation_calling(samples) }}
 
 {{- assembly() }}
+
+{{- finalize(samples) }}
 
 {#
 {{- fastq_stats() }}

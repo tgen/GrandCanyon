@@ -1,0 +1,27 @@
+{% macro finalize(samples) %}
+
+- name: finalize
+  after-re: .*
+  cpus: 1
+  mem: 2G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.multiqc.container }}
+  cmd: |
+    set -uev
+
+    mkdir --parents qc
+    multiqc --force --outdir qc .
+
+    {% if not keep_alignments|default(true) %}
+    {% for sample in samples.values() %}
+      {% for aligner in sample.aligners %}
+        {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+        {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
+        rm {{ bam }}
+        rm {{ bam_index }}
+      {% endfor %}
+    {% endfor %}
+    {% endif %}
+
+{% endmacro %}

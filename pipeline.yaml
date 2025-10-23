@@ -98,6 +98,8 @@ constants:
       container: quay.io/biocontainers/ont-modkit:0.5.0--hcdda2d0_0
     mosdepth:
       container: quay.io/biocontainers/mosdepth:0.3.8--hd299d5a_0
+    multiqc:
+      container: quay.io/biocontainers/multiqc:1.31--pyhdfd78af_0
     oarfish:
       container: quay.io/biocontainers/oarfish:0.8.1--h5ca1c30_0
     pafplot:
