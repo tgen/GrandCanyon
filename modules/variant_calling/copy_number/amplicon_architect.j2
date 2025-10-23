@@ -23,6 +23,10 @@
     - {{ cnvkit_cns }}
     - {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}
     - {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.mosek }}
+  output:
+    - {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bam
+    - {{ results_dir }}/{{ sample_or_pair.name }}_AA_results
+    - {{ results_dir }}/{{ sample_or_pair.name }}_classification
   cpus: 8
   mem: 32G
   walltime: "24:00:00"
@@ -72,5 +76,12 @@
       -i {{ results_dir }}/{{ sample_or_pair.name }}_classification/{{ sample_or_pair.name }}.input \
       --ref GRCh38 \
       -o {{ results_dir }}/{{ sample_or_pair.name }}_classification/{{ sample_or_pair.name }}
+
+    samtools view \
+      --threads 8 \
+      --regions-file {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed \
+      --bam \
+      --output {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bam \
+      {{ bam }}
 
 {% endmacro %}
