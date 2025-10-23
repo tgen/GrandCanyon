@@ -60,11 +60,13 @@
 
     {% if ubam.glPrep|lower not in ['longread'] %}
     samtools collate \
+      --threads 6 \
       -u \
       -O \
       -T temp/fastqs/collate_{{ ubam.basename | replace(".", "_") }} \
       temp/ubams/{{ ubam.basename }} | \
     samtools fastq \
+      --threads 6 \
       -1 temp/fastqs/{{ ubam.basename | replace(".", "_") }}_R1.fastq.gz \
       -2 temp/fastqs/{{ ubam.basename | replace(".", "_") }}_R2.fastq.gz \
       -0 /dev/null -s /dev/null -n
