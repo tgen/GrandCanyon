@@ -175,6 +175,7 @@
 
           {% do alignable_files.append(r1fastq) %}
           {% do alignable_files.append(r2fastq) %}
+          {% do alignable_files.append(file) %}
         {% else %}
           {% do alignable_files.append(file) %}
         {% endif %}
@@ -218,8 +219,8 @@
     {% endif %}
 
     {% for rgid, rg in sample.read_groups.items() %}
-        {% for file in rg.data_files|selectattr('fastqCode', 'eq', 'simplex') %}
-          {% set duplex_matches = rg.data_files|selectattr('fastqCode', 'eq', 'duplex')|selectattr('sampleName', 'eq', file.sampleName)|selectattr('rgid', 'eq', file.rgid)|list %}
+        {% for file in rg.data_files|selectattr('fastqCode', 'defined')|selectattr('fastqCode', 'eq', 'simplex') %}
+          {% set duplex_matches = rg.data_files|selectattr('fastqCode', 'defined')|selectattr('fastqCode', 'eq', 'duplex')|selectattr('sampleName', 'eq', file.sampleName)|selectattr('rgid', 'eq', file.rgid)|list %}
           {% if duplex_matches | length > 0 %}
               {% do rg.data_files.pop(loop.index) %}
           {% endif %}
