@@ -22,7 +22,24 @@
           {% set paternal_datafiles = [] %}
           {% for rgsm in paternal.rgsm %}
             {% for file in dataFiles|selectattr('rgsm', 'eq', rgsm) %}
-              {% do paternal_datafiles.append(file) %}
+              {% if file.fileType in ('ubam') and file.glPrep|lower not in ('longread') %}
+                {% set r1fastq = file.copy() %}
+                {% set r2fastq = file.copy() %}
+
+                {% set r1fastq_basename %}{{ file.basename | replace(".", "_") }}_R1.fastq.gz{% endset %}
+                {% set r2fastq_basename %}{{ file.basename | replace(".", "_") }}_R2.fastq.gz{% endset %}
+
+                {% set r1fastq_path %}temp/fastqs/{{ r1fastq_basename }}{% endset %}
+                {% set r2fastq_path %}temp/fastqs/{{ r2fastq_basename }}{% endset %}
+
+                {% do r1fastq.update({"path": r1fastq_path, "basename": r1fastq_basename, "fastqCode": "R1", "fileType": "fastq"}) %}
+                {% do r2fastq.update({"path": r2fastq_path, "basename": r2fastq_basename, "fastqCode": "R2", "fileType": "fastq"}) %}
+
+                {% do paternal_datafiles.append(r1fastq) %}
+                {% do paternal_datafiles.append(r2fastq) %}
+              {% else %}
+                {% do paternal_datafiles.append(file) %}
+              {% endif %}
             {% endfor %}
           {% endfor %}
         {% endif %}
@@ -31,7 +48,24 @@
           {% set maternal_datafiles = [] %}
           {% for rgsm in maternal.rgsm %}
             {% for file in dataFiles|selectattr('rgsm', 'eq', rgsm) %}
-              {% do maternal_datafiles.append(file) %}
+              {% if file.fileType in ('ubam') and file.glPrep|lower not in ('longread') %}
+                {% set r1fastq = file.copy() %}
+                {% set r2fastq = file.copy() %}
+
+                {% set r1fastq_basename %}{{ file.basename | replace(".", "_") }}_R1.fastq.gz{% endset %}
+                {% set r2fastq_basename %}{{ file.basename | replace(".", "_") }}_R2.fastq.gz{% endset %}
+
+                {% set r1fastq_path %}temp/fastqs/{{ r1fastq_basename }}{% endset %}
+                {% set r2fastq_path %}temp/fastqs/{{ r2fastq_basename }}{% endset %}
+
+                {% do r1fastq.update({"path": r1fastq_path, "basename": r1fastq_basename, "fastqCode": "R1", "fileType": "fastq"}) %}
+                {% do r2fastq.update({"path": r2fastq_path, "basename": r2fastq_basename, "fastqCode": "R2", "fileType": "fastq"}) %}
+
+                {% do maternal_datafiles.append(r1fastq) %}
+                {% do maternal_datafiles.append(r2fastq) %}
+              {% else %}
+                {% do maternal_datafiles.append(file) %}
+              {% endif %}
             {% endfor %}
           {% endfor %}
         {% endif %}

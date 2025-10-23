@@ -1,19 +1,36 @@
 {% macro yak(name, input, output) %}
 
-{% set input_paths = [] %}
+{% set longread_paths = [] %}
+{% set shortread_paths = [] %}
 {% for file in input %}
-  {% set input_path %}temp/fastqs/{{ file.basename }}{% endset %}
-  {% do input_paths.append(input_path) %}
+  {% if file.fileType in ('ubam') and file.glPrep|lower in ('longread') %}
+    {% set input_path %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do longread_paths.append(input_path) %}
+  {% else %}
+    {% set input_path %}temp/fastqs/{{ file.basename }}{% endset %}
+    {% do shortread_paths.append(input_path) %}
+  {% endif %}
 {% endfor %}
+
+{% if longread_paths | length > 0 and shortread_paths | length > 0 %}
+  {% set input_paths = shortread_paths %}
+  {% set input_config = 'PairedEnd' %}
+{% elif longread_paths | length == 0 and shortread_paths | length > 0 %}
+  {% set input_paths = shortread_paths %}
+  {% set input_config = 'PairedEnd' %}
+{% else %}
+  {% set input_paths = longread_paths %}
+  {% set input_config = 'SingleEnd' %}
+{% endif %}
 
 - name: yak_{{ name }}
   input:
-   {% for file in input %}
-   - temp/fastqs/{{ file.basename }}
+   {% for path in input_paths %}
+   - {{ path }}
    {% endfor %}
   output: {{ output }}
   cpus: 16
-  mem: 32G
+  mem: 64G
   walltime: "8:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.yak.container }}
@@ -24,7 +41,11 @@
       -b37 \
       -t16 \
       -o {{ output }} \
+      {% if input_config in ('PairedEnd') %}
       <(cat {{ input_paths | join(" ") }}) \
       <(cat {{ input_paths | join(" ") }})
+      {% else %}
+      {{ input_paths | join(" ") }}
+      {% endif %}
 
 {% endmacro %}
