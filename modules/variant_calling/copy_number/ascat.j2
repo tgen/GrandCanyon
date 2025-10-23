@@ -147,19 +147,25 @@
     ascat.synchroniseFiles(
                         {% if input_config in 'paired' %}
                         samplename = "{{ sample_or_pair.tumor.name }}",
-                        {% else %}
-                        samplename = "{{ sample_or_pair.name }}",
-                        {% endif %}
                         tumourLogR_file = "${ROOT_DIR}/{{ temp_dir }}/Tumor_LogR.txt",
                         tumourBAF_file = "${ROOT_DIR}/{{ temp_dir }}/Tumor_BAF.txt",
                         normalLogR_file = "${ROOT_DIR}/{{ temp_dir }}/Germline_LogR.txt",
                         normalBAF_file = "${ROOT_DIR}/{{ temp_dir }}/Germline_BAF.txt")
+                        {% else %}
+                        samplename = "{{ sample_or_pair.name }}",
+                        tumourLogR_file = "${ROOT_DIR}/{{ temp_dir }}/Tumor_LogR.txt",
+                        tumourBAF_file = "${ROOT_DIR}/{{ temp_dir }}/Tumor_BAF.txt",
+                        normalLogR_file=NA,
+                        normalBAF_file=NA)
+                        {% endif %}
 
     ascat.bc = ascat.loadData(
       Tumor_LogR_file = "${ROOT_DIR}/{{ temp_dir }}/Tumor_LogR.txt",
       Tumor_BAF_file = "${ROOT_DIR}/{{ temp_dir }}/Tumor_BAF.txt",
+      {% if input_config in 'paired' %}
       Germline_LogR_file = "${ROOT_DIR}/{{ temp_dir }}/Germline_LogR.txt",
       Germline_BAF_file = "${ROOT_DIR}/{{ temp_dir }}/Germline_BAF.txt",
+      {% endif %}
       gender = "$GENDER",
       genomeVersion = "hg38")
 
