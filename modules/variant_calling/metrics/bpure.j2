@@ -1,0 +1,63 @@
+{% macro bpure(sample_or_pair, input_seg, seg_resolution, variant_caller, aligner='bwa') %}
+
+{% if sample_or_pair.normal is defined %}
+  {%- set sample_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/metrics/b_pure/{{ sample_or_pair.name }}_{{ aligner }}/{{ variant_caller }}_{{ seg_resolution }}_res{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/metrics/b_pure/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set output_prefix %}{{ sample_or_pair.name }}_{{ variant_caller }}_{{ seg_resolution }}_res{% endset %}
+  {%- set sample = sample_or_pair.tumor %}
+{% else %}
+  {%- set sample_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/metrics/b_pure/{{ sample_or_pair.name }}_{{ aligner }}/{{ variant_caller }}_{{ seg_resolution }}_res{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/metrics/b_pure/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set output_prefix %}{{ sample_or_pair.name }}_{{ variant_caller }}_{{ seg_resolution }}_res{% endset %}
+  {%- set sample = sample_or_pair.tumor %}
+{% endif %}
+
+{% set library_list = [] %}
+{% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
+  {% do library_list.append(rglb) %}
+{% endfor %}
+
+- name: bpure_{{ output_prefix }}
+  tags: [{{ sample.gltype }}, b_cell_purity, {{ sample.name }}]
+  input:
+    - {{ sample_bam }}
+    - {{ input_seg }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ temp_dir }}
+    - {{ results_dir }}/{{ output_prefix }}_b_cell_purity.tsv
+    {% for library in library_list %}
+    {% if loop.length == 1 %}
+    - {{ results_dir }}/{{ output_prefix }}_b_cell_purity.json
+    {% else %}
+    - {{ results_dir }}/{{ output_prefix }}_{{ library }}_b_cell_purity.json
+    {% endif %}
+    {% endfor %}
+  cpus: 2
+  mem: 8G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bpure.container }}
+  digest: {{ constants.tools.bpure.digest }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    b_pure.py \
+        --bam-file {{ sample_bam }} \
+        --seg-file {{ input_seg }} \
+        --seg-resolution {{ seg_resolution }} \
+        --reference-file {{ constants.grandcanyon[reference].reference_fasta }} \
+        --temp-dir {{ temp_dir }} \
+        --output-dir {{ results_dir }} \
+        --output-prefix {{ output_prefix }} \
+        --sample-name {{ sample.name }} \
+        --lib {{ library_list | join(',') }} \
+        --json-out True
+
+{% endmacro %}

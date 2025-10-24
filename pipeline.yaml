@@ -22,6 +22,9 @@ constants:
     bedtools:
       container: ghcr.io/tgen/containers/bedtools:2.29.0-23080313
       digest: cde92d1b69ecfda6e5f115c6b9220a312c380b0d7aa30378437476cd50206ee0
+    bpure:
+      container: ghcr.io/tgen/containers/b_pure:1.2.0
+      digest: c00b4bf858f636f7cb1be02958aa617ff4aa4a3355fe171b046fa05c1de7f787
     bwa_mem2_samtools:
       container: ghcr.io/tgen/containers/bwa_mem2_samtools:2.2.1-23080315
       digest: 98a83bc2d70fa39755a02c2d81de64ef36dac292cdf6b1fcf02570a3e227b7f6
@@ -29,6 +32,9 @@ constants:
       container: hkubal/clair3:v1.2.0
     clairs:
       container: hkubal/clairs:v0.4.3
+    cnvear:
+      container: ghcr.io/tgen/containers/cnvear:0.4.1
+      digest: 7caabd0c91d241090ceff9e3d9a616e71a8e65d17a41c66b0d2fb02113ad1ea4
     cnvkit:
       container: quay.io/biocontainers/cnvkit:0.9.12--pyhdfd78af_0
     compleasm:
@@ -310,6 +316,9 @@ constants:
         amplicon_architect:
           data_repo: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/amplicon_architect
           mosek: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/amplicon_architect/mosek
+        cnvear:
+          fish_probe_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/seq_fish/GRCh38_Myeloma_FISH_Probe_Locations_for_CNVear.bed
+          cnvear_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.cnvear.bed
         gatk_cnv:
           mappability_track: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/bismap/k100.umap.no_header.bed
         mutect2:
@@ -439,3 +448,14 @@ constants:
         salmon: "ISR"
         featurecounts: "2"
         collectrnaseqmetrics: "SECOND_READ_TRANSCRIPTION_STRAND"
+    cnvear_copy_number_thresholds:
+      genome:
+        high_gain: 1.32
+        gain: 0.16
+        het_loss: -0.16
+        hom_loss: -1.32
+      exome:
+        high_gain: 1.32
+        gain: 0.16
+        het_loss: -0.16
+        hom_loss: -1.32
