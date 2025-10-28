@@ -18,8 +18,8 @@
       {% for aligner in sample.aligners %}
         {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
         {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
-        rm {{ bam }}
-        rm {{ bam_index }}
+    rm -f {{ bam }}
+    rm -f {{ bam_index }}
       {% endfor %}
     {% endfor %}
     {% endif %}

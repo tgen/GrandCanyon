@@ -77,11 +77,13 @@
       --ref GRCh38 \
       -o {{ results_dir }}/{{ sample_or_pair.name }}_classification/{{ sample_or_pair.name }}
 
-    samtools view \
-      --threads 8 \
-      --regions-file {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed \
-      --bam \
-      --output {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bam \
-      {{ bam }}
+    [ -s {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed ] && \
+      samtools view \
+        --threads 8 \
+        --regions-file {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed \
+        --bam \
+        --output {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bam \
+        {{ bam }} || \
+      echo "Skipping evidence bam creation as no events were detected."
 
 {% endmacro %}
