@@ -91,9 +91,12 @@
       {% do r2fastq.update({"path": "temp/fastqs/" + r2fastq.basename}) %}
       {% do files_to_remove.append(r2fastq.path) %}
 
-      {% set ubam = rg.data_files|selectattr('fileType', 'eq', 'ubam')|first %}
-      {% do ubam.update({"path": "temp/ubams/" + ubam.basename}) %}
-      {% do files_to_remove.append(ubam.path) %}
+      {% set ubam_list = rg.data_files|selectattr('fileType', 'eq', 'ubam')|list %}
+      {% if ubam_list | length > 0 %}
+        {% set ubam = ubam_list|first %}
+        {% do ubam.update({"path": "temp/ubams/" + ubam.basename}) %}
+        {% do files_to_remove.append(ubam.path) %}
+      {% endif %}
 
       {% set file %}temp/fastqs/{{ sample.name }}/{{ rgid }}{% endset %}
       {% do files_to_remove.append(file) %}
