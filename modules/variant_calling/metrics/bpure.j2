@@ -11,7 +11,7 @@
   {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/metrics/b_pure/{{ sample_or_pair.name }}_{{ aligner }}/{{ variant_caller }}_{{ seg_resolution }}_res{% endset %}
   {%- set results_dir %}{{ sample_or_pair.gltype }}/metrics/b_pure/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
   {%- set output_prefix %}{{ sample_or_pair.name }}_{{ variant_caller }}_{{ seg_resolution }}_res{% endset %}
-  {%- set sample = sample_or_pair.tumor %}
+  {%- set sample = sample_or_pair %}
 {% endif %}
 
 {% set library_list = [] %}

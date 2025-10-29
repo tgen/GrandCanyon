@@ -22,9 +22,9 @@
   input:
     - {{ input_seg }}
     {% if studyDisease == "Multiple Myeloma" | default(false) %}
-    - {{ constants.grandcanyon[reference].fish_probe_locations }}
+    - {{ constants.grandcanyon[reference].tool_resources.cnvear.fish_probe_locations }}
     {% else %}
-    - {{ constants.grandcanyon[reference].cnvear_locations }}
+    - {{ constants.grandcanyon[reference].tool_resources.cnvear.cnvear_locations }}
     {% endif %}
   output:
     - {{ output_dir }}/{{ cnvear_output }}
@@ -42,11 +42,11 @@
     {# original probe locations, but exclude regions that fall entirely outside of the input seg windows #}
     {% if studyDisease == "Multiple Myeloma" | default(false) %}
     tail -n+2 {{ input_seg }} | cut -f2-4 | \
-    bedtools intersect -a {{ constants.grandcanyon[reference].fish_probe_locations }} -b stdin -wa | \
+    bedtools intersect -a {{ constants.grandcanyon[reference].tool_resources.cnvear.fish_probe_locations }} -b stdin -wa | \
     sort -k1,1V -k2,2n -k3,3n -u > {{ output_dir }}/{{ cnvear_probes }}
     {% else %}
     tail -n+2 {{ input_seg }} | cut -f2-4 | \
-    bedtools intersect -a {{ constants.grandcanyon[reference].cnvear_locations }} -b stdin -wa | \
+    bedtools intersect -a {{ constants.grandcanyon[reference].tool_resources.cnvear.cnvear_locations }} -b stdin -wa | \
     sort -k1,1V -k2,2n -k3,3n -u > {{ output_dir }}/{{ cnvear_probes }}
     {% endif %}
 
