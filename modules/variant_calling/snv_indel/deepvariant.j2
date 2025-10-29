@@ -140,9 +140,9 @@
       --include 'FILTER == "PASS"' \
       --output-type z \
       --output {{ pass_vcf }} \
-      --write-index \
       {{ all_vcf }}
 
+    bcftools index --tbi --force {{ pass_vcf }}
 
 {% if tasks[sample.gltype|capitalize+"_variant_calling_phasing_whatshap"]|default(false) %}
   {% set whatshap_phased_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.whatshap.phased.vcf.gz{% endset %}
