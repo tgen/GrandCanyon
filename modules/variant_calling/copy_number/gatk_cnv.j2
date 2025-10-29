@@ -39,6 +39,12 @@
     {% endif %}
     {% set cnvIntervals = controlDataFiles|selectattr('assayCode', 'eq', sample_or_pair.assayCode)|map(attribute='gatkCnvPonIntervals')|first|default(none) %}
     {% set cnvPon = controlDataFiles|selectattr('assayCode', 'eq', sample_or_pair.assayCode)|map(attribute='gatkCnvPon')|first|default(none) %}
+  {% else %}
+    {% if input_vcf is not defined %}
+      {% set input_vcf = none %}
+    {% endif %}
+    {% set cnvIntervals = none %}
+    {% set cnvPon = none %}
   {% endif %}
 {% endif %}
 
