@@ -11,13 +11,26 @@
   {{ raise(raise_msg) }}
 {% endif %}
 
+{% if constants.grandcanyon[reference].gff is defined %}
+  {% set transcript_file_command %}--gff {{ constants.grandcanyon[reference].gff }}{% endset %}
+{% elif constants.grandcanyon[reference].gtf is defined %}
+  {% set transcript_file_command %}--gtf {{ constants.grandcanyon[reference].gtf }}{% endset %}
+{% endif %}
+
 - name: vep_all_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
   input:
     - {{ input_vcf }}
+    {% if constants.grandcanyon[reference].vep_data is defined %}
     - {{ constants.grandcanyon[reference].vep_data }}
     {% if reference == "grch38" %}
     - {{ constants.grandcanyon[reference].vep_plugin_data }}
+    {% endif %}
+    {% endif %}
+    {% if constants.grandcanyon[reference].gff is defined %}
+    - {{ constants.grandcanyon[reference].gff }}
+    {% elif constants.grandcanyon[reference].gtf is defined %}
+    - {{ constants.grandcanyon[reference].gtf }}
     {% endif %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output: {{ final_vcf_prefix }}.vep.full.vcf
@@ -48,9 +61,14 @@
         --species {{ constants.grandcanyon[reference].species }} \
         {% endif %}
         --force_overwrite \
+        {% if constants.grandcanyon[reference].vep_data is defined %}
         --cache \
         --dir_cache "{{ constants.grandcanyon[reference].vep_data }}" \
         --cache_version {{ constants.grandcanyon[reference].gene_model_version }} \
+        {% endif %}
+        {% if transcript_file_command is defined %}
+        {{ transcript_file_command }} \
+        {% endif %}
         --offline \
         --fasta "{{ constants.grandcanyon[reference].reference_fasta }}" \
         {% if reference == "grch38" %}
@@ -133,9 +151,14 @@
         --species {{ constants.grandcanyon[reference].species }} \
         {% endif %}
         --force_overwrite \
+        {% if constants.grandcanyon[reference].vep_data is defined %}
         --cache \
         --dir_cache "{{ constants.grandcanyon[reference].vep_data }}" \
         --cache_version {{ constants.grandcanyon[reference].gene_model_version }} \
+        {% endif %}
+        {% if transcript_file_command is defined %}
+        {{ transcript_file_command }} \
+        {% endif %}
         --offline \
         --fasta "{{ constants.grandcanyon[reference].reference_fasta }}" \
         {% if reference == "grch38" %}
