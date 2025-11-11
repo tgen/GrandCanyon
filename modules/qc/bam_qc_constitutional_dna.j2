@@ -3,7 +3,10 @@
 {% from 'modules/qc/stats2json.j2' import stats2json with context %}
 
 {% macro bam_qc_verifybamid2(sample, libraryCount, sample_lb, taskPrefix='Genome', aligner='bwa', bam_level=true) %}
-{% if tasks[taskPrefix+"_quality_control_constitutional_contamination_check_VerifyBamID"]|default(false) %}
+{% if tasks[taskPrefix+"_quality_control_constitutional_contamination_check_VerifyBamID"]|default(false) and
+constants.grandcanyon[reference].tool_resources is defined|default(false) and
+constants.grandcanyon[reference].tool_resources.verifybamid is defined|default(false) and
+constants.grandcanyon[reference].tool_resources.verifybamid.verifybamid_resources is defined|default(false) %}
 
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
 
@@ -151,7 +154,10 @@
 
 
 {% macro sex_check(sample, libraryCount, sample_lb, taskPrefix='Genome', aligner='bwa', bam_level=true) %}
-{% if tasks[taskPrefix+"_quality_control_constitutional_sex_check_freebayes"]|default(false) %}
+{% if tasks[taskPrefix+"_quality_control_constitutional_sex_check_freebayes"]|default(false) and
+constants.grandcanyon[reference].tool_resources is defined|default(false) and
+constants.grandcanyon[reference].tool_resources.sex_check is defined|default(false) and
+constants.grandcanyon[reference].tool_resources.sex_check.sexcheck_targets is defined|default(false) %}
 
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
 
