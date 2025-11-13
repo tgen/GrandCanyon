@@ -21,6 +21,7 @@
     {% endif %}
     - {{ bam }}
     - {{ cnvkit_cns }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
     - {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}
     - {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.mosek }}
   output:
@@ -77,13 +78,25 @@
       --ref GRCh38 \
       -o {{ results_dir }}/{{ sample_or_pair.name }}_classification/{{ sample_or_pair.name }}
 
-    [ -s {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed ] && \
+    if [ -s {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed ]; then
+      grep 'SN:\(chr\)\?[0-9]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+        sed 's/SN://;s/LN://' |\
+        awk '{ OFS="\t" ; print $2, $3 }' > {{ temp_dir }}/{{ sample_or_pair }}_contig_lengths.tsv
+
+      bedtools slop \
+        -i {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed \
+        -b 10000 \
+        -g {{ temp_dir }}/{{ sample_or_pair }}_contig_lengths.tsv \
+        -o {{ temp_dir }}/{{ sample_or_pair }}_AA_CNV_evidence.bed
+
       samtools view \
         --threads 8 \
-        --regions-file {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed \
+        --regions-file {{ temp_dir }}/{{ sample_or_pair }}_AA_CNV_evidence.bed \
         --bam \
         --output {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bam \
-        {{ bam }} || \
+        {{ bam }}
+    else
       echo "Skipping evidence bam creation as no events were detected."
+    fi
 
 {% endmacro %}
