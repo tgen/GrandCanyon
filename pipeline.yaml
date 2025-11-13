@@ -6,6 +6,8 @@ __pipeline__:
   bin: required_scripts/
 constants:
   tools:
+    agat:
+      container: quay.io/biocontainers/agat:1.5.1--pl5321hdfd78af_0
     allelecounter:
       container: quay.io/biocontainers/cancerit-allelecount:4.3.0--h8bd2d3b_7
     amplicon_architect:
@@ -64,9 +66,13 @@ constants:
       container: quay.io/biocontainers/freebayes:1.3.10--hbefcdb2_0
     gatk:
       container: broadinstitute/gatk:4.5.0.0
+    gffread:
+      container: quay.io/biocontainers/gffread:0.12.7--h077b44d_6
     glnexus:
       container: ghcr.io/dnanexus-rnd/glnexus:v1.4.3
       digest: ce6fecf59dddc6089a8100b31c29c1e6ed50a0cf123da9f2bc589ee4b0c69c8e
+    gtftogenepred:
+      container: quay.io/biocontainers/ucsc-gtftogenepred:469--h664eb37_1
     hifiasm:
       container: quay.io/biocontainers/hifiasm:0.25.0--h5ca1c30_0
     hificnv:

@@ -43,6 +43,16 @@
         {% set raise_msg %}reference_fasta not defined! constants.grandcanyon.{{ reference }}.reference_fasta is not in pipeline.yaml or user supplied input{% endset %}
         {{ raise(raise_msg) }}
     {% endif %}
+    {% if constants.grandcanyon[reference].gff is defined and constants.grandcanyon[reference].gtf is not defined %}
+        {% from 'utilities/prepare_resources.j2' import convert_gff3_to_gtf with context %}
+            {% set gene_model_dir = constants.grandcanyon[reference].gff | dirname %}
+            {% set gene_model_gff = constants.grandcanyon[reference].gff %}
+            {% set gene_model_prefix = gene_model_gff.split('.')[:-1]|join('.') %}
+            {% set gene_model_gtf %}{{ gene_model_prefix }}.gtf{% endset %}
+            {% do constants.grandcanyon[reference].update({'gtf': gene_model_gtf}) %}
+            {{- convert_gff3_to_gtf() }}
+        {% endif %}
+    {% endif %}
     {% if constants.grandcanyon[reference].gtf is defined %}
         {% from 'utilities/prepare_resources.j2' import prepare_gene_model with context %}
         {% if constants.grandcanyon[reference].ref_flat is not defined

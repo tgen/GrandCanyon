@@ -159,7 +159,7 @@
   cpus: 1
   mem: 4G
   walltime: "1:00:00"
-  container: quay.io/biocontainers/ucsc-gtftogenepred:469--h664eb37_1
+  container: {{ constants.tools.gtftogenepred.container }}
   cmd: |
     set -eu
 
@@ -224,10 +224,28 @@
   cpus: 1
   mem: 4G
   walltime: "1:00:00"
-  container: quay.io/biocontainers/gffread:0.12.7--h077b44d_6
+  container: {{ constants.tools.gffread.container }}
   cmd: |
     set -eu
 
     gffread {{ constants.grandcanyon[reference].gtf }} -g {{ constants.grandcanyon[reference].reference_fasta }} -w {{ constants.grandcanyon[reference].transcriptome }}
+
+{% endmacro %}
+
+{% macro convert_gff3_to_gtf() %}
+
+- name: convert_gff3_to_gtf_for_{{ reference | replace('.', '_') }}
+  input:
+    - {{ constants.grandcanyon[reference].gff }}
+  output:
+    - {{ constants.grandcanyon[reference].gtf }}
+  cpus: 2
+  mem: 32G
+  walltime: "1:00:00"
+  container: {{ constants.tools.agat.container }}
+  cmd: |
+    set -eu
+
+    agat_convert_sp_gff2gtf.pl --gff {{ constants.grandcanyon[reference].gff }} --gtf_version 3 -o {{ constants.grandcanyon[reference].gtf }}
 
 {% endmacro %}
