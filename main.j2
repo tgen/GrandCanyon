@@ -51,7 +51,6 @@
             {% set gene_model_gtf %}{{ gene_model_prefix }}.gtf{% endset %}
             {% do constants.grandcanyon[reference].update({'gtf': gene_model_gtf}) %}
             {{- convert_gff3_to_gtf() }}
-        {% endif %}
     {% endif %}
     {% if constants.grandcanyon[reference].gtf is defined %}
         {% from 'utilities/prepare_resources.j2' import prepare_gene_model with context %}
