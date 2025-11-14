@@ -79,15 +79,15 @@
       -o {{ results_dir }}/{{ sample_or_pair.name }}_classification/{{ sample_or_pair.name }}
 
     if [ -s {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed ]; then
-      grep 'SN:\(chr\)\?[0-9]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+      grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
         sed 's/SN://;s/LN://' |\
-        awk '{ OFS="\t" ; print $2, $3 }' > {{ temp_dir }}/{{ sample_or_pair }}_contig_lengths.tsv
+        awk '{ OFS="\t" ; print $2, $3 }' > {{ temp_dir }}/contig_lengths.tsv
 
       bedtools slop \
         -i {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed \
         -b 10000 \
-        -g {{ temp_dir }}/{{ sample_or_pair }}_contig_lengths.tsv \
-        -o {{ temp_dir }}/{{ sample_or_pair }}_AA_CNV_evidence.bed
+        -g {{ temp_dir }}/contig_lengths.tsv \
+        -o {{ temp_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bed
 
       samtools view \
         --threads 8 \
