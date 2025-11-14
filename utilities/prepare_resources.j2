@@ -5,7 +5,7 @@
   output:
     - {{ constants.grandcanyon[reference].reference_fai }}
     - {{ constants.grandcanyon[reference].reference_dict }}
-    - {{ constants.grandcanyon[reference].primary_interval_list }}
+    - {{ constants.grandcanyon[reference].reference_non_N_interval_list }}
   cpus: 4
   mem: 16G
   walltime: "4:00:00"
@@ -21,11 +21,60 @@
       -o {{ constants.grandcanyon[reference].reference_dict }} \
       {{ constants.grandcanyon[reference].reference_fasta }}
 
-    [ -e {{ constants.grandcanyon[reference].primary_interval_list }} ] ||\
-    grep 'SN:\(chr\)\?[0-9]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
-      sed 's/SN://;s/LN://' |\
-      awk '{ OFS="\t" ; print $2,1,$3 }' \
-      > {{ constants.grandcanyon[reference].primary_interval_list }}
+    if [ ! -e {{ constants.grandcanyon[reference].reference_non_N_interval_list }} ]; then
+      CONTIG_LIST=$(grep 'SN:\(chr\)\?[0-9]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+        sed 's/SN://;s/LN://' |\
+        awk '{ ORS="CONTIG_SEP" ; print $2 }' | sed 's/CONTIG_SEP$//')
+
+      awk -v CONTIG_LIST="$CONTIG_LIST" 'BEGIN {
+        START=0
+        CONTIG="beginning"
+        split(CONTIG_LIST, CONTIGS, "CONTIG_SEP")
+        for (i in CONTIGS) CONTIGS[CONTIGS[i]] = ""
+        SKIP_CONTIG="No"
+      };
+      $1 ~ /^>/ {
+        if (CONTIG != "beginning" && b[length(b)] != "N" && SKIP_CONTIG == "No") {
+          OFS = "\t"
+          print CONTIG,TOTAL-START,TOTAL-1
+        }
+        split($1, a, ">")
+        TOTAL=1
+        START=0
+        RESET="No"
+        split(a[2], c, " ")
+        CONTIG=c[1]
+        if (CONTIG in CONTIGS == 0) {
+          SKIP_CONTIG="Yes"
+        }
+        next
+      }
+      {
+        if ( SKIP_CONTIG == "No" ) {
+          split($0, b, "")
+          for (i=1; i <= length($0); i++) {
+            if (b[i] == "N") {
+              if ( RESET == "Yes" ) {
+                OFS = "\t"
+                print CONTIG,TOTAL-START,TOTAL-1
+                RESET="No"
+              }
+              TOTAL+=1
+              START=0
+            } else {
+              RESET="Yes"
+              START+=1
+              TOTAL+=1
+            }
+          }
+        }
+      } END {
+        if (b[length(b)] != "N" && SKIP_CONTIG == "No") {
+          OFS = "\t"
+          print CONTIG,TOTAL-START,TOTAL-1
+        }
+      }' {{ constants.grandcanyon[reference].reference_fasta }} > {{ constants.grandcanyon[reference].reference_non_N_interval_list }}
+    fi
 
 {% endmacro %}
 

@@ -61,7 +61,7 @@
   input:
     - {{ bam }}
     - {{ bam_index }}
-    - {{ constants.grandcanyon[reference].primary_interval_list }}
+    - {{ constants.grandcanyon[reference].reference_non_N_interval_list }}
     - {{ sample.capture_kit.no_header_targets_interval_list }}
   output:
     - {{ regions }}
@@ -80,7 +80,7 @@
     mkdir -p {{ results_dir }}
 
     bedtools intersect \
-      -a {{ constants.grandcanyon[reference].primary_interval_list }} \
+      -a {{ constants.grandcanyon[reference].reference_non_N_interval_list }} \
       -b {{ sample.capture_kit.no_header_targets_interval_list }} \
       | \
     sort -k1,1 -k2,2n \
@@ -107,7 +107,7 @@
     {% if sample.gltype == 'exome' %}
     - {{ regions }}
     {% else %}
-    - {{ constants.grandcanyon[reference].primary_interval_list }}
+    - {{ constants.grandcanyon[reference].reference_non_N_interval_list }}
     {% endif %}
     - {{ reference_fasta }}
   output:
@@ -147,7 +147,7 @@
       {% if sample.gltype == 'exome' %}
       --target-regions {{ regions }} \
       {% else %}
-      --target-regions {{ constants.grandcanyon[reference].primary_interval_list }} \
+      --target-regions {{ constants.grandcanyon[reference].reference_non_N_interval_list }} \
       {% endif %}
       --reference {{ reference_fasta }} \
       {{ bam }} \
