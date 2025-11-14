@@ -91,7 +91,7 @@
 
       samtools view \
         --threads 8 \
-        --regions-file {{ temp_dir }}/{{ sample_or_pair }}_AA_CNV_evidence.bed \
+        --regions-file {{ temp_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bed \
         --bam \
         --output {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bam \
         {{ bam }}
