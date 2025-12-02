@@ -298,3 +298,28 @@
     agat_convert_sp_gff2gtf.pl --gff {{ constants.grandcanyon[reference].gff }} --gtf_version 3 -o {{ constants.grandcanyon[reference].gtf }}
 
 {% endmacro %}
+
+{% macro liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta) %}
+
+- name: liftover_vcf_{{ source_vcf | replace('.', '_') }}
+  input:
+    - {{ source_vcf }}
+    - {{ source_fasta }}
+  output:
+    - {{ result_vcf }}
+    - {{ result_fasta }}
+  cpus: 2
+  mem: 8G
+  walltime: "1:00:00"
+  container: {{ constants.tools.liftover_vcf.container }}
+  cmd: |
+    set -eu
+
+    bcftools +liftover \
+      -Ou {{ source_vcf }} -- \
+      -s {{ source_fasta }} \
+      -f {{ result_fasta }} \
+      -c {{ constants.grandcanyon[reference].chain_file }} | \
+    bcftools sort -Oz -o {{ result_vcf }} -W=tbi
+
+{% endmacro %}

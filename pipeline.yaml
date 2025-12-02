@@ -83,6 +83,10 @@ constants:
       container: quay.io/biocontainers/isoseq:4.3.0--h9ee0642_0
     lancet2:
       container: us-central1-docker.pkg.dev/nygc-app-c-148c/lancet-public/lancet:v2.8.6-main-6b2317c8
+    liftover:
+      container: quay.io/biocontainers/ucsc-liftover:482--h0b57e2e_0
+    liftover_vcf:
+      container: quay.io/biocontainers/bcftools-liftover-plugin:1.22--hb66fcc3_0
     longshot:
       container: quay.io/biocontainers/longshot:1.0.0--hd4f2111_2
     lorax:

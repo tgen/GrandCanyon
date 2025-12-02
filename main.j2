@@ -80,6 +80,19 @@
         {% set raise_msg %}gene_model gtf not defined! constants.grandcanyon.{{ reference }}.gtf is not in pipeline.yaml or user supplied input{% endset %}
         {{ log(raise_msg) }}
     {% endif %}
+    {% if constants.grandcanyon[reference].chain_file is defined and source_reference is defined %}
+      {% set log_msg %}Detected {{ constants.grandcanyon[reference].chain_file }} chain file. Assuming chain is for {{ source_reference }} -> {{ reference }}{% endset %}
+      {{ log(log_msg, level='WARNING') }}
+      {% set liftover_output_dir %}{{ constants.grandcanyon[reference].reference_fasta | dirname }}{% endset %}
+      {% set source_fasta %}{{ constants.grandcanyon[source_reference].reference_fasta }}{% endset %}
+      {% set result_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+      {% set source_vcf %}{{ constants.grandcanyon[source_reference].tool_resources.mutect2.germline_reference }}{% endset %}
+      {% set result_vcf %}{{ liftover_output_dir }}/vcfs/{{ source_vcf | basename }}{% endset %}
+      {{ liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta) }}
+      {% set temp_reference_dict = constants.grandcanyon[reference] %}
+      {% do constants.grandcanyon[reference].update(constants.grandcanyon[source_reference]) %}
+      {% do constants.grandcanyon[reference].update(temp_reference_dict) %}
+    {% endif %}
 {% endif %}
 
 {% set reference = reference | lower %}
