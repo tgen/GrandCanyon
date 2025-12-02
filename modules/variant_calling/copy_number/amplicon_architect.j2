@@ -87,7 +87,7 @@
         -i {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed \
         -b 10000 \
         -g {{ temp_dir }}/contig_lengths.tsv \
-        -o {{ temp_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bed
+        > {{ temp_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bed
 
       samtools view \
         --threads 8 \
