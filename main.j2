@@ -90,7 +90,7 @@
       {% set source_vcf %}{{ constants.grandcanyon[source_reference].tool_resources.mutect2.germline_reference }}{% endset %}
       {% set result_vcf %}{{ liftover_output_dir }}/vcfs/{{ source_vcf | basename }}{% endset %}
       {% do constants.grandcanyon[reference].update({'tool_resources': {'mutect2': {'germline_reference': result_vcf }}}) %}
-      {{ liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta) }}
+      {{ liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta, 'tool_resources_mutect2_germline_reference') }}
       {% set temp_reference_dict = constants.grandcanyon[reference] %}
       {% do constants.grandcanyon[reference].update(constants.grandcanyon[source_reference]) %}
       {% do constants.grandcanyon[reference].update(temp_reference_dict) %}

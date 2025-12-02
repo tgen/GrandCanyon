@@ -299,9 +299,9 @@
 
 {% endmacro %}
 
-{% macro liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta) %}
+{% macro liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta, task_name) %}
 
-- name: liftover_vcf_{{ source_vcf | replace('.', '_') }}
+- name: liftover_vcf_{{ task_name }}
   input:
     - {{ source_vcf }}
     - {{ source_fasta }}
