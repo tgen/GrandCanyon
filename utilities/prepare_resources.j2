@@ -277,6 +277,7 @@
   cmd: |
     set -eu
 
+    [ -e {{ constants.grandcanyon[reference].transcriptome }} ] ||\
     gffread {{ constants.grandcanyon[reference].gtf }} -g {{ constants.grandcanyon[reference].reference_fasta }} -w {{ constants.grandcanyon[reference].transcriptome }}
 
 {% endmacro %}
@@ -295,11 +296,14 @@
   cmd: |
     set -eu
 
+    [ -e {{ constants.grandcanyon[reference].gtf }} ] ||\
     agat_convert_sp_gff2gtf.pl --gff {{ constants.grandcanyon[reference].gff }} --gtf_version 3 -o {{ constants.grandcanyon[reference].gtf }}
 
 {% endmacro %}
 
 {% macro liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta, task_name) %}
+
+{% set temp_dir %}temp/pipeline_resources/liftover_vcf{% endset %}
 
 - name: liftover_vcf_{{ task_name }}
   input:
@@ -308,18 +312,27 @@
   output:
     - {{ result_vcf }}
     - {{ result_fasta }}
-  cpus: 2
-  mem: 8G
+  cpus: 4
+  mem: 32G
   walltime: "1:00:00"
   container: {{ constants.tools.liftover_vcf.container }}
   cmd: |
     set -eu
 
+    rm -rf {{ temp_dir }}
+    mkdir -p {{ temp_dir }}
+
+    [ -e {{ result_vcf }} ] ||\
     bcftools +liftover \
-      -Ou {{ source_vcf }} -- \
-      -s {{ source_fasta }} \
-      -f {{ result_fasta }} \
-      -c {{ constants.grandcanyon[reference].chain_file }} | \
-    bcftools sort -Oz -o {{ result_vcf }} -W=tbi
+      {{ source_vcf }} -- \
+      --src-fasta-ref {{ source_fasta }} \
+      --fasta-ref {{ result_fasta }} \
+      --chain {{ constants.grandcanyon[reference].chain_file }} \
+      2> {{ temp_dir }}/{{ result_vcf | basename }}_liftover.log | \
+    bcftools sort \
+      --output-type z \
+      --output {{ result_vcf }} \
+      --temp-dir {{ temp_dir }}/bcftools \
+      --write-index=tbi
 
 {% endmacro %}
