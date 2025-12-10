@@ -84,18 +84,18 @@
 
     {% for rgid, rg in sample.read_groups.items() %}
       {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
-      {% do r1fastq.update({"path": "temp/fastqs/" + r1fastq.basename}) %}
-      {% do files_to_remove.append(r1fastq.path) %}
+      {% set r1fastq_path %}temp/fastqs/{{ r1fastq.basename }}{% endset %}
+      {% do files_to_remove.append(r1fastq_path) %}
 
       {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
-      {% do r2fastq.update({"path": "temp/fastqs/" + r2fastq.basename}) %}
-      {% do files_to_remove.append(r2fastq.path) %}
+      {% set r2fastq_path %}temp/fastqs/{{ r2fastq.basename }}{% endset %}
+      {% do files_to_remove.append(r2fastq_path) %}
 
       {% set ubam_list = rg.data_files|selectattr('fileType', 'eq', 'ubam')|list %}
       {% if ubam_list | length > 0 %}
         {% set ubam = ubam_list|first %}
-        {% do ubam.update({"path": "temp/ubams/" + ubam.basename}) %}
-        {% do files_to_remove.append(ubam.path) %}
+        {% set ubam_path %}temp/ubams/{{ ubam.basename}}{% endset %}
+        {% do files_to_remove.append(ubam_path) %}
       {% endif %}
 
       {% set file %}temp/fastqs/{{ sample.name }}/{{ rgid }}{% endset %}

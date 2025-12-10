@@ -1,5 +1,40 @@
 {% macro finalize(samples) %}
 
+{% if clean_up_data_files_on_finalize | default(false) %}
+{#
+This will only run in special circumstances and will not be enablable from kbase.
+Expecation is that after rsync, which should be error free, we no longer need the
+fastq from the source location.
+#}
+
+{% set file_list = [] %}
+{% for file in dataFiles %}
+  {% if file.fastqPath is defined %}
+    {% do file_list.append(file.fastqPath) %}
+  {% elif file.path is defined %}
+    {% do file_list.append(file.path) %}
+  {% endif %}
+{% endfor %}
+
+- name: clean_up_source
+  input:
+    {% for path in file_list %}
+    - {{ path }}
+    {% endfor %}
+  before: finalize
+  after-re: ^(?!finalize).*$
+  cpus: 1
+  mem: 2G
+  walltime: "1:00:00"
+  cmd: |
+    set -euv
+
+    {% for path in file_list %}
+    rm -f {{ path }}
+    {% endfor %}
+
+{% endif %}
+
 - name: finalize
   after-re: .*
   cpus: 1
