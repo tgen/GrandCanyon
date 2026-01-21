@@ -175,8 +175,8 @@ constants.grandcanyon[reference].tool_resources.sex_check.sex_check_targets is d
 
   {% set vcf %}{{ temp_dir }}/{{ bam|basename }}.sexCheck.vcf{% endset %}
   {% set output %}{{ results_dir }}/{{ bam|basename }}.sexCheck.txt{% endset %}
-  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.sexCheck.txt{% endset %}
-  {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.sexCheck.json{% endset %}
+  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.sexCheck.txt{% endset %}
+  {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.sexCheck.json{% endset %}
   {% set config_sex %}{{ sex|default("Unknown") }}{% endset %}
 
 - name: freebayes_sex_check_{{ task }}
@@ -217,7 +217,7 @@ constants.grandcanyon[reference].tool_resources.sex_check.sex_check_targets is d
   tags: [{{ sample.gltype }}, quality_control, constitutional_sex_check, freebayes, {{ sample.name }}]
   input:
     - {{ bam }}
-    - {{ bam }}.bai
+    - {{ bam_index }}
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output: {{ temp_dir }}/{{ bam|basename }}.sexCheck.nonPARreadCount.txt
   {% if bam_level is sameas false %}
@@ -297,7 +297,7 @@ constants.grandcanyon[reference].tool_resources.sex_check.sex_check_targets is d
   output:
     - {{ output }}
     {% if libraryCount == 1 %}
-    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.sexCheck.txt
+    - {{ sample_lb_output }}
     {% endif %}
   reset: predecessors
   cpus: 1
