@@ -157,7 +157,7 @@ constants.grandcanyon[reference].tool_resources.verifybamid.verifybamid_resource
 {% if tasks[taskPrefix+"_quality_control_constitutional_sex_check_freebayes"]|default(false) and
 constants.grandcanyon[reference].tool_resources is defined|default(false) and
 constants.grandcanyon[reference].tool_resources.sex_check is defined|default(false) and
-constants.grandcanyon[reference].tool_resources.sex_check.sexcheck_targets is defined|default(false) %}
+constants.grandcanyon[reference].tool_resources.sex_check.sex_check_targets is defined|default(false) %}
 
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
 
