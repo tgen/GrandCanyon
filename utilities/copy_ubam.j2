@@ -39,7 +39,7 @@
   input:
     - temp/ubams/{{ ubam.basename }}
   output:
-    {% if ubam.glPrep|lower not in ['longread'] %}
+    {% if ubam.glPrep|lower not in ['longread'] and not ubam.glPrep.lower().startswith('kinnex') %}
     - temp/fastqs/{{ ubam.basename | replace(".", "_") }}_R1.fastq.gz
     - temp/fastqs/{{ ubam.basename | replace(".", "_") }}_R2.fastq.gz
     {% else %}
@@ -58,7 +58,7 @@
 
     mkdir -p temp/fastqs/
 
-    {% if ubam.glPrep|lower not in ['longread'] %}
+    {% if ubam.glPrep|lower not in ['longread'] and not ubam.glPrep.lower().startswith('kinnex') %}
     samtools collate \
       --threads 6 \
       -u \
