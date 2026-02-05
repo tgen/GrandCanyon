@@ -250,6 +250,10 @@
               {% do rg.data_files.pop(loop.index) %}
           {% endif %}
         {% endfor %}
+        {% if tasks[sample.gltype|capitalize+'_preprocessing_trim_reads']|default(false) %}
+          {% from 'utilities/read_trimming.j2' import trim_reads with context %}
+          {{- trim_reads(sample, rg, rgid) }}
+        {% endif %}
     {% endfor %}
 {% endfor %}
 
