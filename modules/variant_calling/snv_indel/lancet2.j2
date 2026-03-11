@@ -20,7 +20,7 @@
     - temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed
   output:
     - {{ temp_dir }}/{{ chunk }}.lancet2.vcf.gz
-  cpus: 4
+  cpus: 8
   mem: 16G
   walltime: "8:00:00"
   queue_preset: "DEFAULT"
@@ -31,7 +31,7 @@
     mkdir -p {{ temp_dir }}
 
     Lancet2 pipeline \
-      --num-threads 4 \
+      --num-threads 8 \
       --tumor {{ tumor_bam }} \
       --normal {{ normal_bam }} \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
@@ -93,12 +93,16 @@
     set -eu
     set -o pipefail
 
+    bcftools filter \
+      {{ all_vcf }} | \
     bcftools view \
       --include 'FILTER == "PASS"' \
+      {% if pair.gltype == 'exome' %}
+      --targets-file {{ capture_kit_bed }} \
+      {% endif %}
       --output-type z \
       --output {{ pass_vcf }} \
-      --write-index \
-      {{ all_vcf }}
+      --write-index
 
 {% if not tasks[pair.gltype|capitalize+"_variant_calling_merge_vcfs_vcfMerger2"]|default(false) %}
 {% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
