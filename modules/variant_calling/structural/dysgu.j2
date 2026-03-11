@@ -126,6 +126,10 @@
 
 - name: dysgu_filter_{{ sample_or_pair.name }}_{{ aligner }}
   input:
+    {% if input_config == 'paired' %}
+    - {{ normal_vcf }}
+    - {{ normal_bam }}
+    {% endif %}
     - {{ temp_all_vcf }}
   output:
     - {{ temp_pass_vcf }}
