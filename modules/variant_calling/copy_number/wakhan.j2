@@ -1,0 +1,84 @@
+{% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
+
+{% macro wakhan(sample_or_pair, aligner) %}
+
+{% if sample_or_pair.normal is defined %}
+  {% if sample_or_pair.normal.phased_vcf is defined %}
+    {{- whatshap_haplotag(sample_or_pair.tumor, aligner, 'deepvariant', sample_or_pair.normal.phased_vcf) }}
+    {%- set phased_vcf %}{{ sample_or_pair.normal.phased_vcf }}{% endset %}
+    {%- set normal_bam %}{{ sample_or_pair.normal.phased_bam }}{% endset %}
+    {%- set bam %}{{ sample_or_pair.tumor.phased_bam }}{% endset %}
+  {% else %}
+    {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+    {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {% endif %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+{% else %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+{% endif %}
+{% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_structural_caller_severus"]|default(false) %}
+  {%- set severus_vcf %}{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}/{{ sample_or_pair.name }}.{{ aligner }}.severus.all.vcf.gz{% endset %}
+{% endif %}
+
+- name: wakhan_{{ sample_or_pair.name }}_{{ aligner }}
+  reset: predecessors
+  input:
+    {% if phased_vcf is defined %}
+    - {{ phased_vcf }}
+    {% endif %}
+    {% if severus_vcf is defined %}
+    - {{ severus_vcf }}
+    {% endif %}
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+  cpus: 16
+  mem: 64G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.wakhan.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    {% if sample_or_pair.normal is defined %}
+    wakhan all \
+      --threads 16 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      {% if phased_vcf is defined %}
+      --normal-phased-vcf {{ phased_vcf }} \
+      {% endif %}
+      {% if severus_vcf is defined %}
+      --breakpoints {{ severus_vcf }} \
+      --use-sv-haplotypes \
+      {% endif %}
+      --target-bam {{ bam }} \
+      --genome-name {{ sample_or_pair.tumor.rgsm }} \
+      --out-dir-plots {{ temp_dir }}
+
+    {% else %}
+    wakhan all \
+      --threads 16 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      {% if phased_vcf is defined %}
+      --tumor-phased-vcf {{ phased_vcf }} \
+      {% endif %}
+      {% if severus_vcf is defined %}
+      --breakpoints {{ severus_vcf }} \
+      --use-sv-haplotypes \
+      {% endif %}
+      --target-bam {{ bam }} \
+      --genome-name {{ sample_or_pair.rgsm }} \
+      --out-dir-plots {{ temp_dir }}
+
+    {% endif %}
+
+{% endmacro %}

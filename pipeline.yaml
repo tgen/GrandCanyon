@@ -40,9 +40,9 @@ constants:
     cnvkit:
       container: quay.io/biocontainers/cnvkit:0.9.12--pyhdfd78af_0
     compleasm:
-      container: quay.io/biocontainers/compleasm:0.2.6--pyh7cba7a3_0
+      container: quay.io/biocontainers/compleasm:0.2.7--pyh7e72e81_1
     cutesv:
-      container: quay.io/biocontainers/cutesv:2.1.2--pyhdfd78af_0
+      container: quay.io/biocontainers/cutesv:2.1.3--pyhdfd78af_0
     ctat_lr:
       container: trinityctat/ctat_lr_fusion:1.1.2
     deepsomatic:
@@ -57,13 +57,13 @@ constants:
       container: nanoporetech/dorado:shaae1d5e75f94041e4fd7af4a7ed6e6432b0eaea29
       version: 0.8.2
     dysgu:
-      container: quay.io/biocontainers/dysgu:1.8.5--py312h9c9b0c2_0
+      container: quay.io/biocontainers/dysgu:1.8.7--py312h9c9b0c2_0
     fastp:
-      container: ghcr.io/tgen/fastp:1.1.1
+      container: ghcr.io/tgen/fastp:1.1.1-tgen
     flair:
-      container: quay.io/biocontainers/flair:2.2.0--pyhdfd78af_0
+      container: quay.io/biocontainers/flair:3.0.0b1--pyhdfd78af_0
     flye:
-      container: quay.io/biocontainers/flye:2.9.4--py311hc849397_2
+      container: quay.io/biocontainers/flye:2.9.6--py311h2de2dd3_0
     freebayes:
       container: quay.io/biocontainers/freebayes:1.3.10--hbefcdb2_0
     gatk:
@@ -78,13 +78,13 @@ constants:
     hifiasm:
       container: quay.io/biocontainers/hifiasm:0.25.0--h5ca1c30_0
     hificnv:
-      container: quay.io/biocontainers/hificnv:0.1.7--h9ee0642_0
+      container: quay.io/biocontainers/hificnv:1.0.1--h9ee0642_0
     isoquant:
-      container: quay.io/biocontainers/isoquant:3.7.0--hdfd78af_0
+      container: quay.io/biocontainers/isoquant:3.10.0--hdfd78af_0
     isoseq:
       container: quay.io/biocontainers/isoseq:4.3.0--h9ee0642_0
     lancet2:
-      container: us-central1-docker.pkg.dev/nygc-app-c-148c/lancet-public/lancet:v2.8.6-main-6b2317c8
+      container: ghcr.io/tgen/containers/lancet2:2.8.6-bin
     liftover:
       container: quay.io/biocontainers/ucsc-liftover:482--h0b57e2e_0
     liftover_vcf:
@@ -101,11 +101,11 @@ constants:
     mashmap:
       container: /home/tgenref/containers/mashmap_3.1.3--h07ea13f_0.sif
     medaka:
-      container: quay.io/biocontainers/medaka:1.11.1--py310h87e71ce_0
+      container: quay.io/biocontainers/medaka:2.1.1--py312ha65e1bd_0
     merqury:
       container: /home/tgenref/containers/merqury_1.3.sif
     methbat:
-      container: quay.io/biocontainers/methbat:0.14.1--h9ee0642_0
+      container: quay.io/biocontainers/methbat:0.17.0--h9ee0642_0
     minigraph:
       container: quay.io/biocontainers/minigraph:0.21--he4a0461_1
     minimap2:
@@ -113,13 +113,13 @@ constants:
     moddotplot:
       container: /home/tgenref/containers/moddotplot_latest.sif
     modkit:
-      container: quay.io/biocontainers/ont-modkit:0.5.0--hcdda2d0_0
+      container: quay.io/biocontainers/ont-modkit:0.6.1--hcdda2d0_0
     mosdepth:
       container: quay.io/biocontainers/mosdepth:0.3.8--hd299d5a_0
     multiqc:
       container: quay.io/biocontainers/multiqc:1.31--pyhdfd78af_0
     oarfish:
-      container: quay.io/biocontainers/oarfish:0.8.1--h5ca1c30_0
+      container: quay.io/biocontainers/oarfish:0.9.2--h5ca1c30_0
     pafplot:
       container: /home/tgenref/containers/pafplot.sif
     pafr:
@@ -135,7 +135,7 @@ constants:
     pb_cpg_tools:
       container: quay.io/biocontainers/pb-cpg-tools:3.0.0--h9ee0642_0
     pychopper:
-      container: quay.io/biocontainers/pychopper:2.5.0--py_0
+      container: quay.io/biocontainers/pychopper:2.7.10--pyhdfd78af_0
     python3:
       container: python:3.7.16-slim-bullseye
     python3_with_modules:
@@ -159,13 +159,13 @@ constants:
     shasta:
       container: quay.io/biocontainers/shasta:0.11.1--h4ac6f70_2
     sigprofiler:
-      container: quay.io/biocontainers/sigprofilerassignment:0.2.3--pyhdfd78af_0
+      container: quay.io/biocontainers/sigprofilerassignment:1.0.1--pyhdfd78af_0
     smoove:
       container: brentp/smoove:v0.2.8
     sniffles:
-      container: quay.io/biocontainers/sniffles:2.6.2--pyhdfd78af_0
+      container: quay.io/biocontainers/sniffles:2.7.0--pyhdfd78af_0
     somalier:
-      container: brentp/somalier:v0.3.0
+      container: brentp/somalier:v0.3.1
     spectre:
       container: /home/tgenref/containers/spectre-cnv_0.2.1.sif
     sqanti3:
@@ -179,23 +179,25 @@ constants:
     subread:
       container: quay.io/biocontainers/subread:2.0.6--he4a0461_0
     trgt:
-      container: quay.io/biocontainers/trgt:3.0.0--h9ee0642_0
+      container: quay.io/biocontainers/trgt:4.0.0--h9ee0642_0
     truvari:
-      container: quay.io/biocontainers/truvari:5.3.0--pyhdfd78af_0
+      container: quay.io/biocontainers/truvari:5.4.0--pyhdfd78af_0
     vardict:
       container: quay.io/biocontainers/vardict-java:1.8.3--hdfd78af_0
       digest: 4069c082c97470bce4a07f228dbf74b6ea3fc5c4eaa93ba76d2826a496ca3c44
     vcfmerger:
-      container: ghcr.io/tgen/containers/vcfmerger2:0.9.5-23090712
-      digest: 37640beed1f829702dbd8c03a1e4955a205abd8a38e209ea88ffa815c570a8fa
+      container: ghcr.io/tgen/containers/vcfmerger2:0.10.0
+      digest: 25408957d91c15e6b4af37cf71673d5a436aa074510b929b9ce628a19568b1c4
     vep:
       container: ensemblorg/ensembl-vep:release_112.0
     verifybamid2:
       container: griffan/verifybamid2:v2.0.1
     verkko:
       container: quay.io/biocontainers/verkko:2.2.1--h45dadce_0
+    wakhan:
+      container: quay.io/biocontainers/wakhan:0.4.2--pyhdfd78af_0
     whatshap:
-      container: quay.io/biocontainers/whatshap:2.6--py312hf731ba3_0
+      container: quay.io/biocontainers/whatshap:2.8--py312hf731ba3_0
     yak:
       container: quay.io/biocontainers/yak:0.1--h577a1d6_6
   grandcanyon:
@@ -255,21 +257,21 @@ constants:
       gene_model_name: ensembl_v103
       gene_model_version: 112
       capture_kit_path: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/tool_resources/capture_kits
-      reference_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_alts_hla_masked.fa
-      reference_fai: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_alts_hla_masked.fa.fai
-      reference_alts: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_alts_hla_masked.fa.alt
+      reference_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa
+      reference_fai: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa.fai
+      reference_alts: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa.alt
       reference_fastaSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa
       reference_faiSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa.fai
-      reference_dict: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_alts_hla_masked.dict
+      reference_dict: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.dict
       reference_non_N_interval_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/samtools_stats/GRCh38tempe_decoy_alts_hla_masked_samstats_no_N_1based_primary_contigs_no_chrX_chrY.txt
       reference_gbz: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/vg/hprc-v1.1-mc-grch38.gbz
-      bwa_mem2_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/bwa_2.2.1/GRCh38tempe_decoy_alts_hla_masked.fa
+      bwa_mem2_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/bwa2_2.2.1/GRCh38tgen_decoy_alts_hla.fa
       gff3: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.gff3.gz
       gtf: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.noheader.sorted.gtf
       gtfSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/gene_model/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf
       transcriptome: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.transcriptome.fasta
       transcriptomeSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/transcriptome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa
-      star_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/genome_reference/GRCh38tempe_decoy_masked.fa
+      star_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy.fa
       starfusion_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/tool_resources/starFusion_gencode_v37/starFusion_Resources/ctat_genome_lib_build_dir
       snpSniffer_sites: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/snpSniffer/positions_387_hg38_ucsc.txt
       snpSniffer_database: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/snpSniffer/databaseV5_hg38_ucsc.ini
@@ -303,6 +305,7 @@ constants:
             "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/clinvar/20220910/clinvar_20220910_hg38_tempe.bcf",
             "mark_sites": "CLINVAR",
             "columns": "",
+            # "columns": "CLNORIGIN:=ORIGIN,CLNDN,CLNDNINCL,CLNDISDB,CLNDISDBINCL,CLNHGVS,CLNREVSTAT,CLNSIG,CLNSIGCONF,CLNSIGINCL,CLNSIGSCV,CLNVC,CLNVCSO,CLNVI,DBVARID,GENEINFO,MC,ONCDN,ONCDNINCL,ONCDISDB,ONCDISDBINCL,ONC,ONCINCL,ONCREVSTAT,ONCSCV,ONCCONF,SCIDN,SCIDNINCL,SCIDISDB,SCIDISDBINCL,SCIREVSTAT,SCI,SCIINCL,SCISCV",
           }
         - {
             "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/topmed/freeze8/All.BRAVO_TOPMed_Freeze_8.bcf",
@@ -340,8 +343,8 @@ constants:
           vntrs: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/severus/human_GRCh38_no_alt_analysis_set.trf.bed
           pon: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/severus/PoN_1000G_hg38.tsv.gz
         sex_check:
-          sex_check_targets: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/tgen_gender_check/chrx_common_dbSNPv152_snv_exons.bed
-          sex_check_vcf: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/tgen_gender_check/chrx_common_dbSNPv152_snv_exons.vcf.gz
+          sex_check_targets: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/tgen_gender_check/chrx_common_dbSNPv152_snv_exons.bed
+          sex_check_vcf: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/tgen_gender_check/chrx_common_dbSNPv152_snv_exons.vcf.gz
         sigprofiler:
           ref_dir: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sigprofiler/references/chromosomes
           sbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sigprofiler/COSMIC_v3.4_SBS_GRCh38.txt
@@ -460,14 +463,40 @@ constants:
         salmon: "ISR"
         featurecounts: "2"
         collectrnaseqmetrics: "SECOND_READ_TRANSCRIPTION_STRAND"
-    cnvear_copy_number_thresholds:
-      genome:
-        high_gain: 1.32
-        gain: 0.16
-        het_loss: -0.16
-        hom_loss: -1.32
-      exome:
-        high_gain: 1.32
-        gain: 0.16
-        het_loss: -0.16
-        hom_loss: -1.32
+task_variables:
+  cnvear_copy_number_thresholds:
+    genome:
+      high_gain: 1.32
+      gain: 0.16
+      het_loss: -0.16
+      hom_loss: -1.32
+    exome:
+      high_gain: 1.32
+      gain: 0.16
+      het_loss: -0.16
+      hom_loss: -1.32
+  read_trimming:
+    genome:
+      n_base_limit: 5
+      length_required: 75
+      qualified_quality_phred: 15
+      unqualified_percent_limit: 40
+      trim_poly_g: true
+      poly_g_percent: 0.85
+      trim_poly_g_read2only: true
+    exome:
+      n_base_limit: 5
+      length_required: 75
+      qualified_quality_phred: 15
+      unqualified_percent_limit: 40
+      trim_poly_g: true
+      poly_g_percent: 0.85
+      trim_poly_g_read2only: true
+    rna:
+      n_base_limit: 5
+      length_required: 75
+      qualified_quality_phred: 15
+      unqualified_percent_limit: 40
+      trim_poly_g: true
+      poly_g_percent: 0.85
+      trim_poly_g_read2only: true
