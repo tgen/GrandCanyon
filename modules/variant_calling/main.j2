@@ -37,12 +37,15 @@
 {% from 'modules/variant_calling/structural/severus.j2' import severus with context %}
 {% from 'modules/variant_calling/structural/savana.j2' import savana with context %}
 
-{# copy number callers #}
-{% from 'modules/variant_calling/copy_number/spectre.j2' import spectre with context %}
-{% from 'modules/variant_calling/copy_number/hifi_cnv.j2' import hifi_cnv with context %}
+{# short-read copy number callers #}
 {% from 'modules/variant_calling/copy_number/gatk_cnv.j2' import gatk_cnv with context %}
 {% from 'modules/variant_calling/copy_number/cnvkit.j2' import cnvkit with context %}
 {% from 'modules/variant_calling/copy_number/ascat.j2' import ascat with context %}
+
+{# long-read copy number callers #}
+{% from 'modules/variant_calling/copy_number/spectre.j2' import spectre with context %}
+{% from 'modules/variant_calling/copy_number/hifi_cnv.j2' import hifi_cnv with context %}
+{% from 'modules/variant_calling/copy_number/wakhan.j2' import wakhan with context %}
 
 {# variant phasing #}
 {% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
@@ -380,18 +383,28 @@
     # copy number variant callers
     ############}
 
-    {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
-      {% if sample.gltype in 'genome' %}
-        {{- gatk_cnv(sample, aligner) }}
+    {% if sample.glprep in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_wakhan"]|default(false) %}
+        {{- wakhan(sample, aligner) }}
       {% endif %}
-    {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_cna_caller_cnvkit"]|default(false) %}
-      {{- cnvkit(sample, aligner) }}
-    {% endif %}
+    {% else %}
 
-    {% if tasks[taskPrefix+"_variant_calling_cna_caller_ascat"]|default(false) %}
-      {{- ascat(sample, aligner) }}
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
+        {% if sample.gltype in 'genome' %}
+          {{- gatk_cnv(sample, aligner) }}
+        {% endif %}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_cnvkit"]|default(false) %}
+        {{- cnvkit(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_ascat"]|default(false) %}
+        {{- ascat(sample, aligner) }}
+      {% endif %}
+
     {% endif %}
 
   {% endfor %}
@@ -417,6 +430,7 @@
     ############}
 
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
+      {% do pair.callers.append('deepsomatic') %}
       {{- deepsomatic(pair, aligner) }}
     {% endif %}
 
@@ -427,7 +441,7 @@
     {% if pair.glprep not in 'longread' %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_lancet2"]|default(false) %}
-        {% do pair.callers.append('lancet') %}
+        {% do pair.callers.append('lancet2') %}
         {{- lancet2(pair, aligner) }}
       {% endif %}
 
@@ -489,18 +503,28 @@
     # copy number variant callers
     ############}
 
-    {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
-      {% if pair.gltype in 'genome' %}
-        {{- gatk_cnv(pair, aligner) }}
+    {% if pair.glprep in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_wakhan"]|default(false) %}
+        {{- wakhan(pair, aligner) }}
       {% endif %}
-    {% endif %}
 
-    {% if tasks[taskPrefix+"_variant_calling_cna_caller_cnvkit"]|default(false) %}
-      {{- cnvkit(pair, aligner) }}
-    {% endif %}
+    {% else %}
 
-    {% if tasks[taskPrefix+"_variant_calling_cna_caller_ascat"]|default(false) %}
-      {{- ascat(pair, aligner) }}
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
+        {% if pair.gltype in 'genome' %}
+          {{- gatk_cnv(pair, aligner) }}
+        {% endif %}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_cnvkit"]|default(false) %}
+        {{- cnvkit(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_ascat"]|default(false) %}
+        {{- ascat(pair, aligner) }}
+      {% endif %}
+
     {% endif %}
 
   {% endfor %}
