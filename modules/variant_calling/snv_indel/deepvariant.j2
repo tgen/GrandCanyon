@@ -52,7 +52,6 @@
       --reads {{ bam }} \
       --output_vcf {{ all_vcf }} \
       --output_gvcf {{ all_gvcf }} \
-      --sample_name {{ sample.name }} \
       --num_shards 20 \
       --logging_dir {{ temp_dir }}/logs \
       --novcf_stats_report \

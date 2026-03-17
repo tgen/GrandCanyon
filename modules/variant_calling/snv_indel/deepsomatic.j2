@@ -78,11 +78,8 @@
       {% if sample_or_pair.normal is defined %}
       --reads_tumor {{ tumor_bam }} \
       --reads_normal {{ normal_bam }} \
-      --sample_name_tumor {{ sample_or_pair.tumor.name }} \
-      --sample_name_normal {{ sample_or_pair.normal.name }} \
       {% else %}
       --reads_tumor {{ bam }} \
-      --sample_name_tumor {{ sample_or_pair.name }} \
       {% endif %}
       --output_vcf {{ all_vcf }} \
       --output_gvcf {{ all_gvcf }} \
