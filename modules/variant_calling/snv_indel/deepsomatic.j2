@@ -23,7 +23,6 @@
   {% elif sample_or_pair.rgpl == 'ONT' %}
     {%- set model_type = 'ONT_TUMOR_ONLY' %}
   {% elif sample_or_pair.gltype == 'exome' %}
-    {# CURRENTLY NOT SUPPORTED BY DEEPSOMATIC #}
     {%- set model_type = 'WES_TUMOR_ONLY' %}
   {% else %}
     {%- set model_type = 'WGS_TUMOR_ONLY' %}
@@ -34,10 +33,6 @@
 {%- set all_gvcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.deepsomatic.all.g.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.deepsomatic.pass.vcf.gz{% endset %}
 
-{% if sample_or_pair.gltype == 'exome' and sample_or_pair.normal is not defined %}
-  {% set log_msg %}deepsomatic was enabled for exome processing, but {{ sample_or_pair.name }} does not have a matched normal to pair with.{% endset %}
-  {{ log(log_msg, level='WARNING') }}
-{% else %}
 - name: deepsomatic_prep_and_make_examples_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, deepsomatic, {{ sample_or_pair.name }}]
   reset: predecessors
@@ -179,8 +174,6 @@
 {% from 'modules/variant_calling/metrics/sigprofiler.j2' import sigprofiler with context %}
 {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_metrics_sigprofiler"]|default(false) and sample_or_pair.normal is defined %}
   {{- sigprofiler(sample_or_pair, pass_vcf, aligner, 'deepsomatic') }}
-{% endif %}
-
 {% endif %}
 
 {% endmacro %}
