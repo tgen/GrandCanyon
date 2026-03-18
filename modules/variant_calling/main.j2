@@ -298,6 +298,7 @@
     # snv and indel variant callers
     ############}
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
+      {% do sample.callers.append('deepsomatic') %}
       {{- deepsomatic(sample, aligner) }}
     {% endif %}
 
