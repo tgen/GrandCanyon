@@ -8,7 +8,7 @@
 {%- set pass_vcf %}{{ results_dir }}/{{ pair.name }}.{{ aligner }}.lancet2.pass.vcf.gz{% endset %}
 
 {% if pair.gltype == 'exome' %}
-{%- set capture_kit_bed %}{{ pair.capture_kit.extended_bed }}{% endset %}
+{%- set capture_kit_bed %}{{ pair.tumor.capture_kit.extended_bed }}{% endset %}
 {% endif %}
 
 {% for chunk in range(1, num_chunks+1) %}
