@@ -45,7 +45,7 @@
         {% else %}
             {% do sample.update({'phenotype': 0}) %}
         {% endif %}
-        echo -e '{{	family.name }}\t{{ sample.sampleMergeKey }}\t{{ paternal.sampleMergeKey | default(0) }}\t{{ maternal.sampleMergeKey | default(0) }}\t{{ sample.sex }}\t{{ sample.phenotype }}' >> {{ results_dir }}/{{ family.name }}.ped
+        echo -e '{{ family.name }}\t{{ sample.sampleMergeKey }}\t{{ paternal.sampleMergeKey | default(0) }}\t{{ maternal.sampleMergeKey | default(0) }}\t{{ sample.sex }}\t{{ sample.phenotype }}' >> {{ results_dir }}/{{ family.name }}.ped
       {% endfor %}
     {% endif %}
 

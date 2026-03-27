@@ -89,10 +89,8 @@ constants:
       container: quay.io/biocontainers/ucsc-liftover:482--h0b57e2e_0
     liftover_vcf:
       container: quay.io/biocontainers/bcftools-liftover-plugin:1.22--hb66fcc3_0
-    longshot:
-      container: quay.io/biocontainers/longshot:1.0.0--hd4f2111_2
-    lorax:
-      container: quay.io/biocontainers/lorax:0.3.8--hb7e2ac5_0
+    longphase:
+      container: quay.io/biocontainers/longphase:2.0.1--hfc4162c_0
     manta:
       container: ghcr.io/tgen/containers/manta:1.6.0-23082819
       digest: 8413ec3da1e20da9f0cc9544722c7e9d30135f4ee0aa8092b67fc74c782913a3
@@ -464,6 +462,33 @@ constants:
         featurecounts: "2"
         collectrnaseqmetrics: "SECOND_READ_TRANSCRIPTION_STRAND"
 task_variables:
+  umi_options:
+    correct_umi_umi_files: /home/tgenref/assay_files/twist_umi_adaptor_system/known_umi_sequences.txt
+    correct_umi_max_mismatches: 1
+    correct_umi_min_distance: 2
+    correct_umi_read_structure: "5M2S+T 5M2S+T"
+    group_reads_edits: 1
+    group_reads_min_map_q: 1
+    group_reads_strategy: "paired"
+    consensus_error_rate_pre_umi: 45
+    consensus_error_rate_post_umi: 40
+    consensus_min_input_base_quality: 10
+    filter_min_reads: 1
+    filter_min_base_quality: 30
+    filter_max_no_call_fraction: 0.1
+    filter_max_base_error_rate: 0.1
+  somatic_variant_filtering:
+    genome:
+      vcfmerger_exclude_filter: "(FMT/DP<10 | FMT/AR[0]>=0.02 | FMT/AR[1]<0.05)"
+    exome:
+      vcfmerger_exclude_filter: "(FMT/DP<10 | FMT/AR[0]>=0.02 | FMT/AR[1]<0.05)"
+  tumor_only_variant_filtering:
+    genome:
+      COSMIC_Ratio_Threshold: 0.10
+      vcfmerger_exclude_filter: "(FMT/DP<10 | FMT/AR[0]>=0.02 | FMT/AR[1]<0.05)"
+    exome:
+      COSMIC_Ratio_Threshold: 0.10
+      vcfmerger_exclude_filter: "(FMT/DP<10 | FMT/AR[0]>=0.02 | FMT/AR[1]<0.05)"
   cnvear_copy_number_thresholds:
     genome:
       high_gain: 1.32

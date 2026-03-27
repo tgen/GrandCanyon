@@ -7,6 +7,10 @@
 {%- set all_vcf %}{{ results_dir }}/{{ pair.name }}.{{ aligner }}.lancet2.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ pair.name }}.{{ aligner }}.lancet2.pass.vcf.gz{% endset %}
 
+{% if pair.gltype == 'exome' %}
+{%- set capture_kit_bed %}{{ sample_or_pair.capture_kit.extended_bed }}{% endset %}
+{% endif %}
+
 {% for chunk in range(1, num_chunks+1) %}
 - name: lancet2_{{ pair.name }}_{{ aligner }}_{{ chunk }}
   tags: [{{ pair.gltype }}, somatic, snp_indel_caller, lancet2, {{ pair.name }}]
@@ -81,6 +85,9 @@
   input:
     - {{ all_vcf }}
     - {{ all_vcf }}.tbi
+    {% if pair.gltype == 'exome' %}
+    - {{ capture_kit_bed }}
+    {% endif %}
   output:
     - {{ pass_vcf }}
     - {{ pass_vcf }}.tbi
