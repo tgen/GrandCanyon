@@ -14,7 +14,6 @@
 {% from 'modules/variant_calling/snv_indel/vcfmerger2.j2' import vcfmerger2 with context %}
 
 {# long-read snv callers #}
-{% from 'modules/variant_calling/snv_indel/longshot.j2' import longshot with context %}
 {% from 'modules/variant_calling/snv_indel/trgt.j2' import trgt with context %}
 
 {# joint snv variant callers #}
@@ -94,10 +93,6 @@
     {% endif %}
 
     {% if sample.glprep in 'longread' %}
-
-      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_longshot"]|default(false) %}
-        {{- longshot(sample, aligner) }}
-      {% endif %}
 
       {% if sample.rgpl in ('PACBIO') %}
         {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_trgt"]|default(false) %}
