@@ -14,87 +14,97 @@
 {% elif constants.grandcanyon[reference] is not defined %}
     {% set raise_msg %}Unsupported reference defined! {{ reference|lower }} is not in pipeline.yaml or user supplied input{% endset %}
     {{ raise(raise_msg) }}
-{% elif reference not in ['grch38', 'chm13'] %}
-    {% set log_msg %}reference: {{ reference }}, appears to be a user supplied input! We will generate expected resources from the supplied paths{% endset %}
-    {{ log(log_msg, level='WARNING') }}
-    {% if constants.grandcanyon[reference].reference_fasta is defined %}
-        {% from 'utilities/prepare_resources.j2' import prepare_reference with context %}
-        {% if constants.grandcanyon[reference].reference_fai is not defined 
-        or constants.grandcanyon[reference].reference_dict is not defined
-        or constants.grandcanyon[reference].reference_non_N_interval_list is not defined %}
-            {% set reference_fasta = constants.grandcanyon[reference].reference_fasta %}
-            {% set reference_fai %}{{ reference_fasta }}.fai{% endset %}
-            {% set reference_dict %}{{ reference_fasta }}.dict{% endset %}
-            {% set reference_non_N_interval_list %}{{ reference_fasta }}.primary_contigs.nonN.interval_list{% endset %}
-            {% do constants.grandcanyon[reference].update({'reference_fai': reference_fai}) %}
-            {% do constants.grandcanyon[reference].update({'reference_dict': reference_dict}) %}
-            {% do constants.grandcanyon[reference].update({'reference_non_N_interval_list': reference_non_N_interval_list}) %}
-            {{- prepare_reference() }}
-        {% endif %}
-        {% from 'utilities/prepare_resources.j2' import prepare_bwa_index with context %}
-        {% for task in tasks if task.endswith("alignment_dna_alignment_bwa") and tasks[task] %}
-          {% if loop.last and constants.grandcanyon[reference].bwa_mem2_index is not defined %}
-            {% set bwa_mem2_index %}{{ constants.grandcanyon[reference].reference_fasta | dirname | dirname }}/tool_resources/bwa_mem2/{{ constants.grandcanyon[reference].reference_fasta | basename }}{% endset %}
-            {% do constants.grandcanyon[reference].update({'bwa_mem2_index': bwa_mem2_index}) %}
-            {{- prepare_bwa_index() }}
-          {% endif %}
-        {% endfor %}
-    {% else %}
-        {% set raise_msg %}reference_fasta not defined! constants.grandcanyon.{{ reference }}.reference_fasta is not in pipeline.yaml or user supplied input{% endset %}
-        {{ raise(raise_msg) }}
+{% endif %}
+
+{% if constants.grandcanyon[reference].reference_fasta is defined %}
+    {% from 'utilities/prepare_resources.j2' import prepare_reference with context %}
+    {% if constants.grandcanyon[reference].reference_fai is not defined
+    or constants.grandcanyon[reference].reference_dict is not defined
+    or constants.grandcanyon[reference].reference_non_N_interval_list is not defined %}
+        {% set reference_fasta = constants.grandcanyon[reference].reference_fasta %}
+        {% set reference_fai %}{{ reference_fasta }}.fai{% endset %}
+        {% set reference_dict %}{{ reference_fasta }}.dict{% endset %}
+        {% set reference_non_N_interval_list %}{{ reference_fasta }}.primary_contigs.nonN.interval_list{% endset %}
+        {% do constants.grandcanyon[reference].update({'reference_fai': reference_fai}) %}
+        {% do constants.grandcanyon[reference].update({'reference_dict': reference_dict}) %}
+        {% do constants.grandcanyon[reference].update({'reference_non_N_interval_list': reference_non_N_interval_list}) %}
+        {{- prepare_reference() }}
     {% endif %}
-    {% if constants.grandcanyon[reference].gff is defined and constants.grandcanyon[reference].gtf is not defined %}
-        {% from 'utilities/prepare_resources.j2' import convert_gff3_to_gtf with context %}
-            {% set gene_model_dir = constants.grandcanyon[reference].gff | dirname %}
-            {% set gene_model_gff = constants.grandcanyon[reference].gff %}
-            {% set gene_model_prefix = gene_model_gff.split('.')[:-1]|join('.') %}
-            {% set gene_model_gtf %}{{ gene_model_prefix }}.gtf{% endset %}
-            {% do constants.grandcanyon[reference].update({'gtf': gene_model_gtf}) %}
-            {{- convert_gff3_to_gtf() }}
+    {% from 'utilities/prepare_resources.j2' import prepare_bwa_index with context %}
+    {% for task in tasks if task.endswith("alignment_dna_alignment_bwa") and tasks[task] %}
+      {% if loop.last and constants.grandcanyon[reference].bwa_mem2_index is not defined %}
+        {% set bwa_mem2_index %}{{ constants.grandcanyon[reference].reference_fasta | dirname | dirname }}/tool_resources/bwa_mem2/{{ constants.grandcanyon[reference].reference_fasta | basename }}{% endset %}
+        {% do constants.grandcanyon[reference].update({'bwa_mem2_index': bwa_mem2_index}) %}
+        {{- prepare_bwa_index() }}
+      {% endif %}
+    {% endfor %}
+{% else %}
+    {% set raise_msg %}reference_fasta not defined! constants.grandcanyon.{{ reference }}.reference_fasta is not in pipeline.yaml or user supplied input{% endset %}
+    {{ raise(raise_msg) }}
+{% endif %}
+{% if constants.grandcanyon[reference].reference_gfa is defined %}
+    {% from 'utilities/prepare_resources.j2' import prepare_pangenome_reference with context %}
+    {% if constants.grandcanyon[reference].reference_hapl is not defined
+    or constants.grandcanyon[reference].reference_gbz is not defined %}
+        {% set reference_gfa = constants.grandcanyon[reference].reference_gfa %}
+        {% set reference_hapl %}{{ reference_gfa | replace("gfa", "hapl") }}{% endset %}
+        {% set reference_gbz %}{{ reference_gfa | replace("gfa", "gbz") }}{% endset %}
+        {% do constants.grandcanyon[reference].update({'reference_hapl': reference_hapl}) %}
+        {% do constants.grandcanyon[reference].update({'reference_gbz': reference_gbz}) %}
+        {{- prepare_pangenome_reference() }}
     {% endif %}
-    {% if constants.grandcanyon[reference].gtf is defined %}
-        {% from 'utilities/prepare_resources.j2' import prepare_gene_model with context %}
-        {% if constants.grandcanyon[reference].ref_flat is not defined
-        or constants.grandcanyon[reference].ribo_locations is not defined
-        or constants.grandcanyon[reference].starfusion_index is not defined %}
-            {% set gene_model_dir = constants.grandcanyon[reference].gtf | dirname %}
-            {% set gene_model_gtf = constants.grandcanyon[reference].gtf %}
-            {% set gene_model_prefix = gene_model_gtf.split('.')[:-1]|join('.') %}
-            {% set ref_flat %}{{ gene_model_prefix }}.refFlat.txt{% endset %}
-            {% set ribo_locations %}{{ gene_model_prefix }}.ribo.interval_list{% endset %}
-            {% set starfusion_index %}{{ gene_model_dir }}/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir{% endset %}
-            {% do constants.grandcanyon[reference].update({'ref_flat': ref_flat}) %}
-            {% do constants.grandcanyon[reference].update({'ribo_locations': ribo_locations}) %}
-            {% do constants.grandcanyon[reference].update({'starfusion_index': starfusion_index}) %}
-            {{- prepare_gene_model() }}
-        {% endif %}
-        {% from 'utilities/prepare_resources.j2' import prepare_transcriptome with context %}
-        {% if constants.grandcanyon[reference].transcriptome is not defined %}
-            {% set gene_model_gtf = constants.grandcanyon[reference].gtf %}
-            {% set gene_model_prefix = gene_model_gtf.split('.')[:-1]|join('.') %}
-            {% set transcriptome %}{{ gene_model_prefix }}.transcriptome.fasta{% endset %}
-            {% do constants.grandcanyon[reference].update({'transcriptome': transcriptome}) %}
-            {{- prepare_transcriptome() }}
-        {% endif %}
-    {% else %}
-        {% set raise_msg %}gene_model gtf not defined! constants.grandcanyon.{{ reference }}.gtf is not in pipeline.yaml or user supplied input{% endset %}
-        {{ log(raise_msg) }}
+{% endif %}
+{% if constants.grandcanyon[reference].gff is defined and constants.grandcanyon[reference].gtf is not defined %}
+    {% from 'utilities/prepare_resources.j2' import convert_gff3_to_gtf with context %}
+        {% set gene_model_dir = constants.grandcanyon[reference].gff | dirname %}
+        {% set gene_model_gff = constants.grandcanyon[reference].gff %}
+        {% set gene_model_prefix = gene_model_gff.split('.')[:-1]|join('.') %}
+        {% set gene_model_gtf %}{{ gene_model_prefix }}.gtf{% endset %}
+        {% do constants.grandcanyon[reference].update({'gtf': gene_model_gtf}) %}
+        {{- convert_gff3_to_gtf() }}
+{% endif %}
+{% if constants.grandcanyon[reference].gtf is defined %}
+    {% from 'utilities/prepare_resources.j2' import prepare_gene_model with context %}
+    {% if constants.grandcanyon[reference].ref_flat is not defined
+    or constants.grandcanyon[reference].ribo_locations is not defined
+    or constants.grandcanyon[reference].starfusion_index is not defined %}
+        {% set gene_model_dir = constants.grandcanyon[reference].gtf | dirname %}
+        {% set gene_model_gtf = constants.grandcanyon[reference].gtf %}
+        {% set gene_model_prefix = gene_model_gtf.split('.')[:-1]|join('.') %}
+        {% set ref_flat %}{{ gene_model_prefix }}.refFlat.txt{% endset %}
+        {% set ribo_locations %}{{ gene_model_prefix }}.ribo.interval_list{% endset %}
+        {% set starfusion_index %}{{ gene_model_dir }}/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir{% endset %}
+        {% do constants.grandcanyon[reference].update({'ref_flat': ref_flat}) %}
+        {% do constants.grandcanyon[reference].update({'ribo_locations': ribo_locations}) %}
+        {% do constants.grandcanyon[reference].update({'starfusion_index': starfusion_index}) %}
+        {{- prepare_gene_model() }}
     {% endif %}
-    {% if constants.grandcanyon[reference].chain_file is defined and source_reference is defined %}
-      {% from 'utilities/prepare_resources.j2' import liftover_vcf with context %}
-      {% set log_msg %}Detected {{ constants.grandcanyon[reference].chain_file }} chain file. Assuming chain is for {{ source_reference }} -> {{ reference }}{% endset %}
-      {{ log(log_msg, level='WARNING') }}
-      {% set liftover_output_dir %}{{ constants.grandcanyon[reference].reference_fasta | dirname }}{% endset %}
-      {% set source_fasta %}{{ constants.grandcanyon[source_reference].reference_fasta }}{% endset %}
-      {% set result_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
-      {% set source_vcf %}{{ constants.grandcanyon[source_reference].tool_resources.mutect2.germline_reference }}{% endset %}
-      {% set result_vcf %}{{ liftover_output_dir }}/vcfs/{{ source_vcf | basename }}{% endset %}
-      {% do constants.grandcanyon[reference].update({'tool_resources': {'mutect2': {'germline_reference': result_vcf }}}) %}
-      {{ liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta, 'tool_resources_mutect2_germline_reference') }}
-      {% set temp_reference_dict = constants.grandcanyon[reference] %}
-      {% do constants.grandcanyon[reference].update(constants.grandcanyon[source_reference]) %}
-      {% do constants.grandcanyon[reference].update(temp_reference_dict) %}
+    {% from 'utilities/prepare_resources.j2' import prepare_transcriptome with context %}
+    {% if constants.grandcanyon[reference].transcriptome is not defined %}
+        {% set gene_model_gtf = constants.grandcanyon[reference].gtf %}
+        {% set gene_model_prefix = gene_model_gtf.split('.')[:-1]|join('.') %}
+        {% set transcriptome %}{{ gene_model_prefix }}.transcriptome.fasta{% endset %}
+        {% do constants.grandcanyon[reference].update({'transcriptome': transcriptome}) %}
+        {{- prepare_transcriptome() }}
     {% endif %}
+{% else %}
+    {% set raise_msg %}gene_model gtf not defined! constants.grandcanyon.{{ reference }}.gtf is not in pipeline.yaml or user supplied input{% endset %}
+    {{ log(raise_msg) }}
+{% endif %}
+{% if constants.grandcanyon[reference].chain_file is defined and source_reference is defined %}
+  {% from 'utilities/prepare_resources.j2' import liftover_vcf with context %}
+  {% set log_msg %}Detected {{ constants.grandcanyon[reference].chain_file }} chain file. Assuming chain is for {{ source_reference }} -> {{ reference }}{% endset %}
+  {{ log(log_msg, level='WARNING') }}
+  {% set liftover_output_dir %}{{ constants.grandcanyon[reference].reference_fasta | dirname }}{% endset %}
+  {% set source_fasta %}{{ constants.grandcanyon[source_reference].reference_fasta }}{% endset %}
+  {% set result_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+  {% set source_vcf %}{{ constants.grandcanyon[source_reference].tool_resources.mutect2.germline_reference }}{% endset %}
+  {% set result_vcf %}{{ liftover_output_dir }}/vcfs/{{ source_vcf | basename }}{% endset %}
+  {% do constants.grandcanyon[reference].update({'tool_resources': {'mutect2': {'germline_reference': result_vcf }}}) %}
+  {{ liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta, 'tool_resources_mutect2_germline_reference') }}
+  {% set temp_reference_dict = constants.grandcanyon[reference] %}
+  {% do constants.grandcanyon[reference].update(constants.grandcanyon[source_reference]) %}
+  {% do constants.grandcanyon[reference].update(temp_reference_dict) %}
 {% endif %}
 
 {% set reference = reference | lower %}
@@ -236,6 +246,9 @@
         {% endif %}
         {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minimap2_sr"]|default(false) %}
             {% do sample.aligners.append('minimap2') %}
+        {% endif %}
+        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_vg_giraffe"]|default(false) %}
+            {% do sample.aligners.append('vg_giraffe') %}
         {% endif %}
     {% else %}
         {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minimap2"]|default(false) %}

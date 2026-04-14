@@ -116,6 +116,56 @@
 
 {% endmacro %}
 
+{% macro prepare_pangenome_reference() %}
+
+{% set reference_dist %}{{ constants.grandcanyon[reference].reference_gbz | replace(".gbz", ".dist") }}{% endset %}
+{% set reference_ri %}{{ constants.grandcanyon[reference].reference_gbz | replace(".gbz", ".ri") }}{% endset %}
+- name: create_pangenome_reference_base_{{ reference | replace('.', '_') }}
+  input:
+    - {{ constants.grandcanyon[reference].reference_gfa }}
+  output:
+    - {{ constants.grandcanyon[reference].reference_gbz }}
+    - {{ constants.grandcanyon[reference].reference_hapl }}
+  cpus: 20
+  mem: 120G
+  walltime: "4:00:00"
+  container: {{ constants.tools.vg.container }}
+  cmd: |
+    set -eu
+
+    mkdir -p $(dirname {{ constants.grandcanyon[reference].reference_gbz }})
+
+    [ -e {{ constants.grandcanyon[reference].reference_gbz }} ] ||\
+    vg gbwt \
+      -p \
+      --num-threads 20 \
+      -G {{ constants.grandcanyon[reference].reference_gfa }} \
+      --gbz-format \
+      -g {{ constants.grandcanyon[reference].reference_gbz }}
+
+    [ -e {{ reference_dist }} ] ||\
+    vg index \
+      -t 20 \
+      -j {{ reference_dist }} \
+      {{ constants.grandcanyon[reference].reference_gbz }}
+
+    [ -e {{ reference_ri }} ] ||\
+    vg gbwt \
+      -p \
+      --num-threads 20 \
+      -r {{ reference_ri }} \
+      -Z {{ constants.grandcanyon[reference].reference_gbz }}
+
+    [ -e {{ constants.grandcanyon[reference].reference_hapl }} ] ||\
+    vg haplotypes \
+      -t 20 \
+      -v 2 \
+      -d {{ reference_dist }} \
+      -r {{ reference_ri }} \
+      -H {{ constants.grandcanyon[reference].reference_hapl }} \
+      {{ constants.grandcanyon[reference].reference_gbz }}
+
+{% endmacro %}
 
 {% macro prepare_chunk_intervals(exclusion_list=none) %}
 

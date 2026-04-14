@@ -1,6 +1,7 @@
 {% from 'modules/dna_alignment/minimap2.j2' import minimap2 with context %}
 {% from 'modules/dna_alignment/minimap2_sr.j2' import minimap2_sr with context %}
 {% from 'modules/dna_alignment/bwa_mem2_samtools.j2' import bwa_mem2_samtools with context %}
+{% from 'modules/dna_alignment/vg_giraffe.j2' import vg_giraffe with context %}
 {% from 'modules/qc/main.j2' import bam_qc with context %}
 {% from 'utilities/remove_files.j2' import remove_files with context %}
 
@@ -79,6 +80,21 @@
           {% set task %}samtools_markdup_{{ sample.name }}_{{ rglb }}_{{ aligner }}{% endset %}
           {% do task_list.append(task) %}
         {% endif %}
+      {% endfor %}
+    {% endif %}
+    {% if 'vg_giraffe' in sample.aligners %}
+      {{- vg_giraffe(sample, opt_dup_distance, aligner='vg_giraffe') }}
+      {% set aligner = 'vg_giraffe' %}
+      {% set task %}chunked_samtools_merge_rglb_bams_{{ sample.name }}_{{ aligner }}{% endset %}
+      {% do task_list.append(task) %}
+      {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+      {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
+        {% set file %}{{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam{% endset %}
+        {% do files_to_remove.append(file) %}
+        {% for rgid in rg %}
+          {% set file %}{{ temp_dir }}/{{ rgid.rgid }}{% endset %}
+          {% do files_to_remove.append(file) %}
+        {% endfor %}
       {% endfor %}
     {% endif %}
 

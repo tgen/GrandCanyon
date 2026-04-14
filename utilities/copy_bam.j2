@@ -72,7 +72,7 @@
 {% if aligner in ('bwa') %}
   {% set aligner_prefix = 'bwa_mem2' %}
 {% else %}
-  {% set aligner_prefix = 'minimap2' %}
+  {% set aligner_prefix = aligner %}
 {% endif %}
 - name: {{ aligner_prefix }}_samtools_create_temp_bam_{{ sample.name }}
   input:

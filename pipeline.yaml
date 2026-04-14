@@ -83,6 +83,8 @@ constants:
       container: quay.io/biocontainers/isoquant:3.10.0--hdfd78af_0
     isoseq:
       container: quay.io/biocontainers/isoseq:4.3.0--h9ee0642_0
+    kmc:
+      container: quay.io/biocontainers/kmc:3.2.4--h5ca1c30_4
     lancet2:
       container: ghcr.io/tgen/containers/lancet2:2.8.6-bin
     liftover:
@@ -185,13 +187,15 @@ constants:
       digest: 4069c082c97470bce4a07f228dbf74b6ea3fc5c4eaa93ba76d2826a496ca3c44
     vcfmerger:
       container: ghcr.io/tgen/containers/vcfmerger2:0.10.0
-      digest: a805d8ce372636e79a2ef78c3cb58daa4a0d4b10bf957945355bde47730a217e
+      digest: 11b4dc88f0e43439dcdcfe584fc042b917d25a639644c567ae325ce8254b1b98
     vep:
       container: ensemblorg/ensembl-vep:release_112.0
     verifybamid2:
       container: griffan/verifybamid2:v2.0.1
     verkko:
       container: quay.io/biocontainers/verkko:2.2.1--h45dadce_0
+    vg:
+      container: ghcr.io/tgen/containers/vg_samtools:1.70_1.20
     wakhan:
       container: quay.io/biocontainers/wakhan:0.4.2--pyhdfd78af_0
     whatshap:
@@ -262,7 +266,9 @@ constants:
       reference_faiSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa.fai
       reference_dict: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.dict
       reference_non_N_interval_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/samtools_stats/GRCh38tempe_decoy_alts_hla_masked_samstats_no_N_1based_primary_contigs_no_chrX_chrY.txt
+      reference_gfa: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/vg/hprc-v1.1-mc-grch38.gfa
       reference_gbz: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/vg/hprc-v1.1-mc-grch38.gbz
+      reference_hapl: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/vg/hprc-v1.1-mc-grch38.hapl
       bwa_mem2_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/bwa2_2.2.1/GRCh38tgen_decoy_alts_hla.fa
       gff3: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.gff3.gz
       gtf: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.noheader.sorted.gtf

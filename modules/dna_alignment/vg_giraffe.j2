@@ -1,0 +1,216 @@
+# This alignment command prefix is shared by all modules using bwa
+{% from 'utilities/read_group_line.j2' import read_group_line with context %}
+{% from 'utilities/remove_files.j2' import remove_files with context %}
+
+{% macro vg_giraffe(sample, opt_dup_distance, aligner) %}
+
+{% set temp_dir %}temp/{{ sample.gltype }}/alignment/vg_giraffe/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/alignment/vg_giraffe/{{ sample.name }}{% endset %}
+
+{% set r1fqlist = [] %}
+{% set r2fqlist = [] %}
+
+{% for rgid, rg in sample.read_groups.items() %}
+  {% if rg.data_files|length < 2 %}
+      {{ raise('Read group did not have 2 data files: {}'.format(rgid)) }}
+  {% endif %}
+
+  {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
+  {% do r1fastq.update({"path": "temp/fastqs/" + r1fastq.basename}) %}
+  {% do r1fqlist.append(r1fastq) %}
+
+  {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
+  {% do r2fastq.update({"path": "temp/fastqs/" + r2fastq.basename}) %}
+  {% do r2fqlist.append(r2fastq) %}
+{% endfor %}
+
+- name: kmc_counts_{{ sample.name }}
+  reset: predecessors
+  input:
+    {% for fq in r1fqlist %}
+    - {{ fq.path }}
+    {% endfor %}
+    {% for fq in r2fqlist %}
+    - {{ fq.path }}
+    {% endfor %}
+  output:
+    - {{ temp_dir }}/kmc/{{ sample.name }}.kff
+  cpus: 16
+  mem: 64G
+  walltime: "6:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.kmc.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ temp_dir }}/kmc/{{ sample.name }}/kmc_tmp_dir
+
+    cat <<EOF > {{ temp_dir }}/kmc/{{ sample.name }}.fq.paths
+    {% for fq in r1fqlist %}
+    {{ fq.path }}
+    {% endfor %}
+    {% for fq in r2fqlist %}
+    {{ fq.path }}
+    {% endfor %}
+    EOF
+
+    kmc \
+      -k29 \
+      -m64 \
+      -okff \
+      -t16 \
+      @{{ temp_dir }}/kmc/{{ sample.name }}.fq.paths \
+      {{ temp_dir }}/kmc/{{ sample.name }} \
+      {{ temp_dir }}/kmc/{{ sample.name }}/kmc_tmp_dir
+
+
+{% for rgid, rg in sample.read_groups.items() %}
+{% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
+{% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
+
+- name: vg_giraffe_{{ sample.name }}_{{ rgid }}
+  reset: predecessors
+  input:
+    - temp/fastqs/{{ r1fastq.basename }}
+    - temp/fastqs/{{ r2fastq.basename }}
+    - {{ constants.grandcanyon[reference].reference_gbz }}
+    - {{ constants.grandcanyon[reference].reference_hapl }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+    - {{ temp_dir }}/kmc/{{ sample.name }}.kff
+  output:
+    - {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam
+  cpus: 20
+  mem: 80G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.vg.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ temp_dir }}/st_sort_temp
+    mkdir -p {{ results_dir }}
+
+    vg giraffe -p -t 19 \
+      -Z {{ constants.grandcanyon[reference].reference_gbz }} \
+      --haplotype-name {{ constants.grandcanyon[reference].reference_hapl }} \
+      --ref-paths {{ constants.grandcanyon[reference].reference_dict }} \
+      --kff-name {{ temp_dir }}/kmc/{{ sample.name }}.kff \
+      --read-group '{{ read_group_line(rg, format="bwa") }}' \
+      --sample {{ sample.rgsm }} \
+      --output-format BAM \
+      -f temp/fastqs/{{ r1fastq.basename }} \
+      -f temp/fastqs/{{ r2fastq.basename }} \
+      | samtools sort \
+        --threads 19 \
+        --output-fmt CRAM \
+        --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+        -T {{ temp_dir }}/st_sort_temp/{{ rgid }} \
+        -o {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam \
+        -
+
+{% endfor %}
+
+{% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
+- name: chunked_samtools_merge_rgid_bams_{{ sample.name }}_{{ rglb }}_{{ aligner }}
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, vg_giraffe, {{ sample.name }}]
+  reset: predecessors
+  input:
+  {% for rgid in rg %}
+    - {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.bam
+  {% endfor %}
+  output: {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam
+  walltime: "24:00:00"
+  cpus: 4
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# No long options available for the following:
+      -c           Combine @RG headers with colliding IDs [alter IDs to be distinct]
+      -f           Overwrite the output BAM if exist
+      -l INT       Compression level, from 0 to 9 [-1]
+    #}
+    samtools merge \
+      --threads 4 \
+      -c \
+      -f \
+      -u \
+      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam \
+      {% for rgid in rg %}
+      {% if not loop.last %}
+      {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.bam \
+      {% else %}
+      {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.bam
+      {% endif %}
+      {% endfor %}
+
+{% endfor %}
+
+- name: chunked_samtools_merge_rglb_bams_{{ sample.name }}_{{ aligner }}
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, minimap2, {{ sample.name }}]
+  reset: predecessors
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
+    - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam
+  {% endfor %}
+  output: {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+  walltime: "24:00:00"
+  cpus: 4
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# No long options available for the following:
+      -c           Combine @RG headers with colliding IDs [alter IDs to be distinct]
+      -f           Overwrite the output BAM if exist
+    #}
+    samtools merge \
+      --threads 4 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      -c \
+      -f \
+      --write-index \
+      {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
+      {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
+      {% if not loop.last %}
+      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam \
+      {% else %}
+      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam
+      {% endif %}
+      {% endfor %}
+
+- name: vg_giraffe_samtools_create_temp_bam_{{ sample.name }}
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, minimap2, {{ sample.name }}]
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+  output:
+    - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
+    - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam.bai
+  walltime: "4:00:00"
+  cpus: 8
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+
+    samtools view \
+      -@ 8 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --no-PG \
+      -o {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam \
+      --write-index \
+      {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+
+    samtools index -@8 {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
+
+{% endmacro %}
