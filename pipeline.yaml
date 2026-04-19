@@ -86,7 +86,7 @@ constants:
     kmc:
       container: quay.io/biocontainers/kmc:3.2.4--h5ca1c30_4
     lancet2:
-      container: ghcr.io/tgen/containers/lancet2:2.8.6-bin
+      container: ghcr.io/tgen/containers/lancet2:v2.9.0_main_6062445515
     liftover:
       container: quay.io/biocontainers/ucsc-liftover:482--h0b57e2e_0
     liftover_vcf:
