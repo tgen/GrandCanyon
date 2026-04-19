@@ -64,6 +64,57 @@
       {{ temp_dir }}/kmc/{{ sample.name }} \
       {{ temp_dir }}/kmc/{{ sample.name }}/kmc_tmp_dir
 
+- name: vg_haplotypes_{{ sample.name }}
+  reset: kmc_counts_{{ sample.name }}
+  input:
+    - {{ constants.grandcanyon[reference].reference_gbz }}
+    - {{ constants.grandcanyon[reference].reference_hapl }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+    - {{ temp_dir }}/kmc/{{ sample.name }}.kff
+  output:
+    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz
+    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.min
+    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode
+    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist
+    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa
+    - {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
+  cpus: 20
+  mem: 80G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.vg.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    vg haplotypes -v 2 -t 20 \
+      --include-reference --diploid-sampling \
+      -i {{ constants.grandcanyon[reference].reference_hapl }} \
+      -k {{ temp_dir }}/kmc/{{ sample.name }}.kff \
+      -g {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz \
+      {{ constants.grandcanyon[reference].reference_gbz }}
+
+    vg index \
+      -j {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist \
+      {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz
+
+    vg minimizer -p -t 20 \
+      -o {{ temp_dir }}/{{ sample.rgsm }}.sampled.min \
+      -z {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode \
+      -d {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist \
+      {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz
+
+    vg paths \
+      -x {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz \
+      -L | grep -i "^{{ reference }}" > {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
+
+    vg paths \
+      -x {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz \
+      -p {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt \
+      -F > {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa
+
+    samtools faidx {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa
+    samtools dict {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa
 
 {% for rgid, rg in sample.read_groups.items() %}
 {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
@@ -74,10 +125,12 @@
   input:
     - temp/fastqs/{{ r1fastq.basename }}
     - temp/fastqs/{{ r2fastq.basename }}
-    - {{ constants.grandcanyon[reference].reference_gbz }}
-    - {{ constants.grandcanyon[reference].reference_hapl }}
+    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz
+    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.min
+    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode
+    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist
+    - {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
     - {{ constants.grandcanyon[reference].reference_dict }}
-    - {{ temp_dir }}/kmc/{{ sample.name }}.kff
   output:
     - {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam
   cpus: 20
@@ -93,19 +146,20 @@
     mkdir -p {{ results_dir }}
 
     vg giraffe -p -t 19 \
-      -Z {{ constants.grandcanyon[reference].reference_gbz }} \
-      --haplotype-name {{ constants.grandcanyon[reference].reference_hapl }} \
-      --ref-paths {{ constants.grandcanyon[reference].reference_dict }} \
-      --kff-name {{ temp_dir }}/kmc/{{ sample.name }}.kff \
+      -Z {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz \
+      -m {{ temp_dir }}/{{ sample.rgsm }}.sampled.min \
+      -z {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode \
+      -d {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist \
       --read-group '{{ read_group_line(rg, format="bwa") }}' \
       --sample {{ sample.rgsm }} \
+      --ref-paths {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt \
       --output-format BAM \
       -f temp/fastqs/{{ r1fastq.basename }} \
       -f temp/fastqs/{{ r2fastq.basename }} \
+      | samtools reheader -c 'sed -E "s/SN:[A-z0-9]+#[0-9]#/SN:/"' - \
       | samtools sort \
         --threads 19 \
-        --output-fmt CRAM \
-        --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+        -m 2G \
         -T {{ temp_dir }}/st_sort_temp/{{ rgid }} \
         -o {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam \
         -
@@ -179,6 +233,8 @@
       -c \
       -f \
       --write-index \
+      --output-fmt CRAM \
+      --output-fmt-option embed_ref=2 \
       {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
       {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
       {% if not loop.last %}

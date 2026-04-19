@@ -19,6 +19,16 @@
   {% endif %}
 {% endif %}
 
+{% if aligner in 'vg_giraffe' %}
+  {% if sample_or_pair.normal is defined %}
+    {% set reference_fasta %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.rgsm }}.sampled.fa{% endset %}
+  {% else %}
+    {% set reference_fasta %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.rgsm }}.sampled.fa{% endset %}
+  {% endif %}
+{% else %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+{% endif %}
+
 - name: manta_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, structural_caller, manta, {{ sample_or_pair.name }}]
   reset: predecessors
@@ -32,7 +42,7 @@
     - {{ bam }}
     - {{ bam }}.bai
     {% endif %}
-    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ reference_fasta }}
   output: 
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz.tbi
@@ -99,7 +109,7 @@
       {% else %}
       --bam "{{ bam }}" \
       {% endif %}
-      --referenceFasta "{{ constants.grandcanyon[reference].reference_fasta }}" \
+      --referenceFasta "{{ reference_fasta }}" \
       --runDir "{{ temp_dir }}"
 
     {# Execute on the local machine with 19 parallel jobs #}
