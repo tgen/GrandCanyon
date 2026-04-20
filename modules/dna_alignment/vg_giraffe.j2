@@ -111,10 +111,10 @@
     vg paths \
       -x {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz \
       -p {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt \
-      -F > {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa
+      -F | grep -i "^{{ reference }}" | sed -E "s/SN:[A-z0-9]+#[0-9]#/SN:/" > {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa
 
     samtools faidx {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa
-    samtools dict {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa
+    samtools dict {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa > {{ temp_dir }}/{{ sample.rgsm }}.sampled.dict
 
 {% for rgid, rg in sample.read_groups.items() %}
 {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
