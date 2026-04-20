@@ -22,11 +22,14 @@
 {% if aligner in 'vg_giraffe' %}
   {% if sample_or_pair.normal is defined %}
     {% set reference_fasta %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.rgsm }}.sampled.fa{% endset %}
+    {% set reference_dict %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.rgsm }}.sampled.dict{% endset %}
   {% else %}
     {% set reference_fasta %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.rgsm }}.sampled.fa{% endset %}
+    {% set reference_dict %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.rgsm }}.sampled.dict{% endset %}
   {% endif %}
 {% else %}
   {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+  {% set reference_dict %}{{ constants.grandcanyon[reference].reference_dict }}{% endset %}
 {% endif %}
 
 - name: manta_{{ sample_or_pair.name }}_{{ aligner }}
@@ -43,7 +46,8 @@
     - {{ bam }}.bai
     {% endif %}
     - {{ reference_fasta }}
-  output: 
+    - {{ reference_dict }}
+  output:
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSmallIndels.vcf.gz.tbi
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.manta.candidateSV.vcf.gz
@@ -76,7 +80,7 @@
 
     {# creating calling_intervals on the fly based on reference_dict, this should also accept a user supplied value in the future #}
     MANTA_BED="{{ temp_dir }}/callRegions.bed"
-    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ reference_dict }} |\
       sed 's/SN://;s/LN://' |\
       awk '{ OFS="\t" ; print $2,0,$3-1 }' \
       > ${MANTA_BED}
