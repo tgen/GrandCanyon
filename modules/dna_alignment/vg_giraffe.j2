@@ -69,15 +69,37 @@
   input:
     - {{ constants.grandcanyon[reference].reference_gbz }}
     - {{ constants.grandcanyon[reference].reference_hapl }}
-    - {{ constants.grandcanyon[reference].reference_dict }}
     - {{ temp_dir }}/kmc/{{ sample.name }}.kff
   output:
-    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz
+    - {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz
+  cpus: 20
+  mem: 80G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.vg.container }}
+  cmd: |
+    set -eu
+
+    mkdir -p {{ results_dir }}
+
+    vg haplotypes -v 2 -t 20 \
+      --include-reference --diploid-sampling \
+      -i {{ constants.grandcanyon[reference].reference_hapl }} \
+      -k {{ temp_dir }}/kmc/{{ sample.name }}.kff \
+      -g {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz \
+      {{ constants.grandcanyon[reference].reference_gbz }}
+
+- name: vg_index_{{ sample.name }}
+  input:
+    - {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz
+  output:
     - {{ temp_dir }}/{{ sample.rgsm }}.sampled.min
     - {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode
     - {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist
-    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa
     - {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
+    - {{ results_dir }}/{{ sample.rgsm }}.sampled.fa
+    - {{ results_dir }}/{{ sample.rgsm }}.sampled.fa.fai
+    - {{ results_dir }}/{{ sample.rgsm }}.sampled.dict
   cpus: 20
   mem: 80G
   walltime: "8:00:00"
@@ -87,34 +109,27 @@
     set -eu
     set -o pipefail
 
-    vg haplotypes -v 2 -t 20 \
-      --include-reference --diploid-sampling \
-      -i {{ constants.grandcanyon[reference].reference_hapl }} \
-      -k {{ temp_dir }}/kmc/{{ sample.name }}.kff \
-      -g {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz \
-      {{ constants.grandcanyon[reference].reference_gbz }}
-
     vg index \
       -j {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist \
-      {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz
+      {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz
 
     vg minimizer -p -t 20 \
       -o {{ temp_dir }}/{{ sample.rgsm }}.sampled.min \
       -z {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode \
       -d {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist \
-      {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz
+      {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz
 
     vg paths \
-      -x {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz \
+      -x {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz \
       -L | grep -i "^{{ reference }}" > {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
 
     vg paths \
-      -x {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz \
+      -x {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz \
       -p {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt \
-      -F | sed -E 's/[A-z0-9]+#[0-9]#//' > {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa
+      -F | sed -E 's/[A-z0-9]+#[0-9]#//' > {{ results_dir }}/{{ sample.rgsm }}.sampled.fa
 
-    samtools faidx {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa
-    samtools dict {{ temp_dir }}/{{ sample.rgsm }}.sampled.fa > {{ temp_dir }}/{{ sample.rgsm }}.sampled.dict
+    samtools faidx {{ results_dir }}/{{ sample.rgsm }}.sampled.fa
+    samtools dict {{ results_dir }}/{{ sample.rgsm }}.sampled.fa > {{ results_dir }}/{{ sample.rgsm }}.sampled.dict
 
 {% for rgid, rg in sample.read_groups.items() %}
 {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
@@ -125,12 +140,11 @@
   input:
     - temp/fastqs/{{ r1fastq.basename }}
     - temp/fastqs/{{ r2fastq.basename }}
-    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz
+    - {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz
     - {{ temp_dir }}/{{ sample.rgsm }}.sampled.min
     - {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode
     - {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist
     - {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
-    - {{ constants.grandcanyon[reference].reference_dict }}
   output:
     - {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam
   cpus: 20
@@ -146,7 +160,7 @@
     mkdir -p {{ results_dir }}
 
     vg giraffe -p -t 19 \
-      -Z {{ temp_dir }}/{{ sample.rgsm }}.sampled.gbz \
+      -Z {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz \
       -m {{ temp_dir }}/{{ sample.rgsm }}.sampled.min \
       -z {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode \
       -d {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist \
@@ -192,7 +206,6 @@
       --threads 4 \
       -c \
       -f \
-      -u \
       {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam \
       {% for rgid in rg %}
       {% if not loop.last %}
@@ -208,7 +221,7 @@
   tags: [{{ sample.gltype }}, alignment, dna_alignment, minimap2, {{ sample.name }}]
   reset: predecessors
   input:
-    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ results_dir }}/{{ sample.rgsm }}.sampled.fa
   {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
     - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam
   {% endfor %}
@@ -228,12 +241,11 @@
     #}
     samtools merge \
       --threads 4 \
-      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --reference {{ results_dir }}/{{ sample.rgsm }}.sampled.fa \
       -c \
       -f \
       --write-index \
       --output-fmt CRAM \
-      --output-fmt-option embed_ref=2 \
       {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
       {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
       {% if not loop.last %}
@@ -246,7 +258,7 @@
 - name: vg_giraffe_samtools_create_temp_bam_{{ sample.name }}
   tags: [{{ sample.gltype }}, alignment, dna_alignment, minimap2, {{ sample.name }}]
   input:
-    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ results_dir }}/{{ sample.rgsm }}.sampled.fa
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
   output:
     - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
@@ -260,7 +272,7 @@
 
     samtools view \
       -@ 8 \
-      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --reference {{ results_dir }}/{{ sample.rgsm }}.sampled.fa \
       --no-PG \
       -o {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam \
       --write-index \
