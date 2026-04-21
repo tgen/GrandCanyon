@@ -8,13 +8,8 @@
 {%- set pass_vcf %}{{ results_dir }}/{{ pair.name }}.{{ aligner }}.lancet2.pass.vcf.gz{% endset %}
 
 {% if aligner in 'vg_giraffe' %}
-  {% if sample_or_pair.normal is defined %}
-    {% set reference_fasta %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.rgsm }}.sampled.fa{% endset %}
-    {% set reference_dict %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.rgsm }}.sampled.dict{% endset %}
-  {% else %}
-    {% set reference_fasta %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.rgsm }}.sampled.fa{% endset %}
-    {% set reference_dict %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.rgsm }}.sampled.dict{% endset %}
-  {% endif %}
+  {% set reference_fasta %}{{ pair.gltype }}/alignment/{{ aligner }}/{{ pair.tumor.name }}/{{ pair.tumor.rgsm }}.sampled.fa{% endset %}
+  {% set reference_dict %}{{ pair.gltype }}/alignment/{{ aligner }}/{{ pair.tumor.name }}/{{ pair.tumor.rgsm }}.sampled.dict{% endset %}
 {% else %}
   {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
   {% set reference_dict %}{{ constants.grandcanyon[reference].reference_dict }}{% endset %}
