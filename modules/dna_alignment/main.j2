@@ -85,8 +85,6 @@
     {% if 'vg_giraffe' in sample.aligners %}
       {{- vg_giraffe(sample, opt_dup_distance, aligner='vg_giraffe') }}
       {% set aligner = 'vg_giraffe' %}
-      {% set task %}chunked_samtools_merge_rglb_bams_{{ sample.name }}_{{ aligner }}{% endset %}
-      {% do task_list.append(task) %}
       {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
       {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
         {% set file %}{{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam{% endset %}
@@ -95,6 +93,15 @@
           {% set file %}{{ temp_dir }}/{{ rgid.rgid }}{% endset %}
           {% do files_to_remove.append(file) %}
         {% endfor %}
+        {% if sample.read_groups.values() | groupby('rglb') | length > 1 %}
+          {% set file %}{{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram{% endset %}
+          {% do files_to_remove.append(file) %}
+          {% set task %}chunked_samtools_merge_rglb_bams_{{ sample.name }}_{{ aligner }}{% endset %}
+          {% do task_list.append(task) %}
+        {% else %}
+          {% set task %}samtools_markdup_{{ sample.name }}_{{ rglb }}_{{ aligner }}{% endset %}
+          {% do task_list.append(task) %}
+        {% endif %}
       {% endfor %}
     {% endif %}
 

@@ -311,7 +311,7 @@
     samtools merge \
       --threads 4 \
       --reference {{ results_dir }}/{{ sample.rgsm }}.sampled.fa \
-
+      -c \
       -f \
       --write-index \
       --output-fmt CRAM \
