@@ -169,13 +169,18 @@
       --ref-paths {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt \
       --output-format BAM \
       -f temp/fastqs/{{ r1fastq.basename }} \
-      -f temp/fastqs/{{ r2fastq.basename }} \
-      | samtools reheader -c 'sed -E "s/SN:[A-z0-9]+#[0-9]#/SN:/"' - \
-      | samtools sort \
-        --threads 19 \
-        -T {{ temp_dir }}/st_sort_temp/{{ rgid }} \
-        -o {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam \
-        -
+      -f temp/fastqs/{{ r2fastq.basename }} |\
+    samtools reheader -c 'sed -E "s/SN:[A-z0-9]+#[0-9]#/SN:/"' - |\
+    samtools fixmate \
+      --threads 19 \
+      -m \
+      - \
+      - |\
+    samtools sort \
+      --threads 19 \
+      -T {{ temp_dir }}/st_sort_temp/{{ rgid }} \
+      -o {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam \
+      -
 
 {% endfor %}
 
@@ -215,8 +220,72 @@
       {% endif %}
       {% endfor %}
 
+- name: samtools_markdup_{{ sample.name }}_{{ rglb }}_{{ aligner }}
+  tags: [{{ sample.gltype }}, alignment, mark_duplicates, samtools, {{ sample.name }}]
+  reset: predecessors
+  methods: Duplicate reads for {{ sample.name }} were marked with samtools markdup.
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam
+  output:
+    {% if sample.read_groups.values() | groupby('rglb') | length == 1 %}
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    {% else %}
+    - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram
+    {% endif %}
+    - {{ results_dir }}/stats/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam.samtools.markdup.json
+  walltime: "96:00:00"
+  cpus: 4
+  mem: 64G
+  queue_preset: "DEFAULT-LONG"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {#
+    # If this task was interrupted previously, temp files may exist
+    # that will cause errors with samtools markdup. Here, we purge any
+    # existing temp files before making the directory again.
+    #}
+    rm -r "{{ temp_dir }}/markdup_temp/{{ sample.name }}_{{ rglb }}" || true
+    mkdir -p "{{ temp_dir }}/markdup_temp/{{ sample.name }}_{{ rglb }}"
+    mkdir -p "{{ results_dir }}/stats/"
+
+    {#
+    # Choose an optical distance based on sequencer
+    #}
+
+    {# No long options available for the following:
+     -d      Optical distance
+     -S      Mark supplemenary alignments of duplicates as duplicates (slower)
+     -f      Write stats to named file. Implies -s (report stats)
+     -T      PREFIX    Write temporary files to PREFIX.samtools.nnnn.nnnn.tmp
+     2>      Stats are output to stderr which is redirected to ".{{ aligner }}.bam.markdup.txt"
+    #}
+    samtools markdup \
+      {% if sample.pcrCycles is defined and sample.pcrCycles == 0 %}
+      --use-read-groups \
+      {% endif %}
+      --json \
+      -d {{ opt_dup_distance }} \
+      -S \
+      -f {{ results_dir }}/stats/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam.samtools.markdup.json \
+      --threads 4 \
+      --write-index \
+      --output-fmt CRAM \
+      --reference {{ results_dir }}/{{ sample.rgsm }}.sampled.fa \
+      -T {{ temp_dir }}/markdup_temp/{{ sample.name }}_{{ rglb }} \
+      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam \
+      {% if sample.read_groups.values() | groupby('rglb') | length == 1 %}
+      {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+      {% else %}
+      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram
+      {% endif %}
+
 {% endfor %}
 
+{% if sample.read_groups.values() | groupby('rglb') | length > 1 %}
 - name: chunked_samtools_merge_rglb_bams_{{ sample.name }}_{{ aligner }}
   tags: [{{ sample.gltype }}, alignment, dna_alignment, minimap2, {{ sample.name }}]
   reset: predecessors
@@ -242,18 +311,20 @@
     samtools merge \
       --threads 4 \
       --reference {{ results_dir }}/{{ sample.rgsm }}.sampled.fa \
-      -c \
+
       -f \
       --write-index \
       --output-fmt CRAM \
       {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
       {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
       {% if not loop.last %}
-      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam \
+      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram \
       {% else %}
-      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam
+      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram
       {% endif %}
       {% endfor %}
+
+{% endif %}
 
 - name: vg_giraffe_samtools_create_temp_bam_{{ sample.name }}
   tags: [{{ sample.gltype }}, alignment, dna_alignment, minimap2, {{ sample.name }}]
