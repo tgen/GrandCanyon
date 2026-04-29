@@ -73,7 +73,6 @@
       --splice-flank=no \
       -t 10 \
       -L \
-      -y \
       -Y \
       {{ constants.grandcanyon[reference].reference_fastaSIRV }} \
       {{ prepped_fastq }} |\
@@ -146,7 +145,6 @@
       -ax map-ont \
       -t 10 \
       -L \
-      -y \
       -Y \
       -N 100 \
       -p 1.0 \
@@ -202,7 +200,6 @@
       --junc-bed {{ temp_dir }}/{{ sample.name }}_anno.bed \
       -t 20 \
       -L \
-      -y \
       -Y \
       {{ reference_fasta }} \
       {{ prepped_fastq }} |\
@@ -260,7 +257,6 @@
       -ax map-ont \
       -t 10 \
       -L \
-      -y \
       -Y \
       -N 100 \
       -p 1.0 \
