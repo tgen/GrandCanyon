@@ -1,33 +1,59 @@
-{% macro lancet2(pair, aligner='bwa') %}
+{% macro lancet2(sample_or_pair, aligner='bwa') %}
 
-{%- set normal_bam %}temp/{{ pair.gltype }}/alignment/{{ aligner }}/{{ pair.normal.name }}/{{ pair.normal.name }}.{{ aligner }}.bam{% endset %}
-{%- set tumor_bam %}temp/{{ pair.gltype }}/alignment/{{ aligner }}/{{ pair.tumor.name }}/{{ pair.tumor.name }}.{{ aligner }}.bam{% endset %}
-{%- set temp_dir %}temp/{{ pair.gltype }}/somatic_variant_calls/lancet2/{{ pair.name }}_{{ aligner }}{% endset %}
-{%- set results_dir %}{{ pair.gltype }}/somatic_variant_calls/lancet2/{{ pair.name }}_{{ aligner }}{% endset %}
-{%- set all_vcf %}{{ results_dir }}/{{ pair.name }}.{{ aligner }}.lancet2.all.vcf.gz{% endset %}
-{%- set pass_vcf %}{{ results_dir }}/{{ pair.name }}.{{ aligner }}.lancet2.pass.vcf.gz{% endset %}
+{% if sample_or_pair.normal is defined %}
+  {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+  {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/lancet2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/lancet2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set input_config = "paired" %}
+  {% if sample_or_pair.gltype == 'exome' %}
+  {%- set capture_kit_bed %}{{ sample_or_pair.tumor.capture_kit.extended_bed }}{% endset %}
+  {% endif %}
+{% else %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/lancet2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/lancet2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set input_config = "tumor_only" %}
+  {% else %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_variant_calls/lancet2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_variant_calls/lancet2/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set input_config = "germline" %}
+  {% endif %}
+  {% if sample_or_pair.gltype == 'exome' %}
+  {%- set capture_kit_bed %}{{ sample_or_pair.capture_kit.extended_bed }}{% endset %}
+  {% endif %}
+{% endif %}
+
+{%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.lancet2.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.lancet2.pass.vcf.gz{% endset %}
 
 {% if aligner in 'vg_giraffe' %}
-  {% set reference_fasta %}{{ pair.gltype }}/alignment/{{ aligner }}/{{ pair.tumor.name }}/{{ pair.tumor.rgsm }}.sampled.fa{% endset %}
-  {% set reference_dict %}{{ pair.gltype }}/alignment/{{ aligner }}/{{ pair.tumor.name }}/{{ pair.tumor.rgsm }}.sampled.dict{% endset %}
+  {% set reference_fasta %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.rgsm }}.sampled.fa{% endset %}
+  {% set reference_dict %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.rgsm }}.sampled.dict{% endset %}
 {% else %}
   {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
   {% set reference_dict %}{{ constants.grandcanyon[reference].reference_dict }}{% endset %}
 {% endif %}
 
-{% if pair.gltype == 'exome' %}
-{%- set capture_kit_bed %}{{ pair.tumor.capture_kit.extended_bed }}{% endset %}
+{% if sample_or_pair.gltype == 'exome' %}
+{%- set capture_kit_bed %}{{ sample_or_pair.tumor.capture_kit.extended_bed }}{% endset %}
 {% endif %}
 
 {% for chunk in range(1, num_chunks+1) %}
-- name: lancet2_{{ pair.name }}_{{ aligner }}_{{ chunk }}
-  tags: [{{ pair.gltype }}, somatic, snp_indel_caller, lancet2, {{ pair.name }}]
+- name: lancet2_{{ sample_or_pair.name }}_{{ aligner }}_{{ chunk }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, lancet2, {{ sample_or_pair.name }}]
   reset: predecessors
   input:
+    {% if sample_or_pair.normal is defined %}
     - {{ normal_bam }}
     - {{ normal_bam }}.bai
     - {{ tumor_bam }}
     - {{ tumor_bam }}.bai
+    {% else %}
+    - {{ bam }}
+    - {{ bam }}.bai
+    {% endif %}
     - {{ reference_fasta }}
     - temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed
   output:
@@ -44,16 +70,20 @@
 
     Lancet2 pipeline \
       --num-threads 8 \
+      {% if input_config in ('paired') %}
       --tumor {{ tumor_bam }} \
       --normal {{ normal_bam }} \
+      {% else %}
+      --normal {{ bam }} \
+      {% endif %}
       --reference {{ reference_fasta }} \
       --bed-file temp/pipeline_resources/calling_intervals/primary_calling_interval_{{ chunk }}.bed \
       --out-vcfgz {{ temp_dir }}/{{ chunk }}.lancet2.vcf.gz
 
 {% endfor %}
 
-- name: lancet2_merge_chunks_{{ pair.name }}_{{ aligner }}
-  tags: [{{ pair.gltype }}, somatic, snp_indel_caller, lancet, {{ pair.name }}]
+- name: lancet2_merge_chunks_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, lancet, {{ sample_or_pair.name }}]
   reset: predecessors
   input:
     {% for chunk in range(1, num_chunks+1) %}
@@ -87,13 +117,13 @@
       {% endfor %}
 
 
-- name: lancet2_filter_variants_{{ pair.name }}_{{ aligner }}
-  tags: [{{ pair.gltype }}, somatic, snp_indel_caller, lancet2, {{ pair.name }}]
+- name: lancet2_filter_variants_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, lancet2, {{ sample_or_pair.name }}]
   reset: predecessors
   input:
     - {{ all_vcf }}
     - {{ all_vcf }}.tbi
-    {% if pair.gltype == 'exome' %}
+    {% if sample_or_pair.gltype == 'exome' %}
     - {{ capture_kit_bed }}
     {% endif %}
   output:
@@ -108,16 +138,19 @@
     set -eu
     set -o pipefail
 
-    bcftools filter \
-      {{ all_vcf }} | \
     bcftools view \
+      {% if input_config in ('paired') %}
+      --include 'FILTER == "PASS" && CASE==1' \
+      {% else %}
       --include 'FILTER == "PASS"' \
-      {% if pair.gltype == 'exome' %}
-      --targets-file {{ capture_kit_bed }} \
       {% endif %}
       --output-type z \
+      {% if sample_or_pair.gltype == 'exome' %}
+      --targets-file {{ capture_kit_bed }} \
+      {% endif %}
       --output {{ pass_vcf }} \
-      --write-index
+      --write-index \
+      {{ all_vcf }}
 
 {% if not tasks[pair.gltype|capitalize+"_variant_calling_merge_vcfs_vcfMerger2"]|default(false) %}
 {% from 'modules/annotation/main.j2' import annotate_vcfs with context %}

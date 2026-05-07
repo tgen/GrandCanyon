@@ -314,6 +314,11 @@
         {{- vardict(sample, aligner) }}
       {% endif %}
 
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_lancet2"]|default(false) %}
+        {% do sample.callers.append('lancet2') %}
+        {{- lancet2(sample, aligner) }}
+      {% endif %}
+
       {% if tasks[taskPrefix+"_variant_calling_merge_vcfs_vcfMerger2"]|default(false) %}
         {{- vcfmerger2(sample, aligner) }}
       {% endif %}
