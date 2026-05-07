@@ -36,10 +36,6 @@
   {% set reference_dict %}{{ constants.grandcanyon[reference].reference_dict }}{% endset %}
 {% endif %}
 
-{% if sample_or_pair.gltype == 'exome' %}
-{%- set capture_kit_bed %}{{ sample_or_pair.tumor.capture_kit.extended_bed }}{% endset %}
-{% endif %}
-
 {% for chunk in range(1, num_chunks+1) %}
 - name: lancet2_{{ sample_or_pair.name }}_{{ aligner }}_{{ chunk }}
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, lancet2, {{ sample_or_pair.name }}]
