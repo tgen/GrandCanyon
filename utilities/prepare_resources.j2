@@ -253,8 +253,8 @@
     - {{ constants.grandcanyon[reference].reference_dict }}
   output:
     - {{ constants.grandcanyon[reference].ref_flat }}
+    - {{ constants.grandcanyon[reference].ref_flat | replace('.txt', '.hugoID.txt') }}
     - {{ constants.grandcanyon[reference].ribo_locations }}
-    - {{ constants.grandcanyon[reference].gtf }}.refFlat.hugoID.txt
   cpus: 1
   mem: 4G
   walltime: "1:00:00"
@@ -277,13 +277,13 @@
         cut -f1-5 |\
     cat {{ constants.grandcanyon[reference].reference_dict }} - > {{ constants.grandcanyon[reference].ribo_locations }}
 
-    [ -e {{ constants.grandcanyon[reference].gtf }}.refFlat.hugoID.txt ] ||\
+    [ -e {{ constants.grandcanyon[reference].ref_flat | replace('.txt', '.hugoID.txt') }} ] ||\
     gtfToGenePred -genePredExt \
         -ignoreGroupsWithoutExons \
         -geneNameAsName2 \
         {{ constants.grandcanyon[reference].gtf }} \
         /dev/stdout |\
-        awk 'BEGIN { OFS="\t"} {print $12, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10}' > {{ constants.grandcanyon[reference].gtf }}.refFlat.hugoID.txt
+        awk 'BEGIN { OFS="\t"} {print $12, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10}' > {{ constants.grandcanyon[reference].ref_flat | replace('.txt', '.hugoID.txt') }}
 
 
 - name: create_starfusion_resources_for_{{ reference | replace('.', '_') }}
@@ -334,9 +334,12 @@
 
 {% macro convert_gff3_to_gtf() %}
 
+{% set temp_gene_model_gff %}{{ constants.grandcanyon[reference].gff3 | basename | replace('.gff3.gz', '.gff3') }}{% endset %}
+{% set temp_dir %}temp/pipeline_resources/agat_gff_to_gtf{% endset %}
 - name: convert_gff3_to_gtf_for_{{ reference | replace('.', '_') }}
   input:
-    - {{ constants.grandcanyon[reference].gff }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+    - {{ constants.grandcanyon[reference].gff3 }}
   output:
     - {{ constants.grandcanyon[reference].gtf }}
   cpus: 2
@@ -346,8 +349,35 @@
   cmd: |
     set -eu
 
-    [ -e {{ constants.grandcanyon[reference].gtf }} ] ||\
-    agat_convert_sp_gff2gtf.pl --gff {{ constants.grandcanyon[reference].gff }} --gtf_version 3 -o {{ constants.grandcanyon[reference].gtf }}
+    rm -rf {{ temp_dir }}
+    mkdir -p {{ temp_dir }}
+
+    cd {{ temp_dir }}
+    agat config --expose
+    sed -i 's/tabix: false/tabix: true/' agat_config.yaml
+
+    if [ ! -e {{ constants.grandcanyon[reference].gtf }} ]; then
+      # If the reference dictionary is "chr" prefixed we should maintain this for the gff and gtf files
+      if grep -m1 -q '^@SQ.*SN:chr' {{ constants.grandcanyon[reference].reference_dict }} ; then
+        zcat -f {{ constants.grandcanyon[reference].gff3 }} | awk -F'\t' 'BEGIN {OFS="\t"}
+            /^#/ {print; next}
+            $3 == "chromosome" || $3 == "scaffold" {
+                match($9, /Alias=[^;]*/);
+                alias_str = substr($9, RSTART+6, RLENGTH-6);
+                split(alias_str, aliases, ",");
+                for (i in aliases) {
+                    if (aliases[i] ~ /^chr/) {
+                        current = aliases[i];
+                        break;
+                    }
+                }
+            }
+        { if (current != "") $1 = current; print }' > {{ temp_gene_model_gff }}
+      else
+        zcat -f {{ constants.grandcanyon[reference].gff3 }} > {{ temp_gene_model_gff }}
+      fi
+      agat_convert_sp_gff2gtf.pl --gff {{ temp_gene_model_gff }} --gtf_version 3 -o {{ constants.grandcanyon[reference].gtf }}
+    fi
 
 {% endmacro %}
 

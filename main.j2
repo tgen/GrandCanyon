@@ -54,11 +54,14 @@
         {{- prepare_pangenome_reference() }}
     {% endif %}
 {% endif %}
-{% if constants.grandcanyon[reference].gff is defined and constants.grandcanyon[reference].gtf is not defined %}
+{% if constants.grandcanyon[reference].gff3 is defined and constants.grandcanyon[reference].gtf is not defined %}
     {% from 'utilities/prepare_resources.j2' import convert_gff3_to_gtf with context %}
-        {% set gene_model_dir = constants.grandcanyon[reference].gff | dirname %}
-        {% set gene_model_gff = constants.grandcanyon[reference].gff %}
-        {% set gene_model_prefix = gene_model_gff.split('.')[:-1]|join('.') %}
+        {% set gene_model_gff = constants.grandcanyon[reference].gff3 %}
+        {% if gene_model_gff.endswith('.gz') %}
+          {% set gene_model_prefix = gene_model_gff.split('.')[:-2]|join('.') %}
+        {% else %}
+          {% set gene_model_prefix = gene_model_gff.split('.')[:-1]|join('.') %}
+        {% endif %}
         {% set gene_model_gtf %}{{ gene_model_prefix }}.gtf{% endset %}
         {% do constants.grandcanyon[reference].update({'gtf': gene_model_gtf}) %}
         {{- convert_gff3_to_gtf() }}
@@ -141,6 +144,7 @@
 
 {% set samples = {} %}
 
+{% if dataFiles is defined %}
 {% for file in dataFiles %}
     {% if file.fastqPath is defined %}
         {% set path = file.fastqPath %}
@@ -324,4 +328,4 @@
 {#
 {{- fastq_stats() }}
 #}
-
+{% endif %}

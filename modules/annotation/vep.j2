@@ -12,8 +12,8 @@
 {% endif %}
 
 {% if constants.grandcanyon[reference].vep_data is defined %}
-{% elif constants.grandcanyon[reference].gff is defined %}
-  {% set transcript_file_command %}--gff {{ constants.grandcanyon[reference].gff }}{% endset %}
+{% elif constants.grandcanyon[reference].gff3 is defined %}
+  {% set transcript_file_command %}--gff {{ constants.grandcanyon[reference].gff3 }}{% endset %}
 {% elif constants.grandcanyon[reference].gtf is defined %}
   {% set transcript_file_command %}--gtf {{ constants.grandcanyon[reference].gtf }}{% endset %}
 {% else %}
@@ -31,8 +31,8 @@
     - {{ constants.grandcanyon[reference].vep_plugin_data }}
     {% endif %}
     {% endif %}
-    {% if constants.grandcanyon[reference].gff is defined %}
-    - {{ constants.grandcanyon[reference].gff }}
+    {% if constants.grandcanyon[reference].gff3 is defined %}
+    - {{ constants.grandcanyon[reference].gff3 }}
     {% elif constants.grandcanyon[reference].gtf is defined %}
     - {{ constants.grandcanyon[reference].gtf }}
     {% endif %}
