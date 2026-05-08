@@ -1,5 +1,3 @@
-{% from 'utilities/remove_files.j2' import remove_files with context %}
-
 # Run Salmon RNA Quantification
 {% macro salmon_sr(sample) %}
 {% set temp_dir %}temp/{{ sample.gltype }}/quant/salmon/{{ sample.name }}{% endset %}
