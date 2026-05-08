@@ -145,7 +145,7 @@
     - {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist
     - {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
   output:
-    - {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam
+    - {{ temp_dir }}/st_sort_temp/{{ rgid }}.cram
   cpus: 20
   mem: 80G
   walltime: "8:00:00"
@@ -163,10 +163,10 @@
       -m {{ temp_dir }}/{{ sample.rgsm }}.sampled.min \
       -z {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode \
       -d {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist \
-      --read-group '{{ read_group_line(rg, format="bwa") }}' \
+      --read-group '{{ read_group_line(rg, format="vg") }}' \
       --sample {{ sample.rgsm }} \
       --ref-paths {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt \
-      --output-format BAM \
+      --output-format CRAM \
       -f temp/fastqs/{{ r1fastq.basename }} \
       -f temp/fastqs/{{ r2fastq.basename }} |\
     samtools reheader -c 'sed -E "s/SN:[A-z0-9]+#[0-9]#/SN:/"' - |\
@@ -178,7 +178,7 @@
     samtools sort \
       --threads 19 \
       -T {{ temp_dir }}/st_sort_temp/{{ rgid }} \
-      -o {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam \
+      -o {{ temp_dir }}/st_sort_temp/{{ rgid }}.cram \
       -
 
 {% endfor %}
@@ -189,9 +189,9 @@
   reset: predecessors
   input:
   {% for rgid in rg %}
-    - {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.bam
+    - {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.cram
   {% endfor %}
-  output: {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam
+  output: {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.cram
   walltime: "24:00:00"
   cpus: 4
   mem: 8G
@@ -210,12 +210,12 @@
       --threads 4 \
       -c \
       -f \
-      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam \
+      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.cram \
       {% for rgid in rg %}
       {% if not loop.last %}
-      {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.bam \
+      {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.cram \
       {% else %}
-      {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.bam
+      {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.cram
       {% endif %}
       {% endfor %}
 
@@ -273,9 +273,9 @@
       --threads 4 \
       --write-index \
       --output-fmt CRAM \
-      --reference {{ results_dir }}/{{ sample.rgsm }}.sampled.fa \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       -T {{ temp_dir }}/markdup_temp/{{ sample.name }}_{{ rglb }} \
-      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam \
+      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.cram \
       {% if sample.read_groups.values() | groupby('rglb') | length == 1 %}
       {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
       {% else %}
@@ -309,7 +309,7 @@
     #}
     samtools merge \
       --threads 4 \
-      --reference {{ results_dir }}/{{ sample.rgsm }}.sampled.fa \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       -c \
       -f \
       --write-index \
@@ -342,7 +342,7 @@
 
     samtools view \
       -@ 8 \
-      --reference {{ results_dir }}/{{ sample.rgsm }}.sampled.fa \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --no-PG \
       -o {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam \
       --write-index \

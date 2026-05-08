@@ -21,6 +21,8 @@
     {% do wrapped_tags.append('"' + tag + '"') %}
   {% endfor %}
   {% set rg_line = ' '.join(wrapped_tags) %}
+{% elif format in ['vg'] %}
+  {% set rg_line = ' '.join(tags) %}
 {% else %}
   {{ raise('Read group line format should be "bwa" or "star"') }}
 {% endif %}
