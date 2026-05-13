@@ -195,7 +195,7 @@ constants:
     verkko:
       container: quay.io/biocontainers/verkko:2.2.1--h45dadce_0
     vg:
-      container: ghcr.io/tgen/containers/vg_samtools:1.70_1.20
+      container: ghcr.io/tgen/containers/vg_samtools:1.71_1.21
     wakhan:
       container: quay.io/biocontainers/wakhan:0.4.2--pyhdfd78af_0
     whatshap:

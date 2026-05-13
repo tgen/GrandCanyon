@@ -91,6 +91,7 @@
 - name: vg_index_{{ sample.name }}
   input:
     - {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz
+    - {{ constants.grandcanyon[reference].reference_dict }}
   output:
     - {{ temp_dir }}/{{ sample.rgsm }}.sampled.min
     - {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode
@@ -122,6 +123,12 @@
       -x {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz \
       -L | grep -i "^{{ reference }}" > {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
 
+    rm -f {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.sorted.txt
+    while read LINE; do
+      grep -w "$LINE" {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt >> {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.sorted.txt || :
+    done < <(cat {{ constants.grandcanyon[reference].reference_dict }} | grep SN | cut -f2 | sed 's/SN://g')
+    mv {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.sorted.txt {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
+
     vg paths \
       -x {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz \
       -p {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt \
@@ -144,8 +151,9 @@
     - {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode
     - {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist
     - {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
+    - {{ constants.grandcanyon[reference].reference_dict }}
   output:
-    - {{ temp_dir }}/st_sort_temp/{{ rgid }}.cram
+    - {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam
   cpus: 20
   mem: 80G
   walltime: "8:00:00"
@@ -166,10 +174,26 @@
       --read-group '{{ read_group_line(rg, format="vg") }}' \
       --sample {{ sample.rgsm }} \
       --ref-paths {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt \
-      --output-format CRAM \
+      --output-format BAM \
       -f temp/fastqs/{{ r1fastq.basename }} \
       -f temp/fastqs/{{ r2fastq.basename }} |\
     samtools reheader -c 'sed -E "s/SN:[A-z0-9]+#[0-9]#/SN:/"' - |\
+    samtools reheader -P -c 'awk "
+      BEGIN { FS=OFS=\"\t\" }
+      NR==FNR {
+        if (\$1 == \"@SQ\") {
+          split(\$2, s, \":\");
+          for(i=1; i<=NF; i++) if(\$i ~ /^M5:/) { split(\$i, m, \":\"); m5_map[s[2]] = m[2] }
+        }
+        next
+      }
+      /^@SQ/ {
+        split(\$2, s, \":\");
+        if (s[2] in m5_map) {
+          for(i=1; i<=NF; i++) if(\$i ~ /^M5:/) \$i = \"M5:\" m5_map[s[2]]
+        }
+      }
+      { print }" {{ constants.grandcanyon[reference].reference_dict }} -' - |\
     samtools fixmate \
       --threads 19 \
       -m \
@@ -178,7 +202,7 @@
     samtools sort \
       --threads 19 \
       -T {{ temp_dir }}/st_sort_temp/{{ rgid }} \
-      -o {{ temp_dir }}/st_sort_temp/{{ rgid }}.cram \
+      -o {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam \
       -
 
 {% endfor %}
@@ -189,9 +213,9 @@
   reset: predecessors
   input:
   {% for rgid in rg %}
-    - {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.cram
+    - {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.bam
   {% endfor %}
-  output: {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.cram
+  output: {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam
   walltime: "24:00:00"
   cpus: 4
   mem: 8G
@@ -210,12 +234,12 @@
       --threads 4 \
       -c \
       -f \
-      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.cram \
+      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam \
       {% for rgid in rg %}
       {% if not loop.last %}
-      {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.cram \
+      {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.bam \
       {% else %}
-      {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.cram
+      {{ temp_dir }}/st_sort_temp/{{ rgid.rgid }}.bam
       {% endif %}
       {% endfor %}
 
@@ -275,7 +299,7 @@
       --output-fmt CRAM \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       -T {{ temp_dir }}/markdup_temp/{{ sample.name }}_{{ rglb }} \
-      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.cram \
+      {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam \
       {% if sample.read_groups.values() | groupby('rglb') | length == 1 %}
       {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
       {% else %}
@@ -328,7 +352,7 @@
 - name: vg_giraffe_samtools_create_temp_bam_{{ sample.name }}
   tags: [{{ sample.gltype }}, alignment, dna_alignment, minimap2, {{ sample.name }}]
   input:
-    - {{ results_dir }}/{{ sample.rgsm }}.sampled.fa
+    - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
   output:
     - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
