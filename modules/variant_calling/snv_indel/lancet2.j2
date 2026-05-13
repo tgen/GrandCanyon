@@ -28,13 +28,8 @@
 {%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.lancet2.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.lancet2.pass.vcf.gz{% endset %}
 
-{% if aligner in 'vg_giraffe' %}
-  {% set reference_fasta %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.rgsm }}.sampled.fa{% endset %}
-  {% set reference_dict %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.rgsm }}.sampled.dict{% endset %}
-{% else %}
-  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
-  {% set reference_dict %}{{ constants.grandcanyon[reference].reference_dict }}{% endset %}
-{% endif %}
+{% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+{% set reference_dict %}{{ constants.grandcanyon[reference].reference_dict }}{% endset %}
 
 {% for chunk in range(1, num_chunks+1) %}
 - name: lancet2_{{ sample_or_pair.name }}_{{ aligner }}_{{ chunk }}

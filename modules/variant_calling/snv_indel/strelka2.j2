@@ -27,20 +27,6 @@
   {%- set capture_kit_bed %}{{ sample_or_pair.capture_kit.extended_bed }}{% endset %}
   {% endif %}
 {% endif %}
-
-{% if aligner in 'vg_giraffe' %}
-  {% if sample_or_pair.normal is defined %}
-    {% set reference_fasta %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.rgsm }}.sampled.fa{% endset %}
-    {% set reference_dict %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.rgsm }}.sampled.dict{% endset %}
-  {% else %}
-    {% set reference_fasta %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.rgsm }}.sampled.fa{% endset %}
-    {% set reference_dict %}{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.rgsm }}.sampled.dict{% endset %}
-  {% endif %}
-{% else %}
-  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
-  {% set reference_dict %}{{ constants.grandcanyon[reference].reference_dict }}{% endset %}
-{% endif %}
-
 {% set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.strelka2.all.vcf.gz{% endset %}
 {% set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.strelka2.pass.vcf.gz{% endset %}
 {% set call_regions_bed %}{{ temp_dir }}/callRegions.bed{% endset %}
@@ -48,7 +34,7 @@
 - name: strelka2_prep_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, strelka2, {{ sample_or_pair.name }}]
   input:
-    - {{ reference_dict }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
   output:
     - {{ call_regions_bed }}.gz
   cpus: 1
@@ -63,7 +49,7 @@
     rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
 
-    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ reference_dict }} |\
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
       sed 's/SN://;s/LN://' |\
       awk '{ OFS="\t" ; print $2,0,$3-1 }' \
       > {{ call_regions_bed }}
@@ -100,7 +86,7 @@
     - {{ indel_candidates }}
     - {{ indel_candidates }}.tbi
     - {{ call_regions_bed }}.gz
-    - {{ reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     {% if input_config in ('paired') %}
     - {{ temp_dir }}/results/variants/somatic.indels.vcf.gz
@@ -134,7 +120,7 @@
       --bam {{ bam }} \
       {% endif %}
       --indelCandidates {{ indel_candidates }} \
-      --ref {{ reference_fasta }} \
+      --ref {{ constants.grandcanyon[reference].reference_fasta }} \
       --callRegions {{ call_regions_bed }}.gz \
       --runDir {{ temp_dir }}
 
