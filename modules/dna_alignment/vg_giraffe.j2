@@ -177,7 +177,7 @@
       --output-format BAM \
       -f temp/fastqs/{{ r1fastq.basename }} \
       -f temp/fastqs/{{ r2fastq.basename }} |\
-    samtools reheader -c 'sed -E "s/SN:[A-z0-9]+#[0-9]#/SN:/"' - |\
+    samtools reheader -P -c 'sed -E "s/SN:[A-z0-9]+#[0-9]#/SN:/"' - |\
     samtools reheader -P -c 'awk "
       BEGIN { FS=OFS=\"\t\" }
       NR==FNR {
@@ -199,6 +199,11 @@
       -m \
       - \
       - |\
+    samtools merge \
+      --threads 19 \
+      --no-PG \
+      -o - \
+      {{ constants.grandcanyon[reference].reference_dict }} - |\
     samtools sort \
       --threads 19 \
       -T {{ temp_dir }}/st_sort_temp/{{ rgid }} \
