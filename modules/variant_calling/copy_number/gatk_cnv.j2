@@ -1,5 +1,6 @@
 {% from 'modules/variant_calling/copy_number/cnvear.j2' import cnvear with context %}
 {% from 'modules/variant_calling/metrics/bpure.j2' import bpure with context %}
+{% from 'modules/variant_calling/metrics/thred.j2' import thred with context %}
 
 {%- macro gatk_cnv(sample_or_pair, aligner) %}
 
@@ -803,6 +804,7 @@ and input_vcf is not none %}
 
 {% set final_seg %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.re_centered.cr.igv.seg{% endset %}
 {{- cnvear(sample_or_pair, final_seg, 'GATK', aligner) }}
+{{- thred(sample_or_pair, final_seg, aligner)}}
 
 {% if studyDisease == "Multiple Myeloma" | default(false) %}
   {{- bpure(sample_or_pair, final_seg, 'high', 'gatk', aligner) }}
