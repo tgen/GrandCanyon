@@ -38,6 +38,7 @@
 
 {# short-read copy number callers #}
 {% from 'modules/variant_calling/copy_number/gatk_cnv.j2' import gatk_cnv with context %}
+{% from 'modules/variant_calling/copy_number/ichorcna.j2' import ichorcna with context %}
 {% from 'modules/variant_calling/copy_number/cnvkit.j2' import cnvkit with context %}
 {% from 'modules/variant_calling/copy_number/ascat.j2' import ascat with context %}
 
@@ -166,6 +167,10 @@
         {% if sample.gltype in 'genome' %}
           {{- gatk_cnv(sample, aligner) }}
         {% endif %}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_ichorcna"]|default(false) %}
+        {{- ichorcna(sample, aligner) }}
       {% endif %}
 
     {% endif %}
@@ -396,6 +401,10 @@
         {% if sample.gltype in 'genome' %}
           {{- gatk_cnv(sample, aligner) }}
         {% endif %}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_ichorcna"]|default(false) %}
+        {{- ichorcna(sample, aligner) }}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_cna_caller_cnvkit"]|default(false) %}

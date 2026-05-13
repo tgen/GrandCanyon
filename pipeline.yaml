@@ -79,6 +79,10 @@ constants:
       container: quay.io/biocontainers/hifiasm:0.25.0--h5ca1c30_0
     hificnv:
       container: quay.io/biocontainers/hificnv:1.0.1--h9ee0642_0
+    hmmcopy:
+      container: quay.io/biocontainers/hmmcopy:0.1.1--h8b12597_4
+    ichorcna:
+      container: gavinhalab/ichorcna:3.0.0
     isoquant:
       container: quay.io/biocontainers/isoquant:3.10.0--hdfd78af_0
     isoseq:
