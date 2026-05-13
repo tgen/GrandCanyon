@@ -13,22 +13,15 @@
   {% else %}
     {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
   {% endif %}
-  {% if sample.glprep.startswith('kinnex') %}
-    {% set alignment_format = 'cram' %}
-    {% set index_format = 'crai' %}
-  {% else %}
-    {% set alignment_format = 'bam' %}
-    {% set index_format = 'bai' %}
-  {% endif %}
   {% if bam_level is sameas false %}
     {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
     {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
-    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}{% endset %}
-    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.{{ index_format }}{% endset %}
+    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram{% endset %}
+    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.crai{% endset %}
   {% else %}
     {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
-    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.{{ alignment_format }}{% endset %}
-    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.{{ alignment_format }}.{{ index_format }}{% endset %}
+    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
   {% endif %}
 
   {% set rna_metrics %}{{ results_dir }}/{{ bam|basename }}.rna_metrics{% endset %}
