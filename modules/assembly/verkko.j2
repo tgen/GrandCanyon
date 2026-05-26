@@ -2,9 +2,6 @@
 {% from 'modules/assembly/quast.j2' import quast with context %}
 
 {% from 'modules/assembly/minimap2.j2' import minimap2_asm with context %}
-{% from 'modules/assembly/mashmap.j2' import mashmap with context %}
-
-{% from 'modules/assembly/plotting.j2' import moddotplot with context %}
 
 {% macro verkko(input) %}
 
@@ -67,12 +64,6 @@
 
 {% if tasks.Genome_assembly_metrics_align_minimap2|default(false) %}
 {{- minimap2_asm(input, input_assemblies, 'verkko') }}
-{% endif %}
-{% if tasks.Genome_assembly_metrics_align_mashmap|default(false) %}
-{{- mashmap(input, input_assembly, 'verkko') }}
-{% endif %}
-{% if tasks.Genome_assembly_metrics_moddotplot|default(false) %}
-{{- moddotplot(input, input_assembly, 'verkko') }}
 {% endif %}
 
 {% else %}

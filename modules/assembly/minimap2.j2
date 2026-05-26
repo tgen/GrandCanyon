@@ -1,6 +1,3 @@
-{% from 'modules/assembly/plotting.j2' import pafplot with context %}
-{% from 'modules/assembly/plotting.j2' import pafr with context %}
-
 {% macro minimap2_asm(pair, input_assemblies, assembler) %}
 
 {% set results_dir %}{{ input_assemblies | first | dirname }}{% endset %}
@@ -31,14 +28,6 @@
       {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ input_assembly }} > {{ input_assembly }}.minimap2.paf
     {% endfor %}
-
-
-{% if tasks.plot_assembly_pafplot | default(false) %}
-{{- pafplot(pair, input_assemblies, 'minimap2', assembler) }}
-{% endif %}
-{% if tasks.plot_assembly_pafr | default(false) %}
-{{- pafr(pair, input_assemblies, 'minimap2', assembler) }}
-{% endif %}
 
 {% endmacro %}
 

@@ -100,10 +100,6 @@ constants:
     manta:
       container: ghcr.io/tgen/containers/manta:1.6.0-23082819
       digest: 8413ec3da1e20da9f0cc9544722c7e9d30135f4ee0aa8092b67fc74c782913a3
-    margin:
-      container: /home/tgenref/containers/margin_latest.sif
-    mashmap:
-      container: /home/tgenref/containers/mashmap_3.1.3--h07ea13f_0.sif
     medaka:
       container: quay.io/biocontainers/medaka:2.1.1--py312ha65e1bd_0
     merqury:
@@ -114,8 +110,6 @@ constants:
       container: quay.io/biocontainers/minigraph:0.21--he4a0461_1
     minimap2:
       container: /home/tgenref/containers/minimap2-samtools_2.28_1.20.sif
-    moddotplot:
-      container: /home/tgenref/containers/moddotplot_latest.sif
     modkit:
       container: quay.io/biocontainers/ont-modkit:0.6.1--hcdda2d0_0
     mosdepth:
@@ -124,10 +118,6 @@ constants:
       container: quay.io/biocontainers/multiqc:1.31--pyhdfd78af_0
     oarfish:
       container: quay.io/biocontainers/oarfish:0.9.2--h5ca1c30_0
-    pafplot:
-      container: /home/tgenref/containers/pafplot.sif
-    pafr:
-      container: /home/tgenref/containers/pafr.sif
     pb_cpg_tools:
       container: quay.io/biocontainers/pb-cpg-tools:3.0.0--h9ee0642_0
     pbmm2:
@@ -262,33 +252,34 @@ constants:
       species: homo_sapiens
       genome_build: grch38_hg38
       genome_subversion_name: hg38
-      gene_model_name: ensembl_v103
-      gene_model_version: 112
-      capture_kit_path: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/tool_resources/capture_kits
+      gene_model_name: ensembl_v113
+      gene_model_version: 113
+      capture_kit_path: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/tool_resources/capture_kits
+      known_capture_kits: /home/tgenref/homo_sapiens/grch38_hg38/capture_kits/manifest.yaml
       reference_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa
       reference_fai: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa.fai
       reference_alts: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa.alt
       reference_fastaSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa
       reference_faiSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa.fai
       reference_dict: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.dict
-      reference_non_N_interval_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/samtools_stats/GRCh38tempe_decoy_alts_hla_masked_samstats_no_N_1based_primary_contigs_no_chrX_chrY.txt
-      reference_gfa: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/vg/hprc-v1.1-mc-grch38.gfa
-      reference_gbz: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/vg/hprc-v1.1-mc-grch38.gbz
-      reference_hapl: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/vg/hprc-v1.1-mc-grch38.hapl
+      reference_non_N_interval_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/samtools_stats/GRCh38tgen_decoy_alts_hla_masked_samstats_no_N_1based_primary_contigs_no_chrX_chrY.txt
+      reference_gfa: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/vg/hprc-v1.1-mc-grch38.gfa
+      reference_gbz: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/vg/hprc-v1.1-mc-grch38.gbz
+      reference_hapl: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/vg/hprc-v1.1-mc-grch38.hapl
       bwa_mem2_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/bwa2_2.2.1/GRCh38tgen_decoy_alts_hla.fa
-      gff3: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.gff3.gz
-      gtf: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.noheader.sorted.gtf
+      gff3: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.gff3.gz
+      gtf: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.ucsc.gtf
       gtfSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/gene_model/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf
-      transcriptome: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.transcriptome.fasta
+      transcriptome: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.ucsc.transcriptome.fasta
       transcriptomeSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/transcriptome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa
       star_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy.fa
-      starfusion_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/tool_resources/starFusion_gencode_v37/starFusion_Resources/ctat_genome_lib_build_dir
-      snpSniffer_sites: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/snpSniffer/positions_387_hg38_ucsc.txt
-      snpSniffer_database: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/snpSniffer/databaseV5_hg38_ucsc.ini
-      vep_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/v112/
+      starfusion_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir
+      snpSniffer_sites: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/snpSniffer/positions_387_hg38_ucsc.txt
+      snpSniffer_database: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/snpSniffer/databaseV5_hg38_ucsc.ini
+      vep_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/v113/
       vep_plugin_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/plugins
-      ref_flat: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.refFlat.txt
-      ribo_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.ribo.interval_list
+      ref_flat: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.ucsc.refFlat.txt
+      ribo_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.ucsc.ribo.interval_list
       encode_denylist: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/ncbi/Encode_deny_list_with_ncbi_centromere.merged.bed
       annotation_databases:
         - {
@@ -312,10 +303,9 @@ constants:
             "columns": "COSMIC_NC_CNT:=CNT",
           }
         - {
-            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/clinvar/20220910/clinvar_20220910_hg38_tempe.bcf",
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/clinvar/20250907/clinvar_20250907_hg38.bcf",
             "mark_sites": "CLINVAR",
-            "columns": "",
-            # "columns": "CLNORIGIN:=ORIGIN,CLNDN,CLNDNINCL,CLNDISDB,CLNDISDBINCL,CLNHGVS,CLNREVSTAT,CLNSIG,CLNSIGCONF,CLNSIGINCL,CLNSIGSCV,CLNVC,CLNVCSO,CLNVI,DBVARID,GENEINFO,MC,ONCDN,ONCDNINCL,ONCDISDB,ONCDISDBINCL,ONC,ONCINCL,ONCREVSTAT,ONCSCV,ONCCONF,SCIDN,SCIDNINCL,SCIDISDB,SCIDISDBINCL,SCIREVSTAT,SCI,SCIINCL,SCISCV",
+            "columns": "CLNORIGIN:=ORIGIN,CLNDN,CLNDNINCL,CLNHGVS,CLNREVSTAT,CLNSIG,CLNSIGCONF,CLNSIGINCL,CLNSIGSCV,GENEINFO,ONCDN,ONCDNINCL,ONC,ONCINCL,ONCREVSTAT,ONCSCV,ONCCONF,SCIDN,SCIDNINCL,SCIREVSTAT,SCI,SCIINCL,SCISCV",
           }
         - {
             "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/topmed/freeze8/All.BRAVO_TOPMed_Freeze_8.bcf",
@@ -424,7 +414,6 @@ constants:
     required_scripts:
       germline_variant_filter_Rscript: germline_variant_filter.R
       plotSamStats_Rscript: summarize_samstats.R
-      pafr_plot_Rscript: assembly_pafr_plot.R
       stats2json: samStats2json.py
       stats2lims: uploadStats2Lims.py
       plotCNVplus_Rscript: plotCNVplus.R
