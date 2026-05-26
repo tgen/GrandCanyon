@@ -318,7 +318,7 @@
   tags: [{{ sample.gltype }}, alignment, dna_alignment, minimap2, {{ sample.name }}]
   reset: predecessors
   input:
-    - {{ results_dir }}/{{ sample.rgsm }}.sampled.fa
+    - {{ constants.grandcanyon[reference].reference_fasta }}
   {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
     - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam
   {% endfor %}
