@@ -33,26 +33,14 @@
 
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
-
-    {# we already did alignment, skipping flair align step and converting bam to bed for flair correct #}
-    bam2Bed12 \
-      -i {{ sample_bam }} \
-      > {{ temp_dir }}/flair.aligned.bed
-    flair correct \
-      --threads 10 \
-      --query {{ temp_dir }}/flair.aligned.bed \
+    flair transcriptome \
+      --genomealignedbam {{ sample_bam }} \
       --genome {{ reference_fasta }} \
       --gtf {{ gtf }} \
-      --output {{ temp_dir }}/{{ sample.name }}
-    flair collapse \
-      --threads 10 \
-      --query {{ temp_dir }}/{{ sample.name }}_all_corrected.bed \
-      --genome {{ reference_fasta }} \
-      --reads {{ input_fq }} \
-      {% if not SIRV %}
-      --gtf {{ gtf }} \
+      {% if sample_sj_tab is defined %}
+      --shortread {{ sample_sj_tab }} \
       {% endif %}
-      --output {{ results_dir }}/{{ sample.name }}.collapse
+      --output {{ temp_dir }}/{{ sample.name }}
 
     {# generate reads_manifest.tsv file for flair quantify #}
     printf "{{ sample.name }}\tcondition1\tbatch1\t{{ input_fq }}\n" > {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv
@@ -63,14 +51,6 @@
       --reads_manifest {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv \
       --sample_id_only \
       --isoforms {{ results_dir }}/{{ sample.name }}.collapse.isoforms.fa \
-      --output {{ results_dir }}/{{ sample.name }}.quantify
-    flair quantify \
-      --threads 10 \
-      --temp_dir {{ temp_dir }} \
-      --reads_manifest {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv \
-      --sample_id_only \
-      --isoforms {{ results_dir }}/{{ sample.name }}.collapse.isoforms.fa \
-      --tpm \
       --output {{ results_dir }}/{{ sample.name }}.quantify
 
     {# generate file with the 10 longest isoforms #}
