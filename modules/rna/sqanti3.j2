@@ -63,87 +63,27 @@
     EOF
     {% endif %}
 
-    CAGE_PEAK=$(ls /opt2/sqanti3/*/SQANTI3*/data/ref_TSS_annotation/human.refTSS_v3.1.hg38.bed)
-    POLYA_MOTIF=$(ls /opt2/sqanti3/*/SQANTI3*/data/polyA_motifs/mouse_and_human.polyA_motif.txt)
+    # CAGE_PEAK=$(ls /opt2/sqanti3/*/SQANTI3*/data/ref_TSS_annotation/human.refTSS_v3.1.hg38.bed)
+    # POLYA_MOTIF=$(ls /opt2/sqanti3/*/SQANTI3*/data/polyA_motifs/mouse_and_human.polyA_motif.txt)
 
-    conda run -n sqanti3 sqanti3_qc.py \
-      {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff \
-      {{ constants.grandcanyon[reference].gtf }} \
-      {{ constants.grandcanyon[reference].reference_fasta }} \
-      --CAGE_peak ${CAGE_PEAK} \
-      --polyA_motif_list ${POLYA_MOTIF} \
-      --gff3 {{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }} \
-      --isoAnnotLite \
-      -o {{ sample.name }} \
-      -d {{ temp_dir }} \
-      -fl {{ isoseq_dir }}/{{ sample.name }}.collapsed.abundance.txt \
-    {% if shortfqlist | length > 0 %}
-      --short_reads {{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
-    {% endif %}
-      --cpus 20 \
-      --report both
+    conda run -n sqanti3 sqanti3 init \
+      -c sqanti3_config.yaml \
+      -a \
+      cpus=20 \
+      dir={{ temp_dir }} \
+      refGTF={{ constants.grandcanyon[reference].gtf }} \
+      refFasta={{ constants.grandcanyon[reference].reference_fasta }} \
+      isoforms={{ isoseq_dir }}/{{ sample.name }}.collapsed.gff \
+      output={{ sample.name }} \
+      gff3={{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }} \
+      isoAnnotLite=True \
+      fl_count={{ isoseq_dir }}/{{ sample.name }}.collapsed.abundance.txt \
+      {% if shortfqlist | length > 0 %}
+      short_reads={{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
+      {% endif %}
+      report=both
 
-    mv {{ temp_dir }}/{{ sample.name }}* {{ results_dir }}
-
-    conda run -n sqanti3 sqanti3_filter.py rules \
-      {{ results_dir }}/{{ sample.name }}_classification.txt \
-      -o {{ sample.name }} \
-      -d {{ results_dir }} \
-      --skip_report
-
-    {% if shortfqlist | length > 0 %}
-    cat <<EOF > {{ results_dir }}/{{ sample.name }}_rules_filter.json
-    {
-      "full-splice_match": [
-          {
-              "perc_A_downstream_TTS":[0,59]
-          }
-      ],
-      "incomplete-splice_match":[
-          {
-              "length":[2001,14999],
-              "subcategory": ["3prime_fragment", "5prime_fragment", "internal_fragment"]
-          }
-      ],
-      "novel_in_catalog":[
-          {
-              "all_canonical": "canonical"
-          },
-          {
-              "min_cov": 10
-          }
-      ],
-      "novel_not_in_catalog":[
-          {
-              "all_canonical": "canonical",
-              "diff_to_gene_TSS":[-50,50],
-              "diff_to_gene_TTS": [-50,50]
-          },
-          {
-              "min_cov": 10,
-              "diff_to_gene_TSS":[-50,50],
-              "diff_to_gene_TTS": [-50,50]
-          }
-      ],
-      "rest": [
-          {
-              "RTS_stage":"FALSE",
-              "all_canonical":"canonical",
-              "coding": "coding",
-              "perc_A_downstream_TTS":[0,59],
-              "exons": 2
-          }
-       ]
-    }
-    EOF
-
-    conda run -n sqanti3 sqanti3_filter.py rules \
-      {{ results_dir }}/{{ sample.name }}_classification.txt \
-      -o {{ sample.name }}_strict_filter \
-      -d {{ results_dir }} \
-      --json_filter {{ results_dir }}/{{ sample.name }}_rules_filter.json \
-      --skip_report
-    {% endif %}
+    conda run -n sqanti3 sqanti3 all -c sqanti3_config.yaml
 
 {% endif %}
 
