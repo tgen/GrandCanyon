@@ -61,7 +61,7 @@ constants:
     fastp:
       container: ghcr.io/tgen/fastp:1.1.1-tgen
     flair:
-      container: quay.io/biocontainers/flair:3.0.0--pyhdfd78af_0
+      container: brookslab/flair:3.0.0
     flye:
       container: quay.io/biocontainers/flye:2.9.6--py311h2de2dd3_0
     freebayes:
