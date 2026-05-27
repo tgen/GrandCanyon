@@ -38,11 +38,11 @@ constants:
       container: ghcr.io/tgen/containers/cnvear:0.4.1
       digest: 7caabd0c91d241090ceff9e3d9a616e71a8e65d17a41c66b0d2fb02113ad1ea4
     cnvkit:
-      container: quay.io/biocontainers/cnvkit:0.9.12--pyhdfd78af_0
+      container: quay.io/biocontainers/cnvkit:0.9.13--pyhdfd78af_0
     compleasm:
       container: quay.io/biocontainers/compleasm:0.2.7--pyh7e72e81_1
     ctat_lr:
-      container: trinityctat/ctat_lr_fusion:1.1.2
+      container: trinityctat/ctat_lr_fusion:1.4.0
     cutesv:
       container: quay.io/biocontainers/cutesv:2.1.3--pyhdfd78af_0
     deepsomatic:
@@ -57,7 +57,7 @@ constants:
       container: nanoporetech/dorado:shaae1d5e75f94041e4fd7af4a7ed6e6432b0eaea29
       version: 0.8.2
     dysgu:
-      container: quay.io/biocontainers/dysgu:1.8.7--py312h9c9b0c2_0
+      container: quay.io/biocontainers/dysgu:1.8.8--py313h5d164f8_0
     fastp:
       container: ghcr.io/tgen/fastp:1.1.1-tgen
     flair:
@@ -96,12 +96,12 @@ constants:
     liftover_vcf:
       container: quay.io/biocontainers/bcftools-liftover-plugin:1.22--hb66fcc3_0
     longphase:
-      container: quay.io/biocontainers/longphase:2.0.1--hfc4162c_0
+      container: quay.io/biocontainers/longphase:2.0.2--h4e109e1_0
     manta:
       container: ghcr.io/tgen/containers/manta:1.6.0-23082819
       digest: 8413ec3da1e20da9f0cc9544722c7e9d30135f4ee0aa8092b67fc74c782913a3
     medaka:
-      container: quay.io/biocontainers/medaka:2.1.1--py312ha65e1bd_0
+      container: quay.io/biocontainers/medaka:2.2.2--py312h3050eb1_0
     merqury:
       container: /home/tgenref/containers/merqury_1.3.sif
     methbat:
@@ -113,11 +113,11 @@ constants:
     modkit:
       container: quay.io/biocontainers/ont-modkit:0.6.1--hcdda2d0_0
     mosdepth:
-      container: quay.io/biocontainers/mosdepth:0.3.8--hd299d5a_0
+      container: quay.io/biocontainers/mosdepth:0.3.14--h05c3d44_0
     multiqc:
       container: quay.io/biocontainers/multiqc:1.31--pyhdfd78af_0
     oarfish:
-      container: quay.io/biocontainers/oarfish:0.9.2--h5ca1c30_0
+      container: quay.io/biocontainers/oarfish:0.9.4--h7f5d12c_0
     pb_cpg_tools:
       container: quay.io/biocontainers/pb-cpg-tools:3.0.0--h9ee0642_0
     pbmm2:
@@ -139,25 +139,25 @@ constants:
     R:
       container: ghcr.io/tgen/containers/r_with_modules:4.1.2-23080815
     salmon:
-      container: quay.io/biocontainers/salmon:1.10.2--hecfa306_0
+      container: quay.io/biocontainers/salmon:1.11.4--h7f96273_0
     samtools:
       container: quay.io/biocontainers/samtools:1.20--h50ea8bc_1
     savana:
-      container: quay.io/biocontainers/savana:1.3.5--pyhdfd78af_0
+      container: quay.io/biocontainers/savana:1.3.7--pyhdfd78af_0
     seqkit:
       container: quay.io/biocontainers/seqkit:2.8.2--h9ee0642_1
     seqtk:
       container: quay.io/biocontainers/seqtk:1.4--he4a0461_2
     severus:
-      container: quay.io/biocontainers/severus:1.6--pyhdfd78af_0
+      container: quay.io/biocontainers/severus:1.7--pyhdfd78af_0
     shasta:
       container: quay.io/biocontainers/shasta:0.11.1--h4ac6f70_2
     sigprofiler:
-      container: quay.io/biocontainers/sigprofilerassignment:1.0.1--pyhdfd78af_0
+      container: quay.io/biocontainers/sigprofilerassignment:1.1.3--pyhdfd78af_0
     smoove:
       container: brentp/smoove:v0.2.8
     sniffles:
-      container: quay.io/biocontainers/sniffles:2.7.0--pyhdfd78af_0
+      container: quay.io/biocontainers/sniffles:2.8.0--pyhdfd78af_0
     somalier:
       container: brentp/somalier:v0.3.1
     spectre:
@@ -175,7 +175,7 @@ constants:
     thred:
       container: ghcr.io/tgen/containers/thred:1.1.0-23080712
     trgt:
-      container: quay.io/biocontainers/trgt:4.0.0--h9ee0642_0
+      container: quay.io/biocontainers/trgt:5.0.0--h9ee0642_0
     truvari:
       container: quay.io/biocontainers/truvari:5.4.0--pyhdfd78af_0
     vardict:
@@ -189,7 +189,7 @@ constants:
     verifybamid2:
       container: griffan/verifybamid2:v2.0.1
     verkko:
-      container: quay.io/biocontainers/verkko:2.2.1--h45dadce_0
+      container: quay.io/biocontainers/verkko:2.3.2--hb0edd9e_0
     vg:
       container: ghcr.io/tgen/containers/vg_samtools:1.71_1.21
     wakhan:
