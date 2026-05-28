@@ -32,7 +32,7 @@
 - name: sqanti3_{{ sample.name }}
   input:
     - {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff
-    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.abundance.txt
+    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].gtf }}
     - {{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }}
@@ -76,8 +76,10 @@
       isoforms={{ isoseq_dir }}/{{ sample.name }}.collapsed.gff \
       output={{ sample.name }} \
       gff3={{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }} \
+      CAGE_peak={{ constants.grandcanyon[reference].tool_resources.sqanti3.cage_peak }} \
+      polyA_motif_list={{ constants.grandcanyon[reference].tool_resources.sqanti3.polya_motif }} \
       isoAnnotLite=True \
-      fl_count={{ isoseq_dir }}/{{ sample.name }}.collapsed.abundance.txt \
+      fl_count={{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt \
       {% if shortfqlist | length > 0 %}
       short_reads={{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
       {% endif %}

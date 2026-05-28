@@ -166,7 +166,7 @@ constants:
     spectre:
       container: /home/tgenref/containers/spectre-cnv_0.2.1.sif
     sqanti3:
-      container: anaconesalab/sqanti3:v6.0.1
+      container: ghcr.io/tgen/containers/sqanti3:6.0.2
     star_fusion:
       container: trinityctat/starfusion:1.14.0
       digest: b66201d38db7055d84b6af2928c8cf44159254b747adad784250fbaa1230e86d
@@ -360,6 +360,8 @@ constants:
           denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38_blacklist_spectre.bed
         sqanti3:
           tappas_gff: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sqanti3/human_tappas_gencode_annotation_file.gff3
+          cage_peak: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sqanti3/human.refTSS_v3.1.hg38.bed
+          polya_motif: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sqanti3/mouse_and_human.polyA_motif.txt
         trgt:
           strchive: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/trgt/STRchive-disease-loci.hg38.TRGT.bed
         verifybamid:
