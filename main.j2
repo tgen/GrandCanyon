@@ -139,6 +139,7 @@
 {% from 'modules/variant_calling/main.j2' import somatic_variant_calling with context %}
 {% from 'modules/methylation/main.j2' import methylation_calling with context %}
 {% from 'modules/assembly/main.j2' import assembly with context %}
+{% from 'modules/qc/bam_qc_snpsniffer.j2' import snpsniffer_summary with context %}
 
 {{- prepare_chunk_intervals() }}
 
@@ -322,6 +323,11 @@
 {{- methylation_calling(samples) }}
 
 {{- assembly() }}
+
+{# project level quality control #}
+{% if samples|length > 1 %}
+  {{- snpsniffer_summary(samples) }}
+{% endif %}
 
 {{- finalize(samples) }}
 

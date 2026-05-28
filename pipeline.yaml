@@ -154,6 +154,9 @@ constants:
       container: quay.io/biocontainers/shasta:0.11.1--h4ac6f70_2
     sigprofiler:
       container: quay.io/biocontainers/sigprofilerassignment:1.1.3--pyhdfd78af_0
+    snpsniffer:
+      container: ghcr.io/tgen/containers/snpsniffer:7.0.1
+      digest: 22eeb74559868fc2b80976f7901cb2c1021893bf9fe2939b06da0b539af3c942
     smoove:
       container: brentp/smoove:v0.2.8
     sniffles:
