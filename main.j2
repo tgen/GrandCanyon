@@ -143,7 +143,9 @@
 
 {{- prepare_chunk_intervals() }}
 
-{% set samples = {} %}
+{% if samples is not defined %}
+    {% set samples = {} %}
+{% endif %}
 
 {% if dataFiles is defined %}
 {% for file in dataFiles %}

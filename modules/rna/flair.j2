@@ -1,5 +1,9 @@
 {% macro flair(sample, sample_bam, input_fq, reference_fasta, gtf, SIRV=false) %}
 
+{% if sample.external_data is defined and sample.external_data.sj_tab is defined %}
+  {% set sample_sj_tab %}{{ sample.external_data.sj_tab }}{% endset %}
+{% endif %}
+
 {% if SIRV %}
   {% set temp_dir %}temp/{{ sample.gltype }}/isoforms/flair_SIRV/{{ sample.name }}{% endset %}
   {% set results_dir %}{{ sample.gltype }}/isoforms/flair_SIRV/{{ sample.name }}{% endset %}
@@ -18,6 +22,9 @@
     - {{ gtf }}
     - {{ sample_bam }}
     - {{ input_fq }}
+    {% if sample_sj_tab is defined %}
+    - {{ sample_sj_tab }}
+    {% endif %}
   output:
     - {{ temp_dir }}/flair.collapse.isoforms.fa
     - {{ results_dir }}/{{ sample.name }}.quantify.isoforms.fa

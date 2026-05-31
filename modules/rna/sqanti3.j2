@@ -1,5 +1,9 @@
 {% macro sqanti3(sample) %}
 
+{% if sample.external_data is defined and sample.external_data.sj_tab is defined %}
+  {% set sample_sj_tab %}{{ sample.external_data.sj_tab }}{% endset %}
+{% endif %}
+
 {% set temp_dir %}temp/{{ sample.gltype }}/isoforms/sqanti3/{{ sample.name }}{% endset %}
 {% set results_dir %}{{ sample.gltype }}/isoforms/sqanti3/{{ sample.name }}{% endset %}
 {% set isoseq_dir %}{{ sample.gltype }}/isoforms/isoseq/{{ sample.name }}{% endset %}
@@ -32,7 +36,7 @@
 - name: sqanti3_{{ sample.name }}
   input:
     - {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff
-    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt
+    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.abundance.txt
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].gtf }}
     - {{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }}
@@ -40,6 +44,9 @@
     - {{ pair.r1path }}
     - {{ pair.r2path }}
     {% endfor %}
+    {% if sample_sj_tab is defined %}
+    - {{ sample_sj_tab }}
+    {% endif %}
   output:
     - {{ results_dir }}/{{ sample.name }}.collapsed.sorted.gff
     - {{ results_dir }}/{{ sample.name }}.collapsed_classification.txt
@@ -63,8 +70,7 @@
     EOF
     {% endif %}
 
-    # CAGE_PEAK=$(ls /opt2/sqanti3/*/SQANTI3*/data/ref_TSS_annotation/human.refTSS_v3.1.hg38.bed)
-    # POLYA_MOTIF=$(ls /opt2/sqanti3/*/SQANTI3*/data/polyA_motifs/mouse_and_human.polyA_motif.txt)
+    cp {{ isoseq_dir }}/{{ sample.name }}.collapsed.abundance.txt {{ temp_dir }}/{{ sample.name }}.collapsed.abundance.tsv
 
     conda run -n sqanti3 sqanti3 init \
       -c sqanti3_config.yaml \
@@ -79,9 +85,12 @@
       CAGE_peak={{ constants.grandcanyon[reference].tool_resources.sqanti3.cage_peak }} \
       polyA_motif_list={{ constants.grandcanyon[reference].tool_resources.sqanti3.polya_motif }} \
       isoAnnotLite=True \
-      fl_count={{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt \
+      fl_count={{ temp_dir }}/{{ sample.name }}.collapsed.abundance.tsv \
       {% if shortfqlist | length > 0 %}
       short_reads={{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
+      {% endif %}
+      {% if sample_sj_tab is defined %}
+      coverage={{ sample_sj_tab }} \
       {% endif %}
       report=both
 
