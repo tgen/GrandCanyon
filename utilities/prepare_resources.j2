@@ -247,10 +247,16 @@
     awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "CDS" && $4 < $5) { OFS = "\t" ; print $1, $4, $5, "CDS" }}' {{ constants.grandcanyon[reference].gtf }} |\
       awk '!dup[$0]++' | sort -k1,1V -k2,2n -k3,3n | bedtools merge -i - > {{ constants.grandcanyon[reference].gtf }}.cds.bed
 
+
+{% if constants.grandcanyon[reference].star_fasta is defined %}
+  {% set reference_dict %}{{ constants.grandcanyon[reference].star_fasta | replace('.fa','.dict') }}{% endset %}
+{% else %}
+  {% set reference_dict %}{{ constants.grandcanyon[reference].reference_dict }}{% endset %}
+{% endif %}
 - name: create_rnaseq_resources_for_{{ reference | replace('.', '_') }}
   input:
     - {{ constants.grandcanyon[reference].gtf }}
-    - {{ constants.grandcanyon[reference].reference_dict }}
+    - {{ reference_dict }}
   output:
     - {{ constants.grandcanyon[reference].ref_flat }}
     - {{ constants.grandcanyon[reference].ref_flat | replace('.txt', '.hugoID.txt') }}
@@ -275,7 +281,7 @@
         sed 's/gene_id "//g' |\
         sed 's/"; transcript_id "/\'$'\t''/g' |\
         cut -f1-5 |\
-    cat {{ constants.grandcanyon[reference].reference_dict }} - > {{ constants.grandcanyon[reference].ribo_locations }}
+    cat {{ reference_dict }} - > {{ constants.grandcanyon[reference].ribo_locations }}
 
     [ -e {{ constants.grandcanyon[reference].ref_flat | replace('.txt', '.hugoID.txt') }} ] ||\
     gtfToGenePred -genePredExt \
