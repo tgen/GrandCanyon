@@ -1,4 +1,4 @@
-{% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
+{% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_small_variants with context %}
 
 {% macro vcfmerger2(sample_or_pair, aligner='bwa') %}
 
@@ -187,6 +187,6 @@
     rm -rf {{ temp_dir }}/SummaryPlots_*/sets
     mv {{ temp_dir }}/SummaryPlots_* "{{ results_dir }}"
 
-{{- annotate_vcfs(sample_or_pair, temp_dir, results_dir, merged_vcf_gz, aligner, 'merged') }}
+{{- postprocess_small_variants(sample_or_pair, temp_dir, results_dir, merged_vcf_gz, aligner, 'merged') }}
 
 {% endmacro %}

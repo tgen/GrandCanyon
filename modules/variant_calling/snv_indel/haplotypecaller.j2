@@ -191,7 +191,7 @@
       --output {{ pass_vcf }} \
       --write-index
 
-{% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
-{{- annotate_vcfs(sample, temp_dir, results_dir, pass_vcf, aligner, 'haplotypecaller') }}
+{% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_small_variants with context %}
+{{- postprocess_small_variants(sample, temp_dir, results_dir, pass_vcf, aligner, 'haplotypecaller') }}
 
 {% endmacro %}

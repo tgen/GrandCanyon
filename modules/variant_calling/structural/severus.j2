@@ -122,7 +122,7 @@
       --write-index \
       {{ all_vcf }}
 
-{% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
-{{- annotate_vcfs(sample_or_pair, temp_dir, results_dir, pass_vcf, aligner, 'severus') }}
+{% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_small_variants with context %}
+{{- postprocess_small_variants(sample_or_pair, temp_dir, results_dir, pass_vcf, aligner, 'severus') }}
 
 {% endmacro %}

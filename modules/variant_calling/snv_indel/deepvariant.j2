@@ -1,4 +1,4 @@
-{% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
+{% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_small_variants with context %}
 {% from 'modules/variant_calling/snv_indel/filtering.j2' import germline_candidate_filters with context %}
 
 {%- macro deepvariant(sample, aligner) %}
@@ -146,10 +146,10 @@
 {% if tasks[sample.gltype|capitalize+"_variant_calling_phasing_whatshap"]|default(false) %}
   {% set whatshap_phased_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.whatshap.phased.vcf.gz{% endset %}
   {% set annotated_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.whatshap.phased.db.vep.pick.vcf.gz{% endset %}
-  {{- annotate_vcfs(sample, temp_dir, results_dir, whatshap_phased_vcf, aligner, 'deepvariant') }}
+  {{- postprocess_small_variants(sample, temp_dir, results_dir, whatshap_phased_vcf, aligner, 'deepvariant') }}
 {% else %}
   {% set annotated_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.pass.db.vep.pick.vcf.gz{% endset %}
-  {{- annotate_vcfs(sample, temp_dir, results_dir, pass_vcf, aligner, 'deepvariant') }}
+  {{- postprocess_small_variants(sample, temp_dir, results_dir, pass_vcf, aligner, 'deepvariant') }}
 {% endif %}
 {% if tasks[sample.gltype|capitalize+"_variant_calling_annotate_vcfs_bcftools"]|default(false) and tasks[sample.gltype|capitalize+"_variant_calling_annotate_vcfs_vep"]|default(false) and reference in ('grch38', 'grch37') %}
   {{- germline_candidate_filters(sample, temp_dir, results_dir, annotated_vcf, aligner, 'deepvariant') }}

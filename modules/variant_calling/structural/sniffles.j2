@@ -111,8 +111,8 @@
       {{ all_vcf }}
 
 {% if input.samples is not defined %}
-  {% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
-  {{- annotate_vcfs(input, temp_dir, results_dir, pass_vcf, aligner, 'sniffles') }}
+  {% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_small_variants with context %}
+  {{- postprocess_small_variants(input, temp_dir, results_dir, pass_vcf, aligner, 'sniffles') }}
 {% endif %}
 
 {% endmacro %}

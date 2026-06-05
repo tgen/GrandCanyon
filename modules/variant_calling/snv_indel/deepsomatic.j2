@@ -168,12 +168,4 @@
       --write-index \
       {{ all_vcf }}
 
-{% from 'modules/annotation/main.j2' import annotate_vcfs with context %}
-{{- annotate_vcfs(sample_or_pair, temp_dir, results_dir, pass_vcf, aligner, 'deepsomatic') }}
-
-{% from 'modules/variant_calling/metrics/sigprofiler.j2' import sigprofiler with context %}
-{% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_metrics_sigprofiler"]|default(false) and sample_or_pair.normal is defined %}
-  {{- sigprofiler(sample_or_pair, pass_vcf, aligner, 'deepsomatic') }}
-{% endif %}
-
 {% endmacro %}
