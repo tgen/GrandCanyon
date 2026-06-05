@@ -112,7 +112,7 @@
 
 {% if input.samples is not defined %}
   {% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_small_variants with context %}
-  {{- postprocess_small_variants(input, temp_dir, results_dir, pass_vcf, aligner, 'sniffles') }}
+  {{- postprocess_small_variants(input, pass_vcf, temp_dir, results_dir, aligner, 'sniffles') }}
 {% endif %}
 
 {% endmacro %}

@@ -192,6 +192,6 @@
       --write-index
 
 {% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_small_variants with context %}
-{{- postprocess_small_variants(sample, temp_dir, results_dir, pass_vcf, aligner, 'haplotypecaller') }}
+{{- postprocess_small_variants(sample, pass_vcf, temp_dir, results_dir, aligner, 'haplotypecaller') }}
 
 {% endmacro %}
