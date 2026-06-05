@@ -1,4 +1,4 @@
-{% macro filter_germline_variants(sample_or_pair, input_vcf, temp_dir, results_dir, aligner, variant_caller) %}
+{% macro filter_germline_variants(sample, input_vcf, temp_dir, results_dir, aligner, variant_caller) %}
 
 {% if input_vcf.endswith('.vcf') %}
   {% set vcf_prefix = input_vcf.split('.')[:-1]|join('.') %}

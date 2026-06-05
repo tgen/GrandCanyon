@@ -3,6 +3,16 @@
 
 {% macro filter_variants(sample_or_pair, input_vcf, temp_dir, results_dir, aligner, variant_caller) %}
 
+{% if sample_or_pair.normal is defined %}
+  {%- set input_config = "paired" %}
+{% else %}
+  {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set input_config = "tumor_only" %}
+  {% else %}
+    {%- set input_config = "germline" %}
+  {% endif %}
+{% endif %}
+
 {% if input_config in ("paired", "tumor_only") %}
   {{- filter_somatic_variants(sample_or_pair, input_vcf, temp_dir, results_dir, aligner, variant_caller) }}
 {% else %}

@@ -2,7 +2,7 @@
 {%- from 'modules/variant_calling/postprocessing/metrics/sigprofiler.j2' import sigprofiler with context %}
 {%- from 'modules/variant_calling/postprocessing/metrics/tucon.j2' import tucon with context %}
 
-{%- macro collect_variant_metrics(sample_or_pair, input_vcf, temp_dir, results_dir, aligner, variant_caller) %}
+{%- macro collect_variant_metrics(sample_or_pair, input_vcf, results_dir, aligner, variant_caller) %}
 
 {% if sample_or_pair.normal is defined %}
   {%- set input_config = "paired" %}
