@@ -179,8 +179,6 @@ constants:
       container: ghcr.io/tgen/containers/thred:1.1.0-23080712
     trgt:
       container: quay.io/biocontainers/trgt:5.0.0--h9ee0642_0
-    truvari:
-      container: quay.io/biocontainers/truvari:5.4.0--pyhdfd78af_0
     vardict:
       container: quay.io/biocontainers/vardict-java:1.8.3--hdfd78af_0
       digest: 4069c082c97470bce4a07f228dbf74b6ea3fc5c4eaa93ba76d2826a496ca3c44

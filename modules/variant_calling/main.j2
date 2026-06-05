@@ -23,7 +23,6 @@
 
 {# general sv callers #}
 {% from 'modules/variant_calling/structural/dysgu.j2' import dysgu with context %}
-{% from 'modules/variant_calling/structural/truvari.j2' import truvari with context %}
 
 {# short-read sv callers #}
 {% from 'modules/variant_calling/structural/manta.j2' import manta with context %}
@@ -383,10 +382,6 @@
         {{- smoove(sample, aligner) }}
       {% endif %}
 
-      {% if tasks[taskPrefix+"_variant_calling_merge_structural_vcfs_truvari"]|default(false) %}
-        {{- truvari(sample, aligner) }}
-      {% endif %}
-
     {% endif %}
 
     {############
@@ -508,10 +503,6 @@
         {{- manta(pair, aligner) }}
       {% endif %}
 
-    {% endif %}
-
-    {% if tasks[taskPrefix+"_variant_calling_merge_structural_vcfs_truvari"]|default(false) %}
-      {{- truvari(pair, aligner) }}
     {% endif %}
 
     {############
