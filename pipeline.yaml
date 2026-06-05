@@ -188,7 +188,7 @@ constants:
       container: ghcr.io/tgen/containers/vcfmerger2:0.10.0
       digest: 11b4dc88f0e43439dcdcfe584fc042b917d25a639644c567ae325ce8254b1b98
     vep:
-      container: ensemblorg/ensembl-vep:release_112.0
+      container: ensemblorg/ensembl-vep:release_113.4
     verifybamid2:
       container: griffan/verifybamid2:v2.0.1
     verkko:

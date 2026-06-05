@@ -38,6 +38,13 @@
         {{- prepare_bwa_index() }}
       {% endif %}
     {% endfor %}
+    {% if constants.grandcanyon[reference].tool_resources.ascat is not defined
+    or constants.grandcanyon[reference].tool_resources.ascat.ascat_resources is not defined %}
+        {% from 'utilities/prepare_resources.j2' import generate_cnv_resources with context %}
+        {% set ascat_resources %}{{ constants.grandcanyon[reference].reference_fasta | dirname | dirname }}/tool_resources/ascat{% endset %}
+        {% do constants.grandcanyon[reference].tool_resources.update({'ascat': { 'ascat_resources': ascat_resources }}) %}
+        {{- generate_cnv_resources() }}
+    {% endif %}
 {% else %}
     {% set raise_msg %}reference_fasta not defined! constants.grandcanyon.{{ reference }}.reference_fasta is not in pipeline.yaml or user supplied input{% endset %}
     {{ raise(raise_msg) }}
@@ -143,9 +150,7 @@
 
 {{- prepare_chunk_intervals() }}
 
-{% if samples is not defined %}
-    {% set samples = {} %}
-{% endif %}
+{% set samples = {} %}
 
 {% if dataFiles is defined %}
 {% for file in dataFiles %}
@@ -312,6 +317,12 @@
     {% endif %}
   {% endif %}
 {% endfor %}
+
+{% if external_data is defined %}
+  {% for sample in samples.values() %}
+    {% do sample.update({'external_data': external_data[sample.name]}) %}
+  {% endfor %}
+{% endif %}
 
 {# Start of module calls #}
 {{- dna_alignment(samples) }}
