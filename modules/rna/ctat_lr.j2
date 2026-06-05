@@ -68,7 +68,7 @@
     - {{ results_dir }}/{{ sample.name }}.fusion_predictions.tsv
   cpus: 10
   mem: 60G
-  walltime: "24:00:00"
+  walltime: "36:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.ctat_lr.container }}
   cmd: |
@@ -101,8 +101,6 @@
     mv {{ temp_dir }}/ctat-LR-fusion.fusion_predictions.preliminary.abridged.tsv {{ results_dir }}/{{ sample.name }}.fusion_predictions.preliminary.abridged.tsv
     mv {{ temp_dir }}/ctat-LR-fusion.fusion_predictions.preliminary.tsv {{ results_dir }}/{{ sample.name }}.fusion_predictions.preliminary.tsv
     mv {{ temp_dir }}/ctat-LR-fusion.fusion_predictions.tsv {{ results_dir }}/{{ sample.name }}.fusion_predictions.tsv
-
-    rm {{ temp_dir }}/{{ sample.name }}*.fasta {{ temp_dir }}/{{ sample.name }}*.fastq
 
 {% else %}
   {% set log_msg %}ctat_lr_fusion was enabled, but no compatible long read data was found for {{ sample.name }}{% endset %}
