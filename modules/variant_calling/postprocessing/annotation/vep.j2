@@ -37,7 +37,9 @@
     - {{ constants.grandcanyon[reference].gtf }}
     {% endif %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
-  output: {{ final_vcf_prefix }}.vep.full.vcf
+  output:
+    - {{ final_vcf_prefix }}.vep.full.vcf.gz
+    - {{ final_vcf_prefix }}.vep.full.vcf.gz.tbi
   walltime: "8:00:00"
   cpus: 4
   mem: 8G
@@ -51,7 +53,8 @@
     vep --fork 4 \
         --input_file "{{ input_vcf }}" \
         --format vcf \
-        --output_file "{{ final_vcf_prefix }}.vep.full.vcf" \
+        --output_file "{{ final_vcf_prefix }}.vep.full.vcf.gz" \
+        --compress_output bgzip \
         --vcf \
         --vcf_info_field CSQ \
         {% if is_human %}
@@ -90,32 +93,7 @@
         --canonical \
         --flag_pick_allele_gene
 
-- name: vep_all_bcftools_compress_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
-  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
-  input:
-    - {{ final_vcf_prefix }}.vep.full.vcf
-  output:
-    - {{ final_vcf_prefix }}.vep.full.vcf.gz
-    - {{ final_vcf_prefix }}.vep.full.vcf.gz.tbi
-  walltime: "8:00:00"
-  cpus: 4
-  mem: 8G
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.bcftools.container }}
-  cmd: |
-    set -eu
-    set -o pipefail
-
-    {# Convert to compressed VCF #}
-    bcftools view \
-        --threads 4 \
-        --output-type z \
-        --output-file "{{ final_vcf_prefix }}.vep.full.vcf.gz" \
-        "{{ final_vcf_prefix }}.vep.full.vcf"
-
-    rm  "{{ final_vcf_prefix }}.vep.full.vcf"
-
-    bcftools index --threads 4 --force --tbi "{{ final_vcf_prefix }}.vep.full.vcf.gz"
+    tabix {{ final_vcf_prefix }}.vep.full.vcf.gz
 
 - name: vep_con_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
   tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
@@ -126,7 +104,9 @@
     - {{ constants.grandcanyon[reference].vep_plugin_data }}
     {% endif %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
-  output: {{ final_vcf_prefix }}.vep.pick.vcf
+  output:
+    - {{ final_vcf_prefix }}.vep.pick.vcf.gz
+    - {{ final_vcf_prefix }}.vep.pick.vcf.gz.tbi
   walltime: "8:00:00"
   cpus: 4
   mem: 8G
@@ -140,7 +120,8 @@
     vep --fork 4 \
         --input_file "{{ input_vcf }}" \
         --format vcf \
-        --output_file "{{ final_vcf_prefix }}.vep.pick.vcf" \
+        --output_file "{{ final_vcf_prefix }}.vep.pick.vcf.gz" \
+        --compress_output bgzip \
         --vcf \
         --vcf_info_field CSQ \
         {% if is_human %}
@@ -180,32 +161,7 @@
         --canonical \
         --pick_allele_gene
 
-- name: vep_con_bcftools_compress_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
-  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
-  input:
-    - {{ final_vcf_prefix }}.vep.pick.vcf
-  output:
-    - {{ final_vcf_prefix }}.vep.pick.vcf.gz
-    - {{ final_vcf_prefix }}.vep.pick.vcf.gz.tbi
-  walltime: "8:00:00"
-  cpus: 4
-  mem: 8G
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.bcftools.container }}
-  cmd: |
-    set -euv
-    set -o pipefail
-
-    {# Convert to compressed VCF #}
-    bcftools view \
-        --threads 4 \
-        --output-type z \
-        --output-file "{{ final_vcf_prefix }}.vep.pick.vcf.gz" \
-        "{{ final_vcf_prefix }}.vep.pick.vcf"
-
-    rm "{{ final_vcf_prefix }}.vep.pick.vcf"
-
-    bcftools index --threads 4 --force --tbi "{{ final_vcf_prefix }}.vep.pick.vcf.gz"
+    tabix {{ final_vcf_prefix }}.vep.pick.vcf.gz
 
 {% endmacro %}
 

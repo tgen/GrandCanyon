@@ -1,0 +1,23 @@
+{%- from 'modules/variant_calling/metrics/msisensor_pro.j2' import msisensor_pro with context %}
+
+{%- macro collect_sample_metrics(sample_or_pair, aligner) %}
+
+{% if sample_or_pair.normal is defined %}
+  {%- set input_config = "paired" %}
+  {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+  {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+{% else %}
+  {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set input_config = "tumor_only" %}
+  {% else %}
+    {%- set input_config = "germline" %}
+  {% endif %}
+{% endif %}
+
+{% if input_config in ('paired') %}
+  {% if tasks[sample_or_pair.gltype|capitalize+"_somatic_sample_metric_msisensor_pro"]|default(false) %}
+    {{- msisensor_pro(sample_or_pair, normal_bam, tumor_bam, aligner) }}
+  {% endif %}
+{% endif %}
+
+{% endmacro %}

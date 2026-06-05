@@ -1,0 +1,39 @@
+{%- from 'modules/variant_calling/postprocessing/metrics/mutation_burden.j2' import mutation_burden with context %}
+{%- from 'modules/variant_calling/postprocessing/metrics/sigprofiler.j2' import sigprofiler with context %}
+{%- from 'modules/variant_calling/postprocessing/metrics/tucon.j2' import tucon with context %}
+
+{%- macro collect_variant_metrics(sample_or_pair, input_vcf, temp_dir, results_dir, aligner, variant_caller) %}
+
+{% if sample_or_pair.normal is defined %}
+  {%- set input_config = "paired" %}
+  {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+  {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+{% else %}
+  {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set input_config = "tumor_only" %}
+  {% else %}
+    {%- set input_config = "germline" %}
+  {% endif %}
+{% endif %}
+
+{# For now only vcfmerger output should be used for variant metrics #}
+{% if variant_caller in 'merged' %}
+
+  {% if input_config in ('paired') %}
+    {% if tasks[sample_or_pair.gltype|capitalize+"_somatic_sample_metric_tgen_mutation_burden"]|default(false) %}
+      {{- mutation_burden(sample_or_pair, normal_bam, tumor_bam, input_vcf, variant_caller, aligner, 'vep') }}
+    {% endif %}
+
+    {% if tasks[sample_or_pair.gltype|capitalize+"_somatic_sample_metric_tucon"]|default(false) %}
+      {{- tucon(sample_or_pair, input_vcf, 'vep', variant_caller, aligner) }}
+    {% endif %}
+  {% endif %}
+
+  {% if tasks[sample_or_pair.gltype|capitalize+"_somatic_sample_metric_sigprofiler"]|default(false) %}
+    {{- sigprofiler(sample_or_pair, input_vcf, variant_caller, aligner) }}
+  {% endif %}
+
+{% endif %}
+
+
+{% endmacro %}

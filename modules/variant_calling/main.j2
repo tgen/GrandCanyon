@@ -51,6 +51,10 @@
 {% from 'modules/variant_calling/whatshap.j2' import whatshap_haplotag with context %}
 {% from 'modules/variant_calling/whatshap.j2' import whatshap_phase with context %}
 
+{# sample signatures/metrics and status calling #}
+{% from 'modules/variant_calling/metrics/main.j2' import collect_sample_metrics with context %}
+
+
 {# utilities #}
 {% from 'utilities/create_ped.j2' import create_ped with context %}
 
@@ -473,6 +477,7 @@
       {% if tasks[taskPrefix+"_variant_calling_merge_vcfs_vcfMerger2"]|default(false) %}
         {{- vcfmerger2(pair, aligner) }}
       {% endif %}
+
     {% endif %}
 
     {############
@@ -536,6 +541,12 @@
       {% endif %}
 
     {% endif %}
+
+    {############
+    # signatures and metrics
+    ############}
+
+    {{- collect_sample_metrics(pair, aligner) }}
 
   {% endfor %}
 

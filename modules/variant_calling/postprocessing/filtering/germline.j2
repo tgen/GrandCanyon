@@ -1,4 +1,4 @@
-{% macro germline_candidate_filters(sample, temp_dir, results_dir, input_vcf, aligner, tool) %}
+{% macro filter_germline_variants(sample_or_pair, input_vcf, temp_dir, results_dir, aligner, variant_caller) %}
 
 {% if input_vcf.endswith('.vcf') %}
   {% set vcf_prefix = input_vcf.split('.')[:-1]|join('.') %}
@@ -8,7 +8,7 @@
   {{ raise('{} does not appear to be a vcf!'.format(input_vcf)) }}
 {% endif %}
 
-{% set output_vcf %}{{ vcf_prefix }}.candidate.germline.vcf.gz{% endset %}
+{% set output_vcf %}{{ vcf_prefix }}.filtered.vcf.gz{% endset %}
 
 {% if tasks[sample.gltype|capitalize+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
   {% if reference == 'grch38' %}
@@ -22,7 +22,7 @@
     {% set query_format %}'%CHROM\t%POS\t[%GT\t%VAF\t%AD\t%PS\t]%Consequence\t%IMPACT\t%Gene\t%SYMBOL\n'{% endset %}
   {% endif %}
 
-- name: germline_candidate_filter_bcftools_{{ tool }}_{{ sample.name }}
+- name: germline_candidate_filter_bcftools_{{ variant_caller }}_{{ sample.name }}
   input:
     - {{ input_vcf }}
   output:
@@ -45,8 +45,8 @@
     bcftools +split-vep -H -s worst:missense+ -x -f {{ query_format }} | sed -e '1 s/^#//' -e '1 s/[][0-9]//g' \
     > {{ temp_dir }}/candidate_variants.tsv
 
-- name: germline_candidate_filter_parse_genotypes_{{ tool }}_{{ sample.name }}
-  reset: germline_candidate_filter_bcftools_{{ tool }}_{{ sample.name }}
+- name: germline_candidate_filter_parse_genotypes_{{ variant_caller }}_{{ sample.name }}
+  reset: germline_candidate_filter_bcftools_{{ variant_caller }}_{{ sample.name }}
   input:
     - {{ temp_dir }}/candidate_variants.tsv
   output:
@@ -66,8 +66,8 @@
 
     awk 'NR>1 { OFS="\t"; print $1, $2-1, $2 }' {{ temp_dir }}/filtered_candidate_variants.tsv > {{ temp_dir }}/candidate_positions.bed
 
-- name: germline_candidate_filter_variants_bcftools_{{ tool }}_{{ sample.name }}
-  reset: germline_candidate_filter_parse_genotypes_{{ tool }}_{{ sample.name }}
+- name: germline_candidate_filter_variants_bcftools_{{ variant_caller }}_{{ sample.name }}
+  reset: germline_candidate_filter_parse_genotypes_{{ variant_caller }}_{{ sample.name }}
   input:
     - {{ temp_dir }}/candidate_positions.bed
     - {{ input_vcf }}

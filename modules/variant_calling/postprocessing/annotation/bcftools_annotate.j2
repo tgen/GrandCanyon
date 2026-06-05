@@ -1,4 +1,4 @@
-{% macro bcftools_annotate(sample_or_pair, temp_dir, input_vcf, taskPrefix, variant_caller, output_vcf, aligner='minimap2') %}
+{% macro bcftools_annotate(sample_or_pair, temp_dir, input_vcf, variant_caller, output_vcf, aligner='minimap2') %}
 
 {% set output_bcf %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.{{ variant_caller }}.db.bcf{% endset %}
 

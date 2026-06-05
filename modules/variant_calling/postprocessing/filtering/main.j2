@@ -1,0 +1,12 @@
+{%- from 'modules/variant_calling/postprocessing/filtering/somatic.j2' import filter_somatic_variants with context %}
+{%- from 'modules/variant_calling/postprocessing/filtering/germline.j2' import filter_germline_variants with context %}
+
+{% macro filter_variants(sample_or_pair, input_vcf, temp_dir, results_dir, aligner, variant_caller) %}
+
+{% if input_config in ("paired", "tumor_only") %}
+  {{- filter_somatic_variants(sample_or_pair, input_vcf, temp_dir, results_dir, aligner, variant_caller) }}
+{% else %}
+  {{- filter_germline_variants(sample_or_pair, input_vcf, temp_dir, results_dir, aligner, variant_caller) }}
+{% endif %}
+
+{% endmacro %}
