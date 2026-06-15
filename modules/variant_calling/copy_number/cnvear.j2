@@ -26,6 +26,7 @@
     {% else %}
     - {{ constants.grandcanyon[reference].tool_resources.cnvear.cnvear_locations }}
     {% endif %}
+    - {{ constants.grandcanyon[reference].reference_dict }}
   output:
     - {{ output_dir }}/{{ cnvear_output }}
     - {{ output_dir }}/{{ cnvear_probes }}
@@ -50,9 +51,15 @@
     sort -k1,1V -k2,2n -k3,3n -u > {{ output_dir }}/{{ cnvear_probes }}
     {% endif %}
 
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+      sed 's/SN://;s/LN://' |\
+      awk '{ OFS="\t" ; print $2, $2 }' \
+      > {{ output_dir }}/refseq_hgvs_chrom_key.tsv
+
     cnvear \
       --file-probes {{ output_dir }}/{{ cnvear_probes }} \
       --file-segments {{ input_seg }} \
+      --file-map-contig-refseq-hgvs {{ output_dir }}/refseq_hgvs_chrom_key.tsv \
       --input-copy-number-space 'LOG2' \
       --output-copy-number-space 'LOG2' \
       --threshold_high_gain_call {{ cnvear_copy_number_thresholds.high_gain }} \
@@ -64,5 +71,7 @@
       --dir-out {{ output_dir }} \
       --outfilename {{ cnvear_output }} \
       --gender {{ config_sex }}
+
+    rm {{ output_dir }}/refseq_hgvs_chrom_key.tsv
 
 {% endmacro %}
