@@ -166,7 +166,7 @@
 #
 #}
 
-{% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_small_variants with context %}
-{{- postprocess_small_variants(sample_or_pair, pass_vcf, temp_dir, results_dir, aligner, 'manta') }}
+{% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_structural_variants with context %}
+{{- postprocess_structural_variants(sample_or_pair, pass_vcf, temp_dir, results_dir, aligner, 'manta') }}
 
 {% endmacro %}

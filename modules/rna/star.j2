@@ -173,7 +173,6 @@
     - {{ star_bam_sorted }}
   output:
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
-    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
     - {{ rna_md_metrics }}
   cpus: 10
   mem: 40G
@@ -199,14 +198,27 @@
       --REFERENCE_SEQUENCE {{ reference_fasta }} \
       --OUTPUT "{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram"
 
-    mv {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.bai {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
+- name: star_samtools_index_cram_{{ sample.name }}
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
+  input:
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+  output:
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
+  walltime: "1:00:00"
+  cpus: 2
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
 
+    samtools index {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
 
 - name: star_samtools_create_temp_bam_{{ sample.name }}
   tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
   input:
     - {{ reference_fasta }}
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
   output:
     - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
     - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam.bai

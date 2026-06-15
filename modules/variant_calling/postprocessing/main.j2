@@ -27,5 +27,29 @@
 {{- filter_variants(sample_or_pair, annotated_vcf, temp_dir, results_dir, aligner, variant_caller) }}
 {{- collect_variant_metrics(sample_or_pair, filtered_vcf, results_dir, aligner, variant_caller) }}
 
+{% endmacro %}
+
+{%- macro postprocess_structural_variants(sample_or_pair, input_vcf, temp_dir, results_dir, aligner, variant_caller) %}
+
+{% if input_vcf.endswith('.vcf') %}
+  {% set vcf_prefix = input_vcf.split('.')[:-1]|join('.') %}
+{% elif input_vcf.endswith('.vcf.gz') %}
+  {% set vcf_prefix = input_vcf.split('.')[:-2]|join('.') %}
+{% else %}
+  {{ raise('{} does not appear to be a vcf!'.format(input_vcf)) }}
+{% endif %}
+
+{% set annotation_descriptions = [] %}
+{% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_annotate_vcfs_bcftools"]|default(false) %}
+  {% do annotation_descriptions.append(".db") %}
+{% endif %}
+{% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
+  {% do annotation_descriptions.append(".vep.pick") %}
+{% endif %}
+
+{% set annotated_vcf %}{{ vcf_prefix }}{{ annotation_descriptions | join('') }}.vcf.gz{% endset %}
+{% set filtered_vcf %}{{ vcf_prefix }}{{ annotation_descriptions | join('') }}.filtered.vcf.gz{% endset %}
+
+{{- annotate_vcfs(sample_or_pair, input_vcf, temp_dir, results_dir, aligner, variant_caller) }}
 
 {% endmacro %}
