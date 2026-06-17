@@ -273,6 +273,16 @@
 {% set pairs = [] %}
 {% set tumors_with_normal = [] %}
 {% for tumor in samples.values() if tumor.subGroup|lower in ('tumor','tumour','case') and tumor.gltype in ('exome','genome') %}
+
+  {% if tasks['RNA_alignment_rna_alignment_STAR']|default(false) and tumor.dnaRnaMergeKey is defined %}
+    {% for rna in samples.values() if rna.dnaRnaMergeKey is defined and rna.dnaRnaMergeKey == tumor.dnaRnaMergeKey and rna.gltype == 'rna' %}
+      {% if 'rna_samples' not in tumor %}
+         {% do tumor.update({'rna_samples': []}) %}
+      {% endif %}
+      {% do tumor.rna_samples.append(rna) %}
+   {% endfor %}
+  {% endif %}
+
   {% for normal in samples.values() if normal.subGroup|lower in ('constitutional','germline','normal','control') and normal.gltype == tumor.gltype and normal.assayCode == tumor.assayCode %}
     {% set pair_name = normal.name + '-' + tumor.name %}
     {% do pairs.append({'name': pair_name, 'gltype': normal.gltype, 'glprep': normal.glprep, 'normal': normal, 'tumor': tumor}) %}

@@ -1,4 +1,6 @@
 {% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_small_variants with context %}
+{% from 'modules/variant_calling/snv_indel/rna_variant_check.j2' import add_rna_header_to_vcf with context %}
+{% from 'modules/variant_calling/snv_indel/rna_variant_check.j2' import add_matched_rna with context %}
 
 {% macro vcfmerger2(sample_or_pair, aligner='bwa') %}
 
@@ -17,8 +19,9 @@
     {%- set input_config = "germline" %}
   {% endif %}
 {% endif %}
-{% set merged_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.merged.vcf{% endset %}
-{% set merged_vcf_gz %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.merged.vcf.gz{% endset %}
+{% set merged_vcf %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.merged.vcf{% endset %}
+{% set merged_vcf_gz %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.merged.vcf.gz{% endset %}
+{% set output_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.merged.vcf.gz{% endset %}
 
 {% set vcfs_to_merge=[] %}
 
@@ -187,6 +190,11 @@
     rm -rf {{ temp_dir }}/SummaryPlots_*/sets
     mv {{ temp_dir }}/SummaryPlots_* "{{ results_dir }}"
 
+{% if input_config in ("paired") and 'rna_samples' in sample_or_pair.tumor %}
+  {{- add_matched_rna(merged_vcf_gz, output_vcf, sample_or_pair, aligner, temp_dir) }}
+{% else %}
+  {{- add_rna_header_to_vcf(merged_vcf_gz, output_vcf, sample_or_pair, aligner , temp_dir)  }}
+{% endif %}
 {{- postprocess_small_variants(sample_or_pair, merged_vcf_gz, temp_dir, results_dir, aligner, 'merged') }}
 
 {% endmacro %}
