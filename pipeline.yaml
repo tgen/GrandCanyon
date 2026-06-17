@@ -2,7 +2,7 @@ __pipeline__:
   name: grandcanyon
   main: main.j2
   description: Adaptable genomics suite supporting short and long read sequencing data
-  version: 1.0.0.dev
+  version: 1.0.0
   bin: required_scripts/
 constants:
   tools:
@@ -284,6 +284,7 @@ constants:
       ref_flat: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.ucsc.refFlat.txt
       ribo_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.ucsc.ribo.interval_list
       encode_denylist: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/ncbi/Encode_deny_list_with_ncbi_centromere.merged.bed
+      centromere: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/ncbi/Modeled_regions_for_GRCh38_centromere_blacklist_merged.bed
       annotation_databases:
         - {
             "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/dbsnp/b154/dbSNP_b154_hg38tgen.bcf",
@@ -330,44 +331,43 @@ constants:
           }
       tool_resources:
         ascat:
-          ascat_resources: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/ascat
+          ascat_resources: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/ascat
         amplicon_architect:
-          data_repo: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/amplicon_architect
-          mosek: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/amplicon_architect/mosek
+          data_repo: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/amplicon_architect
+          mosek: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/amplicon_architect/mosek
         cnvear:
           fish_probe_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/seq_fish/GRCh38_Myeloma_FISH_Probe_Locations_for_CNVear.bed
-          cnvear_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/Homo_sapiens.GRCh38.103.ucsc.cnvear.bed
         gatk_cnv:
           mappability_track: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/bismap/k100.umap.no_header.bed
         mutect2:
           germline_reference: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.AnnotationReference.vcf.gz
           contamination: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.common.vcf.gz
         msisensor:
-          msi_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/msisensor_pro_v1.1.a/GRCh38tempe_decoy_alts_hla_masked.microsatellites.list
+          msi_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/msisensor_pro/GRCh38tgen_decoy_alts_hla.microsatellites.list
         severus:
-          vntrs: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/severus/human_GRCh38_no_alt_analysis_set.trf.bed
-          pon: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/severus/PoN_1000G_hg38.tsv.gz
+          vntrs: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/severus/human_GRCh38_no_alt_analysis_set.trf.bed
+          pon: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/severus/PoN_1000G_hg38.tsv.gz
         sex_check:
           sex_check_targets: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/tgen_gender_check/chrx_common_dbSNPv152_snv_exons.bed
           sex_check_vcf: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/tgen_gender_check/chrx_common_dbSNPv152_snv_exons.vcf.gz
         sigprofiler:
-          ref_dir: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sigprofiler/references/chromosomes
-          sbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sigprofiler/COSMIC_v3.4_SBS_GRCh38.txt
-          dbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sigprofiler/COSMIC_v3.4_DBS_GRCh38.txt
-          sv: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sigprofiler/COSMIC_v3.4_SV_GRCh38.txt
+          ref_dir: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/references/chromosomes
+          sbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/COSMIC_v3.4_SBS_GRCh38.txt
+          dbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/COSMIC_v3.4_DBS_GRCh38.txt
+          sv: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/COSMIC_v3.4_SV_GRCh38.txt
         somalier:
           sites: https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz
         spectre:
-          mdr: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38.mdr
-          denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/spectre/grch38_blacklist_spectre.bed
+          mdr: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/spectre/grch38.mdr
+          denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/spectre/grch38_blacklist_spectre.bed
         sqanti3:
-          tappas_gff: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sqanti3/human_tappas_gencode_annotation_file.gff3
-          cage_peak: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sqanti3/human.refTSS_v3.1.hg38.bed
-          polya_motif: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/sqanti3/mouse_and_human.polyA_motif.txt
+          tappas_gff: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sqanti3/human_tappas_gencode_annotation_file.gff3
+          cage_peak: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sqanti3/human.refTSS_v3.1.hg38.bed
+          polya_motif: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sqanti3/mouse_and_human.polyA_motif.txt
         trgt:
-          strchive: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/trgt/STRchive-disease-loci.hg38.TRGT.bed
+          strchive: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/trgt/STRchive-disease-loci.hg38.TRGT.bed
         verifybamid:
-          verifybamid_resources: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/tool_resources/VerifyBamID_2.0.1
+          verifybamid_resources: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/VerifyBamID_2.0.1
     canfam4:
       species: canis_lupus_familiarisgsd
       genome_build: canfam4
