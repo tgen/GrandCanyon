@@ -342,7 +342,6 @@
 
 {% set temp_dir %}temp/pipeline_resources/capture_kit_resources{% endset %}
 
-
 - name: create_capture_kit_resources_gatk
   input:
     - {{ constants.grandcanyon[reference].known_capture_kits }}
@@ -350,6 +349,7 @@
     - {{ constants.grandcanyon[reference].reference_dict }}
     {% for capture_kit_code in capture_kit_codes %}
     - {{ constants.grandcanyon[reference].known_capture_kits | dirname }}/{{ capture_kit_code }}
+    {% endfor %}
   output:
     {% for capture_kit_code in capture_kit_codes %}
     {% set capture_kit_path_prefix %}{{ constants.grandcanyon[reference].capture_kit_path }}/{{ capture_kit_code }}/{{ capture_kit_code }}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}{% endset %}
@@ -370,8 +370,8 @@
       BAITS=${SOURCE_DIR}/$(grep -A3 "${capture_kit_code}:" {{ constants.grandcanyon[reference].known_capture_kits }} | grep source_baits | awk '{ print $2 }')
       LABEL=$(grep -A3 "${capture_kit_code}:" {{ constants.grandcanyon[reference].known_capture_kits }} | grep prefix | awk '{ print $2 }')
 
-      [ -e {{ constants.grandcanyon[reference].capture_kit_path }}/${capture_kit_code}/${PREFIX} ] ||\
-      touch {{ constants.grandcanyon[reference].capture_kit_path }}/${capture_kit_code}/${PREFIX}
+      [ -e {{ constants.grandcanyon[reference].capture_kit_path }}/${capture_kit_code}/${LABEL} ] ||\
+      touch {{ constants.grandcanyon[reference].capture_kit_path }}/${capture_kit_code}/${LABEL}
 
       [ -e ${OUTPUT_PATH_PREFIX}.targets.interval_list ] ||\
       gatk BedToIntervalList -SD {{ constants.grandcanyon[reference].reference_dict }} --INPUT "$TARGETS" --OUTPUT ${OUTPUT_PATH_PREFIX}.targets.interval_list
@@ -389,9 +389,11 @@
     - {{ constants.grandcanyon[reference].known_capture_kits }}
     - {{ constants.grandcanyon[reference].reference_fai }}
     - {{ constants.grandcanyon[reference].gtf }}
+    {% for capture_kit_code in capture_kit_codes %}
+    - {{ constants.grandcanyon[reference].known_capture_kits | dirname }}/{{ capture_kit_code }}
+    {% endfor %}
   output:
     {% for capture_kit_code in capture_kit_codes %}
-    {% set capture_kit_path_prefix %}{{ constants.grandcanyon[reference].capture_kit_path }}/{{ capture_kit_code }}/{{ capture_kit_code }}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}{% endset %}
     {% set capture_kit_path_prefix %}{{ constants.grandcanyon[reference].capture_kit_path }}/{{ capture_kit_code }}/{{ capture_kit_code }}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}{% endset %}
     - {{ capture_kit_path_prefix }}.extended.bed
     {% endfor %}
