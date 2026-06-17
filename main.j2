@@ -282,6 +282,7 @@
     {% endfor %}
 {% endfor %}
 
+{% set capture_kits = [] %}
 {% for sample in samples.values() if sample.gltype == 'exome' %}
     {% do sample.update({'library_code': sample.assayCode[0:2]|upper}) %}
     {% do sample.update({'capture_kit_code': sample.assayCode[-3:]|upper}) %}
@@ -297,7 +298,15 @@
     {% do sample['capture_kit'].update({'no_header_targets_interval_list': no_header_targets_interval_list}) %}
     {% do sample['capture_kit'].update({'baits_interval_list': baits_interval_list}) %}
     {% do sample['capture_kit'].update({'extended_bed': extended_bed}) %}
+
+    {% if sample.capture_kit_code not in capture_kits %}
+        {% do capture_kits.append(sample.capture_kit_code) %}
+    {% endif %}
 {% endfor %}
+{% if capture_kits | length > 0 %}
+    {% from 'utilities/prepare_resources.j2' import generate_capture_kit_resources with context %}
+    {{ generate_capture_kit_resources(capture_kits) }}
+{% endif %}
 
 {% for sample in samples.values() if sample.gltype == 'rna' %}
     {% set readOrientation=sample.readOrientation|default('inward')|lower|replace('-','') %}

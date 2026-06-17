@@ -338,6 +338,95 @@
 
 {% endmacro %}
 
+{% macro generate_capture_kit_resources(capture_kit_codes) %}
+
+{% set temp_dir %}temp/pipeline_resources/capture_kit_resources{% endset %}
+
+
+- name: create_capture_kit_resources_gatk
+  input:
+    - {{ constants.grandcanyon[reference].known_capture_kits }}
+    - {{ constants.grandcanyon[reference].reference_fai }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+    {% for capture_kit_code in capture_kit_codes %}
+    - {{ constants.grandcanyon[reference].known_capture_kits | dirname }}/{{ capture_kit_code }}
+  output:
+    {% for capture_kit_code in capture_kit_codes %}
+    {% set capture_kit_path_prefix %}{{ constants.grandcanyon[reference].capture_kit_path }}/{{ capture_kit_code }}/{{ capture_kit_code }}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}{% endset %}
+    - {{ capture_kit_path_prefix }}.targets.interval_list
+    - {{ capture_kit_path_prefix }}.no.header.targets.interval_list
+    - {{ capture_kit_path_prefix }}.baits.interval_list
+    - {{ capture_kit_path_prefix }}.no.header.baits.interval_list
+    {% endfor %}
+  cpus: 2
+  mem: 4G
+  walltime: "1:00:00"
+  container: {{ constants.tools.gatk.container }}
+  cmd: |
+    for capture_kit_code in {{ capture_kit_codes | join(' ') }}; do
+      SOURCE_DIR={{ constants.grandcanyon[reference].known_capture_kits | dirname }}/${capture_kit_code}
+      OUTPUT_PATH_PREFIX={{ constants.grandcanyon[reference].capture_kit_path }}/${capture_kit_code}/${capture_kit_code}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}
+      TARGETS=${SOURCE_DIR}/$(grep -A3 "${capture_kit_code}:" {{ constants.grandcanyon[reference].known_capture_kits }} | grep source_targets | awk '{ print $2 }')
+      BAITS=${SOURCE_DIR}/$(grep -A3 "${capture_kit_code}:" {{ constants.grandcanyon[reference].known_capture_kits }} | grep source_baits | awk '{ print $2 }')
+      LABEL=$(grep -A3 "${capture_kit_code}:" {{ constants.grandcanyon[reference].known_capture_kits }} | grep prefix | awk '{ print $2 }')
+
+      [ -e {{ constants.grandcanyon[reference].capture_kit_path }}/${capture_kit_code}/${PREFIX} ] ||\
+      touch {{ constants.grandcanyon[reference].capture_kit_path }}/${capture_kit_code}/${PREFIX}
+
+      [ -e ${OUTPUT_PATH_PREFIX}.targets.interval_list ] ||\
+      gatk BedToIntervalList -SD {{ constants.grandcanyon[reference].reference_dict }} --INPUT "$TARGETS" --OUTPUT ${OUTPUT_PATH_PREFIX}.targets.interval_list
+      [ -e ${OUTPUT_PATH_PREFIX}.no.header.targets.interval_list ] ||\
+      grep -v "@" ${OUTPUT_PATH_PREFIX}.targets.interval_list > ${OUTPUT_PATH_PREFIX}.no.header.targets.interval_list
+
+      [ -e ${OUTPUT_PATH_PREFIX}.targets.interval_list ] ||\
+      gatk BedToIntervalList -SD {{ constants.grandcanyon[reference].reference_dict }} --INPUT "$BAITS" --OUTPUT ${OUTPUT_PATH_PREFIX}.baits.interval_list
+      [ -e ${OUTPUT_PATH_PREFIX}.no.header.targets.interval_list ] ||\
+      grep -v "@" ${OUTPUT_PATH_PREFIX}.baits.interval_list > ${OUTPUT_PATH_PREFIX}.no.header.baits.interval_list
+    done
+
+- name: create_capture_kit_resources_bedtools
+  input:
+    - {{ constants.grandcanyon[reference].known_capture_kits }}
+    - {{ constants.grandcanyon[reference].reference_fai }}
+    - {{ constants.grandcanyon[reference].gtf }}
+  output:
+    {% for capture_kit_code in capture_kit_codes %}
+    {% set capture_kit_path_prefix %}{{ constants.grandcanyon[reference].capture_kit_path }}/{{ capture_kit_code }}/{{ capture_kit_code }}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}{% endset %}
+    {% set capture_kit_path_prefix %}{{ constants.grandcanyon[reference].capture_kit_path }}/{{ capture_kit_code }}/{{ capture_kit_code }}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}{% endset %}
+    - {{ capture_kit_path_prefix }}.extended.bed
+    {% endfor %}
+  cpus: 2
+  mem: 4G
+  walltime: "1:00:00"
+  container: {{ constants.tools.bedtools.container }}
+  cmd: |
+    for capture_kit_code in {{ capture_kit_codes | join(' ') }}; do
+      SOURCE_DIR={{ constants.grandcanyon[reference].known_capture_kits | dirname }}/${capture_kit_code}
+      OUTPUT_PATH_PREFIX={{ constants.grandcanyon[reference].capture_kit_path }}/${capture_kit_code}/${capture_kit_code}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}
+      TARGETS=${SOURCE_DIR}/$(grep -A3 "${capture_kit_code}:" {{ constants.grandcanyon[reference].known_capture_kits }} | grep source_targets | awk '{ print $2 }')
+
+      if [ ! -e ${OUTPUT_PATH_PREFIX}.extended.bed ]; then
+        mkdir -p {{ temp_dir }}
+        awk '$3 == "exon" {print $1 "\t" $4-1 "\t" $5}' {{ constants.grandcanyon[reference].gtf }} > "{{ temp_dir }}/{{ constants.grandcanyon[reference].gtf }}.exons.bed"
+
+        bedtools slop -b 100 -g {{ constants.grandcanyon[reference].reference_fai }} -i "$TARGETS" > "{{ temp_dir }}/${capture_kit_code}.padded_targets.bed"
+
+        bedtools intersect \
+          -wa \
+          -a "{{ temp_dir }}/{{ constants.grandcanyon[reference].gtf }}.exons.bed" \
+          -b "{{ temp_dir }}/${capture_kit_code}.padded_targets.bed" \
+          > "{{ temp_dir }}/${capture_kit_code}.captured_exons.bed"
+
+        cat "{{ temp_dir }}/${capture_kit_code}.padded_targets.bed" "{{ temp_dir }}/${capture_kit_code}.captured_exons.bed" > "{{ temp_dir }}/${capture_kit_code}.union.bed"
+        bedtools sort \
+          -faidx {{ constants.grandcanyon[reference].reference_fai }} \
+          -i "{{ temp_dir }}/${capture_kit_code}.union.bed" | \
+        bedtools merge -i stdin > ${OUTPUT_PATH_PREFIX}.extended.bed
+      fi
+    done
+
+{% endmacro %}
+
 {% macro convert_gff3_to_gtf() %}
 
 {% set temp_gene_model_gff %}{{ constants.grandcanyon[reference].gff3 | basename | replace('.gff3.gz', '.gff3') }}{% endset %}
