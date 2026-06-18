@@ -115,7 +115,7 @@
   reset: predecessors
   input:
     - {{ input_vcf }}
-    {% for batch in constants.grandcanyon[reference].primary_contig_calling_intervals %}
+    {% for chunk in range(1, num_chunks+1) %}
     - {{ temp_dir }}/{{ chunk }}_{{ rna_sample.name }}_DnaVarInRNA.vcf
     {% endfor %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
