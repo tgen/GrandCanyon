@@ -33,10 +33,10 @@
   {% endfor %}
     - {{ constants.grandcanyon[reference].starfusion_index }}
   output:
-    - {{ results_dir }}/{{ sample.name }}_Chimeric.out.junction
+    - {{ results_dir }}/{{ sample.name }}.Chimeric.out.junction
     {% if tasks['RNA_transcriptome_fusion_caller_Keep_STAR_Fusion_BAM']|default(false) %}
-    - {{ results_dir }}/{{ sample.name }}_starfusion.bam
-    - {{ results_dir }}/{{ sample.name }}_starfusion.bam.bai
+    - {{ results_dir }}/{{ sample.name }}.starfusion.cram
+    - {{ results_dir }}/{{ sample.name }}.starfusion.cram.crai
     {% endif %}
   cpus: 20
   mem: 80G
@@ -87,21 +87,20 @@
       -l 2 \
       -m 3G \
       --threads 20 \
-      --output-fmt BAM \
-      -o "{{ temp_dir }}/{{ sample.name }}.Aligned.sorted.bam" \
+      --output-fmt CRAM \
+      -o "{{ temp_dir }}/{{ sample.name }}.Aligned.sorted.cram" \
+      --write-index \
       "{{ temp_dir }}/Aligned.out.bam"
 
     {# Removing unneeded large file #}
     rm {{ temp_dir }}/Aligned.out.bam
 
-    samtools index -@ 20 {{ temp_dir }}/{{ sample.name }}.Aligned.sorted.bam
-
     {% if tasks['RNA_transcriptome_fusion_caller_Keep_STAR_Fusion_BAM']|default(false) %}
-    mv {{ temp_dir }}/{{ sample.name }}.Aligned.sorted.bam {{ results_dir }}/{{ sample.name }}_starfusion.bam
-    mv {{ temp_dir }}/{{ sample.name }}.Aligned.sorted.bam.bai {{ results_dir }}/{{ sample.name }}_starfusion.bam.bai
+    mv {{ temp_dir }}/{{ sample.name }}.Aligned.sorted.cram {{ results_dir }}/{{ sample.name }}.starfusion.cram
+    mv {{ temp_dir }}/{{ sample.name }}.Aligned.sorted.cram.crai {{ results_dir }}/{{ sample.name }}.starfusion.cram.crai
     {% endif %}
 
-    mv {{ temp_dir }}/Chimeric.out.junction {{ results_dir }}/{{ sample.name }}_Chimeric.out.junction
+    mv {{ temp_dir }}/Chimeric.out.junction {{ results_dir }}/{{ sample.name }}.Chimeric.out.junction
 
 - name: star_fusion_{{ sample.name }}
   tags: [{{ sample.gltype }}, transcriptome, fusion_caller, STAR_Fusion, {{ sample.name }}]
