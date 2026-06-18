@@ -75,7 +75,7 @@
 
     {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(false) %}
       {{- deepvariant(sample, aligner) }}
-      {% if tasks[taskPrefix+"_variant_calling_phasing_whatshap"]|default(false) %}
+      {% if tasks[taskPrefix+"_variant_calling_phasing_whatshap"]|default(false) and sample.glprep in 'longread' %}
         {% do sample.update({'phased_bam': '', 'phased_vcf': ''}) %}
         {{- whatshap_phase(sample, aligner, 'deepvariant') }}
         {{- whatshap_haplotag(sample, aligner, 'deepvariant') }}
