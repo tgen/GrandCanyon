@@ -7,7 +7,6 @@
 {% set sjdb_overhang %}{{ sample.read1Length - 1|default(99, true) }}{% endset %}
 {% set results_dir %}{{ sample.gltype }}/alignment/star/{{ sample.name }}{% endset %}
 {% set star_finalcountsdir %}{{ sample.gltype }}/quant/star/{{ sample.name }}{% endset %}
-{% set star_fusionsdir %}{{ sample.gltype }}/fusions/starfusion/{{ sample.name }}{% endset %}
 {% set temp_dir %}temp/{{ sample.gltype }}/quant/star/{{ sample.name }}{% endset %}
 {% set star_bam_unsort %}{{ temp_dir }}/{{ sample.name }}.Aligned.out.bam{% endset %}
 {% set star_bam_sorted %}{{ temp_dir }}/{{ sample.name }}.Aligned.sorted.bam{% endset %}
@@ -53,7 +52,6 @@
     - {{ constants.grandcanyon[reference].gtf }}
   output:
     - {{ star_bam_unsort }}
-    - {{ star_fusionsdir }}/{{ sample.name }}.Chimeric.out.junction
     - {{ star_finalcountsdir }}/{{ sample.name }}.ReadsPerGene.out.tab
     - {{ star_finalcountsdir }}/{{ sample.name }}.star.junctions
     - {{ results_dir }}/stats/{{ sample.name }}_star.Log.final.out

@@ -89,7 +89,6 @@
       --threads 20 \
       --output-fmt CRAM \
       -o "{{ temp_dir }}/{{ sample.name }}.Aligned.sorted.cram" \
-      --write-index \
       "{{ temp_dir }}/Aligned.out.bam"
 
     samtools index -@ 20 {{ temp_dir }}/{{ sample.name }}.Aligned.sorted.cram
