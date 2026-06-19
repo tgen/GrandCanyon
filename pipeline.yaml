@@ -184,7 +184,7 @@ constants:
       digest: 4069c082c97470bce4a07f228dbf74b6ea3fc5c4eaa93ba76d2826a496ca3c44
     vcfmerger:
       container: ghcr.io/tgen/containers/vcfmerger2:0.10.1
-      digest: 26cce86fa1713fbac3c5e709094a0b899855e5d7d880869f1aa0172f24dbf4c8
+      digest: f79be54c60c5fbe43756ec5537849c1b0285068a615a4e12d183315ec553005e
     vep:
       container: ensemblorg/ensembl-vep:release_113.4
     verifybamid2:
