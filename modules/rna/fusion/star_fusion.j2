@@ -92,6 +92,8 @@
       --write-index \
       "{{ temp_dir }}/Aligned.out.bam"
 
+    samtools index -@ 20 {{ temp_dir }}/{{ sample.name }}.Aligned.sorted.cram
+
     {# Removing unneeded large file #}
     rm {{ temp_dir }}/Aligned.out.bam
 
