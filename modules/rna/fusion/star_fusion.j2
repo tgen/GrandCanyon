@@ -82,26 +82,25 @@
       --outReadsUnmapped None \
       --outFileNamePrefix "{{ temp_dir }}/"
 
+    mv {{ temp_dir }}/Chimeric.out.junction {{ results_dir }}/{{ sample.name }}.Chimeric.out.junction
+
+    {% if tasks['RNA_transcriptome_fusion_caller_Keep_STAR_Fusion_BAM']|default(false) %}
     samtools sort \
       -T "{{ temp_dir }}" \
       -l 2 \
       -m 3G \
       --threads 20 \
+      --reference {{ constants.grandcanyon[reference].starfusion_index }}/ref_genome.fa \
       --output-fmt CRAM \
-      -o "{{ temp_dir }}/{{ sample.name }}.Aligned.sorted.cram" \
+      -o "{{ results_dir }}/{{ sample.name }}.starfusion.cram" \
       "{{ temp_dir }}/Aligned.out.bam"
 
-    samtools index -@ 20 {{ temp_dir }}/{{ sample.name }}.Aligned.sorted.cram
+    samtools index -@ 20 {{ results_dir }}/{{ sample.name }}.starfusion.cram
+    {% endif %}
 
     {# Removing unneeded large file #}
     rm {{ temp_dir }}/Aligned.out.bam
 
-    {% if tasks['RNA_transcriptome_fusion_caller_Keep_STAR_Fusion_BAM']|default(false) %}
-    mv {{ temp_dir }}/{{ sample.name }}.Aligned.sorted.cram {{ results_dir }}/{{ sample.name }}.starfusion.cram
-    mv {{ temp_dir }}/{{ sample.name }}.Aligned.sorted.cram.crai {{ results_dir }}/{{ sample.name }}.starfusion.cram.crai
-    {% endif %}
-
-    mv {{ temp_dir }}/Chimeric.out.junction {{ results_dir }}/{{ sample.name }}.Chimeric.out.junction
 
 - name: star_fusion_{{ sample.name }}
   tags: [{{ sample.gltype }}, transcriptome, fusion_caller, STAR_Fusion, {{ sample.name }}]
