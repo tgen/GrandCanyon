@@ -195,6 +195,6 @@
 {% else %}
   {{- add_rna_header_to_vcf(merged_vcf_gz, output_vcf, sample_or_pair, aligner , temp_dir)  }}
 {% endif %}
-{{- postprocess_small_variants(sample_or_pair, merged_vcf_gz, temp_dir, results_dir, aligner, 'merged') }}
+{{- postprocess_small_variants(sample_or_pair, output_vcf, temp_dir, results_dir, aligner, 'merged') }}
 
 {% endmacro %}
