@@ -2,6 +2,8 @@
 
 {% macro trim_reads(sample, rg, rgid) %}
 
+{% if rg.data_files|selectattr('fastqCode', 'eq', 'R1')|list|length > 0 %}
+
 {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
 {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
 
@@ -71,5 +73,7 @@
 
 
 {{- stats2json(sample.gltype, sample.name, task, results_json, minimal_json, "fastp", sample_name=sample.name, library_name=rg.rglb, read_group_name=rgid) }}
+
+{% endif %}
 
 {% endmacro %}
