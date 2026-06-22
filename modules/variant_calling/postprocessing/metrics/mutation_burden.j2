@@ -14,7 +14,7 @@
     - {{ input_vcf }}
     - {{ normal_bam }}
     - {{ tumor_bam }}
-    - {{ constants.grandcanyon[reference].vep_canonical_cds_intervals }}
+    - {{ constants.grandcanyon[reference].gtf }}
     {% if pair.gltype == 'exome' %}
     - {{ pair.tumor.capture_kit.extended_bed }}
     {% endif %}
@@ -35,8 +35,10 @@
 
     PROJECT_ROOT=$PWD
 
+    awk -F '[\t"]' '/canonical/ && $1 !~ /^#/ { if ($3 == "CDS" && $4 < $5) { OFS = "\t" ; print $1, $4-1, $5, "CDS" }}' {{ constants.grandcanyon[reference].gtf }} |\
+      awk '!dup[$0]++' | sort -k1,1V -k2,2n -k3,3n | bedtools merge -i - > {{ mutation_burden_temp }}/{{ constants.grandcanyon[reference].gtf | basename }}.cds.bed
+
     bcftools +split-vep \
-      --include '{{ CC_filter }}' \
       --select :missense+ \
       --drop-sites \
       --output {{ mutation_burden_temp }}/{{ input_vcf | basename }} \
@@ -46,7 +48,7 @@
 
     {% if pair.gltype == 'exome' %}
     bedtools intersect \
-      -a {{ constants.grandcanyon[reference].vep_canonical_cds_intervals }} \
+      -a {{ mutation_burden_temp }}/{{ constants.grandcanyon[reference].gtf | basename }}.cds.bed \
       -b {{ pair.tumor.capture_kit.extended_bed }} \
       > {{ mutation_burden_temp }}/{{ pair.name }}_isec_cds_capture_kit.bed
     {% endif %}
@@ -61,7 +63,7 @@
       {% if pair.gltype == 'exome' %}
       --bed {{ pair.name }}_isec_cds_capture_kit.bed \
       {% else %}
-      --bed {{ constants.grandcanyon[reference].vep_canonical_cds_intervals }} \
+      --bed {{ constants.grandcanyon[reference].gtf | basename }}.cds.bed \
       {% endif %}
       --vcf {{ input_vcf | basename }} \
       --tbam ${PROJECT_ROOT}/{{ tumor_bam }} \
