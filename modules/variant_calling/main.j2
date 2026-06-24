@@ -26,7 +26,6 @@
 
 {# short-read sv callers #}
 {% from 'modules/variant_calling/structural/manta.j2' import manta with context %}
-{% from 'modules/variant_calling/structural/smoove.j2' import smoove with context %}
 
 {# long-read sv callers #}
 {% from 'modules/variant_calling/structural/cutesv.j2' import cutesv with context %}
@@ -385,11 +384,6 @@
       {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
         {% do sample.sv_callers.append('manta') %}
         {{- manta(sample, aligner) }}
-      {% endif %}
-
-      {% if tasks[taskPrefix+"_variant_calling_structural_caller_smoove"]|default(false) %}
-        {% do sample.sv_callers.append('smoove') %}
-        {{- smoove(sample, aligner) }}
       {% endif %}
 
     {% endif %}

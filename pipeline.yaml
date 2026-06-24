@@ -159,8 +159,6 @@ constants:
     snpsniffer:
       container: ghcr.io/tgen/containers/snpsniffer:7.0.1
       digest: 22eeb74559868fc2b80976f7901cb2c1021893bf9fe2939b06da0b539af3c942
-    smoove:
-      container: brentp/smoove:v0.2.8
     sniffles:
       container: quay.io/biocontainers/sniffles:2.8.0--pyhdfd78af_0
     somalier:
