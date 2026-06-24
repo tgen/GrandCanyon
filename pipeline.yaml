@@ -121,7 +121,7 @@ constants:
     mutation_burden:
       container: ghcr.io/tgen/containers/mutation-burden:1.2.4_20260623
     oarfish:
-      container: quay.io/biocontainers/oarfish:0.9.4--h7f5d12c_0
+      container: quay.io/biocontainers/oarfish:0.10.0--hd727d2a_0
     pbmm2:
       container: quay.io/biocontainers/pbmm2:1.13.1--h9ee0642_0
     pbpigeon:
@@ -149,7 +149,7 @@ constants:
     seqkit:
       container: quay.io/biocontainers/seqkit:2.8.2--h9ee0642_1
     seqtk:
-      container: quay.io/biocontainers/seqtk:1.4--he4a0461_2
+      container: quay.io/biocontainers/seqtk:1.5--h577a1d6_1
     severus:
       container: quay.io/biocontainers/severus:1.7--pyhdfd78af_0
     shasta:
@@ -196,7 +196,7 @@ constants:
     vg:
       container: ghcr.io/tgen/containers/vg_samtools:1.71_1.21
     wakhan:
-      container: quay.io/biocontainers/wakhan:0.4.2--pyhdfd78af_0
+      container: quay.io/biocontainers/wakhan:0.4.3--pyhdfd78af_0
     whatshap:
       container: quay.io/biocontainers/whatshap:2.8--py312hf731ba3_0
     yak:
