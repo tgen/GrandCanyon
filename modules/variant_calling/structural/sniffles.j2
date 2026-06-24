@@ -111,8 +111,8 @@
       {{ all_vcf }}
 
 {% if input.samples is not defined %}
-  {% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_small_variants with context %}
-  {{- postprocess_small_variants(input, pass_vcf, temp_dir, results_dir, aligner, 'sniffles') }}
+  {% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_structural_variants with context %}
+  {{- postprocess_structural_variants(sample_or_pair, pass_vcf, temp_dir, results_dir, aligner, 'sniffles') }}
 {% endif %}
 
 {% endmacro %}
