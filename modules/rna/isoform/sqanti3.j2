@@ -36,7 +36,7 @@
 - name: sqanti3_{{ sample.name }}
   input:
     - {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff
-    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.abundance.txt
+    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].gtf }}
     - {{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }}
@@ -70,7 +70,7 @@
     EOF
     {% endif %}
 
-    cp {{ isoseq_dir }}/{{ sample.name }}.collapsed.abundance.txt {{ temp_dir }}/{{ sample.name }}.collapsed.abundance.tsv
+    cp {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt {{ temp_dir }}/{{ sample.name }}.collapsed.flnc_count.csv
 
     conda run -n sqanti3 sqanti3 init \
       -c sqanti3_config.yaml \
@@ -85,7 +85,7 @@
       CAGE_peak={{ constants.grandcanyon[reference].tool_resources.sqanti3.cage_peak }} \
       polyA_motif_list={{ constants.grandcanyon[reference].tool_resources.sqanti3.polya_motif }} \
       isoAnnotLite=True \
-      fl_count={{ temp_dir }}/{{ sample.name }}.collapsed.abundance.tsv \
+      fl_count={{ temp_dir }}/{{ sample.name }}.collapsed.flnc_count.csv \
       {% if shortfqlist | length > 0 %}
       short_reads={{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
       {% endif %}
