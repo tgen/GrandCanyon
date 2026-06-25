@@ -112,7 +112,7 @@
 
 {% if input.samples is not defined %}
   {% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_structural_variants with context %}
-  {{- postprocess_structural_variants(sample_or_pair, pass_vcf, temp_dir, results_dir, aligner, 'sniffles') }}
+  {{- postprocess_structural_variants(input, pass_vcf, temp_dir, results_dir, aligner, 'sniffles') }}
 {% endif %}
 
 {% endmacro %}
