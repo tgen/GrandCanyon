@@ -1,9 +1,9 @@
 {% from 'modules/variant_calling/metrics/bpure.j2' import bpure with context %}
 
 {% macro ichorcna(sample, aligner='bwa') %}
-{% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
-{% set temp_dir %}temp/{{ sample.gltype }}/copy_number_analysis/ichorCNA/{{ sample.name }}_{{ aligner }}/{{ sample.name }}.{{ aligner }}.ichor_rundir{% endset %}
-{% set results_dir %}{{ sample.gltype }}/copy_number_analysis/ichorCNA/{{ sample.name }}_{{ aligner }}{% endset %}
+{% set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{% set temp_dir %}temp/{{ sample.gltype }}/constitutional_copy_number/ichorCNA/{{ sample.name }}_{{ aligner }}/{{ sample.name }}.{{ aligner }}.ichor_rundir{% endset %}
+{% set results_dir %}{{ sample.gltype }}/constitutional_copy_number/ichorCNA/{{ sample.name }}_{{ aligner }}{% endset %}
 {% set wig %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.wig{% endset %}
 {% set ichor_json %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.ichorCNA.json{% endset %}
 
@@ -49,13 +49,10 @@
 
 - name: ichor_cna_{{ sample.name }}_{{ aligner }}
   tags: [{{ sample.gltype }}, constitutional, cna_caller, ichor, {{ sample.name }}]
-  {% if control.ichorPon is defined %}
-  reset: prepare_tumor_only_{{ control.name }}
-  {% endif %}
   input:
     - {{ wig }}
     {% if control.ichorPon is defined %}
-    - temp/tumor_only/control_data_files/{{ control.assayCode }}/{{ control.ichorPon | basename }}
+    - {{ control.ichorPon }}
     {% endif %}
   output:
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.ichorCNA.cna.seg
