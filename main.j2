@@ -275,7 +275,14 @@
               {% do rg.data_files.pop(loop.index) %}
           {% endif %}
         {% endfor %}
-        {% if tasks[sample.gltype|capitalize+'_preprocessing_trim_reads']|default(false) %}
+        {% if sample.gltype == 'rna' %}
+          {% set taskPrefix = 'RNA' %}
+        {% elif sample.gltype == 'exome' %}
+          {% set taskPrefix = 'Exome' %}
+        {% elif sample.gltype in 'genome' %}
+          {% set taskPrefix = 'Genome' %}
+        {% endif %}
+        {% if tasks[taskPrefix+'_preprocessing_trim_reads']|default(false) %}
           {% from 'utilities/read_trimming.j2' import trim_reads with context %}
           {{- trim_reads(sample, rg, rgid) }}
         {% endif %}
