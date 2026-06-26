@@ -3,7 +3,7 @@
 {%- set input_bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
 {%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/{{ variant_caller }}/{{ sample.name }}_{{ aligner }}{% endset %}
 {%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/{{ variant_caller }}/{{ sample.name }}_{{ aligner }}{% endset %}
-{%- set output_prefix %}{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.whatshap{% endset %}
+{%- set output_prefix %}{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.pass.whatshap{% endset %}
 {%- set input_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.pass.vcf.gz{% endset %}
 {%- set phased_vcf %}{{ results_dir }}/{{ output_prefix }}.phased.vcf.gz{% endset %}
 {% do sample.update({'phased_vcf': phased_vcf}) %}
