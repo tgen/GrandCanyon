@@ -142,7 +142,7 @@
 
     bcftools index --tbi --force {{ pass_vcf }}
 
-{% if tasks[sample.gltype|capitalize+"_variant_calling_phasing_whatshap"]|default(false) %}
+{% if tasks[sample.gltype|capitalize+"_variant_calling_phasing_whatshap"]|default(false) and sample.glprep in 'longread' %}
   {% set whatshap_phased_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.pass.whatshap.phased.vcf.gz{% endset %}
   {% set annotated_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.deepvariant.pass.whatshap.phased.db.vep.pick.vcf.gz{% endset %}
   {{- postprocess_small_variants(sample, whatshap_phased_vcf, temp_dir, results_dir, aligner, 'deepvariant') }}
