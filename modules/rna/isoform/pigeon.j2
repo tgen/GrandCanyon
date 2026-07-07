@@ -3,6 +3,8 @@
 {% set temp_dir %}temp/{{ sample.gltype }}/isoforms/pigeon/{{ sample.name }}{% endset %}
 {% set results_dir %}{{ sample.gltype }}/isoforms/pigeon/{{ sample.name }}{% endset %}
 {% set isoseq_dir %}{{ sample.gltype }}/isoforms/isoseq/{{ sample.name }}{% endset %}
+{% set temp_gtf %}{{ temp_dir }}/{{ constants.grandcanyon[reference].gtf | basename }}{% endset %}
+{% set prepped_gtf %}{{ temp_dir }}/{{ constants.grandcanyon[reference].gtf | basename | replace('.gtf', '.sorted.gtf') }}{% endset %}
 
 {% set longfqlist = [] %}
 
@@ -37,14 +39,16 @@
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
-    pigeon prepare {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff
+    grep "gene_name" {{ constants.grandcanyon[reference].gtf }} > {{ temp_gtf }}
+
+    pigeon prepare {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff {{ temp_gtf }}
 
     pigeon classify \
       --num-threads 4 \
       --out-dir {{ results_dir }} \
       --fl {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt \
       {{ isoseq_dir }}/{{ sample.name }}.collapsed.sorted.gff \
-      {{ constants.grandcanyon[reference].gtf }} \
+      {{ prepped_gtf }} \
       {{ constants.grandcanyon[reference].reference_fasta }}
 
     pigeon filter \
