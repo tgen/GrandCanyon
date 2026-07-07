@@ -83,7 +83,7 @@ constants.grandcanyon[reference].tool_resources.verifybamid.verifybamid_resource
 
     mkdir -p "{{ results_dir }}"
 
-    VerifyBamID \
+    verifybamid2 \
       --NumThread 1 \
       --DisableSanityCheck \
       --SVDPrefix {{ constants.grandcanyon[reference].tool_resources.verifybamid.verifybamid_resources }}/1000g.phase3.100k.b38.vcf.gz.dat \
