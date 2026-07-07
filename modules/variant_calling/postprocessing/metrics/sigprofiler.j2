@@ -19,8 +19,6 @@
   input:
     - {{ input_vcf }}
     - {{ constants.grandcanyon[reference].tool_resources.sigprofiler.ref_dir }}
-    - {{ constants.grandcanyon[reference].tool_resources.sigprofiler.sbs }}
-    - {{ constants.grandcanyon[reference].tool_resources.sigprofiler.dbs }}
   cpus: 2
   mem: 4G
   walltime: "4:00:00"
@@ -42,9 +40,8 @@
     SigProfilerAssignment cosmic_fit \
       {{ temp_vcf_dir }} \
       {{ results_dir }}/SBS \
-      --signatures {{ constants.grandcanyon[reference].tool_resources.sigprofiler.sbs }} \
       --genome_build GRCh38 \
-      --cosmic_version 3.6 \
+      --cosmic_version 3.5 \
       --input_type vcf \
       {% if sample_or_pair.gltype == 'exome' %}
       --exome True \
@@ -54,9 +51,8 @@
     SigProfilerAssignment cosmic_fit \
       {{ temp_vcf_dir }} \
       {{ results_dir }}/DBS \
-      --signatures {{ constants.grandcanyon[reference].tool_resources.sigprofiler.dbs }} \
       --genome_build GRCh38 \
-      --cosmic_version 3.6 \
+      --cosmic_version 3.5 \
       --input_type vcf \
       --collapse_to_SBS96 False \
       {% if sample_or_pair.gltype == 'exome' %}
