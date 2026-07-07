@@ -188,7 +188,7 @@ constants:
     vep:
       container: ensemblorg/ensembl-vep:release_113.4
     verifybamid2:
-      container: griffan/verifybamid2:v2.0.1
+      container: quay.io/biocontainers/verifybamid2:2.0.3--hc004090_0
     verkko:
       container: quay.io/biocontainers/verkko:2.3.2--hb0edd9e_0
     vg:
