@@ -1,6 +1,7 @@
 {% macro modkit(sample, aligner) %}
 
 {%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/methylation/modkit/{{ sample.name }}_{{ aligner }}{% endset %}
 {%- set results_dir %}{{ sample.gltype }}/methylation/modkit/{{ sample.name }}_{{ aligner }}{% endset %}
 
 - name: modkit_{{ sample.name }}_{{ aligner }}
@@ -9,7 +10,7 @@
     - {{ bam }}
     - {{ bam }}.bai
     - {{ constants.grandcanyon[reference].reference_fasta }}
-  output: {{ results_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed
+  output: {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed
   cpus: 8
   mem: 32G
   walltime: "24:00:00"
@@ -19,6 +20,8 @@
     set -eu
     set -o pipefail
 
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
     modkit pileup \
@@ -28,11 +31,11 @@
       --ignore h \
       --ref {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ bam }} \
-      {{ results_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed
+      {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed
 
 - name: modkit_compress_and_index_{{ sample.name }}_{{ aligner }}
   reset: predecessors
-  input: {{ results_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed
+  input: {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed
   output:
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed.gz
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed.gz.tbi
@@ -44,7 +47,10 @@
   cmd: |
     set -eu
 
-    bgzip {{ results_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed
-    tabix {{ results_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed.gz
+    bgzip {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed
+    tabix {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed.gz
+
+    mv {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed.gz {{ results_dir }}
+    mv {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed.gz.tbi {{ results_dir }}
 
 {% endmacro %}
