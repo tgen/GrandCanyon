@@ -38,10 +38,11 @@
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
+    bcftools +fill-tags {{ input_vcf }} -- -t FORMAT/VAF | \
     bcftools +split-vep \
       -c am_pathogenicity:Float \
       -e '{{ exclude_filter }}' \
-      -s worst:missense+ -x {{ input_vcf }} | \
+      -s worst:missense+ -x | \
     bcftools +split-vep -H -s worst:missense+ -x -f {{ query_format }} | sed -e '1 s/^#//' -e '1 s/[][0-9]//g' \
     > {{ temp_dir }}/candidate_variants.tsv
 
