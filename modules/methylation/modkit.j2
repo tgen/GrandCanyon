@@ -23,9 +23,10 @@
 
     modkit pileup \
       --threads 8 \
+      --modified-bases 5mC 5hmC \
+      --no-filtering \
       --cpg \
       --combine-strands \
-      --ignore h \
       --ref {{ constants.grandcanyon[reference].reference_fasta }} \
       {{ bam }} \
       {{ results_dir }}/{{ sample.name }}.{{ aligner }}.modkit.pileup.bed
