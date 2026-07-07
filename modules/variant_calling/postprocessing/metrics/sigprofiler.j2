@@ -44,27 +44,25 @@
       {{ results_dir }}/SBS \
       --signatures {{ constants.grandcanyon[reference].tool_resources.sigprofiler.sbs }} \
       --genome_build GRCh38 \
-      --cosmic_version 3.4 \
+      --cosmic_version 3.6 \
       --input_type vcf \
-      --context_type "96" \
       {% if sample_or_pair.gltype == 'exome' %}
       --exome True \
       {% endif %}
-      --sample_reconstruction_plots png
+      --context_type "96"
 
     SigProfilerAssignment cosmic_fit \
       {{ temp_vcf_dir }} \
       {{ results_dir }}/DBS \
       --signatures {{ constants.grandcanyon[reference].tool_resources.sigprofiler.dbs }} \
       --genome_build GRCh38 \
-      --cosmic_version 3.4 \
+      --cosmic_version 3.6 \
       --input_type vcf \
       --collapse_to_SBS96 False \
-      --context_type "DINUC" \
       {% if sample_or_pair.gltype == 'exome' %}
       --exome True \
       {% endif %}
-      --sample_reconstruction_plots png
+      --context_type "DINUC"
 
 {% else %}
   {% set log_msg %}sigprofiler was enabled, but the sigprofiler ref_dir was not defined for {{ reference }}{% endset %}

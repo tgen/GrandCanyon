@@ -350,9 +350,9 @@ constants:
           sex_check_vcf: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/tgen_gender_check/chrx_common_dbSNPv152_snv_exons.vcf.gz
         sigprofiler:
           ref_dir: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/references/chromosomes
-          sbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/COSMIC_v3.4_SBS_GRCh38.txt
-          dbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/COSMIC_v3.4_DBS_GRCh38.txt
-          sv: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/COSMIC_v3.4_SV_GRCh38.txt
+          sbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/COSMIC_v3.6_SBS_GRCh38.txt
+          dbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/COSMIC_v3.6_DBS_GRCh38.txt
+          sv: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/COSMIC_v3.6_SV_GRCh38.txt
         somalier:
           sites: https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz
         spectre:
