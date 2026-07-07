@@ -92,11 +92,27 @@
       --vcf "{{ unzipped_path }}" \
       -o "{{ prepped_path }}"
     {% else %}
-    bcftools +fill-tags \
-      {{ gzipped_path }} \
-      -O v \
-      -o {{ prepped_path }} \
-      -- -t 'FORMAT/AR:1=FORMAT/AF'
+    if bcftools head {{ gzipped_path }} | grep FORMAT | grep -q 'ID=VAF'; then
+      bcftools +fill-tags \
+        {{ gzipped_path }} \
+        -O v \
+        -o {{ prepped_path }} \
+        -- -t 'FORMAT/AR=FORMAT/VAF'
+    elif bcftools head {{ gzipped_path }} | grep FORMAT | grep -q 'ID=AF'; then
+      bcftools +fill-tags \
+        {{ gzipped_path }} \
+        -O v \
+        -o {{ prepped_path }} \
+        -- -t 'FORMAT/AR=FORMAT/AF'
+    else
+      bcftools +fill-tags \
+        {{ gzipped_path }} \
+        -- -t FORMAT/VAF |\
+      bcftools +fill-tags \
+        -O v \
+        -o {{ prepped_path }} \
+        -- -t 'FORMAT/AR=FORMAT/VAF'
+    fi
     {% endif %}
 
 - name: vcfmerger2_filter_{{ caller }}_{{ sample_or_pair.name }}_{{ aligner }}
