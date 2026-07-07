@@ -164,8 +164,8 @@
   {% set prepped_fastq %}{{ temp_dir }}/{{ sample.name }}.minimap2.sirv.unmapped.fq{% endset %} 
 {% endif %}
 
-{% if constants.grandcanyon[reference].star_fasta is defined %}
-  {% set reference_fasta %}{{ constants.grandcanyon[reference].star_fasta }}{% endset %}
+{% if constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
 {% else %}
   {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
 {% endif %}
@@ -301,8 +301,8 @@
 
 {% if tasks['RNA_transcriptome_quantify_expression_flair']|default(false) %}
   {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.bam{% endset %}
-  {% if constants.grandcanyon[reference].star_fasta is defined %}
-  {% set reference_fasta %}{{ constants.grandcanyon[reference].star_fasta }}{% endset %}
+  {% if constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
   {% else %}
   {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
   {% endif %}
@@ -319,8 +319,8 @@
 
 {% if tasks['RNA_transcriptome_quantify_expression_isoquant']|default(false) %}
   {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.bam{% endset %}
-  {% if constants.grandcanyon[reference].star_fasta is defined %}
-  {% set reference_fasta %}{{ constants.grandcanyon[reference].star_fasta }}{% endset %}
+  {% if constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
   {% else %}
   {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
   {% endif %}

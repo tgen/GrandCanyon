@@ -258,6 +258,7 @@ constants:
       capture_kit_path: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/tool_resources/capture_kits
       known_capture_kits: /home/tgenref/homo_sapiens/grch38_hg38/capture_kits/manifest.yaml
       reference_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa
+      reference_fasta_no_alt: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy.fa
       reference_fai: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa.fai
       reference_alts: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa.alt
       reference_fastaSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa
@@ -273,7 +274,6 @@ constants:
       gtfSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/gene_model/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf
       transcriptome: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.ucsc.transcriptome.fasta
       transcriptomeSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/transcriptome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa
-      star_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy.fa
       starfusion_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir
       snpSniffer_sites: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/snpSniffer/positions_387_hg38_ucsc.txt
       snpSniffer_database: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/snpSniffer/databaseV5_hg38_ucsc.ini

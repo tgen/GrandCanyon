@@ -7,8 +7,8 @@
 {% set temp_dir %}temp/{{ sample.gltype }}/isoforms/isoseq/{{ sample.name }}{% endset %}
 {% set results_dir %}{{ sample.gltype }}/isoforms/isoseq/{{ sample.name }}{% endset %}
 
-{% if constants.grandcanyon[reference].star_fasta is defined %}
-  {% set reference_fasta %}{{ constants.grandcanyon[reference].star_fasta }}{% endset %}
+{% if constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
 {% else %}
   {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
 {% endif %}

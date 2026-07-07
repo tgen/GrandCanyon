@@ -8,8 +8,8 @@
   {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
   {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
 
-  {% if constants.grandcanyon[reference].star_fasta is defined %}
-    {% set reference_fasta %}{{ constants.grandcanyon[reference].star_fasta }}{% endset %}
+  {% if constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
   {% else %}
     {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
   {% endif %}
@@ -44,7 +44,7 @@
   {% if bam_level is sameas false %}
   reset: predecessors
   {% endif %}
-  walltime: "12:00:00"
+  walltime: "24:00:00"
   cpus: 2
   mem: 16G
   queue_preset: "DEFAULT"

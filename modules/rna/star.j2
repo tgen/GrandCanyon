@@ -12,8 +12,8 @@
 {% set star_bam_sorted %}{{ temp_dir }}/{{ sample.name }}.Aligned.sorted.bam{% endset %}
 {% set star_bam_md %}{{ temp_dir }}/{{ sample.name }}.md.bam{% endset %}
 
-{% if constants.grandcanyon[reference].star_fasta is defined %}
-{% set reference_fasta %}{{ constants.grandcanyon[reference].star_fasta }}{% endset %}
+{% if constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+{% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
 {% else %}
 {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
 {% endif %}

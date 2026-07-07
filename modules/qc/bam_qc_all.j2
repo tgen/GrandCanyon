@@ -92,8 +92,8 @@
 
 {% endif %}
 
-{% if sample.gltype == 'rna' and constants.grandcanyon[reference].star_fasta is defined %}
-  {% set reference_fasta %}{{ constants.grandcanyon[reference].star_fasta }}{% endset %}
+{% if sample.gltype == 'rna' and constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
 {% else %}
   {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
 {% endif %}
@@ -383,8 +383,8 @@
   {% set error_metrics_json %}{{ error_metrics }}.json{% endset %}
   {% set quality_yield_metrics_json %}{{ quality_yield_metrics }}.json{% endset %}
 
-  {% if sample.gltype == 'rna' and constants.grandcanyon[reference].star_fasta is defined %}
-    {% set reference_fasta %}{{ constants.grandcanyon[reference].star_fasta }}{% endset %}
+  {% if sample.gltype == 'rna' and constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
   {% else %}
     {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
   {% endif %}
@@ -514,8 +514,8 @@
   {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer_HetRate_Summary.json{% endset %}
   {% set output %}{{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv{% endset %}
 
-{% if sample.gltype == 'rna' and constants.grandcanyon[reference].star_fasta is defined %}
-  {% set reference_fasta %}{{ constants.grandcanyon[reference].star_fasta }}{% endset %}
+{% if sample.gltype == 'rna' and constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
 {% else %}
   {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
 {% endif %}
