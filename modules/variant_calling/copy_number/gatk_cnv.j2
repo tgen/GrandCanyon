@@ -656,7 +656,7 @@ and input_vcf is not none %}
     COVERAGE_CONSTANT=30
     BIN_LENGTH_CONSTANT=2000
     MIN_BIN_LENGTH=2000
-    MAX_LENGTH=`awk -F'\t' '$2 ~ /maximum length/ { print $3 ; exit }' {{ normal_bam_stats }}`
+    MAX_LENGTH=`awk -F'\t' '$2 ~ /maximum length/ { print $3 ; exit }' {{ bam_stats }}`
     AVERAGE_DEPTH=`awk -F'\t' '$1 ~ /^COV/ { TOT=$4 + TOT ; SUM=($3*$4)+SUM} END { print int(SUM/TOT)}' {{ bam_stats }}`
 
     BIN_LENGTH_MODIFIER=`awk "BEGIN { print $COVERAGE_CONSTANT/$AVERAGE_DEPTH }"`
