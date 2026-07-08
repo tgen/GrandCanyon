@@ -108,6 +108,8 @@ constants:
       container: quay.io/biocontainers/methbat:1.1.0--h9ee0642_0
     minigraph:
       container: quay.io/biocontainers/minigraph:0.21--he4a0461_1
+    minibwa:
+      container: quay.io/biocontainers/minibwa:0.3--h118bc1c_1
     minimap2:
       container: /home/tgenref/containers/minimap2-samtools_2.28_1.20.sif
     modkit:

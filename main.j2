@@ -1,4 +1,4 @@
-{# Tasks contains switches for toggling many of the features #}
+ contains switches for toggling many of the features #}
 {% if tasks is not defined %}
     {% set tasks = {} %}
 {% endif %}
@@ -256,8 +256,8 @@
         {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_bwa"]|default(false) %}
             {% do sample.aligners.append('bwa') %}
         {% endif %}
-        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minimap2_sr"]|default(false) %}
-            {% do sample.aligners.append('minimap2') %}
+        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minibwa"]|default(false) %}
+            {% do sample.aligners.append('minibwa') %}
         {% endif %}
         {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_vg_giraffe"]|default(false) %}
             {% do sample.aligners.append('vg_giraffe') %}

@@ -1,5 +1,5 @@
 {% from 'modules/dna_alignment/minimap2.j2' import minimap2 with context %}
-{% from 'modules/dna_alignment/minimap2_sr.j2' import minimap2_sr with context %}
+{% from 'modules/dna_alignment/minibwa.j2' import minibwa with context %}
 {% from 'modules/dna_alignment/bwa_mem2_samtools.j2' import bwa_mem2_samtools with context %}
 {% from 'modules/dna_alignment/vg_giraffe.j2' import vg_giraffe with context %}
 {% from 'modules/qc/main.j2' import bam_qc with context %}
@@ -31,8 +31,8 @@
         {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_bwa"]|default(false) %}
             {% do sample.aligners.append('bwa') %}
         {% endif %}
-        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minimap2_sr"]|default(false) %}
-            {% do sample.aligners.append('minimap2') %}
+        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minibwa"]|default(false) %}
+            {% do sample.aligners.append('minibwa') %}
         {% endif %}
     {% endif %}
     #}
@@ -59,10 +59,10 @@
         {% endif %}
       {% endfor %}
     {% endif %}
-    {% if 'minimap2' in sample.aligners %}
-      {{- minimap2_sr(sample, opt_dup_distance, aligner='minimap2') }}
-      {{- bam_qc(sample, aligner='minimap2') }}
-      {% set aligner = 'minimap2' %}
+    {% if 'minibwa' in sample.aligners %}
+      {{- minibwa(sample, opt_dup_distance, aligner='minibwa') }}
+      {{- bam_qc(sample, aligner='minibwa') }}
+      {% set aligner = 'minibwa' %}
       {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
       {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
         {% set file %}{{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam{% endset %}

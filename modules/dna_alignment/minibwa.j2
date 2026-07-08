@@ -1,6 +1,6 @@
 {% from 'utilities/read_group_line.j2' import read_group_line with context %}
 
-{% macro minimap2_sr(sample, opt_dup_distance, aligner='minimap2') %}
+{% macro minibwa(sample, opt_dup_distance, aligner='minibwa') %}
 
 {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
 {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
@@ -9,7 +9,7 @@
 {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
 {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
 
-- name: chunked_minimap2_generate_chunks_{{ sample.name }}_{{ aligner }}_{{ rgid }}
+- name: chunked_minibwa_generate_chunks_{{ sample.name }}_{{ aligner }}_{{ rgid }}
   reset: predecessors
   input:
     - temp/fastqs/{{ r1fastq.basename }}
@@ -34,9 +34,9 @@
       --read2 temp/fastqs/{{ r2fastq.basename }}
 
 
-- name: chunked_minimap2_generate_chunked_tasks_{{ sample.name }}_{{ aligner }}_{{ rgid }}
+- name: chunked_minibwa_generate_chunked_tasks_{{ sample.name }}_{{ aligner }}_{{ rgid }}
   reset: predecessors
-  after: chunked_minimap2_generate_chunks_{{ sample.name }}_{{ aligner }}_{{ rgid }}
+  after: chunked_minibwa_generate_chunks_{{ sample.name }}_{{ aligner }}_{{ rgid }}
   exec: |
     import glob
 
@@ -44,18 +44,18 @@
     num_chunks = int(len(fastq_list)/2)
     for index in range(1, num_chunks+1):
       chunk = f'{index:03d}'
-      if self.workflow.tasks.get(f'chunked_minimap2_samtools_fixmate_{{ sample.name }}_{{ aligner }}_{{ rgid }}_{chunk}'):
-        self.workflow.tasks.pop(f'chunked_minimap2_samtools_fixmate_{{ sample.name }}_{{ aligner }}_{{ rgid }}_{chunk}')
+      if self.workflow.tasks.get(f'chunked_minibwa_samtools_fixmate_{{ sample.name }}_{{ aligner }}_{{ rgid }}_{chunk}'):
+        self.workflow.tasks.pop(f'chunked_minibwa_samtools_fixmate_{{ sample.name }}_{{ aligner }}_{{ rgid }}_{chunk}')
       self.workflow.new_task(
-          name = f'chunked_minimap2_samtools_fixmate_{{ sample.name }}_{{ aligner }}_{{ rgid }}_{chunk}',
+          name = f'chunked_minibwa_samtools_fixmate_{{ sample.name }}_{{ aligner }}_{{ rgid }}_{chunk}',
           reset = "predecessors",
-          input = ['temp/fastqs/{{ sample.name }}/{{ rgid }}', '{{ constants.grandcanyon[reference].reference_fasta }}'],
+          input = ['temp/fastqs/{{ sample.name }}/{{ rgid }}', '{{ constants.grandcanyon[reference].reference_fasta_no_alt }}'],
           output = "{{ temp_dir }}/{{ rgid }}/{chunk}.{{ aligner }}.bam",
           walltime = "8:00:00",
-          cpus = "20",
-          mem = "80G",
+          cpus = "8",
+          mem = "64G",
           queue_preset = "DEFAULT",
-          container = "{{ constants.tools.minimap2.container }}",
+          container = "{{ constants.tools.minibwa.container }}",
           cmd = f"""
             set -eu
             set -o pipefail
@@ -63,19 +63,14 @@
             rm -r {{ temp_dir }}/{{ rgid }}/{chunk}_st_sort_temp || true
             mkdir -p {{ temp_dir }}/{{ rgid }}/{chunk}_st_sort_temp
 
-            minimap2 \
-              -t 20 \
-              -x sr \
-              -a \
-              -R '{{ read_group_line(rg, format="exec_minimap2") }}' \
-              {% if constants.grandcanyon[reference].reference_alts is defined %}
-              --alt {{ constants.grandcanyon[reference].reference_alts }} \
-              {% endif %}
-              {{ constants.grandcanyon[reference].reference_fasta }} \
+            minibwa map \
+              -t 8 \
+              -R '{{ read_group_line(rg, format="exec_minibwa") }}' \
+              {{ constants.grandcanyon[reference].reference_fasta_no_alt }} \
               temp/fastqs/{{ sample.name }}/{{ rgid }}/{{ r1fastq.basename.split('.fastq.gz')[0] }}.part_{chunk}.fastq.gz \
               temp/fastqs/{{ sample.name }}/{{ rgid }}/{{ r2fastq.basename.split('.fastq.gz')[0] }}.part_{chunk}.fastq.gz |\
             samtools fixmate \
-              --threads 19 \
+              --threads 4 \
               -m \
               - \
               - |\
@@ -83,7 +78,7 @@
               -T {{ temp_dir }}/{{ rgid }}/{chunk}_st_sort_temp/{chunk} \
               -u \
               -m 3G \
-              --threads 19 \
+              --threads 4 \
               --output-fmt BAM \
               -o {{ temp_dir }}/{{ rgid }}/{chunk}.{{ aligner }}.bam \
               -
@@ -95,12 +90,12 @@
 
 {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
 - name: chunked_samtools_merge_rgid_bams_{{ sample.name }}_{{ rglb }}_{{ aligner }}
-  tags: [{{ sample.gltype }}, alignment, dna_alignment, minimap2, {{ sample.name }}]
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, minibwa, {{ sample.name }}]
   reset: predecessors
   after-re:
   {% for rgid in rg %}
-    - chunked_minimap2_generate_chunked_tasks_{{ sample.name }}_{{ aligner }}_{{ rgid.rgid }}
-    - chunked_minimap2_samtools_fixmate_{{ sample.name }}_{{ aligner }}_{{ rgid.rgid }}_.*
+    - chunked_minibwa_generate_chunked_tasks_{{ sample.name }}_{{ aligner }}_{{ rgid.rgid }}
+    - chunked_minibwa_samtools_fixmate_{{ sample.name }}_{{ aligner }}_{{ rgid.rgid }}_.*
   {% endfor %}
   input-re: 
   {% for rgid in rg %}
@@ -140,7 +135,7 @@
   reset: predecessors
   methods: Duplicate reads for {{ sample.name }} were marked with samtools markdup.
   input:
-    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta_no_alt }}
     - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam
   output:
     {% if sample.read_groups.values() | groupby('rglb') | length == 1 %}
@@ -182,7 +177,7 @@
       {% if sample.pcrCycles is defined and sample.pcrCycles == 0 %}
       --use-read-groups \
       {% endif %}
-      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta_no_alt }} \
       --json \
       -d {{ opt_dup_distance }} \
       -S \
@@ -202,10 +197,10 @@
 
 {% if sample.read_groups.values() | groupby('rglb') | length > 1 %}
 - name: chunked_samtools_merge_rglb_bams_{{ sample.name }}_{{ aligner }}
-  tags: [{{ sample.gltype }}, alignment, dna_alignment, minimap2, {{ sample.name }}]
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, minibwa, {{ sample.name }}]
   reset: predecessors
   input: 
-    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta_no_alt }}
   {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
     - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram
   {% endfor %}
@@ -225,7 +220,7 @@
     #}
     samtools merge \
       --threads 4 \
-      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta_no_alt }} \
       -c \
       -f \
       --write-index \
@@ -240,10 +235,10 @@
 
 {% endif %}
 
-- name: minimap2_samtools_create_temp_bam_{{ sample.name }}
-  tags: [{{ sample.gltype }}, alignment, dna_alignment, minimap2, {{ sample.name }}]
+- name: minibwa_samtools_create_temp_bam_{{ sample.name }}
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, minibwa, {{ sample.name }}]
   input:
-    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fasta_no_alt }}
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
   output:
     - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
@@ -257,7 +252,7 @@
 
     samtools view \
       -@ 8 \
-      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --reference {{ constants.grandcanyon[reference].reference_fasta_no_alt }} \
       --no-PG \
       -o {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam \
       --write-index \
