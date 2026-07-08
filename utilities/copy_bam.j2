@@ -29,6 +29,7 @@
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
   cpus: 6
   walltime: "4:00:00"
   queue_preset: "DATA-MOVER"
@@ -78,6 +79,7 @@
   input:
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
   output:
     - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
     - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam.bai

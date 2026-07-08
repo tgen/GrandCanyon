@@ -140,8 +140,10 @@
   output:
     {% if sample.read_groups.values() | groupby('rglb') | length == 1 %}
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
     {% else %}
     - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram
+    - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram.crai
     {% endif %}
     - {{ results_dir }}/stats/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam.samtools.markdup.json
   walltime: "96:00:00"
@@ -203,6 +205,7 @@
     - {{ constants.grandcanyon[reference].reference_fasta_no_alt }}
   {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
     - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram
+    - {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram.crai
   {% endfor %}
   output: {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
   walltime: "24:00:00"
@@ -240,6 +243,7 @@
   input:
     - {{ constants.grandcanyon[reference].reference_fasta_no_alt }}
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
   output:
     - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
     - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam.bai

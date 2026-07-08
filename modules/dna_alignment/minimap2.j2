@@ -70,6 +70,7 @@
     - {{ temp_dir }}/st_sort_temp/{{ rgid | replace("/", "_") }}
     {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
     - {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram
+    - {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram.crai
     {% else %}
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram.crai
@@ -141,6 +142,7 @@
     - {{ constants.grandcanyon[reference].reference_fasta }}
   {% for rgid, rg in sample.read_groups.items() %}
     - {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram
+    - {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram.crai
   {% endfor %}
   output:
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram
@@ -180,6 +182,7 @@
   input:
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ results_dir }}/{{ sample.name }}.minimap2.cram
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram.crai
   output:
     - {{ temp_dir }}/{{ sample.name }}.minimap2.bam
     - {{ temp_dir }}/{{ sample.name }}.minimap2.bam.bai

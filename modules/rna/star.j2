@@ -167,6 +167,7 @@
     - {{ star_bam_sorted }}
   output:
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
     - {{ results_dir }}/stats/{{ sample.name }}.star.bam.samtools.markdup.json
   cpus: 8
   mem: 80G
