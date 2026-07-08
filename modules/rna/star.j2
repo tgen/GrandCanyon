@@ -168,8 +168,8 @@
   output:
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
     - {{ results_dir }}/stats/{{ sample.name }}.star.bam.samtools.markdup.json
-  cpus: 4
-  mem: 64G
+  cpus: 8
+  mem: 80G
   walltime: "24:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.samtools.container }}
@@ -183,7 +183,7 @@
       --json \
       -d {{ opt_dup_distance }} \
       -f {{ results_dir }}/stats/{{ sample.name }}.star.bam.samtools.markdup.json \
-      --threads 4 \
+      --threads 7 \
       --write-index \
       --output-fmt CRAM \
       --reference {{ reference_fasta }} \
