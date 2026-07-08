@@ -65,7 +65,7 @@
 
             minibwa map \
               -t 8 \
-              -R '{{ read_group_line(rg, format="exec_minibwa") }}' \
+              -R '{{ read_group_line(rg, format="exec_bwa") }}' \
               {{ constants.grandcanyon[reference].reference_fasta_no_alt }} \
               temp/fastqs/{{ sample.name }}/{{ rgid }}/{{ r1fastq.basename.split('.fastq.gz')[0] }}.part_{chunk}.fastq.gz \
               temp/fastqs/{{ sample.name }}/{{ rgid }}/{{ r2fastq.basename.split('.fastq.gz')[0] }}.part_{chunk}.fastq.gz |\
