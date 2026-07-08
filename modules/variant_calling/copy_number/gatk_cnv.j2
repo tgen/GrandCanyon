@@ -67,6 +67,10 @@
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].tool_resources.gatk_cnv.mappability_track }}
     - {{ constants.grandcanyon[reference].encode_denylist }}
+    {% if sample_or_pair.gltype in 'exome' %}
+    - {{ sample_or_pair.normal.capture_kit.targets_interval_list }}
+    - {{ sample_or_pair.tumor.capture_kit.targets_interval_list }}
+    {% endif %}
   output:
     - {{ temp_dir }}/preprocessed_filt.interval_list
     - {{ temp_dir }}/anno_preprocessed.interval_list
@@ -85,6 +89,41 @@
     mkdir -p "{{ results_dir }}"
 
     SEX={{ config_sex }}
+
+    {% if sample_or_pair.gltype in 'exome' %}
+    gatk --java-options "-Xmx12g" IntervalListTools \
+      --INPUT {{ sample_or_pair.normal.capture_kit.targets_interval_list }} \
+      --INPUT {{ sample_or_pair.tumor.capture_kit.targets_interval_list }} \
+      --ACTION INTERSECT \
+      --OUTPUT {{ temp_dir }}/pair_intersect.interval_list
+
+    {# Remove the chrY if the sex is female #}
+    if [ ${SEX} == "Female" ]
+    then
+      {# hg38tgen specific due to the chrY contig names   #}
+      grep -v "chrY" {{ temp_dir }}/pair_intersect.interval_list > {{ temp_dir }}/temp.interval_list
+      mv {{ temp_dir }}/temp.interval_list {{ temp_dir }}/pair_intersect.interval_list
+    fi
+
+    {# Set the variable for the --low-count-filter-count-threshold option used in FilterIntervals #}
+    {# With the default padding of 250 during PreprocessIntervals set to 500 + min(interval length) #}
+    {# If the cpature kits from above are different this could result in a smaller than expected interval length #}
+    MAX_LENGTH=`awk -F'\t' '$2 ~ /maximum length/ { print $3 ; exit }' {{ normal_bam_stats }}`
+
+    {# From the interect intervals file extract the smallest. If the smallest is less than 100 set the default as 100 #}
+    MIN_INTERVAL=`awk -F'\t' -v MAX_LENGTH=${MAX_LENGTH} 'BEGIN { MIN = MAX_LENGTH } $1 !~ /@/ { if ( $3-$2 < MIN ) { MIN = $3-$2 }} END { print MIN }' {{ temp_dir }}/pair_intersect.interval_list`
+
+    if [[ ${MIN_INTERVAL} -lt 100 ]]
+    then
+      MIN_INTERVAL=100
+    fi
+
+    BIN_LENGTH=$(( 200 + MIN_INTERVAL ))
+
+    {# Divide by two to accomidate autosomes then times by 20 to reach an esitmated 20x depth #}
+    EXP_1X_COUNTS=$(( BIN_LENGTH/MAX_LENGTH/2*20 ))
+
+    {% elif sample_or_pair.gltype in 'genome' %}
 
     if [ ${SEX} == "Female" ]
     then
@@ -118,8 +157,8 @@
       AVERAGE_DEPTH=${TUMOR_AVERAGE_DEPTH}
     fi
 
-    BIN_LENGTH_MODIFYER=`awk "BEGIN { print $COVERAGE_CONSTANT/$AVERAGE_DEPTH }"`
-    BIN_LENGTH=`awk -v BIN_LENGTH_CONSTANT=${BIN_LENGTH_CONSTANT} -v BIN_LENGTH_MODIFYER=${BIN_LENGTH_MODIFYER} 'BEGIN { printf("%d\n",BIN_LENGTH_CONSTANT*BIN_LENGTH_MODIFYER)}'`
+    BIN_LENGTH_MODIFIER=`awk "BEGIN { print $COVERAGE_CONSTANT/$AVERAGE_DEPTH }"`
+    BIN_LENGTH=`awk -v BIN_LENGTH_CONSTANT=${BIN_LENGTH_CONSTANT} -v BIN_LENGTH_MODIFIER=${BIN_LENGTH_MODIFIER} 'BEGIN { printf("%d\n",BIN_LENGTH_CONSTANT*BIN_LENGTH_MODIFIER)}'`
 
     {# If the bin length is shorter than the max read length then set the bin length to the read length #}
     if [[ ${BIN_LENGTH} -lt ${MIN_BIN_LENGTH} ]]
@@ -130,11 +169,19 @@
     {# Set the variable for the --low-count-filter-count-threshold option used in FilterIntervals #}
     EXP_1X_COUNTS=$(( BIN_LENGTH/MAX_LENGTH/2 ))
 
+    {% endif %}
+
     {# Generate an intervals list to perform CNA on #}
     gatk --java-options "-Xmx12g" PreprocessIntervals \
       --tmp-dir {{ temp_dir }}/temp/ \
+      {% if sample_or_pair.gltype in 'exome' %}
+      --intervals {{ temp_dir }}/pair_intersect.interval_list \
+      --bin-length 0 \
+      --padding 100 \
+      {% elif sample_or_pair.gltype in 'genome' %}
       --intervals ${INTERVALS} \
       --bin-length ${BIN_LENGTH} \
+      {% endif %}
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --output {{ temp_dir }}/preprocessed.interval_list \
       --interval-merging-rule OVERLAPPING_ONLY
@@ -223,6 +270,14 @@
 
     mkdir -p {{ temp_dir }}
 
+    {% if sample_or_pair.gltype in 'exome' %}
+
+    MIN_VAF=0.45
+    MAX_VAF=0.55
+    MIN_DP=20
+
+    {% elif sample_or_pair.gltype in 'genome' %}
+
     NORMAL_AVERAGE_DEPTH=`awk -F'\t' '$1 ~ /^COV/ { TOT=$4 + TOT ; SUM=($3*$4)+SUM} END { print int(SUM/TOT)}' {{ normal_bam_stats }}`
     TUMOR_AVERAGE_DEPTH=`awk -F'\t' '$1 ~ /^COV/ { TOT=$4 + TOT ; SUM=($3*$4)+SUM} END { print int(SUM/TOT)}' {{ tumor_bam_stats }}`
 
@@ -236,6 +291,8 @@
       MAX_VAF=0.55
       MIN_DP=20
     fi
+
+    {% endif %}
 
     {# Extract heterozygous snps from the matched normal excluding the PAR regions on XY#}
     bcftools view \
@@ -529,6 +586,9 @@ and input_vcf is not none %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].reference_dict }}
     - {{ constants.grandcanyon[reference].tool_resources.gatk_cnv.mappability_track }}
+    {% if sample_or_pair.gltype in 'exome' %}
+    - {{ sample_or_pair.capture_kit.targets_interval_list }}
+    {% endif %}
   output:
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.allelicCounts.tsv
     - {{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.standardizedCR.tsv
@@ -560,7 +620,20 @@ and input_vcf is not none %}
 
     {% if cnvIntervals is none %}
     SEX={{ config_sex }}
-    BIN_LENGTH=2000
+
+    {% if sample_or_pair.gltype in 'exome' %}
+
+    {# Remove the chrY if the sex is female #}
+    if [ ${SEX} == "Female" ]
+    then
+      grep -v "chrY" {{ sample_or_pair.capture_kit.targets_interval_list }} > {{ temp_dir }}/temp.interval_list
+    else
+      cp {{ sample_or_pair.capture_kit.targets_interval_list }} {{ temp_dir }}/temp.interval_list
+    fi
+
+    INTERVALS={{ temp_dir }}/temp.interval_list
+
+    {% elif sample_or_pair.gltype in 'genome' %}
 
     if [ ${SEX} == "Female" ]
     then
@@ -579,11 +652,35 @@ and input_vcf is not none %}
       INTERVALS={{ temp_dir }}/gatk_cnv_primary_contigs.interval_list
     fi
 
+    {# Set sample specific variables #}
+    COVERAGE_CONSTANT=30
+    BIN_LENGTH_CONSTANT=2000
+    MIN_BIN_LENGTH=2000
+    MAX_LENGTH=`awk -F'\t' '$2 ~ /maximum length/ { print $3 ; exit }' {{ normal_bam_stats }}`
+    AVERAGE_DEPTH=`awk -F'\t' '$1 ~ /^COV/ { TOT=$4 + TOT ; SUM=($3*$4)+SUM} END { print int(SUM/TOT)}' {{ bam_stats }}`
+
+    BIN_LENGTH_MODIFIER=`awk "BEGIN { print $COVERAGE_CONSTANT/$AVERAGE_DEPTH }"`
+    BIN_LENGTH=`awk -v BIN_LENGTH_CONSTANT=${BIN_LENGTH_CONSTANT} -v BIN_LENGTH_MODIFIER=${BIN_LENGTH_MODIFIER} 'BEGIN { printf("%d\n",BIN_LENGTH_CONSTANT*BIN_LENGTH_MODIFIER)}'`
+
+    {# If the bin length is shorter than the max read length then set the bin length to the read length #}
+    if [[ ${BIN_LENGTH} -lt ${MIN_BIN_LENGTH} ]]
+    then
+      BIN_LENGTH=${MIN_BIN_LENGTH}
+    fi
+
+    {% endif %}
+
     {# Generate an intervals list to perform CNA on #}
     gatk --java-options "-Xmx12g" PreprocessIntervals \
       --tmp-dir {{ temp_dir }}/temp/ \
+      {% if sample_or_pair.gltype in 'exome' %}
+      --intervals ${INTERVALS} \
+      --bin-length 0 \
+      --padding 100 \
+      {% elif sample_or_pair.gltype in 'genome' %}
       --intervals ${INTERVALS} \
       --bin-length ${BIN_LENGTH} \
+      {% endif %}
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       --output {{ temp_dir }}/preprocessed.interval_list \
       --interval-merging-rule OVERLAPPING_ONLY
