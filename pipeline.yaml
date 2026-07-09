@@ -125,7 +125,7 @@ constants:
     oarfish:
       container: quay.io/biocontainers/oarfish:0.10.0--hd727d2a_0
     pbmm2:
-      container: quay.io/biocontainers/pbmm2:1.13.1--h9ee0642_0
+      container: quay.io/biocontainers/pbmm2:26.2.99--h9ee0642_0
     pbpigeon:
       container: quay.io/biocontainers/pbpigeon:1.4.0--h9948957_0
     pbsv:

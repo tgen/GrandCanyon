@@ -67,52 +67,17 @@
   mem: 80G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
-  container: {{ constants.tools.minimap2.container }}
+  container: {{ constants.tools.pbmm2.container }}
   cmd: |
 
-    rm -r {{ temp_dir }}/st_sort_temp || true
-    mkdir -p {{ temp_dir }}/st_sort_temp
     mkdir -p {{ results_dir }}
 
-    paftools.js gff2bed {{ constants.grandcanyon[reference].gtf }} > {{ temp_dir }}/{{ sample.name }}_anno.bed
-
-    samtools fastq \
-      --threads 16 \
-      -T '*' \
+    pbmm2 align \
+      --preset ISOSEQ \
+      --sort \
       {{ temp_dir }}/{{ sample.name }}.clustered.bam \
-      -0 - |\
-    minimap2 \
-      -a \
-      -ax splice:hq \
-      --eqx \
-      --secondary=no \
-      -uf \
-      --junc-bed {{ temp_dir }}/{{ sample.name }}_anno.bed \
-      -t 20 \
-      -L \
-      -y \
-      -Y \
       {{ reference_fasta }} \
-      - |\
-    samtools sort \
-      --threads 20 \
-      --reference {{ reference_fasta }} \
-      -T {{ temp_dir }}/st_sort_temp \
-      -o {{ temp_dir }}/{{ sample.name }}.pbmm2.bam##idx##{{ temp_dir }}/{{ sample.name }}.pbmm2.bam.bai \
-      --output-fmt BAM \
-      --write-index \
-      -
-
-    samtools view --no-PG -H {{ temp_dir }}/{{ sample.name }}.pbmm2.bam | head -n-3 > {{ temp_dir }}/fixed_header.sam
-    samtools view --no-PG -H {{ temp_dir }}/{{ sample.name }}.clustered.bam | tail -n+2 >> {{ temp_dir }}/fixed_header.sam
-    samtools view --no-PG -H {{ temp_dir }}/{{ sample.name }}.pbmm2.bam | tail -n3 >> {{ temp_dir }}/fixed_header.sam
-    samtools reheader \
-      -P \
-      {{ temp_dir }}/fixed_header.sam \
-      {{ temp_dir }}/{{ sample.name }}.pbmm2.bam \
-      > {{ results_dir }}/{{ sample.name }}.pbmm2.bam
-
-    samtools index {{ results_dir }}/{{ sample.name }}.pbmm2.bam
+      {{ results_dir }}/{{ sample.name }}.pbmm2.bam
 
 - name: isoseq_collapse_{{ sample.name }}
   input:
