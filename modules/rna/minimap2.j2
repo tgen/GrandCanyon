@@ -1,6 +1,5 @@
 {% from 'utilities/read_group_line.j2' import read_group_line with context %}
 {% from 'modules/rna/quantification/featureCounts.j2' import featureCounts with context %}
-{% from 'modules/rna/quantification/salmon.j2' import salmon with context %}
 {% from 'modules/rna/quantification/oarfish.j2' import oarfish with context %}
 {% from 'modules/rna/isoform/flair.j2' import flair with context %}
 {% from 'modules/rna/isoform/isoquant.j2' import isoquant with context %}
@@ -283,17 +282,6 @@
     {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.sirv.bam{% endset %}
     {% set gtf %}{{ constants.grandcanyon[reference].gtfSIRV }}{% endset %}
     {{- featureCounts(sample, sample_bam, gtf, SIRV=true) }}
-  {% endif %}
-{% endif %}
-
-{% if tasks['RNA_transcriptome_quantify_expression_salmon']|default(false) %}
-  {% set transcriptome %}{{ constants.grandcanyon[reference].transcriptome }}{% endset %}
-  {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.transcriptome.bam{% endset %}
-  {{- salmon(sample, sample_bam, transcriptome, SIRV=false) }}
-  {% if tasks['RNA_sirvome_enable_processing_sirvome'] | default(false) %}
-    {% set transcriptome %}{{ constants.grandcanyon[reference].transcriptomeSIRV }}{% endset %}
-    {% set sample_bam %}{{ results_dir }}/{{ sample.name }}.minimap2.sirv.transcriptome.bam{% endset %}
-    {{- salmon(sample, sample_bam, transcriptome, SIRV=true) }}
   {% endif %}
 {% endif %}
 

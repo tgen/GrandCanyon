@@ -86,7 +86,7 @@ constants:
     isoquant:
       container: quay.io/biocontainers/isoquant:3.10.0--hdfd78af_0
     isoseq:
-      container: quay.io/biocontainers/isoseq:4.3.0--h9ee0642_0
+      container: quay.io/biocontainers/isoseq:26.2.0--h9ee0642_0
     kmc:
       container: quay.io/biocontainers/kmc:3.2.4--h5ca1c30_4
     lancet2:
@@ -127,7 +127,7 @@ constants:
     pbmm2:
       container: quay.io/biocontainers/pbmm2:26.2.99--h9ee0642_0
     pbpigeon:
-      container: quay.io/biocontainers/pbpigeon:1.4.0--h9948957_0
+      container: quay.io/biocontainers/pbpigeon:26.2.0--h9ee0642_0
     pbsv:
       container: quay.io/biocontainers/pbsv:2.11.0--h9ee0642_0
     pbtk:
@@ -143,7 +143,7 @@ constants:
     R:
       container: ghcr.io/tgen/containers/r_with_modules:4.1.2-23080815
     salmon:
-      container: ghcr.io/tgen/containers/salmon:1.11.4
+      container: quay.io/biocontainers/salmon:2.3.2--hfa8f182_0
     samtools:
       container: quay.io/biocontainers/samtools:1.20--h50ea8bc_1
     savana:
