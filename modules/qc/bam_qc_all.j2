@@ -258,17 +258,9 @@
 {% macro bam_qc_samtools_markdup(sample, sample_lb, taskPrefix=taskPrefix, aligner=aligner) %}
 {% if tasks[taskPrefix+"_quality_control_stats_samtools_markdup_stats"]|default(false) %}
 
-  {% if sample.gltype not in ['rna',] %}
-    {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
-    {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
-    {% set bam %}{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam{% endset %}
-    {% set md_json %}{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.samtools.markdup.json{% endset %}
-  {% else %}
-    {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
-    {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
-    {% set bam %}{{ sample.name }}.{{ aligner }}.bam{% endset %}
-    {% set md_json %}{{ sample.name }}.{{ aligner }}.bam.samtools.markdup.json{% endset %}
-  {% endif %}
+  {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+  {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
+  {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
 
   {% set output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.samtools.markdup_summary.json{% endset %}
 
@@ -290,7 +282,7 @@
 
     # {{ required_scripts.plotSamStats_Rscript.path }} md5: {{ required_scripts.plotSamStats_Rscript.path | md5 }}
     Rscript {{ required_scripts.plotSamStats_Rscript.path }} \
-        --samtoolsDuplicatesFile={{ md_json }} \
+        --samtoolsDuplicatesFile={{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.samtools.markdup.json \
         --bam={{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam \
         --sample={{ sample.name }} \
         --library={{ sample_lb }}

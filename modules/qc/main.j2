@@ -40,7 +40,6 @@
     {% if sample.gltype == 'rna' %}
       {% set taskPrefix = 'RNA' %}
       {{- bam_qc_gatk_collectrnaseqmetrics(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner) }}
-      {{- bam_qc_samtools_markdup(sample, sample_lb, taskPrefix=taskPrefix, aligner=aligner) }}
     {% elif sample.gltype == 'exome' %}
       {% set taskPrefix = 'Exome' %}
       {{- bam_qc_gatk_collecthsmetrics(sample, aligner=aligner) }}

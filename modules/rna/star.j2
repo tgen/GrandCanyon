@@ -10,6 +10,7 @@
 {% set temp_dir %}temp/{{ sample.gltype }}/quant/star/{{ sample.name }}{% endset %}
 {% set star_bam_unsort %}{{ temp_dir }}/{{ sample.name }}.Aligned.out.bam{% endset %}
 {% set star_bam_sorted %}{{ temp_dir }}/{{ sample.name }}.Aligned.sorted.bam{% endset %}
+{% set star_bam_md %}{{ temp_dir }}/{{ sample.name }}.md.bam{% endset %}
 
 {% if constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
 {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
@@ -159,7 +160,10 @@
       -o "{{ star_bam_sorted }}"
 
 
-- name: samtools_markdup_star_{{ sample.name }}
+{% set task %}{{ sample.name }}_star{% endset %}
+{% set rna_md_metrics %}{{ results_dir }}/stats/{{ sample.name }}.star.bam.md_metrics{% endset %}
+{% set rna_md_metrics_json %}{{ rna_md_metrics }}.json{% endset %}
+- name: markduplicates_star_gatk_{{ sample.name }}
   tags: [{{ sample.gltype }}, alignment, rna_alignment, STAR, {{ sample.name }}]
   reset: predecessors
   input:
@@ -167,30 +171,45 @@
     - {{ star_bam_sorted }}
   output:
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
-    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
-    - {{ results_dir }}/stats/{{ sample.name }}.star.bam.samtools.markdup.json
-  cpus: 8
-  mem: 80G
+    - {{ rna_md_metrics }}
+  cpus: 10
+  mem: 40G
   walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.gatk.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r "{{ temp_dir }}/markdup" || true
+    mkdir -p "{{ temp_dir }}/markdup"
+
+    gatk MarkDuplicates \
+      --java-options "-Xmx31G" \
+      --TMP_DIR "temp" \
+      --CLEAR_DT false \
+      --ADD_PG_TAG_TO_READS false \
+      --CREATE_INDEX true \
+      --OPTICAL_DUPLICATE_PIXEL_DISTANCE {{ opt_dup_distance }} \
+      --INPUT "{{ star_bam_sorted }}" \
+      --METRICS_FILE "{{ results_dir }}/stats/{{ sample.name }}.star.bam.md_metrics" \
+      --REFERENCE_SEQUENCE {{ reference_fasta }} \
+      --OUTPUT "{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram"
+
+- name: star_samtools_index_cram_{{ sample.name }}
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
+  input:
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+  output:
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
+  walltime: "1:00:00"
+  cpus: 2
+  mem: 8G
   queue_preset: "DEFAULT"
   container: {{ constants.tools.samtools.container }}
   cmd: |
 
-    rm -r "{{ temp_dir }}/markdup_temp" || true
-    mkdir -p "{{ temp_dir }}/markdup_temp"
-    mkdir -p {{ results_dir }}/stats
-
-    samtools markdup \
-      --json \
-      -d {{ opt_dup_distance }} \
-      -f {{ results_dir }}/stats/{{ sample.name }}.star.bam.samtools.markdup.json \
-      --threads 7 \
-      --write-index \
-      --output-fmt CRAM \
-      --reference {{ reference_fasta }} \
-      -T {{ temp_dir }}/markdup_temp/{{ sample.name }} \
-      {{ star_bam_sorted }} \
-      {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    samtools index {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
 
 - name: star_samtools_create_temp_bam_{{ sample.name }}
   tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
@@ -217,6 +236,8 @@
       {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
 
     samtools index -@8 {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
+
+{{- stats2json(sample.gltype, sample.name, task, rna_md_metrics, rna_md_metrics_json, "picard_mark_duplicates_metrics", sample=sample, sample_name=sample.name) }}
 
 {% if tasks['RNA_transcriptome_quantify_expression_subread_featureCounts']|default(false) %}
   {{- featurecounts(sample) }}
