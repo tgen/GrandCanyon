@@ -1,5 +1,5 @@
 # Run Salmon RNA Quantification
-{% macro salmon_sr(sample) %}
+{% macro salmon(sample) %}
 {% set temp_dir %}temp/{{ sample.gltype }}/quant/salmon/{{ sample.name }}{% endset %}
 {% set results_dir %}{{ sample.gltype }}/quant/salmon/{{ sample.name }}{% endset %}
 
@@ -54,7 +54,6 @@
       --kmerLen 31
 
     salmon quant \
-      --validateMappings \
       --seqBias \
       --gcBias \
       --threads 10 \
