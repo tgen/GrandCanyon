@@ -50,7 +50,6 @@
     ls $ROOT_DIR/{{ longfqlist|map(attribute='path')|join(' $ROOT_DIR/') }} > {{ temp_dir }}/{{ sample.name }}.fofn
     cd {{ temp_dir }} && \
     isoseq cluster2 \
-      --use-qvs \
       --num-threads 20 \
       {{ sample.name }}.fofn \
       {{ sample.name }}.clustered.bam
@@ -73,6 +72,7 @@
     mkdir -p {{ results_dir }}
 
     pbmm2 align \
+      --num-threads 20 \
       --preset ISOSEQ \
       --sort \
       {{ temp_dir }}/{{ sample.name }}.clustered.bam \
@@ -96,7 +96,7 @@
     {# isoseq collapse supports reading in the flnc bam, but it complains about missing a pbi index #}
     {# and this is missing because we cannot reindex the u.bam after addreplacerg insertion of rgid #}
     isoseq collapse \
-      --num-threads 4 \
+      --num-threads 1 \
       --do-not-collapse-extra-5exons \
       {{ results_dir }}/{{ sample.name }}.pbmm2.bam \
       {{ temp_dir }}/{{ sample.name }}.fofn \
