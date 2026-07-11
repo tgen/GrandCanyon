@@ -99,4 +99,53 @@
       echo "Skipping evidence bam creation as no events were detected."
     fi
 
+
+{%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/amplicon_suite/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/amplicon_suite/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+
+- name: amplicon_suite_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, amplicon_architect, {{ sample_or_pair.name }}]
+  reset: predecessors
+  input:
+    {% if input_config in 'paired' %}
+    - {{ normal_bam }}
+    {% endif %}
+    - {{ bam }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+    - {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}
+    - {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.mosek }}
+  output:
+    - {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bam
+    - {{ results_dir }}/{{ sample_or_pair.name }}_AA_results
+    - {{ results_dir }}/{{ sample_or_pair.name }}_classification
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.amplicon_architect.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p "{{ temp_dir }}"
+    mkdir -p "{{ results_dir }}"
+
+    export AA_DATA_REPO="{{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}"
+    export MOSEKLM_LICENSE_FILE="{{ constants.grandcanyon[reference].tool_resources.amplicon_architect.mosek }}"
+    export AA_SRC=$(dirname $(python -c "import ampliconarchitectlib; print(ampliconarchitectlib.__file__)"))
+    export AC_SRC=$(dirname $(which amplicon_classifier.py))
+
+    AmpliconSuite-pipeline.py \
+      -o {{ results_dir }} \
+      -s {{ sample_or_pair.name }} \
+      -t 8 \
+      --bam {{ bam }} \
+      {% if input_config in 'paired' %}
+      --normal_bam {{ normal_bam }} \
+      {% endif %}
+      --ref "GRCh38" \
+      --run_AA \
+      --run_AC
+
 {% endmacro %}
