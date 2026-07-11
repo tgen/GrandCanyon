@@ -49,7 +49,7 @@
       {% endif %}
       --output {{ temp_dir }}/{{ sample.name }}
 
-    mv {{ temp_dir }}/{{ sample.name }}.isoforms.fa {{ results_dir }}
+    mv {{ temp_dir }}/{{ sample.name }}.* {{ results_dir }}
 
     {# generate reads_manifest.tsv file for flair quantify #}
     printf "{{ sample.name }}\tcondition1\tbatch1\t{{ input_fq }}\n" > {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv
