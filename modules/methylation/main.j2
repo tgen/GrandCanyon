@@ -1,5 +1,6 @@
 {# general methylation callers #}
 {% from 'modules/methylation/modkit.j2' import modkit with context %}
+{% from 'modules/methylation/rastair.j2' import rastair with context %}
 
 {# pacbio specific callers #}
 {% from 'modules/methylation/methbat.j2' import methbat with context %}
@@ -24,6 +25,24 @@
 
     {% if tasks[taskPrefix+"_methylation_methylation_caller_modkit"]|default(false) %}
       {{- modkit(sample, aligner) }}
+    {% endif %}
+
+  {% endfor %}
+
+{% endfor %}
+
+{%- for sample in samples.values() if sample.gltype in ('exome','genome') and sample.assayCode in 'WTAPS' %}
+
+  {% for aligner in sample.aligners %}
+
+    {% if sample.gltype in 'exome' %}
+      {% set taskPrefix = 'Exome' %}
+    {% elif sample.gltype in 'genome' %}
+      {% set taskPrefix = 'Genome' %}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_methylation_methylation_caller_rastair"]|default(false) %}
+      {{- rastair(sample, aligner) }}
     {% endif %}
 
   {% endfor %}

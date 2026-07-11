@@ -142,6 +142,8 @@ constants:
       container: quay.io/biocontainers/quast:5.3.0--py312pl5321hdcc493e_1
     R:
       container: ghcr.io/tgen/containers/r_with_modules:4.1.2-23080815
+    rastair:
+      container: quay.io/biocontainers/rastair:2.1.1--h03e3cfe_0
     salmon:
       container: quay.io/biocontainers/salmon:2.3.2--hfa8f182_0
     samtools:

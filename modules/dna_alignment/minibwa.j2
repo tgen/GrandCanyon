@@ -6,84 +6,40 @@
 {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
 
 {% for rgid, rg in sample.read_groups.items() %}
-{% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
-{% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
 
-- name: chunked_minibwa_generate_chunks_{{ sample.name }}_{{ aligner }}_{{ rgid }}
+- name: minibwa_{{ sample.name }}_{{ rgid }}
   reset: predecessors
   input:
-    - temp/fastqs/{{ r1fastq.basename }}
-    - temp/fastqs/{{ r2fastq.basename }}
-  output: temp/fastqs/{{ sample.name }}/{{ rgid }}
+    {% for file in rg.data_files %}
+    - temp/fastqs/{{ file.basename }}
+    {% endfor %}
+  output: {{ temp_dir }}/{{ rgid }}/{{ rgid }}.{{ aligner }}.sam
   walltime: "8:00:00"
-  cpus: 4
-  mem: 16G
+  cpus: 8
+  mem: 64G
   queue_preset: "DEFAULT"
-  container: {{ constants.tools.seqkit.container }}
+  container: {{ constants.tools.minibwa.container }}
   cmd: |
     set -eu
 
-    mkdir -p temp/fastqs/{{ sample.name }}/{{ rgid }}
+    mkdir -p {{ temp_dir }}/{{ rgid }}
 
-    seqkit split2 \
-      --by-size 48000000 \
-      --force \
-      --extension ".gz" \
-      --out-dir temp/fastqs/{{ sample.name }}/{{ rgid }} \
-      --read1 temp/fastqs/{{ r1fastq.basename }} \
-      --read2 temp/fastqs/{{ r2fastq.basename }}
-
-
-- name: chunked_minibwa_generate_chunked_tasks_{{ sample.name }}_{{ aligner }}_{{ rgid }}
-  reset: predecessors
-  after: chunked_minibwa_generate_chunks_{{ sample.name }}_{{ aligner }}_{{ rgid }}
-  exec: |
-    import glob
-
-    fastq_list = glob.glob("temp/fastqs/{{ sample.name }}/{{ rgid }}/*part*fastq.gz")
-    num_chunks = int(len(fastq_list)/2)
-    for index in range(1, num_chunks+1):
-      chunk = f'{index:03d}'
-      if self.workflow.tasks.get(f'chunked_minibwa_samtools_fixmate_{{ sample.name }}_{{ aligner }}_{{ rgid }}_{chunk}'):
-        self.workflow.tasks.pop(f'chunked_minibwa_samtools_fixmate_{{ sample.name }}_{{ aligner }}_{{ rgid }}_{chunk}')
-      self.workflow.new_task(
-          name = f'chunked_minibwa_samtools_fixmate_{{ sample.name }}_{{ aligner }}_{{ rgid }}_{chunk}',
-          reset = "predecessors",
-          input = ['temp/fastqs/{{ sample.name }}/{{ rgid }}', '{{ constants.grandcanyon[reference].reference_fasta_no_alt }}'],
-          output = "{{ temp_dir }}/{{ rgid }}/{chunk}.{{ aligner }}.bam",
-          walltime = "8:00:00",
-          cpus = "8",
-          mem = "64G",
-          queue_preset = "DEFAULT",
-          container = "{{ constants.tools.minibwa.container }}",
-          cmd = f"""
-            set -eu
-            set -o pipefail
-
-            rm -r {{ temp_dir }}/{{ rgid }}/{chunk}_st_sort_temp || true
-            mkdir -p {{ temp_dir }}/{{ rgid }}/{chunk}_st_sort_temp
-
-            minibwa map \
-              -t 8 \
-              -R '{{ read_group_line(rg, format="exec_bwa") }}' \
-              {{ constants.grandcanyon[reference].reference_fasta_no_alt }} \
-              temp/fastqs/{{ sample.name }}/{{ rgid }}/{{ r1fastq.basename.split('.fastq.gz')[0] }}.part_{chunk}.fastq.gz \
-              temp/fastqs/{{ sample.name }}/{{ rgid }}/{{ r2fastq.basename.split('.fastq.gz')[0] }}.part_{chunk}.fastq.gz |\
-            samtools fixmate \
-              --threads 4 \
-              -m \
-              - \
-              - |\
-            samtools sort \
-              -T {{ temp_dir }}/{{ rgid }}/{chunk}_st_sort_temp/{chunk} \
-              -u \
-              -m 3G \
-              --threads 4 \
-              --output-fmt BAM \
-              -o {{ temp_dir }}/{{ rgid }}/{chunk}.{{ aligner }}.bam \
-              -
-          """
-      )
+    minibwa map \
+      -t 8 \
+      -y \
+      -Y \
+      {% if sample.assayCode in 'WTAPS' %}
+      --meth \
+      {% endif %}
+      -o {{ temp_dir }}/{{ rgid }}/{{ rgid }}.{{ aligner }}.sam \
+      {{ constants.grandcanyon[reference].reference_fasta_no_alt }}
+      {% for file in rg.data_files %}
+      {% if not loop.last %}
+      temp/fastqs/{{ file.basename }} \
+      {% else %}
+      temp/fastqs/{{ file.basename }}
+      {% endif %}
+      {% endfor %}
 
 {% endfor %}
 
@@ -92,14 +48,9 @@
 - name: chunked_samtools_merge_rgid_bams_{{ sample.name }}_{{ rglb }}_{{ aligner }}
   tags: [{{ sample.gltype }}, alignment, dna_alignment, minibwa, {{ sample.name }}]
   reset: predecessors
-  after-re:
+  input:
   {% for rgid in rg %}
-    - chunked_minibwa_generate_chunked_tasks_{{ sample.name }}_{{ aligner }}_{{ rgid.rgid }}
-    - chunked_minibwa_samtools_fixmate_{{ sample.name }}_{{ aligner }}_{{ rgid.rgid }}_.*
-  {% endfor %}
-  input-re: 
-  {% for rgid in rg %}
-    - {{ temp_dir }}/{{ rgid.rgid }}/.*.{{ aligner }}.bam
+    - {{ temp_dir }}/{{ rgid.rgid }}/{{ rgid.rgid }}.{{ aligner }}.sam
   {% endfor %}
   output: {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam
   walltime: "24:00:00"
@@ -120,15 +71,18 @@
       --threads 4 \
       -c \
       -f \
-      -u \
       {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam \
       {% for rgid in rg %}
       {% if not loop.last %}
-      {{ temp_dir }}/{{ rgid.rgid }}/*.{{ aligner }}.bam \
+      {{ temp_dir }}/{{ rgid.rgid }}/{{ rgid.rgid }}{{ aligner }}.sam \
       {% else %}
-      {{ temp_dir }}/{{ rgid.rgid }}/*.{{ aligner }}.bam
+      {{ temp_dir }}/{{ rgid.rgid }}/{{ rgid.rgid }}.{{ aligner }}.sam
       {% endif %}
       {% endfor %}
+
+    {% for rgid in rg %}
+    rm -f {{ temp_dir }}/{{ rgid.rgid }}/{{ rgid.rgid }}.{{ aligner }}.sam
+    {% endfor %}
 
 - name: samtools_markdup_{{ sample.name }}_{{ rglb }}_{{ aligner }}
   tags: [{{ sample.gltype }}, alignment, mark_duplicates, samtools, {{ sample.name }}]
