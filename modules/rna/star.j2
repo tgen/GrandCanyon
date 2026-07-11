@@ -170,7 +170,7 @@
     - {{ reference_fasta }}
     - {{ star_bam_sorted }}
   output:
-    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.md.bam
     - {{ rna_md_metrics }}
   cpus: 10
   mem: 40G
