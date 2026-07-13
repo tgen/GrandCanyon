@@ -10,6 +10,7 @@
 - name: minibwa_{{ sample.name }}_{{ rgid }}
   reset: predecessors
   input:
+    - {{ constants.grandcanyon[reference].reference_fasta_no_alt }}
     {% for file in rg.data_files %}
     - temp/fastqs/{{ file.basename }}
     {% endfor %}
@@ -28,11 +29,12 @@
       -t 8 \
       -y \
       -Y \
+      -R '{{ read_group_line(rg, format="bwa") }}' \
       {% if sample.assayCode in 'WTAPS' %}
       --meth \
       {% endif %}
       -o {{ temp_dir }}/{{ rgid }}/{{ rgid }}.{{ aligner }}.sam \
-      {{ constants.grandcanyon[reference].reference_fasta_no_alt }}
+      {{ constants.grandcanyon[reference].reference_fasta_no_alt }} \
       {% for file in rg.data_files %}
       {% if not loop.last %}
       temp/fastqs/{{ file.basename }} \
@@ -74,7 +76,7 @@
       {{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam \
       {% for rgid in rg %}
       {% if not loop.last %}
-      {{ temp_dir }}/{{ rgid.rgid }}/{{ rgid.rgid }}{{ aligner }}.sam \
+      {{ temp_dir }}/{{ rgid.rgid }}/{{ rgid.rgid }}.{{ aligner }}.sam \
       {% else %}
       {{ temp_dir }}/{{ rgid.rgid }}/{{ rgid.rgid }}.{{ aligner }}.sam
       {% endif %}
