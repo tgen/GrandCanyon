@@ -38,10 +38,12 @@
     set -o pipefail
 
     rm -r {{ temp_dir }} || true
-    mkdir -p "{{ temp_dir }}"
+    mkdir -p "{{ temp_dir }}/data_repo"
     mkdir -p "{{ results_dir }}"
 
-    export AA_DATA_REPO="{{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}"
+    cp -r {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}/* {{ temp_dir }}/data_repo/
+
+    export AA_DATA_REPO="{{ temp_dir }}/data_repo"
     export MOSEKLM_LICENSE_FILE="{{ constants.grandcanyon[reference].tool_resources.amplicon_architect.mosek }}"
     export AA_SRC=$(dirname $(python -c "import ampliconarchitectlib; print(ampliconarchitectlib.__file__)"))
     export AC_SRC=$(dirname $(which amplicon_classifier.py))
@@ -128,10 +130,12 @@
     set -o pipefail
 
     rm -r {{ temp_dir }} || true
-    mkdir -p "{{ temp_dir }}"
+    mkdir -p "{{ temp_dir }}/data_repo"
     mkdir -p "{{ results_dir }}"
 
-    export AA_DATA_REPO="{{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}"
+    cp -r {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}/* {{ temp_dir }}/data_repo/
+
+    export AA_DATA_REPO="{{ temp_dir }}/data_repo"
     export MOSEKLM_LICENSE_FILE="{{ constants.grandcanyon[reference].tool_resources.amplicon_architect.mosek }}"
     export AA_SRC=$(dirname $(python -c "import ampliconarchitectlib; print(ampliconarchitectlib.__file__)"))
     export AC_SRC=$(dirname $(which amplicon_classifier.py))
