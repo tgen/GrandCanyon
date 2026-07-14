@@ -17,7 +17,7 @@
   output: {{ temp_dir }}/{{ rgid }}/{{ rgid }}.{{ aligner }}.bam
   walltime: "8:00:00"
   cpus: 8
-  mem: 64G
+  mem: 80G
   queue_preset: "DEFAULT"
   container: {{ constants.tools.minibwa.container }}
   cmd: |
@@ -51,8 +51,8 @@
       - |\
     {% endif %}
     samtools sort \
-      -T {{ temp_dir }}/{{ rgid }}/st_sort_temp\
-      -m 3G \
+      -T {{ temp_dir }}/{{ rgid }}/st_sort_temp \
+      -m 768M \
       --threads 8 \
       --output-fmt BAM \
       -o {{ temp_dir }}/{{ rgid }}/{{ rgid }}.{{ aligner }}.bam \
