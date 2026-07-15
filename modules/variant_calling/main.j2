@@ -399,9 +399,7 @@
     {% else %}
 
       {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
-        {% if sample.gltype in 'genome' %}
-          {{- gatk_cnv(sample, aligner) }}
-        {% endif %}
+        {{- gatk_cnv(sample, aligner) }}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_cna_caller_ichorcna"]|default(false) %}
@@ -520,9 +518,7 @@
     {% else %}
 
       {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
-        {% if pair.gltype in 'genome' %}
-          {{- gatk_cnv(pair, aligner) }}
-        {% endif %}
+        {{- gatk_cnv(pair, aligner) }}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_cna_caller_cnvkit"]|default(false) %}
