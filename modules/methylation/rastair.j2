@@ -21,6 +21,11 @@
 
     mkdir -p {{ results_dir }}
 
-    rastair call --bed {{ results_dir }}/{{ sample.name }}.{{ aligner }}.bed.gz -r {{ constants.grandcanyon[reference].reference_fasta }} {{ bam }}
+    rastair call \
+      --bed {{ results_dir }}/{{ sample.name }}.{{ aligner }}.bed.gz \
+      -r {{ constants.grandcanyon[reference].reference_fasta }} \
+      --min-baseq 30 \
+      --min-mapq 20 \
+      {{ bam }}
 
 {% endmacro %}
