@@ -66,7 +66,7 @@
     {% endif %}
 
     conda run -n sqanti3 sqanti3 init \
-      -c sqanti3_config.yaml \
+      -c {{ results_dir }}/sqanti3_config.yaml \
       -a \
       cpus=20 \
       dir={{ results_dir }} \
@@ -87,7 +87,7 @@
       {% endif %}
       report=both
 
-    conda run -n sqanti3 sqanti3 all -c sqanti3_config.yaml
+    conda run -n sqanti3 sqanti3 all -c {{ results_dir }}/sqanti3_config.yaml
 
 {% endif %}
 
