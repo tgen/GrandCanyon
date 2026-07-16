@@ -1,3 +1,5 @@
+{% from 'modules/rna/isoform/sqanti3.j2' import sqanti3 with context %}
+
 {% macro flair(sample, sample_bam, input_fq, reference_fasta, gtf, SIRV=false) %}
 
 {% if sample.external_data is defined and sample.external_data.sj_tab is defined %}
@@ -27,8 +29,8 @@
     {% endif %}
   output:
     - {{ temp_dir }}/flair.collapse.isoforms.fa
-    - {{ results_dir }}/{{ sample.name }}.quantify.isoforms.fa
-    - {{ results_dir }}/{{ sample.name }}.quantify.tpm.tsv
+    - {{ results_dir }}/{{ sample.name }}.isoforms.gtf
+    - {{ results_dir }}/{{ sample.name }}.quantify.counts.tsv
     - {{ results_dir }}/{{ sample.name }}_flair_top10.txt
   cpus: 10
   mem: 32G
@@ -66,6 +68,12 @@
     awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' {{ results_dir }}/{{ sample.name }}.isoforms.fa |\
     awk '{printf("%d\t%s\t%s\t%s\n",length($2),$1,$1,$2);}' |\
     sort -t $'\t' -k1,1nr | cut -f 1,2 | head > {{ results_dir }}/{{ sample.name }}_flair_top10.txt
+
+{% if tasks['RNA_transcriptome_isoform_discovery_sqanti3']|default(false) %}
+  {% set isoforms %}{{ results_dir }}/{{ sample.name }}.isoforms.gtf{% endset %}
+  {% set flnc_count %}{{ results_dir }}/{{ sample.name }}.quantify.counts.tsv{% endset %}
+  {{- sqanti3(sample, isoforms, flnc_count, temp_dir, results_dir, 'flair') }}
+{% endif %}
 
 {% endmacro %}
 

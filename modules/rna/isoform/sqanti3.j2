@@ -1,12 +1,8 @@
-{% macro sqanti3(sample) %}
+{% macro sqanti3(sample, isoforms, flnc_count, temp_dir, results_dir, toolname) %}
 
 {% if sample.external_data is defined and sample.external_data.sj_tab is defined %}
   {% set sample_sj_tab %}{{ sample.external_data.sj_tab }}{% endset %}
 {% endif %}
-
-{% set temp_dir %}temp/{{ sample.gltype }}/isoforms/sqanti3/{{ sample.name }}{% endset %}
-{% set results_dir %}{{ sample.gltype }}/isoforms/sqanti3/{{ sample.name }}{% endset %}
-{% set isoseq_dir %}{{ sample.gltype }}/isoforms/isoseq/{{ sample.name }}{% endset %}
 
 {% set longfqlist = [] %}
 {% set shortfqlist = [] %}
@@ -33,10 +29,10 @@
 
 {% if longfqlist | length > 0 %}
 
-- name: sqanti3_{{ sample.name }}
+- name: sqanti3_{{ toolname }}_{{ sample.name }}
   input:
-    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.gff
-    - {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt
+    - {{ isoforms }}
+    - {{ flnc_count }}
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].gtf }}
     - {{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }}
@@ -58,7 +54,6 @@
   cmd: |
     set -e
 
-    rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
 
@@ -70,8 +65,6 @@
     EOF
     {% endif %}
 
-    cp {{ isoseq_dir }}/{{ sample.name }}.collapsed.flnc_count.txt {{ temp_dir }}/{{ sample.name }}.collapsed.flnc_count.csv
-
     conda run -n sqanti3 sqanti3 init \
       -c sqanti3_config.yaml \
       -a \
@@ -79,13 +72,13 @@
       dir={{ results_dir }} \
       refGTF={{ constants.grandcanyon[reference].gtf }} \
       refFasta={{ constants.grandcanyon[reference].reference_fasta }} \
-      isoforms={{ isoseq_dir }}/{{ sample.name }}.collapsed.gff \
+      isoforms={{ isoforms }} \
       output={{ sample.name }} \
       gff3={{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }} \
       CAGE_peak={{ constants.grandcanyon[reference].tool_resources.sqanti3.cage_peak }} \
       polyA_motif_list={{ constants.grandcanyon[reference].tool_resources.sqanti3.polya_motif }} \
       isoAnnotLite=True \
-      fl_count={{ temp_dir }}/{{ sample.name }}.collapsed.flnc_count.csv \
+      fl_count={{ flnc_count }} \
       {% if shortfqlist | length > 0 %}
       short_reads={{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
       {% endif %}
