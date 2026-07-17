@@ -69,9 +69,11 @@
     awk '{printf("%d\t%s\t%s\t%s\n",length($2),$1,$1,$2);}' |\
     sort -t $'\t' -k1,1nr | cut -f 1,2 | head > {{ results_dir }}/{{ sample.name }}_flair_top10.txt
 
+    sed 's/_ENSG[0-9]\+//' {{ results_dir }}/{{ sample.name }}.quantify.counts.tsv > {{ results_dir }}/{{ sample.name }}.quantify.flnc.counts.tsv
+
 {% if tasks['RNA_transcriptome_isoform_discovery_sqanti3']|default(false) %}
   {% set isoforms %}{{ results_dir }}/{{ sample.name }}.isoforms.gtf{% endset %}
-  {% set flnc_count %}{{ results_dir }}/{{ sample.name }}.quantify.counts.tsv{% endset %}
+  {% set flnc_count %}{{ results_dir }}/{{ sample.name }}.quantify.flnc.counts.tsv{% endset %}
   {{- sqanti3(sample, isoforms, flnc_count, temp_dir, results_dir, 'flair') }}
 {% endif %}
 
