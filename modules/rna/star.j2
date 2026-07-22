@@ -247,7 +247,7 @@
 
 {{- stats2json(sample.gltype, sample.name, task, rna_md_metrics, rna_md_metrics_json, "picard_mark_duplicates_metrics", sample=sample, sample_name=sample.name) }}
 
-{% if tasks['RNA_transcriptome_quantify_expression_subread_featureCounts']|default(false) %}
+{% if tasks['RNA_transcriptome_quantify_expression_featureCounts']|default(false) %}
   {{- featurecounts(sample) }}
 {% endif %}
 {% endmacro %}

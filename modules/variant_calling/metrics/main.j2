@@ -15,7 +15,7 @@
 {% endif %}
 
 {% if input_config in ('paired') %}
-  {% if tasks[sample_or_pair.gltype|capitalize+"_somatic_sample_metric_msisensor_pro"]|default(false) %}
+  {% if tasks[sample_or_pair.gltype|capitalize+"_sample_metrics_msisensor_pro"]|default(false) %}
     {{- msisensor_pro(sample_or_pair, normal_bam, tumor_bam, aligner) }}
   {% endif %}
 {% endif %}

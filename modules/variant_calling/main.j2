@@ -105,11 +105,11 @@
 
     {% else %}
 
-      {% if tasks[taskPrefix+"_constitutional_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
         {{- strelka2(sample, aligner) }}
       {% endif %}
 
-      {% if tasks[taskPrefix+"_constitutional_variant_calling_snp_indel_caller_vardict"]|default(false) %}
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
         {{- vardict(sample, aligner) }}
       {% endif %}
 

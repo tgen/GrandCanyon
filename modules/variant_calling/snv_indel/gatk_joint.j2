@@ -60,8 +60,6 @@
       -V {{ temp_dir }}/{{ family.name }}.g.vcf.gz \
       -O {{ combined_vcf }}
 
-{% if tasks[taskPrefix+"_joint_variant_calling_gatk_vqsr"] | default(true) %}
-
 - name: gatk_vqsr_{{ family.name }}_{{ family.gltype }}
   input: {{ combined_vcf }}
   output:
@@ -98,10 +96,6 @@
       --tranches-file {{ vqsr_tranches }} \
       --recal-file {{ vqsr_recal }}
 
-{% endif %}
-
-{% if tasks[taskPrefix+"_joint_variant_calling_gatk_cnnscorevariants"] | default(true) %}
-
 - name: gatk_cnnscorevariants_{{ family.name }}_{{ family.gltype }}
   input: {{ combined_vcf }}
   output: {{ cnn_vcf }}
@@ -120,9 +114,7 @@
       --variant {{ combined_vcf }} \
       --output {{ cnn_vcf }}
 
-{% endif %}
-
-{% if tasks[taskPrefix+"_joint_variant_calling_gatk_somalier"] | default(true) %}
+{% if tasks[taskPrefix+"_variant_calling_joint_variant_calling_somalier"] | default(true) %}
   {{- somalier(family, 'gatk', combined_vcf) }}
 {% endif %}
 

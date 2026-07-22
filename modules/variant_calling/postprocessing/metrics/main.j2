@@ -20,16 +20,16 @@
 {% if variant_caller in 'merged' %}
 
   {% if input_config in ('paired') %}
-    {% if tasks[sample_or_pair.gltype|capitalize+"_somatic_sample_metric_tgen_mutation_burden"]|default(false) %}
+    {% if tasks[sample_or_pair.gltype|capitalize+"_sample_metrics_tgen_mutation_burden"]|default(false) %}
       {{- mutation_burden(sample_or_pair, normal_bam, tumor_bam, input_vcf, variant_caller, aligner, 'vep') }}
     {% endif %}
 
-    {% if tasks[sample_or_pair.gltype|capitalize+"_somatic_sample_metric_tucon"]|default(false) %}
+    {% if tasks[sample_or_pair.gltype|capitalize+"_sample_metrics_tucon"]|default(false) %}
       {{- tucon(sample_or_pair, input_vcf, 'vep', variant_caller, aligner) }}
     {% endif %}
   {% endif %}
 
-  {% if tasks[sample_or_pair.gltype|capitalize+"_somatic_sample_metric_sigprofiler"]|default(false) %}
+  {% if tasks[sample_or_pair.gltype|capitalize+"_sample_metrics_sigprofiler"]|default(false) %}
     {{- sigprofiler(sample_or_pair, input_vcf, variant_caller, aligner) }}
   {% endif %}
 

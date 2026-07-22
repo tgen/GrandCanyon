@@ -52,7 +52,7 @@
 
     bcftools index {{ output_vcf }}
 
-{% if tasks[taskPrefix+"_joint_variant_calling_glnexus_somalier"] | default(true) %}
+{% if tasks[taskPrefix+"_variant_calling_joint_variant_calling_somalier"] | default(true) %}
   {{- somalier(family, 'glnexus', output_vcf) }}
 {% endif %}
 
