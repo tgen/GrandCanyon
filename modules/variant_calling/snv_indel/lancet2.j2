@@ -112,6 +112,7 @@
   tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, lancet2, {{ sample_or_pair.name }}]
   reset: predecessors
   input:
+    - {{ reference_fasta }}
     - {{ all_vcf }}
     - {{ all_vcf }}.tbi
     {% if sample_or_pair.gltype == 'exome' %}
@@ -129,8 +130,11 @@
     set -eu
     set -o pipefail
 
-    bcftools filter \
+    bcftools norm \
+      --fasta-ref {{ reference_fasta }} \
+      --check-ref x \
       {{ all_vcf }} | \
+    bcftools filter | \
     bcftools view \
       {% if input_config in ('paired') %}
       --include 'FILTER == "PASS" && CASE==1' \
