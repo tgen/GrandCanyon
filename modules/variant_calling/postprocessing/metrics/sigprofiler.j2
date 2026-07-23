@@ -30,35 +30,56 @@
 
     rm -r {{ temp_vcf_dir }} || true
     mkdir -p {{ temp_vcf_dir }}
-    mkdir -p {{ results_dir }}/{SBS,DBS}
 
     gunzip -c {{ input_vcf }} > {{ temp_vcf_dir }}/{{ vcf_prefix | basename }}.vcf
 
     export SIGPROFILERMATRIXGENERATOR_VOLUME="{{ constants.grandcanyon[reference].tool_resources.sigprofiler.ref_dir }}"
     export SIGPROFILERASSIGNMENT_VOLUME="{{ temp_dir }}"
 
-    SigProfilerAssignment cosmic_fit \
-      {{ temp_vcf_dir }} \
-      {{ results_dir }}/SBS \
-      --genome_build GRCh38 \
-      --cosmic_version 3.5 \
-      --input_type vcf \
+    SigProfilerMatrixGenerator matrix_generator \
       {% if sample_or_pair.gltype == 'exome' %}
-      --exome True \
+      --exome \
       {% endif %}
-      --context_type "96"
+      {{ sample_or_pair.name }} \
+      GRCh38 \
+      {{ temp_vcf_dir }}
 
-    SigProfilerAssignment cosmic_fit \
-      {{ temp_vcf_dir }} \
-      {{ results_dir }}/DBS \
-      --genome_build GRCh38 \
-      --cosmic_version 3.5 \
-      --input_type vcf \
-      --collapse_to_SBS96 False \
-      {% if sample_or_pair.gltype == 'exome' %}
-      --exome True \
-      {% endif %}
-      --context_type "DINUC"
+    if [ -e {{ temp_vcf_dir }}/output/SBS ]; then
+      mkdir -p {{ results_dir }}/SBS
+      SigProfilerAssignment cosmic_fit \
+        {% if sample_or_pair.gltype == 'exome' %}
+        {{ temp_vcf_dir }}/output/SBS/{{ sample_or_pair.name }}.SBS96.exome \
+        {% else %}
+        {{ temp_vcf_dir }}/output/SBS/{{ sample_or_pair.name }}.SBS96.all \
+        {% endif %}
+        {{ results_dir }}/SBS \
+        --genome_build GRCh38 \
+        --cosmic_version 3.5 \
+        --input_type matrix \
+        {% if sample_or_pair.gltype == 'exome' %}
+        --exome True \
+        {% endif %}
+        --context_type "96"
+    fi
+
+    if [ -e {{ temp_vcf_dir }}/output/DBS ]; then
+      mkdir -p {{ results_dir }}/DBS
+      SigProfilerAssignment cosmic_fit \
+        {% if sample_or_pair.gltype == 'exome' %}
+        {{ temp_vcf_dir }}/output/DBS/{{ sample_or_pair.name }}.DBS78.exome \
+        {% else %}
+        {{ temp_vcf_dir }}/output/DBS/{{ sample_or_pair.name }}.DBS78.all \
+        {% endif %}
+        {{ results_dir }}/DBS \
+        --genome_build GRCh38 \
+        --cosmic_version 3.5 \
+        --input_type matrix \
+        --collapse_to_SBS96 False \
+        {% if sample_or_pair.gltype == 'exome' %}
+        --exome True \
+        {% endif %}
+        --context_type "DINUC"
+      fi
 
 {% else %}
   {% set log_msg %}sigprofiler was enabled, but the sigprofiler ref_dir was not defined for {{ reference }}{% endset %}
