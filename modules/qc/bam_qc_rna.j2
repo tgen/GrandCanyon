@@ -10,8 +10,10 @@
 
   {% if constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
     {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
+    {% set reference_dict %}{{ constants.grandcanyon[reference].reference_fasta_no_alt | replace('.fa','.dict') }}{% endset %}
   {% else %}
     {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+    {% set reference_dict %}{{ constants.grandcanyon[reference].reference_dict }}{% endset %}
   {% endif %}
   {% if bam_level is sameas false %}
     {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
@@ -24,6 +26,9 @@
     {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
   {% endif %}
 
+  {% set gene_model_gtf = constants.grandcanyon[reference].gtf %}
+  {% set gene_model_prefix = gene_model_gtf.split('.')[:-1]|join('.') %}
+  {% set ribo_locations %}{{ results_dir }}{{ gene_model_prefix }}.ribo.interval_list{% endset %}
   {% set rna_metrics %}{{ results_dir }}/{{ bam|basename }}.rna_metrics{% endset %}
   {% set rna_metrics_json %}{{ rna_metrics }}.json{% endset %}
 
@@ -33,7 +38,7 @@
     - {{ bam }}
     - {{ bam_index }}
     - {{ constants.grandcanyon[reference].ref_flat }}
-    - {{ constants.grandcanyon[reference].ribo_locations }}
+    - {{ constants.grandcanyon[reference].gtf }}
     - {{ reference_fasta }}
   output:
     - {{ rna_metrics }}
@@ -55,6 +60,13 @@
 
     mkdir -p "{{ results_dir }}"
 
+    grep -w "rRNA" {{ constants.grandcanyon[reference].gtf }} |\
+        cut -f1,4,5,7,9 |\
+        sed 's/gene_id "//g' |\
+        sed 's/"; transcript_id "/\'$'\t''/g' |\
+        cut -f1-5 |\
+    cat {{ reference_dict }} - > {{ ribo_locations }}
+
     gatk CollectRnaSeqMetrics \
       --java-options "-Xmx14G" \
       {% if reference == "grch38" %}
@@ -64,7 +76,7 @@
       --STRAND_SPECIFICITY {{ constants.grandcanyon.strandedness_options[sample.strandedness].collectrnaseqmetrics }} \
       --VALIDATION_STRINGENCY LENIENT \
       --REF_FLAT "{{ constants.grandcanyon[reference].ref_flat }}" \
-      --RIBOSOMAL_INTERVALS "{{ constants.grandcanyon[reference].ribo_locations }}" \
+      --RIBOSOMAL_INTERVALS "{{ ribo_locations }}" \
       --METRIC_ACCUMULATION_LEVEL ALL_READS \
       --METRIC_ACCUMULATION_LEVEL SAMPLE \
       --METRIC_ACCUMULATION_LEVEL LIBRARY \
