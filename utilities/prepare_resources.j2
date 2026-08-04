@@ -292,6 +292,8 @@
         awk 'BEGIN { OFS="\t"} {print $12, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10}' > {{ constants.grandcanyon[reference].ref_flat | replace('.txt', '.hugoID.txt') }}
 
 
+{% if tasks['RNA_transcriptome_fusion_caller_STAR_Fusion']|default(false) %}
+
 - name: create_starfusion_resources_for_{{ reference | replace('.', '_') }}
   input:
     - {{ constants.grandcanyon[reference].reference_fasta }}
@@ -315,6 +317,8 @@
       --pfam_db current \
       --dfam_db {{ constants.grandcanyon.dfam_db }} \
       --output_dir {{ constants.grandcanyon[reference].starfusion_index }}
+
+{% endif %}
 
 {% endmacro %}
 
@@ -481,9 +485,9 @@
 
 {% macro generate_cnv_resources() %}
 
-{% set temp_dir %}temp/pipeline_resources/ascat_resources{% endset %}
+{% if tasks["Genome_variant_calling_cna_caller_ascat"]|default(false) or tasks["Exome_variant_calling_cna_caller_ascat"]|default(false) %}
 
-{% set population_vcf %}{{ constants.grandcanyon[reference].annotation_databases | first }}{% endset %}
+{% set temp_dir %}temp/pipeline_resources/ascat_resources{% endset %}
 
 {% if constants.grandcanyon[reference].annotation_databases is defined and constants.grandcanyon[reference].annotation_databases | length > 0 %}
   {% set population_vcf %}{{ constants.grandcanyon[reference].annotation_databases[0].file }}{% endset %}
@@ -612,6 +616,8 @@
     EOF
 
     Rscript createGCcontentFile.R {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/loci/all_loci_{{ reference }}.txt 16 {{ constants.grandcanyon[reference].reference_fasta }}
+
+{% endif %}
 
 {% endmacro %}
 
