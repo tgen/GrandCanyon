@@ -16,6 +16,23 @@
     {{ raise(raise_msg) }}
 {% endif %}
 
+{% if source_reference is defined %}
+  {% set temp_reference_dict = constants.grandcanyon[reference] %}
+  {% do constants.grandcanyon[reference].update(constants.grandcanyon[source_reference]) %}
+  {% do constants.grandcanyon[reference].update(temp_reference_dict) %}
+  {% if constants.grandcanyon[reference].chain_file is defined %}
+    {% from 'utilities/prepare_resources.j2' import liftover_vcf with context %}
+    {% set log_msg %}Detected {{ constants.grandcanyon[reference].chain_file }} chain file. Assuming chain is for {{ source_reference }} -> {{ reference }}{% endset %}
+    {{ log(log_msg, level='WARNING') }}
+    {% set liftover_output_dir %}{{ constants.grandcanyon[reference].reference_fasta | dirname }}{% endset %}
+    {% set source_fasta %}{{ constants.grandcanyon[source_reference].reference_fasta }}{% endset %}
+    {% set result_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+    {% set source_vcf %}{{ constants.grandcanyon[source_reference].tool_resources.mutect2.germline_reference }}{% endset %}
+    {% set result_vcf %}{{ liftover_output_dir }}/vcfs/{{ source_vcf | basename }}{% endset %}
+    {% do constants.grandcanyon[reference].update({'tool_resources': {'mutect2': {'germline_reference': result_vcf }}}) %}
+    {{ liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta, 'tool_resources_mutect2_germline_reference') }}
+  {% endif %}
+{% endif %}
 {% if constants.grandcanyon[reference].reference_fasta is defined %}
     {% from 'utilities/prepare_resources.j2' import prepare_reference with context %}
     {% if constants.grandcanyon[reference].reference_fai is not defined
@@ -79,15 +96,12 @@
 {% if constants.grandcanyon[reference].gtf is defined %}
     {% from 'utilities/prepare_resources.j2' import prepare_gene_model with context %}
     {% if constants.grandcanyon[reference].ref_flat is not defined
-    or constants.grandcanyon[reference].ribo_locations is not defined
     or constants.grandcanyon[reference].starfusion_index is not defined %}
         {% set gene_model_dir = constants.grandcanyon[reference].gtf | dirname %}
         {% set gene_model_gtf = constants.grandcanyon[reference].gtf %}
         {% set gene_model_prefix = gene_model_gtf.split('.')[:-1]|join('.') %}
         {% set ref_flat %}{{ gene_model_prefix }}.refFlat.txt{% endset %}
-        {% set ribo_locations %}{{ gene_model_prefix }}.ribo.interval_list{% endset %}
         {% do constants.grandcanyon[reference].update({'ref_flat': ref_flat}) %}
-        {% do constants.grandcanyon[reference].update({'ribo_locations': ribo_locations}) %}
 
         {% if tasks['RNA_transcriptome_fusion_caller_STAR_Fusion']|default(false) %}
           {% set starfusion_index %}{{ gene_model_dir }}/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir{% endset %}
@@ -106,23 +120,6 @@
 {% else %}
     {% set raise_msg %}gene_model gtf not defined! constants.grandcanyon.{{ reference }}.gtf is not in pipeline.yaml or user supplied input{% endset %}
     {{ log(raise_msg) }}
-{% endif %}
-{% if source_reference is defined %}
-  {% set temp_reference_dict = constants.grandcanyon[reference] %}
-  {% do constants.grandcanyon[reference].update(constants.grandcanyon[source_reference]) %}
-  {% do constants.grandcanyon[reference].update(temp_reference_dict) %}
-  {% if constants.grandcanyon[reference].chain_file is defined %}
-    {% from 'utilities/prepare_resources.j2' import liftover_vcf with context %}
-    {% set log_msg %}Detected {{ constants.grandcanyon[reference].chain_file }} chain file. Assuming chain is for {{ source_reference }} -> {{ reference }}{% endset %}
-    {{ log(log_msg, level='WARNING') }}
-    {% set liftover_output_dir %}{{ constants.grandcanyon[reference].reference_fasta | dirname }}{% endset %}
-    {% set source_fasta %}{{ constants.grandcanyon[source_reference].reference_fasta }}{% endset %}
-    {% set result_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
-    {% set source_vcf %}{{ constants.grandcanyon[source_reference].tool_resources.mutect2.germline_reference }}{% endset %}
-    {% set result_vcf %}{{ liftover_output_dir }}/vcfs/{{ source_vcf | basename }}{% endset %}
-    {% do constants.grandcanyon[reference].update({'tool_resources': {'mutect2': {'germline_reference': result_vcf }}}) %}
-    {{ liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta, 'tool_resources_mutect2_germline_reference') }}
-  {% endif %}
 {% endif %}
 
 {% set reference = reference | lower %}
