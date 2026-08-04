@@ -242,7 +242,7 @@
       --write-index \
       {{ results_dir }}/{{ sample.name }}.minimap2.cram
 
-{% if tasks['RNA_transcriptome_quantify_expression_salmon']|default(false) %}
+{% if tasks['RNA_transcriptome_quantify_expression_oarfish']|default(false) %}
 
 - name: minimap2_transcriptome_{{ sample.name }}
   input:
