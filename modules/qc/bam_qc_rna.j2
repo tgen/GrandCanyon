@@ -26,9 +26,9 @@
     {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
   {% endif %}
 
-  {% set gene_model_gtf = constants.grandcanyon[reference].gtf %}
+  {% set gene_model_gtf %}{{ constants.grandcanyon[reference].gtf | basename }}{% endset %}
   {% set gene_model_prefix = gene_model_gtf.split('.')[:-1]|join('.') %}
-  {% set ribo_locations %}{{ results_dir }}{{ gene_model_prefix }}.ribo.interval_list{% endset %}
+  {% set ribo_locations %}{{ results_dir }}/{{ gene_model_prefix }}.ribo.interval_list{% endset %}
   {% set rna_metrics %}{{ results_dir }}/{{ bam|basename }}.rna_metrics{% endset %}
   {% set rna_metrics_json %}{{ rna_metrics }}.json{% endset %}
 
@@ -67,22 +67,36 @@
         cut -f1-5 |\
     cat {{ reference_dict }} - > {{ ribo_locations }}
 
-    gatk CollectRnaSeqMetrics \
-      --java-options "-Xmx14G" \
-      {% if reference == "grch38" %}
-      --IGNORE_SEQUENCE chrEBV \
-      {% endif %}
-      --REFERENCE_SEQUENCE {{ reference_fasta }} \
-      --STRAND_SPECIFICITY {{ constants.grandcanyon.strandedness_options[sample.strandedness].collectrnaseqmetrics }} \
-      --VALIDATION_STRINGENCY LENIENT \
-      --REF_FLAT "{{ constants.grandcanyon[reference].ref_flat }}" \
-      --RIBOSOMAL_INTERVALS "{{ ribo_locations }}" \
-      --METRIC_ACCUMULATION_LEVEL ALL_READS \
-      --METRIC_ACCUMULATION_LEVEL SAMPLE \
-      --METRIC_ACCUMULATION_LEVEL LIBRARY \
-      --INPUT "{{ bam }}" \
-      --CHART_OUTPUT "{{ rna_metrics }}.pdf" \
-      --OUTPUT "{{ rna_metrics }}"
+    if grep -q "chrEBV" {{ reference_dict }} ; then
+      gatk CollectRnaSeqMetrics \
+        --java-options "-Xmx14G" \
+        --IGNORE_SEQUENCE "chrEBV" \
+        --REFERENCE_SEQUENCE {{ reference_fasta }} \
+        --STRAND_SPECIFICITY {{ constants.grandcanyon.strandedness_options[sample.strandedness].collectrnaseqmetrics }} \
+        --VALIDATION_STRINGENCY LENIENT \
+        --REF_FLAT "{{ constants.grandcanyon[reference].ref_flat }}" \
+        --RIBOSOMAL_INTERVALS "{{ ribo_locations }}" \
+        --METRIC_ACCUMULATION_LEVEL ALL_READS \
+        --METRIC_ACCUMULATION_LEVEL SAMPLE \
+        --METRIC_ACCUMULATION_LEVEL LIBRARY \
+        --INPUT "{{ bam }}" \
+        --CHART_OUTPUT "{{ rna_metrics }}.pdf" \
+        --OUTPUT "{{ rna_metrics }}"
+    else
+      gatk CollectRnaSeqMetrics \
+        --java-options "-Xmx14G" \
+        --REFERENCE_SEQUENCE {{ reference_fasta }} \
+        --STRAND_SPECIFICITY {{ constants.grandcanyon.strandedness_options[sample.strandedness].collectrnaseqmetrics }} \
+        --VALIDATION_STRINGENCY LENIENT \
+        --REF_FLAT "{{ constants.grandcanyon[reference].ref_flat }}" \
+        --RIBOSOMAL_INTERVALS "{{ ribo_locations }}" \
+        --METRIC_ACCUMULATION_LEVEL ALL_READS \
+        --METRIC_ACCUMULATION_LEVEL SAMPLE \
+        --METRIC_ACCUMULATION_LEVEL LIBRARY \
+        --INPUT "{{ bam }}" \
+        --CHART_OUTPUT "{{ rna_metrics }}.pdf" \
+        --OUTPUT "{{ rna_metrics }}"
+    fi
 
     {% if libraryCount == 1 %}
     if [ -f "{{ rna_metrics }}.pdf" ]; then
