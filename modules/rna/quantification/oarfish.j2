@@ -22,7 +22,7 @@
 
 - name: oarfish_{{ sample.name }}
   input:
-    {{ constants.grandcanyon[reference].transcriptome }}
+    - {{ constants.grandcanyon[reference].transcriptome }}
     {% for fq in longfqlist %}
     - {{ fq.path }}
     {% endfor %}
