@@ -212,7 +212,7 @@
     {% set aligned_files = [] %}
     {% for file in data_files %}
       {% if file.fileType in ('fastq', 'fasterq', 'ubam') %}
-        {% if file.fileType in ('ubam') and file.glPrep|lower not in ('longread') %}
+        {% if file.fileType in ('ubam') and file.glPrep|lower not in ('longread', 'kinnexfulllength') %}
           {% set r1fastq = file.copy() %}
           {% set r2fastq = file.copy() %}
 
