@@ -3,12 +3,32 @@
 {% set temp_dir %}temp/{{ sample.gltype }}/quant/oarfish{% endset %}
 {% set results_dir %}{{ sample.gltype }}/quant/oarfish/{{ sample.name }}{% endset %}
 
+{% set longfqlist = [] %}
+
+{% for rgid, rg in sample.read_groups.items() %}
+  {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
+  {% if longfastq is defined %}
+    {% set longfastq_path %}temp/fastqs/{{ longfastq.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do longfastq.update({"path": longfastq_path}) %}
+    {% do longfqlist.append(longfastq) %}
+  {% endif %}
+{% endfor %}
+
+{% if longfqlist | length > 1 %}
+  {% set lr_fastq %}{{ temp_dir }}/{{ sample.name }}_lr_concat.fastq.gz{% endset %}
+{% else %}
+  {% set lr_fastq %}{{ longfqlist|map(attribute='path')|list|first }}{% endset %}
+{% endif %}
+
 - name: oarfish_{{ sample.name }}
   input:
-    - {{ sample_bam }}
+    {{ constants.grandcanyon[reference].transcriptome }}
+    {% for fq in longfqlist %}
+    - {{ fq.path }}
+    {% endfor %}
   output: {{ results_dir }}
-  cpus: 10
-  mem: 32G
+  cpus: 16
+  mem: 64G
   walltime: "4:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.oarfish.container }}
@@ -17,9 +37,21 @@
     mkdir -p {{ results_dir }}
     mkdir -p {{ temp_dir }}
 
+    {% if longfqlist | length > 1 %}
+    cat {{ longfqlist|map(attribute='path')|join(' ')}} > {{ lr_fastq }}
+    {% endif %}
+
     oarfish \
-      --threads 10 \
-      --alignments {{ sample_bam }} \
+      --threads 16 \
+      --reads {{ lr_fastq }} \
+      --annotated {{ constants.grandcanyon[reference].transcriptome }} \
+      {% if sample.glprep.startswith('kinnex') %}
+      --seq-tech pac-bio-hifi \
+      {% else %}
+      --seq-tech ont-cdna \
+      {% endif %}
+      --filter-group no-filters \
+      --model-coverage \
       --output {{ results_dir }}/{{ sample.name }}
 
 {% endmacro %}
