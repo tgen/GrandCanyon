@@ -1,3 +1,5 @@
+{% from 'modules/qc/main.j2' import bam_qc with context %}
+
 {% macro copy_bam(sample) %}
 
 {% if sample.glprep not in ['longread'] %}
@@ -27,6 +29,7 @@
     - {{ bam.path }}
     {% endfor %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
+    - temp/pipeline_resources/calling_intervals/reference_contigs.bed
   output:
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
@@ -45,12 +48,13 @@
     {% if input_bam.path.endswith('.cram') %}
     rsync {{ input_bam.path }} {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
     {% else %}
+    samtools reheader <(grep '^@SQ' {{ constants.grandcanyon[reference].reference_dict }} ; samtools view -H {{ input_bam.path }} | grep -v '^@SQ') {{ input_bam.path }} |\
     samtools view \
       --threads 6 \
+      --targets-file temp/pipeline_resources/calling_intervals/reference_contigs.bed \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       -O CRAM \
-      -o {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
-      {{ input_bam.path }}
+      -o {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
     {% endif %}
   {% else %}
     samtools merge \
@@ -99,5 +103,7 @@
       {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
 
     samtools index -@8 {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
+
+{{- bam_qc(sample, aligner) }}
 
 {% endmacro %}
