@@ -84,6 +84,7 @@
     {% endif %}
     {% if 'vg_giraffe' in sample.aligners %}
       {{- vg_giraffe(sample, opt_dup_distance, aligner='vg_giraffe') }}
+      {{- bam_qc(sample, aligner='vg_giraffe')}}
       {% set aligner = 'vg_giraffe' %}
       {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
       {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}

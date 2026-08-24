@@ -110,7 +110,9 @@
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
-        {{- vardict(sample, aligner) }}
+        {% if aligner not in 'vg_giraffe' %}
+          {{- vardict(sample, aligner) }}
+        {% endif %}
       {% endif %}
 
     {% endif %}
@@ -325,8 +327,10 @@
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
-        {% do sample.callers.append('vardict') %}
-        {{- vardict(sample, aligner) }}
+        {% if aligner not in 'vg_giraffe' %}
+          {% do sample.callers.append('vardict') %}
+          {{- vardict(sample, aligner) }}
+        {% endif %}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_lancet2"]|default(false) %}
@@ -465,8 +469,10 @@
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
-        {% do pair.callers.append('vardict') %}
-        {{- vardict(pair, aligner) }}
+        {% if aligner not in 'vg_giraffe' %}
+          {% do pair.callers.append('vardict') %}
+          {{- vardict(pair, aligner) }}
+        {% endif %}
       {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_merge_vcfs_vcfMerger2"]|default(false) %}

@@ -6,137 +6,6 @@
 {% set temp_dir %}temp/{{ sample.gltype }}/alignment/vg_giraffe/{{ sample.name }}{% endset %}
 {% set results_dir %}{{ sample.gltype }}/alignment/vg_giraffe/{{ sample.name }}{% endset %}
 
-{% set r1fqlist = [] %}
-{% set r2fqlist = [] %}
-
-{% for rgid, rg in sample.read_groups.items() %}
-  {% if rg.data_files|length < 2 %}
-      {{ raise('Read group did not have 2 data files: {}'.format(rgid)) }}
-  {% endif %}
-
-  {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
-  {% do r1fastq.update({"path": "temp/fastqs/" + r1fastq.basename}) %}
-  {% do r1fqlist.append(r1fastq) %}
-
-  {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
-  {% do r2fastq.update({"path": "temp/fastqs/" + r2fastq.basename}) %}
-  {% do r2fqlist.append(r2fastq) %}
-{% endfor %}
-
-- name: kmc_counts_{{ sample.name }}
-  reset: predecessors
-  input:
-    {% for fq in r1fqlist %}
-    - {{ fq.path }}
-    {% endfor %}
-    {% for fq in r2fqlist %}
-    - {{ fq.path }}
-    {% endfor %}
-  output:
-    - {{ temp_dir }}/kmc/{{ sample.name }}.kff
-  cpus: 16
-  mem: 64G
-  walltime: "6:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.kmc.container }}
-  cmd: |
-    set -eu
-    set -o pipefail
-
-    mkdir -p {{ temp_dir }}/kmc/{{ sample.name }}/kmc_tmp_dir
-
-    cat <<EOF > {{ temp_dir }}/kmc/{{ sample.name }}.fq.paths
-    {% for fq in r1fqlist %}
-    {{ fq.path }}
-    {% endfor %}
-    {% for fq in r2fqlist %}
-    {{ fq.path }}
-    {% endfor %}
-    EOF
-
-    kmc \
-      -k29 \
-      -m64 \
-      -okff \
-      -t16 \
-      @{{ temp_dir }}/kmc/{{ sample.name }}.fq.paths \
-      {{ temp_dir }}/kmc/{{ sample.name }} \
-      {{ temp_dir }}/kmc/{{ sample.name }}/kmc_tmp_dir
-
-- name: vg_haplotypes_{{ sample.name }}
-  reset: kmc_counts_{{ sample.name }}
-  input:
-    - {{ constants.grandcanyon[reference].reference_gbz }}
-    - {{ constants.grandcanyon[reference].reference_hapl }}
-    - {{ temp_dir }}/kmc/{{ sample.name }}.kff
-  output:
-    - {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz
-  cpus: 20
-  mem: 80G
-  walltime: "8:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.vg.container }}
-  cmd: |
-    set -eu
-
-    mkdir -p {{ results_dir }}
-
-    vg haplotypes -v 2 -t 20 \
-      --include-reference --diploid-sampling \
-      -i {{ constants.grandcanyon[reference].reference_hapl }} \
-      -k {{ temp_dir }}/kmc/{{ sample.name }}.kff \
-      -g {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz \
-      {{ constants.grandcanyon[reference].reference_gbz }}
-
-- name: vg_index_{{ sample.name }}
-  input:
-    - {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz
-    - {{ constants.grandcanyon[reference].reference_dict }}
-  output:
-    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.min
-    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode
-    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist
-    - {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
-    - {{ results_dir }}/{{ sample.rgsm }}.sampled.fa
-    - {{ results_dir }}/{{ sample.rgsm }}.sampled.fa.fai
-    - {{ results_dir }}/{{ sample.rgsm }}.sampled.dict
-  cpus: 20
-  mem: 80G
-  walltime: "8:00:00"
-  queue_preset: "DEFAULT"
-  container: {{ constants.tools.vg.container }}
-  cmd: |
-    set -eu
-    set -o pipefail
-
-    vg index \
-      -j {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist \
-      {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz
-
-    vg minimizer -p -t 20 \
-      -o {{ temp_dir }}/{{ sample.rgsm }}.sampled.min \
-      -z {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode \
-      -d {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist \
-      {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz
-
-    vg paths \
-      -x {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz \
-      -L | grep -i "^{{ reference }}" > {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
-
-    rm -f {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.sorted.txt
-    while read LINE; do
-      grep -w "$LINE" {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt >> {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.sorted.txt || :
-    done < <(cat {{ constants.grandcanyon[reference].reference_dict }} | grep SN | cut -f2 | sed 's/SN://g')
-    mv {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.sorted.txt {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
-
-    vg paths \
-      -x {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz \
-      -p {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt \
-      -F | sed -E 's/[A-z0-9]+#[0-9]#//' > {{ results_dir }}/{{ sample.rgsm }}.sampled.fa
-
-    samtools faidx {{ results_dir }}/{{ sample.rgsm }}.sampled.fa
-    samtools dict {{ results_dir }}/{{ sample.rgsm }}.sampled.fa > {{ results_dir }}/{{ sample.rgsm }}.sampled.dict
-
 {% for rgid, rg in sample.read_groups.items() %}
 {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
 {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
@@ -146,11 +15,8 @@
   input:
     - temp/fastqs/{{ r1fastq.basename }}
     - temp/fastqs/{{ r2fastq.basename }}
-    - {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz
-    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.min
-    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode
-    - {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist
-    - {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt
+    - {{ constants.grandcanyon[reference].reference_gbz }}
+    - {{ constants.grandcanyon[reference].reference_hapl }}
     - {{ constants.grandcanyon[reference].reference_dict }}
   output:
     - {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam
@@ -166,14 +32,27 @@
     mkdir -p {{ temp_dir }}/st_sort_temp
     mkdir -p {{ results_dir }}
 
+    vg paths \
+      -x {{ constants.grandcanyon[reference].reference_gbz }} \
+      -L | grep -i "^{{ reference }}" > {{ temp_dir }}/{{ rgid }}.ref_paths.txt
+
+    rm -f {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.sorted.txt
+    while read LINE; do
+      grep -w "$LINE" {{ temp_dir }}/{{ rgid }}.ref_paths.txt >> {{ temp_dir }}/{{ rgid }}.ref_paths.sorted.txt || :
+    done < <(cat {{ constants.grandcanyon[reference].reference_dict }} | grep SN | cut -f2 | sed 's/SN://g')
+    mv {{ temp_dir }}/{{ rgid }}.ref_paths.sorted.txt {{ temp_dir }}/{{ rgid }}.ref_paths.txt
+
     vg giraffe -p -t 19 \
-      -Z {{ results_dir }}/{{ sample.rgsm }}.sampled.gbz \
-      -m {{ temp_dir }}/{{ sample.rgsm }}.sampled.min \
-      -z {{ temp_dir }}/{{ sample.rgsm }}.sampled.zipcode \
-      -d {{ temp_dir }}/{{ sample.rgsm }}.sampled.dist \
+      {% if rg.rgpl == 'PACBIO' %}
+      --parameter-preset hifi \
+      {% elif rg.rgpl == 'ONT' %}
+      --parameter-preset r10 \
+      {% endif %}
+      --gbz-name {{ constants.grandcanyon[reference].reference_gbz }} \
+      --haplotype-name {{ constants.grandcanyon[reference].reference_hapl }} \
       --read-group '{{ read_group_line(rg, format="vg") }}' \
       --sample {{ sample.rgsm }} \
-      --ref-paths {{ temp_dir }}/{{ sample.rgsm }}.ref_paths.txt \
+      --ref-paths {{ temp_dir }}/{{ rgid }}.ref_paths.txt \
       --output-format BAM \
       -f temp/fastqs/{{ r1fastq.basename }} \
       -f temp/fastqs/{{ r2fastq.basename }} |\

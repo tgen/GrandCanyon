@@ -87,8 +87,6 @@ constants:
       container: quay.io/biocontainers/isoquant:3.10.0--hdfd78af_0
     isoseq:
       container: quay.io/biocontainers/isoseq:26.2.0--h9ee0642_0
-    kmc:
-      container: quay.io/biocontainers/kmc:3.2.4--h5ca1c30_4
     lancet2:
       container: ghcr.io/tgen/containers/lancet2:2.9.0_main_7b33422eaa
     liftover:
@@ -196,7 +194,7 @@ constants:
     verkko:
       container: quay.io/biocontainers/verkko:2.3.2--hb0edd9e_0
     vg:
-      container: ghcr.io/tgen/containers/vg_samtools:1.71_1.21
+      container: ghcr.io/tgen/containers/vg_samtools:1.76.1_1.21
     wakhan:
       container: quay.io/biocontainers/wakhan:0.4.3--pyhdfd78af_0
     whatshap:
