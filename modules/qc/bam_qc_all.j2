@@ -584,3 +584,47 @@
 
 {% endif %}
 {% endmacro %}
+
+{% macro bam_qc_riker(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=true) %}
+{% if tasks[taskPrefix+"_quality_control_stats_riker"]|default(false) %}
+
+  {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+
+  {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
+  {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+  {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
+
+  {% if sample.gltype == 'rna' and constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
+  {% else %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+  {% endif %}
+
+- name: riker_multi_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, stats, gatk_CollectMultipleMetrics, {{ sample.name }}]
+  input:
+    - {{ bam }}
+    - {{ bam_index }}
+    - {{ reference_fasta }}
+  walltime: "8:00:00"
+  cpus: 4
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.riker.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ temp_dir }}"
+    mkdir -p "{{ results_dir }}"
+
+    riker multi \
+      --threads 4 \
+      -i {{ bam }} \
+      -r {{ reference_fasta }} \
+      -o {{ temp_dir }}/{{ bam|basename }}.riker \
+      --tools alignment isize basic gcbias \
+
+{% endif %}
+{% endmacro %}

@@ -56,6 +56,8 @@ constants:
     dorado:
       container: nanoporetech/dorado:shaae1d5e75f94041e4fd7af4a7ed6e6432b0eaea29
       version: 0.8.2
+    dupblaster:
+      container: quay.io/biocontainers/dupblaster:0.2.0--hfa8f182_0
     dysgu:
       container: quay.io/biocontainers/dysgu:1.8.8--py313h5d164f8_0
     fastp:
@@ -142,6 +144,8 @@ constants:
       container: ghcr.io/tgen/containers/r_with_modules:4.1.2-23080815
     rastair:
       container: quay.io/biocontainers/rastair:2.1.1--h03e3cfe_0
+    riker:
+      container: quay.io/biocontainers/riker:0.4.1--hec9b1f2_0
     salmon:
       container: quay.io/biocontainers/salmon:2.3.2--hfa8f182_0
     samtools:
