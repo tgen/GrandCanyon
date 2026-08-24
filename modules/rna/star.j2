@@ -270,7 +270,6 @@
   walltime: "8:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.subread.container }}
-  digest: {{ constants.tools.subread.digest }}
   cmd: |
     set -eu
     set -o pipefail
@@ -282,7 +281,7 @@
       -T 7 \
       -p \
       -t "exon" \
-      -s "{{ constants.grandcanyon[reference].strandedness_options[sample.strandedness].featurecounts }}" \
+      -s "{{ constants.grandcanyon.strandedness_options[sample.strandedness].featurecounts }}" \
       -a "{{ constants.grandcanyon[reference].gtf }}" \
       -o "{{ sample.gltype }}/quant/featurecounts/{{ sample.name }}/{{ sample.name }}.exon.counts.tsv" \
       "{{ star_bam_unsort }}"
@@ -295,7 +294,7 @@
       -T 7 \
       -p \
       -t "gene" \
-      -s "{{ constants.grandcanyon[reference].strandedness_options[sample.strandedness].featurecounts }}" \
+      -s "{{ constants.grandcanyon.strandedness_options[sample.strandedness].featurecounts }}" \
       -a "{{ constants.grandcanyon[reference].gtf }}" \
       -o "{{ sample.gltype }}/quant/featurecounts/{{ sample.name }}/{{ sample.name }}.gene.counts.tsv" \
       "{{ star_bam_unsort }}"
