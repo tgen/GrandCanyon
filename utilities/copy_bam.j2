@@ -48,10 +48,13 @@
     {% if input_bam.path.endswith('.cram') %}
     rsync {{ input_bam.path }} {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
     {% else %}
-    samtools reheader <(grep '^@SQ' {{ constants.grandcanyon[reference].reference_dict }} ; samtools view -H {{ input_bam.path }} | grep -v '^@SQ') {{ input_bam.path }} |\
+    samtools view \
+      -u \
+      --targets-file temp/pipeline_resources/calling_intervals/reference_contigs.bed \
+      {{ input_bam.path }} |\
+    samtools reheader <(grep '^@SQ' {{ constants.grandcanyon[reference].reference_dict }} ; samtools view -H {{ input_bam.path }} | grep -v '^@SQ') - |\
     samtools view \
       --threads 6 \
-      --targets-file temp/pipeline_resources/calling_intervals/reference_contigs.bed \
       --reference {{ constants.grandcanyon[reference].reference_fasta }} \
       -O CRAM \
       -o {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
