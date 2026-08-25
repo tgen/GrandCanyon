@@ -271,9 +271,8 @@ constants:
       reference_faiSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa.fai
       reference_dict: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.dict
       reference_non_N_interval_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/samtools_stats/GRCh38tgen_decoy_alts_hla_samstats_no_N_1based_primary_contigs_no_chrX_chrY.txt
-      reference_gfa: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/vg/hprc-v1.1-mc-grch38.gfa
-      reference_gbz: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/vg/hprc-v1.1-mc-grch38.gbz
-      reference_hapl: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/vg/hprc-v1.1-mc-grch38.hapl
+      reference_gbz: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/vg/hprc-v2.1-mc-grch38.gbz
+      reference_hapl: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/vg/hprc-v2.1-mc-grch38.hapl
       bwa_mem2_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/bwa2_2.2.1/GRCh38tgen_decoy_alts_hla.fa
       gff3: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.gff3.gz
       gtf: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.ucsc.gtf

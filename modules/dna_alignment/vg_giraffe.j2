@@ -53,6 +53,7 @@
       --read-group '{{ read_group_line(rg, format="vg") }}' \
       --sample {{ sample.rgsm }} \
       --ref-paths {{ temp_dir }}/{{ rgid }}.ref_paths.txt \
+      --index-basename {{ temp_dir }}/{{ sample.rgsm }}.{{ rgid }} \
       --output-format BAM \
       -f temp/fastqs/{{ r1fastq.basename }} \
       -f temp/fastqs/{{ r2fastq.basename }} |\
