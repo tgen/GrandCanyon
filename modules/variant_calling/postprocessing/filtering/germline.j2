@@ -22,7 +22,7 @@
     {% set query_format %}'%CHROM\t%POS\t[%GT\t%VAF\t%AD\t%PS\t]%Consequence\t%IMPACT\t%Gene\t%SYMBOL\n'{% endset %}
   {% endif %}
 
-- name: germline_candidate_filter_bcftools_{{ variant_caller }}_{{ sample.name }}
+- name: germline_candidate_filter_bcftools_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
     - {{ input_vcf }}
   output:
@@ -46,8 +46,8 @@
     bcftools +split-vep -H -s worst:missense+ -x -f {{ query_format }} | sed -e '1 s/^#//' -e '1 s/[][0-9]//g' \
     > {{ temp_dir }}/candidate_variants.tsv
 
-- name: germline_candidate_filter_parse_genotypes_{{ variant_caller }}_{{ sample.name }}
-  reset: germline_candidate_filter_bcftools_{{ variant_caller }}_{{ sample.name }}
+- name: germline_candidate_filter_parse_genotypes_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
+  reset: germline_candidate_filter_bcftools_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
     - {{ temp_dir }}/candidate_variants.tsv
   output:
@@ -67,8 +67,8 @@
 
     awk 'NR>1 { OFS="\t"; print $1, $2-1, $2 }' {{ temp_dir }}/filtered_candidate_variants.tsv > {{ temp_dir }}/candidate_positions.bed
 
-- name: germline_candidate_filter_variants_bcftools_{{ variant_caller }}_{{ sample.name }}
-  reset: germline_candidate_filter_parse_genotypes_{{ variant_caller }}_{{ sample.name }}
+- name: germline_candidate_filter_variants_bcftools_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
+  reset: germline_candidate_filter_parse_genotypes_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:
     - {{ temp_dir }}/candidate_positions.bed
     - {{ input_vcf }}
