@@ -23,7 +23,6 @@
     - {{ cnvkit_cns }}
     - {{ constants.grandcanyon[reference].reference_dict }}
     - {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}
-    - {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.mosek }}
   output:
     - {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bam
     - {{ results_dir }}/{{ sample_or_pair.name }}_AA_results
@@ -44,7 +43,6 @@
     cp -r {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}/* {{ temp_dir }}/data_repo/
 
     export AA_DATA_REPO="{{ temp_dir }}/data_repo"
-    export MOSEKLM_LICENSE_FILE="{{ constants.grandcanyon[reference].tool_resources.amplicon_architect.mosek }}"
     export AA_SRC=$(dirname $(python -c "import ampliconarchitectlib; print(ampliconarchitectlib.__file__)"))
     export AC_SRC=$(dirname $(which amplicon_classifier.py))
 
@@ -115,7 +113,6 @@
     - {{ bam }}
     - {{ constants.grandcanyon[reference].reference_dict }}
     - {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}
-    - {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.mosek }}
   output:
     - {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bam
     - {{ results_dir }}/{{ sample_or_pair.name }}_AA_results
@@ -136,7 +133,6 @@
     cp -r {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}/* {{ temp_dir }}/data_repo/
 
     export AA_DATA_REPO="{{ temp_dir }}/data_repo"
-    export MOSEKLM_LICENSE_FILE="{{ constants.grandcanyon[reference].tool_resources.amplicon_architect.mosek }}"
     export AA_SRC=$(dirname $(python -c "import ampliconarchitectlib; print(ampliconarchitectlib.__file__)"))
     export AC_SRC=$(dirname $(which amplicon_classifier.py))
 

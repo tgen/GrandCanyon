@@ -11,7 +11,7 @@ constants:
     allelecounter:
       container: quay.io/biocontainers/cancerit-allelecount:4.3.0--h8bd2d3b_7
     amplicon_architect:
-      container: ghcr.io/tgen/containers/amplicon_architect:1.2.9
+      container: ghcr.io/tgen/containers/amplicon_suite:1.6.0
     ascat:
       container: quay.io/biocontainers/ascat:3.2.0--r44hdfd78af_1
     assembly_stats:
@@ -337,7 +337,6 @@ constants:
           ascat_resources: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/ascat
         amplicon_architect:
           data_repo: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/amplicon_architect
-          mosek: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/amplicon_architect/mosek
         cnvear:
           fish_probe_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/seq_fish/GRCh38_Myeloma_FISH_Probe_Locations_for_CNVear.bed
         gatk_cnv:
