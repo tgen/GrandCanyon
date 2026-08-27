@@ -61,7 +61,7 @@
     mkdir -p {{ results_dir }}/{{ sample_or_pair.name }}_classification
 
     {# AmpliconSuite-pipeline defaults to a downsample of 10 for run_AA, replicating here #}
-    python3 /opt/conda/lib/python3.10/site-packages/ampliconarchitectlib/AmpliconArchitect.py \
+    python3 /opt/conda/lib/python3.12/site-packages/ampliconarchitectlib/AmpliconArchitect.py \
       --ref GRCh38 \
       --downsample 10 \
       --bed {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed \
@@ -69,6 +69,7 @@
       --runmode FULL \
       --extendmode EXPLORE \
       --no_cstats \
+      --solver clarabel \
       --out {{ results_dir }}/{{ sample_or_pair.name }}_AA_results/{{ sample_or_pair.name }}
 
     make_input.sh {{ results_dir }}/{{ sample_or_pair.name }}_AA_results {{ results_dir }}/{{ sample_or_pair.name }}_classification/{{ sample_or_pair.name }}
@@ -146,6 +147,7 @@
       {% endif %}
       --ref "GRCh38" \
       --run_AA \
+      --AA_solver clarabel \
       --run_AC
 
 {% endmacro %}
