@@ -531,6 +531,6 @@ task_variables:
       trim_poly_g_read2only: true
     rna:
       n_base_limit: 5
-      length_required: 25
+      length_required: 75
       qualified_quality_phred: 15
       unqualified_percent_limit: 40
