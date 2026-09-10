@@ -23,41 +23,41 @@
   {% do bam_list.append(bam) %}
 {% endfor %}
 
-- name: copy_bams_{{ sample.name }}
+- name: input_bam_to_cram_{{ sample.name }}
   input:
     {% for bam in bam_list %}
     - {{ bam.path }}
     {% endfor %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
-    - temp/pipeline_resources/calling_intervals/reference_contigs.bed
   output:
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
     - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
-  cpus: 6
-  walltime: "4:00:00"
-  queue_preset: "DATA-MOVER"
+  cpus: 8
+  mem: 40G
+  walltime: "8:00:00"
   {% if bam_list | length == 1 and bam_list[0].path.endswith('.cram') %}
   {% else %}
-  container: {{ constants.tools.samtools.container }}
+  container: {{ constants.tools.gatk.container }}
   {% endif %}
   cmd: |
     set -uev
 
+    mkdir -p {{ results_dir }}
   {% if bam_list | length == 1 %}
     {% set input_bam = bam_list | first %}
     {% if input_bam.path.endswith('.cram') %}
     rsync {{ input_bam.path }} {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
     {% else %}
-    samtools view \
-      -u \
-      --targets-file temp/pipeline_resources/calling_intervals/reference_contigs.bed \
-      {{ input_bam.path }} |\
-    samtools reheader <(grep '^@SQ' {{ constants.grandcanyon[reference].reference_dict }} ; samtools view -H {{ input_bam.path }} | grep -v '^@SQ') - |\
-    samtools view \
-      --threads 6 \
-      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
-      -O CRAM \
-      -o {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    gatk CleanSam \
+      -I {{ input_bam.path }} \
+      -O /dev/stdout \
+      --VALIDATION_STRINGENCY LENIENT |\
+    gatk ReorderSam \
+      -I /dev/stdin \
+      -O {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
+      -SD {{ constants.grandcanyon[reference].reference_dict }} \
+      --REFERENCE_SEQUENCE {{ constants.grandcanyon[reference].reference_fasta }} \
+      --CREATE_INDEX true
     {% endif %}
   {% else %}
     samtools merge \
