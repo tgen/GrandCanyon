@@ -150,4 +150,8 @@
       --AA_solver clarabel \
       --run_AC
 
+    for graph in {{ results_dir }}/{{ sample_or_pair.name }}_AA_results/*_graph.txt ; do
+      python3 /opt/conda/bin/CE.py --graph ${graph} --output ${graph%.txt}.CE_cycles.txt --solver highs || true
+    done
+
 {% endmacro %}
