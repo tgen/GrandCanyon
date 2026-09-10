@@ -21,7 +21,7 @@
   output:
     - {{ temp_dir }}/st_sort_temp/{{ rgid }}.bam
   cpus: 20
-  mem: 80G
+  mem: 120G
   walltime: "8:00:00"
   queue_preset: "DEFAULT"
   container: {{ constants.tools.vg.container }}
@@ -42,6 +42,7 @@
     done < <(cat {{ constants.grandcanyon[reference].reference_dict }} | grep SN | cut -f2 | sed 's/SN://g')
     mv {{ temp_dir }}/{{ rgid }}.ref_paths.sorted.txt {{ temp_dir }}/{{ rgid }}.ref_paths.txt
 
+    rm -f {{ temp_dir }}/{{ rgid }}.*
     vg giraffe -p -t 19 \
       {% if rg.rgpl == 'PACBIO' %}
       --parameter-preset hifi \
@@ -53,7 +54,7 @@
       --read-group '{{ read_group_line(rg, format="vg") }}' \
       --sample {{ sample.rgsm }} \
       --ref-paths {{ temp_dir }}/{{ rgid }}.ref_paths.txt \
-      --index-basename {{ temp_dir }}/{{ sample.rgsm }}.{{ rgid }} \
+      --index-basename {{ temp_dir }}/{{ rgid }} \
       --output-format BAM \
       -f temp/fastqs/{{ r1fastq.basename }} \
       -f temp/fastqs/{{ r2fastq.basename }} |\
