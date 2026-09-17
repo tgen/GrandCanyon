@@ -57,6 +57,7 @@
       -O {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
       -SD {{ constants.grandcanyon[reference].reference_dict }} \
       --REFERENCE_SEQUENCE {{ constants.grandcanyon[reference].reference_fasta }} \
+      --ALLOW_INCOMPLETE_DICT_CONCORDANCE true \
       --CREATE_INDEX true
     {% endif %}
   {% else %}
