@@ -11,7 +11,7 @@ constants:
     allelecounter:
       container: quay.io/biocontainers/cancerit-allelecount:4.3.0--h8bd2d3b_7
     amplicon_architect:
-      container: ghcr.io/tgen/containers/amplicon_suite:1.6.0
+      container: ghcr.io/tgen/containers/amplicon_suite:1.6.0-patched
     ascat:
       container: quay.io/biocontainers/ascat:3.2.0--r44hdfd78af_1
     assembly_stats:
@@ -163,8 +163,8 @@ constants:
     sigprofiler:
       container: quay.io/biocontainers/sigprofilerassignment:1.1.4--pyh106432d_0
     snpsniffer:
-      container: ghcr.io/tgen/containers/snpsniffer:7.0.1
-      digest: 22eeb74559868fc2b80976f7901cb2c1021893bf9fe2939b06da0b539af3c942
+      container: ghcr.io/tgen/containers/snpsniffer:7.0.2
+      digest: 09a8aed0fd1b8662a431bbe6893e5f9148a45f64d0930fb5e0407d41d95d7209 
     sniffles:
       container: quay.io/biocontainers/sniffles:2.8.0--pyhdfd78af_0
     somalier:
