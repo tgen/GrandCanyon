@@ -83,7 +83,7 @@
       --tumour {{ bam }} \
       --g1000_vcf {{ g1000_dict[reference] }} \
     {% endif %}
-      --outdir {{ temp_dir }} \
+      --outdir {{ results_dir }} \
       {{ mode_type }} \
       --threads 8 \
       --cna_threads 8 \
