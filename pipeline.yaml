@@ -86,7 +86,7 @@ constants:
     ichorcna:
       container: gavinhalab/ichorcna:3.0.0
     isoquant:
-      container: quay.io/biocontainers/isoquant:3.10.0--hdfd78af_0
+      container: quay.io/biocontainers/isoquant:4.0.0--pyh106432d_0
     isoseq:
       container: quay.io/biocontainers/isoseq:26.2.0--h9ee0642_0
     lancet2:

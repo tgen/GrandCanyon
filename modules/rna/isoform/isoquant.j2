@@ -34,22 +34,19 @@
     mkdir -p {{ results_dir }}
     export TMPDIR={{ temp_dir }}
 
-    paftools.js gff2bed {{ gtf }} > {{ temp_dir }}/{{ sample.name }}_anno.bed
-
     isoquant.py \
       --reference {{ reference_fasta }} \
-      -o {{ temp_dir }}/ \
-      -g {{ gtf }} \
-      {% if sample.glprep.startswith('kinnex') %}
-      -d pacbio \
-      {% else %}
-      -d nanopore \
-      {% endif %}
+      --genedb {{ gtf }} \
       --complete_genedb \
+      {% if sample.glprep.startswith('kinnex') %}
+      --data_type pacbio \
+      {% else %}
+      --data_type nanopore \
+      {% endif %}
       --bam {{ sample_bam }} \
       --labels {{ sample.name }} \
-      -p {{ sample.name }} \
-      --junc_bed_file {{ temp_dir }}/{{ sample.name }}_anno.bed \
+      --prefix {{ sample.name }} \
+      --output {{ temp_dir }}/ \
       --sqanti_output \
       --check_canonical \
       -t 20
