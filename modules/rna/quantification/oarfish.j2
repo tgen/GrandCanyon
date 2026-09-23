@@ -54,5 +54,46 @@
       --model-coverage \
       --output {{ results_dir }}/{{ sample.name }}
 
+{% if sample.external_data is defined and sample.external_data.isoform_gtf is defined %}
+
+{% set gtf_basename %}{{ sample.external_data.isoform_gtf | basename | replace('.gtf', '') | replace('.', '_') }}{% endset %}
+{% set transcriptome %}temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa
+
+- name: oarfish_{{ gtf_basename }}_{{ sample.name }}
+  input:
+    - {{ transcriptome }}
+    {% for fq in longfqlist %}
+    - {{ fq.path }}
+    {% endfor %}
+  output: {{ results_dir }}
+  cpus: 16
+  mem: 64G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.oarfish.container }}
+  cmd: |
+
+    mkdir -p {{ results_dir }}
+    mkdir -p {{ temp_dir }}
+
+    {% if longfqlist | length > 1 %}
+    cat {{ longfqlist|map(attribute='path')|join(' ')}} > {{ lr_fastq }}
+    {% endif %}
+
+    oarfish \
+      --threads 16 \
+      --reads {{ lr_fastq }} \
+      --annotated {{ transcriptome }} \
+      {% if sample.glprep.startswith('kinnex') %}
+      --seq-tech pac-bio-hifi \
+      {% else %}
+      --seq-tech ont-cdna \
+      {% endif %}
+      --filter-group no-filters \
+      --model-coverage \
+      --output {{ results_dir }}/{{ sample.name }}
+
+{% endif %}
+
 {% endmacro %}
 
