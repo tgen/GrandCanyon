@@ -11,7 +11,7 @@
 
   {% for sample in samples.values() if sample.gltype in ['rna'] %}
     {% if sample.external_data is defined and sample.external_data.isoform_gtf is defined %}
-      {{ prepare_custom_transcriptome(sample.external_data.isoform_gtf) }}
+      {{- prepare_custom_transcriptome(sample.external_data.isoform_gtf) }}
     {% endif %}
     {% if sample.rgpm|lower in known_long_read_platforms %}
       {% if tasks['RNA_alignment_rna_alignment_minimap2']|default(false) %}

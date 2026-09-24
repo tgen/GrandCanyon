@@ -334,6 +334,29 @@
 
 {% endmacro %}
 
+{% macro prepare_custom_transcriptome(gtf) %}
+
+{% set gtf_basename %}{{ gtf | basename | replace('.gtf', '') | replace('.', '_') }}{% endset %}
+
+- name: create_transcriptome_fasta_for_{{ gtf_basename }}
+  input:
+    - {{ gtf }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa
+  cpus: 1
+  mem: 4G
+  walltime: "1:00:00"
+  container: {{ constants.tools.gffread.container }}
+  cmd: |
+    set -eu
+
+    gffread {{ gtf }} \
+      -g {{ constants.grandcanyon[reference].reference_fasta }} \
+      -w temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa
+
+{% endmacro %}
+
 {% macro generate_capture_kit_resources(capture_kit_codes) %}
 
 {% set temp_dir %}temp/pipeline_resources/capture_kit_resources{% endset %}
