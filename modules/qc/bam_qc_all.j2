@@ -516,8 +516,10 @@
 
 {% if sample.gltype == 'rna' and constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
   {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
+  {% set reference_dict %}{{ constants.grandcanyon[reference].reference_fasta_no_alt | replace('.fa','.dict') }}{% endset %}
 {% else %}
   {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+  {% set reference_dict %}{{ constants.grandcanyon[reference].reference_dict }}{% endset %}
 {% endif %}
 - name: snpsniffer_geno_{{ task }}
   tags: [{{ sample.gltype }}, quality_control, genotype_concordance, snpSniffer, {{ sample.name }}]
@@ -525,6 +527,7 @@
     - {{ bam }}
     - {{ bam_index }}
     - {{ reference_fasta }}
+    - {{ reference_dict }}
     - {{ constants.grandcanyon[reference].snpSniffer_sites }}
   output:
     - {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf
@@ -544,7 +547,7 @@
     set -eu
     set -o pipefail
 
-    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ reference_dict }} |\
       sed 's/SN:chr//;s/LN://' |\
       awk '{ print "chr"$2, $2 }' \
       > {{ results_dir }}/{{ task }}_chr_remap.txt
