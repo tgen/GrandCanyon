@@ -13,6 +13,7 @@
 {% else %}
 - name: isoquant_{{ sample.name }}
 {% endif %}
+  reset: predecessors
   input:
     - {{ sample_bam }}
     - {{ gtf }}
@@ -24,6 +25,8 @@
   queue_preset: "DEFAULT"
   container: {{ constants.tools.isoquant.container }}
   cmd: |
+
+    set -eu
 
     {# note: this step performs isoquant for read correction, annotation, and quantification #}
     {# input: human aligned genome bam #}
