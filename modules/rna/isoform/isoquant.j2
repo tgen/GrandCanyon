@@ -34,7 +34,7 @@
     mkdir -p {{ results_dir }}
     export TMPDIR={{ temp_dir }}
 
-    isoquant.py \
+    isoquant \
       --reference {{ reference_fasta }} \
       --genedb {{ gtf }} \
       --complete_genedb \
