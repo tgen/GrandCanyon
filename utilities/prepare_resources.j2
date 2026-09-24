@@ -336,7 +336,11 @@
 
 {% macro prepare_custom_transcriptome(gtf) %}
 
-{% set gtf_basename %}{{ gtf | basename | replace('.gtf', '') | replace('.', '_') }}{% endset %}
+{% if gtf.endswith('.gtf') %}
+  {% set gtf_basename = gtf.split('.')[:-1]|join('_')|basename %}
+{% elif gtf.endswith('.gtf.gz') %}
+  {% set gtf_basename = gtf.split('.')[:-2]|join('_')|basename %}
+{% endif %}
 
 - name: create_transcriptome_fasta_for_{{ gtf_basename }}
   input:
@@ -351,9 +355,17 @@
   cmd: |
     set -eu
 
+    {% if gtf.endswith('.gtf.gz') %}
+    gunzip -c {{ gtf }} > temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.gtf
+
+    gffread temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.gtf \
+      -g {{ constants.grandcanyon[reference].reference_fasta }} \
+      -w temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa
+    {% else %}
     gffread {{ gtf }} \
       -g {{ constants.grandcanyon[reference].reference_fasta }} \
       -w temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa
+    {% endif %}
 
 {% endmacro %}
 
