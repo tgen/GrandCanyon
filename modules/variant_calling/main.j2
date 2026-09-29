@@ -309,12 +309,18 @@
     {############
     # snv and indel variant callers
     ############}
-    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
-      {% do sample.callers.append('deepsomatic') %}
-      {{- deepsomatic(sample, aligner) }}
-    {% endif %}
+    {% if sample.glprep in 'longread' %}
 
-    {% if sample.glprep not in 'longread' %}
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
+        {{- deepsomatic(sample, aligner) }}
+      {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
+        {% do pair.callers.append('deepsomatic') %}
+        {{- deepsomatic(sample, aligner) }}
+      {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_mutect2"]|default(false) %}
         {% do sample.callers.append('mutect2') %}
@@ -442,16 +448,22 @@
     # snv and indel variant callers
     ############}
 
-    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
-      {% do pair.callers.append('deepsomatic') %}
-      {{- deepsomatic(pair, aligner) }}
-    {% endif %}
+    {% if pair.glprep in 'longread' %}
 
-    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clairs"]|default(false) %}
-      {{- clairs(pair, aligner) }}
-    {% endif %}
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
+        {{- deepsomatic(pair, aligner) }}
+      {% endif %}
 
-    {% if pair.glprep not in 'longread' %}
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clairs"]|default(false) %}
+        {{- clairs(pair, aligner) }}
+      {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
+        {% do pair.callers.append('deepsomatic') %}
+        {{- deepsomatic(pair, aligner) }}
+      {% endif %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_lancet2"]|default(false) %}
         {% do pair.callers.append('lancet2') %}
