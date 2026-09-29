@@ -59,7 +59,7 @@
 
 {% if sample.external_data.isoform_gtf.endswith('.gtf') %}
   {% set gtf_basename = sample.external_data.isoform_gtf.split('.')[:-1]|join('_')|basename %}
-{% elif gtf.endswith('.gtf.gz') %}
+{% elif sample.external_data.isoform_gtf.endswith('.gtf.gz') %}
   {% set gtf_basename = sample.external_data.isoform_gtf.split('.')[:-2]|join('_')|basename %}
 {% endif %}
 {% set transcriptome %}temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa{% endset %}
