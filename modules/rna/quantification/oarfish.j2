@@ -21,6 +21,7 @@
 {% endif %}
 
 - name: oarfish_{{ sample.name }}
+  reset: predecessors
   input:
     - {{ constants.grandcanyon[reference].transcriptome }}
     {% for fq in longfqlist %}
@@ -56,10 +57,15 @@
 
 {% if sample.external_data is defined and sample.external_data.isoform_gtf is defined %}
 
-{% set gtf_basename %}{{ sample.external_data.isoform_gtf | basename | replace('.gtf', '') | replace('.', '_') }}{% endset %}
+{% if sample.external_data.isoform_gtf.endswith('.gtf') %}
+  {% set gtf_basename = sample.external_data.isoform_gtf.split('.')[:-1]|join('_')|basename %}
+{% elif gtf.endswith('.gtf.gz') %}
+  {% set gtf_basename = sample.external_data.isoform_gtf.split('.')[:-2]|join('_')|basename %}
+{% endif %}
 {% set transcriptome %}temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa{% endset %}
 
 - name: oarfish_{{ gtf_basename }}_{{ sample.name }}
+  reset: predecessors
   input:
     - {{ transcriptome }}
     {% for fq in longfqlist %}

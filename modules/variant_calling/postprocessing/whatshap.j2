@@ -8,7 +8,14 @@
 {%- set phased_vcf %}{{ results_dir }}/{{ output_prefix }}.phased.vcf.gz{% endset %}
 {% do sample.update({'phased_vcf': phased_vcf}) %}
 
+{% if aligner in "bwa" %}
+  {% set aligner_task %}bwa_mem2_samtools_create_temp_bam_{{ sample.name }}{% endset %}
+{% else %}
+  {% set aligner_task %}{{ aligner }}_samtools_create_temp_bam_{{ sample.name }}{% endset %}
+{% endif %}
+
 - name: whatshap_phase_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
+  reset: {{ aligner_task }}
   input:
     - {{ input_vcf }}
     - {{ input_bam }}
@@ -114,7 +121,14 @@
 {% set phased_bam %}{{ output_dir }}/{{ output_prefix }}.haplotagged.bam{% endset %}
 {% do sample.update({'phased_bam': phased_bam}) %}
 
+{% if aligner in "bwa" %}
+  {% set aligner_task %}bwa_mem2_samtools_create_temp_bam_{{ sample.name }}{% endset %}
+{% else %}
+  {% set aligner_task %}{{ aligner }}_samtools_create_temp_bam_{{ sample.name }}{% endset %}
+{% endif %}
+
 - name: whatshap_haplotag_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
+  reset: {{ aligner_task }}
   input:
     - {{ phased_vcf }}
     - {{ input_bam }}
