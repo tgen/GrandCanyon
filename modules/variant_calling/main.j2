@@ -318,7 +318,7 @@
     {% else %}
 
       {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
-        {% do pair.callers.append('deepsomatic') %}
+        {% do sample.callers.append('deepsomatic') %}
         {{- deepsomatic(sample, aligner) }}
       {% endif %}
 
