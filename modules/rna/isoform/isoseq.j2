@@ -1,0 +1,118 @@
+{% from 'modules/rna/isoform/pigeon.j2' import pigeon with context %}
+{% from 'modules/rna/isoform/sqanti3.j2' import sqanti3 with context %}
+
+{% macro isoseq(sample) %}
+
+{% set temp_dir %}temp/{{ sample.gltype }}/isoforms/isoseq/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/isoforms/isoseq/{{ sample.name }}{% endset %}
+
+{% if constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
+{% else %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+{% endif %}
+
+{% set longfqlist = [] %}
+
+{% for rgid, rg in sample.read_groups.items() %}
+  {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
+  {% if longfastq is defined %}
+    {% set longfastq_path %}temp/ubams/{{ longfastq.basename }}{% endset %}
+    {% do longfastq.update({"path": longfastq_path}) %}
+    {% do longfqlist.append(longfastq) %}
+  {% endif %}
+{% endfor %}
+
+{% if longfqlist | length > 0 %}
+
+- name: isoseq_cluster_{{ sample.name }}
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    {% for file in longfqlist %}
+    - {{ file.path }}
+    - {{ file.path }}.pbi
+    {% endfor %}
+  output:
+    - {{ temp_dir }}/{{ sample.name }}.clustered.bam
+  cpus: 20
+  mem: 120G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.isoseq.container }}
+  cmd: |
+
+    rm -rf {{ temp_dir }}
+    mkdir -p {{ temp_dir }}
+
+    ROOT_DIR=${PWD}
+
+    ls $ROOT_DIR/{{ longfqlist|map(attribute='path')|join(' $ROOT_DIR/') }} > {{ temp_dir }}/{{ sample.name }}.fofn
+    cd {{ temp_dir }} && \
+    isoseq cluster2 \
+      --num-threads 20 \
+      {{ sample.name }}.fofn \
+      {{ sample.name }}.clustered.bam
+
+- name: isoseq_pbmm2_{{ sample.name }}
+  reset: predecessors
+  input:
+    - {{ reference_fasta }}
+    - {{ constants.grandcanyon[reference].gtf }}
+    - {{ temp_dir }}/{{ sample.name }}.clustered.bam
+  output:
+    - {{ results_dir }}/{{ sample.name }}.pbmm2.bam
+  cpus: 20
+  mem: 80G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.pbmm2.container }}
+  cmd: |
+
+    mkdir -p {{ results_dir }}
+
+    pbmm2 align \
+      --num-threads 20 \
+      --preset ISOSEQ \
+      --sort \
+      {{ temp_dir }}/{{ sample.name }}.clustered.bam \
+      {{ reference_fasta }} \
+      {{ results_dir }}/{{ sample.name }}.pbmm2.bam
+
+- name: isoseq_collapse_{{ sample.name }}
+  input:
+    - {{ results_dir }}/{{ sample.name }}.pbmm2.bam
+    - {{ temp_dir }}/{{ sample.name }}.clustered.bam
+  output:
+    - {{ results_dir }}/{{ sample.name }}.collapsed.gff
+    - {{ results_dir }}/{{ sample.name }}.collapsed.flnc_count.txt
+    - {{ results_dir }}/{{ sample.name }}.collapsed.flnc_count.csv
+  cpus: 4
+  mem: 16G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.isoseq.container }}
+  cmd: |
+
+    {# isoseq collapse supports reading in the flnc bam, but it complains about missing a pbi index #}
+    {# and this is missing because we cannot reindex the u.bam after addreplacerg insertion of rgid #}
+    isoseq collapse \
+      --num-threads 1 \
+      --do-not-collapse-extra-5exons \
+      {{ results_dir }}/{{ sample.name }}.pbmm2.bam \
+      {{ temp_dir }}/{{ sample.name }}.fofn \
+      {{ results_dir }}/{{ sample.name }}.collapsed.gff
+
+    cp {{ results_dir }}/{{ sample.name }}.collapsed.flnc_count.txt {{ results_dir }}/{{ sample.name }}.collapsed.flnc_count.csv
+
+{% if tasks['RNA_transcriptome_isoform_discovery_pigeon']|default(false) %}
+  {{- pigeon(sample) }}
+{% endif %}
+{% if tasks['RNA_transcriptome_isoform_discovery_sqanti3']|default(false) %}
+  {% set isoforms %}{{ results_dir }}/{{ sample.name }}.collapsed.gff{% endset %}
+  {% set flnc_count %}{{ results_dir }}/{{ sample.name }}.collapsed.flnc_count.csv{% endset %}
+  {{- sqanti3(sample, isoforms, flnc_count, temp_dir, results_dir, 'isoseq') }}
+{% endif %}
+
+{% endif %}
+
+{% endmacro %}

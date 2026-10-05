@@ -1,0 +1,39 @@
+{% from 'modules/variant_calling/postprocessing/annotation/bcftools_annotate.j2' import bcftools_annotate with context %}
+{% from 'modules/variant_calling/postprocessing/annotation/bcftools_csq.j2' import bcftools_csq with context %}
+{% from 'modules/variant_calling/postprocessing/annotation/vep.j2' import vep with context %}
+
+{% macro annotate_vcfs(sample_or_pair, input_vcf, temp_dir, results_dir, aligner, variant_caller) %}
+
+{% if input_vcf.endswith('.vcf') %}
+  {% set vcf_prefix = input_vcf.split('.')[:-1]|join('.') %}
+{% elif input_vcf.endswith('.vcf.gz') %}
+  {% set vcf_prefix = input_vcf.split('.')[:-2]|join('.') %}
+{% else %}
+  {{ raise('{} does not appear to be a vcf!'.format(input_vcf)) }}
+{% endif %}
+
+{% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_annotate_vcfs_bcftools"]|default(false) %}
+  {% set bcftools_output %}{{ vcf_prefix }}.db.vcf.gz{% endset %}
+  {{- bcftools_annotate(sample_or_pair, temp_dir, input_vcf, variant_caller, bcftools_output, aligner) }}
+
+  {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
+    {{- vep(sample_or_pair, results_dir, bcftools_output, variant_caller, vcf_prefix+'.db', aligner) }}
+  {% endif %}
+
+  {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_annotate_vcfs_csq"]|default(false) %}
+    {{- bcftools_csq(sample_or_pair, results_dir, bcftools_output, variant_caller, vcf_prefix+'.db', aligner) }}
+  {% endif %}
+
+{% else %}
+
+  {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
+    {{- vep(sample_or_pair, results_dir, input_vcf, variant_caller, vcf_prefix, aligner) }}
+  {% endif %}
+
+  {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_annotate_vcfs_csq"]|default(false) %}
+    {{- bcftools_csq(sample_or_pair, results_dir, input_vcf, variant_caller, vcf_prefix, aligner) }}
+  {% endif %}
+
+{% endif %}
+
+{% endmacro %}

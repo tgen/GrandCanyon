@@ -1,0 +1,206 @@
+{% from 'utilities/read_group_line.j2' import read_group_line with context %}
+
+{% macro minimap2(sample) %}
+
+{#
+# Create fastq from PacBio uBAM, pipe directly to minimap and convert to bam via samtools collate to prep for zipperBam
+# Need to review the PacBio settings particulary -Y
+# I got an error with the first attempt where the sort order is not matching for the uBAM and aligned BAM
+# I suspect the minimap batch of threads outputs in an order that doesn't match the uBAM so after alignment added collate for rapid sort
+
+## Preset Information
+# map-ont
+## minimap2\' defaults are the map-ont defaults
+# map-hifi	Align PacBio high-fidelity (HiFi) reads to a reference genome
+# -k19 -w19 -U50,500 -g10k -A1 -B4 -O6,26 -E2,1 -s200
+# pbmm2
+# -k 19 -w 19 -u -o 6 -O 26 -e 2 -E 1 -A 1 -B 4 -z 400 -Z 50 -r 2000 -g 5000
+
+## Minimap options added
+# -a	Generate CIGAR and output alignments in the SAM format. Minimap2 outputs in PAF by default.
+# -L	Write CIGAR with >65535 operators at the CG tag. Older tools are unable to convert alignments with >65535 CIGAR ops to BAM. This option makes minimap2 SAM compatible with older tools. Newer tools recognizes this tag and reconstruct the real CIGAR in memory.
+# -y	Copy input FASTA/Q comments to output.
+# -Y	In SAM output, use soft clipping for supplementary alignments.
+
+# Commonly modified values per default
+# -k INT	Minimizer k-mer length [15]
+# -w INT	Minimizer window size [2/3 of k-mer length]. A minimizer is the smallest k-mer in a window of w consecutive k-mers.
+# -U INT1[,INT2] Lower and upper bounds of k-mer occurrences [10,1000000]. The final k-mer occurrence threshold is max{INT1, min{INT2, -f}}. This option prevents excessively small or large -f estimated from the input reference. Available since r1034 and deprecating --min-occ-floor in earlier versions of minimap2.
+# -g NUM	Stop chain enlongation if there are no minimizers within NUM-bp [10k]
+# -A INT	Matching score [2]
+# -B INT	Mismatching penalty [4]
+# -O INT1[,INT2] Gap open penalty [4,24]. If INT2 is not specified, it is set to INT1.
+# -E INT1[,INT2] Gap extension penalty [2,1]. A gap of length k costs min{O1+k*E1,O2+k*E2}. In the splice mode, the second gap penalties are not used.
+# -s INT	Minimal peak DP alignment score to output [40]. The peak score is computed from the final CIGAR. It is the score of the max scoring segment in the alignment and may be different from the total alignment score.
+
+## Additional variables altered by pbmm2
+# -u CHAR	How to find canonical splicing sites GT-AG - f: transcript strand; b: both strands; n: no attempt to match GT-AG [n]
+### github says this is set but the example is incorrect as it should be -u [f/b/n]. Also why set for genomic alignments?
+### reading pbmm2 repo it seems like this is setting: Disable homopolymer-compressed k-mer (compression is active for SUBREAD and UNROLLED preset)
+### This should mean that -H IS NOT SET for HiFi/CCS reads unlike Subreads
+# -o FILE	Output alignments to FILE [stdout]
+### they are setting the output file to be 6? No, they have a different internal parser instead of providing -O an myArray+=(item)
+# -z INT1[,INT2]  Truncate an alignment if the running alignment score drops too quickly along the diagonal of the DP matrix
+# (diagonal X-drop, or Z-drop) [400,200]. If the drop of score is above INT2, minimap2 will reverse complement the query in
+# the related region and align again to test small inversions. Minimap2 truncates alignment if there is an inversion or the
+# drop of score is greater than INT1. Decrease INT2 to find small inversions at the cost of performance and false positives.
+# Increase INT1 to improves the contiguity of alignment at the cost of poor alignment in the middle.
+# -r NUM1[,NUM2]  Bandwidth for chaining and base alignment [500,20k]. NUM1 is used for initial chaining and alignment
+# extension; NUM2 for RMQ-based re-chaining and closing gaps in alignments.
+# -g NUM	Stop chain enlongation if there are no minimizers within NUM-bp [10k].
+
+#}
+
+
+{% set temp_dir %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}{% endset %}
+
+{% for rgid, rg in sample.read_groups.items() %}
+- name: minimap2_{{ sample.name }}_{{ rgid | replace("/", "_") }}
+  reset: predecessors
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    {% for file in rg.data_files %}
+    - temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz
+    {% if file.fastqCode == 'duplex' %}
+    - temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz
+    {% endif %}
+    {% endfor %}
+  output:
+    - {{ temp_dir }}/st_sort_temp/{{ rgid | replace("/", "_") }}
+    {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
+    - {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram
+    - {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram.crai
+    {% else %}
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram.crai
+    {% endif %}
+  cpus: 20
+  mem: 80G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }}/st_sort_temp/{{ rgid | replace("/", "_") }} || true
+    mkdir -p {{ temp_dir }}/st_sort_temp/{{ rgid | replace("/", "_") }}
+    mkdir -p {{ results_dir }}
+
+    minimap2 \
+      -t 20 \
+      {% if rg.rgpl == 'PACBIO' %}
+      {% if tasks.minimap2_alignment_pacbio_maphifi|default(true) %}
+      -x map-hifi \
+      {% elif tasks.minimap2_alignment_pacbio_pbmm2|default(false) %}
+      -k 19 -w 19 -u -o 6 -O 26 -e 2 -E 1 -A 1 -B 4 -z 400 -Z 50 -r 2000 -g 5000 \
+      --eqx \
+      {% endif %}
+      {% elif rg.rgpl == 'ONT' %}
+      -x lr:hq \
+      {% endif %}
+      -y \
+      -a \
+      -L \
+      -Y \
+      --secondary=no \
+      {% if constants.grandcanyon[reference].reference_alts is defined %}
+      --alt {{ constants.grandcanyon[reference].reference_alts }} \
+      {% endif %}
+      {{ constants.grandcanyon[reference].reference_fasta }} \
+      {% for file in rg.data_files %}
+      temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz \
+      {% if file.fastqCode == 'duplex' %}
+      temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz \
+      {% endif %}
+      {% endfor %}
+    | samtools addreplacerg \
+      --threads 10 \
+      -r "{{ read_group_line(rg, format='minimap2') }}" \
+      - \
+    | samtools sort \
+      --threads 20 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      -T {{ temp_dir }}/st_sort_temp/{{ rg.rgid | replace("/", "_") }} \
+      {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
+      -o {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram \
+      {% else %}
+      -o {{ results_dir }}/{{ sample.name }}.minimap2.cram \
+      {% endif %}
+      --output-fmt CRAM \
+      --write-index \
+      -
+
+{% endfor %}
+
+{% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
+- name: minimap2_samtools_merge_rgids_{{ sample.name }}
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
+  reset: predecessors
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  {% for rgid, rg in sample.read_groups.items() %}
+    - {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram
+    - {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram.crai
+  {% endfor %}
+  output:
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram.crai
+  walltime: "8:00:00"
+  cpus: 4
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# No long options available for the following:
+      -c           Combine @RG headers with colliding IDs [alter IDs to be distinct]
+      -f           Overwrite the output BAM if exist
+    #}
+    samtools merge \
+      --threads 4 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      -c \
+      -f \
+      --write-index \
+      {{ results_dir }}/{{ sample.name }}.minimap2.cram \
+      {% for rgid, rg in sample.read_groups.items() %}
+      {% if not loop.last %}
+      {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram \
+      {% else %}
+      {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram
+      {% endif %}
+      {% endfor %}
+
+{% endif %}
+
+- name: minimap2_samtools_create_temp_bam_{{ sample.name }}
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram.crai
+  output:
+    - {{ temp_dir }}/{{ sample.name }}.minimap2.bam
+    - {{ temp_dir }}/{{ sample.name }}.minimap2.bam.bai
+  walltime: "4:00:00"
+  cpus: 8
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
+  cmd: |
+
+    samtools view \
+      -@ 8 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --no-PG \
+      -o {{ temp_dir }}/{{ sample.name }}.minimap2.bam \
+      --write-index \
+      {{ results_dir }}/{{ sample.name }}.minimap2.cram
+
+    samtools index -@8 {{ temp_dir }}/{{ sample.name }}.minimap2.bam
+
+{% endmacro %}

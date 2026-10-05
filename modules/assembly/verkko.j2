@@ -1,0 +1,74 @@
+{% from 'modules/assembly/assembly_qc.j2' import assembly_qc with context %}
+{% from 'modules/assembly/quast.j2' import quast with context %}
+
+{% from 'modules/assembly/minimap2.j2' import minimap2_asm with context %}
+
+{% macro verkko(input) %}
+
+{%- set temp_dir %}temp/{{ input.gltype }}/assembly/verkko/{{ input.project }}{% endset %}
+{%- set results_dir %}{{ input.gltype }}/assembly/verkko/{{ input.project }}{% endset %}
+
+{% set hifi_list = input.hifi + input.duplex + input.corr %}
+
+{% if hifi_list | length > 0 %}
+- name: verkko_{{ input.project }}
+  reset: predecessors
+  input:
+    {% for file in hifi_list + input.ulong %}
+    - {{ file }}
+    {% endfor %}
+  output: {{ results_dir }}/assembly.fasta
+  cpus: 32
+  mem: 600G
+  walltime: "72:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.verkko.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    export TMPDIR={{ temp_dir }}
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    verkko \
+      --local \
+      --local-cpus 32 \
+      --local-memory 512 \
+      --hifi {{ hifi_list | join(' ') }} \
+      {% if input.ulong | length > 0 %}
+      --nano {{ input.ulong | join(' ') }} \
+      {% else %}
+      --no-nano \
+      {% endif %}
+      {% if input.hic_r1 | length > 0 %}
+      --hic1 {{ input.hic_r1 | sort | join(' ') }} \
+      --hic2 {{ input.hic_r2 | sort | join(' ') }} \
+      {% endif %}
+      --screen-human-contaminants \
+      -d {{ temp_dir }}
+
+    mv {{ temp_dir }}/assembly* {{ results_dir }}
+
+{% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
+{% set input_assemblies = [input_assembly] %}
+{% if tasks.Genome_assembly_metrics_assembly_qc|default(false) %}
+{{- assembly_qc(input, input_assembly, 'verkko') }}
+{% endif %}
+
+{% if tasks.Genome_assembly_metrics_quast|default(false) %}
+{{- quast(input, results_dir, input_assemblies, 'verkko') }}
+{% endif %}
+
+{% if tasks.Genome_assembly_metrics_align_minimap2|default(false) %}
+{{- minimap2_asm(input, input_assemblies, 'verkko') }}
+{% endif %}
+
+{% else %}
+  {% set log_msg %}verkko was enabled, but no pacbio or ont duplex data was found. Verkko requires pacbio or ont duplex input data, so this task was skipped{% endset %}
+  {{ log(log_msg, level='WARNING') }}
+{% endif %}
+{% endmacro %}
+

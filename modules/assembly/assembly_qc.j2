@@ -1,0 +1,203 @@
+{% macro assembly_qc(input, input_assembly, assembler) %}
+
+{% set output_prefix %}{{ input_assembly | basename }}{% endset %}
+{% set results_dir %}{{ input_assembly | dirname }}{% endset %}
+
+- name: assembly_stats_{{ input.project }}_{{ assembler }}
+  input: {{ input_assembly }}
+  output: {{ results_dir }}/{{ output_prefix }}_assembly-stats.txt
+  cpus: 2
+  mem: 8G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.assembly_stats.container }}
+  cmd: |
+
+    mkdir -p {{ results_dir }}
+
+    assembly-stats \
+      -t {{ input_assembly }} \
+      > {{ results_dir }}/{{ output_prefix }}_assembly-stats.txt
+
+
+- name: compleasm_{{ input.project }}_{{ assembler }}
+  input:
+    - {{ input_assembly }}
+    - {{ constants.grandcanyon.lineages }}
+  cpus: 8
+  mem: 64G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.compleasm.container }}
+  cmd: |
+    set -eu
+
+    mkdir -p {{ results_dir }}/compleasm
+
+    compleasm run \
+      -t 8 \
+      -l primates \
+      -L {{ constants.grandcanyon.lineages }} \
+      -a {{ input_assembly }} \
+      -o {{ results_dir }}/compleasm
+
+
+- name: t2t_assessment_{{ input.project }}_{{ assembler }}
+  input:
+    - {{ input_assembly }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ output_prefix }}_T2T_sequences_alignment_T2T.txt
+    - {{ results_dir }}/{{ output_prefix }}_T2T_sequences_motif_T2T.txt
+  cpus: 8
+  mem: 64G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: ghcr.io/tgen/containers/t2t_seq:test
+  cmd: |
+    set -e
+
+    T2T_chromosomes.sh \
+      -t 8 \
+      -a {{ input_assembly }} \
+      {% if constants.grandcanyon[reference].reference_fasta is defined %}
+      -r {{ constants.grandcanyon[reference].reference_fasta }} \
+      {% endif %}
+      -o {{ results_dir }}/{{ output_prefix }}_T2T_sequences
+
+
+- name: seqtk_scaffold_extraction_{{ input.project }}_{{ assembler }}
+  input:
+    - {{ results_dir }}/{{ output_prefix }}_T2T_sequences_alignment_T2T.txt
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.seqtk.container }}
+  cmd: |
+    set -e
+
+    seqtk gap \
+      {{ input_assembly }} \
+      > {{ results_dir }}/{{ output_prefix }}_seqtk_gaps.tsv
+
+    cut -f1 {{ results_dir }}/{{ output_prefix }}_seqtk_gaps.tsv \
+      > {{ results_dir }}/{{ output_prefix }}_seqtk_ids_with_gaps.txt
+
+    grep -w \
+      -f {{ results_dir }}/{{ output_prefix }}_seqtk_ids_with_gaps.txt \
+      {{ results_dir }}/{{ output_prefix }}_T2T_sequences_alignment_T2T.txt \
+      > {{ results_dir }}/{{ output_prefix }}_seqtk_scaffolds_ids.txt || true
+
+    grep -w -v \
+      -f {{ results_dir }}/{{ output_prefix }}_seqtk_ids_with_gaps.txt \
+      {{ results_dir }}/{{ output_prefix }}_T2T_sequences_alignment_T2T.txt \
+      > {{ results_dir }}/{{ output_prefix }}_seqtk_contigs_ids.txt || true
+
+
+{% if constants.grandcanyon[reference].reference_cdna is defined %}
+- name: minimap2_asmgene_{{ input.project }}_{{ assembler }}
+  input:
+    - {{ input_assembly }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_cdna }}
+  output:
+    - {{ results_dir }}/{{ output_prefix }}_asmgene_reference.paf
+    - {{ results_dir }}/{{ output_prefix }}_asmgene_assembly.paf
+    - {{ results_dir }}/{{ output_prefix }}_asmgene_output.txt
+  cpus: 8
+  mem: 64G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
+  cmd: |
+    set -eu
+
+    minimap2 \
+      -cxsplice:hq \
+      -t 8 \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
+      {{ constants.grandcanyon[reference].reference_cdna }} > {{ results_dir }}/{{ output_prefix }}_asmgene_reference.paf
+
+    minimap2 \
+      -cxsplice:hq \
+      -t 8 \
+      {{ input_assembly }} \
+      {{ constants.grandcanyon[reference].reference_cdna }} > {{ results_dir }}/{{ output_prefix }}_asmgene_assembly.paf
+
+    paftools.js asmgene \
+      -a \
+      -i.97 \
+      {{ results_dir }}/{{ output_prefix }}_asmgene_reference.paf \
+      {{ results_dir }}/{{ output_prefix }}_asmgene_assembly.paf > {{ results_dir }}/{{ output_prefix }}_asmgene_output.txt
+
+{% endif %}
+
+- name: minigraph_{{ input.project }}_{{ assembler }}
+  input:
+    - {{ input_assembly }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ output_prefix }}_minigraph.paf
+  cpus: 8
+  mem: 64G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minigraph.container }}
+  cmd: |
+    set -eu
+
+    minigraph \
+      -xasm \
+      --show-unmap=yes \
+      -t 8 \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
+      {{ input_assembly }} > {{ results_dir }}/{{ output_prefix }}_minigraph.paf
+
+- name: paftools_asmstat_{{ input.project }}_{{ assembler }}
+  input:
+    - {{ results_dir }}/{{ output_prefix }}_minigraph.paf
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ output_prefix }}_asmgene_reference.paf
+    - {{ results_dir }}/{{ output_prefix }}_asmgene_assembly.paf
+    - {{ results_dir }}/{{ output_prefix }}_asmgene_output.txt
+  cpus: 4
+  mem: 16G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
+  cmd: |
+    set -eu
+
+    paftools.js asmstat \
+      {{ constants.grandcanyon[reference].reference_fasta }}.fai \
+      {{ results_dir }}/{{ output_prefix }}_minigraph.paf > {{ results_dir }}/{{ output_prefix }}_minigraph_asmstat.txt
+
+- name: merqury_{{ input.project }}_{{ assembler }}
+  input:
+    - {{ input_assembly }}
+    - {{ input.gltype }}/assembly/meryl/{{ input.project }}/{{ input.project }}.meryl
+  output:
+    - {{ results_dir }}/merqury/{{ output_prefix }}_merqury
+  cpus: 8
+  mem: 64G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.merqury.container }}
+  cmd: |
+    set -eu
+
+    OMP_NUM_THREADS=8
+
+    ROOT_DIR=${PWD}
+
+    mkdir -p {{ results_dir }}/merqury
+    cd {{ results_dir }}/merqury
+
+    merqury.sh \
+      ${ROOT_DIR}/{{ input.gltype }}/assembly/meryl/{{ input.project }}/{{ input.project }}.meryl \
+      ${ROOT_DIR}/{{ input_assembly }} \
+      {{ output_prefix }}_merqury
+
+{% endmacro %}

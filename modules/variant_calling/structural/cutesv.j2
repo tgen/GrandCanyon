@@ -1,0 +1,117 @@
+{% macro cutesv(sample_or_pair, aligner) %}
+
+{% if sample_or_pair.normal is defined %}
+  {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/cutesv/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/cutesv/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set normal_vcf %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/cutesv/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.cutesv.all.vcf{% endset %}
+  {%- set rgpl %}{{ sample_or_pair.tumor.rgpl }}{% endset %}
+  {%- set input_config = "paired" %}
+{% else %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/cutesv/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/cutesv/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set rgpl %}{{ sample_or_pair.rgpl }}{% endset %}
+    {%- set input_config = "tumor_only" %}
+  {% else %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/cutesv/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/cutesv/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set rgpl %}{{ sample_or_pair.rgpl }}{% endset %}
+    {%- set input_config = "germline" %}
+  {% endif %}
+{% endif %}
+{%- set temp_vcf %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cutesv.all.vcf{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cutesv.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.cutesv.pass.vcf.gz{% endset %}
+
+- name: cutesv_{{ sample_or_pair.name }}_{{ aligner }}
+  reset: predecessors
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+  output:
+    - {{ temp_vcf }}
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.cutesv.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+
+    {# creating calling_intervals on the fly based on reference_dict, this should also accept a user supplied value in the future #}
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+      sed 's/SN://;s/LN://' |\
+      awk '{ OFS="\t" ; print $2,0,$3-1 }' \
+      > {{ temp_dir }}/calling_intervals.bed
+
+    cuteSV \
+      {{ bam }} \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
+      {{ temp_vcf }} \
+      {{ temp_dir }} \
+      -include_bed {{ temp_dir }}/calling_intervals.bed \
+      --sample {{ sample_or_pair.rgsm }} \
+      --genotype \
+      {% if rgpl in ('ONT') %}
+      --max_cluster_bias_INS 100 \
+      --diff_ratio_merging_INS 0.3 \
+      --max_cluster_bias_DEL 100 \
+      --diff_ratio_merging_DEL 0.3 \
+      {% elif rgpl in ('PACBIO') %}
+      --max_cluster_bias_INS 1000 \
+      --diff_ratio_merging_INS 0.9 \
+      --max_cluster_bias_DEL 1000 \
+      --diff_ratio_merging_DEL 0.5 \
+      {% endif %}
+      --threads 8
+
+
+- name: cutesv_filter_variants_{{ sample_or_pair.name }}_{{ aligner }}
+  input:
+    - {{ temp_vcf }}
+  output:
+    - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+
+    mkdir -p {{ results_dir }}
+
+    {# 
+    cuteSV will call variant with a POS of 0 if the event is on the telomere, technically still adheres to vcf 4.2 spec, 
+    but bcftools does not like these so we drop them with this grep. cuteSV also doesn't correctly sort the vcf, so we
+    perform a bcftools sort as well instead of a bcftools view
+    #}
+    grep -vE '^[a-zA-Z0-9].+\s+0' {{ temp_vcf }} |\
+    bcftools sort \
+      --output-type z \
+      --output {{ all_vcf }} \
+      --write-index \
+      --temp-dir {{ temp_dir }} \
+      -
+
+    bcftools view \
+      --include 'FILTER == "PASS"' \
+      --output-type z \
+      --output {{ pass_vcf }} \
+      --write-index \
+      {{ all_vcf }}
+
+
+{% endmacro %}

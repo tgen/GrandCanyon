@@ -1,0 +1,19 @@
+{% macro ul_filter(input, output) %}
+
+- name: extract_ultra_long_{{ input | basename | replace(".", "_") }}
+  input: {{ input }}
+  output: {{ output }}
+  cpus: 4
+  mem: 16G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.seqkit.container }}
+  cmd: |
+    set -eu
+
+    seqkit seq \
+      -m 50000 \
+      -o {{ output }} \
+      {{ input }}
+
+{% endmacro %}

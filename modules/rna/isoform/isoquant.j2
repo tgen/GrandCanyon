@@ -1,0 +1,60 @@
+{% macro isoquant(sample, sample_bam, reference_fasta, gtf, SIRV=false) %}
+
+{% if SIRV %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/isoforms/isoquant_SIRV{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/isoforms/isoquant_SIRV/{{ sample.name }}{% endset %}
+{% else %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/isoforms/isoquant{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/isoforms/isoquant/{{ sample.name }}{% endset %}
+{% endif %}
+
+{% if SIRV %}
+- name: isoquant_SIRV_{{ sample.name }}
+{% else %}
+- name: isoquant_{{ sample.name }}
+{% endif %}
+  reset: predecessors
+  input:
+    - {{ sample_bam }}
+    - {{ gtf }}
+    - {{ reference_fasta }}
+  output: {{ results_dir }}
+  cpus: 20
+  mem: 60G
+  walltime: "36:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.isoquant.container }}
+  cmd: |
+
+    set -eu
+
+    {# note: this step performs isoquant for read correction, annotation, and quantification #}
+    {# input: human aligned genome bam #}
+    {# output: gene and transcript quantification, gtf #}
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+    export TMPDIR={{ temp_dir }}
+
+    isoquant \
+      --reference {{ reference_fasta }} \
+      --genedb {{ gtf }} \
+      --complete_genedb \
+      {% if sample.glprep.startswith('kinnex') %}
+      --data_type pacbio \
+      {% else %}
+      --data_type nanopore \
+      {% endif %}
+      --bam {{ sample_bam }} \
+      --labels {{ sample.name }} \
+      --prefix {{ sample.name }} \
+      --output {{ temp_dir }}/ \
+      --sqanti_output \
+      --check_canonical \
+      -t 20
+
+    mv {{ temp_dir }}/{{ sample.name }}/{{ sample.name }}* {{ results_dir }}/
+
+{% endmacro %}
+

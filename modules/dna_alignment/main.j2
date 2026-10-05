@@ -1,0 +1,174 @@
+{% from 'modules/dna_alignment/minimap2.j2' import minimap2 with context %}
+{% from 'modules/dna_alignment/minibwa.j2' import minibwa with context %}
+{% from 'modules/dna_alignment/bwa_mem2_samtools.j2' import bwa_mem2_samtools with context %}
+{% from 'modules/dna_alignment/vg_giraffe.j2' import vg_giraffe with context %}
+{% from 'modules/qc/main.j2' import bam_qc with context %}
+{% from 'utilities/remove_files.j2' import remove_files with context %}
+
+{% macro dna_alignment(samples) %}
+
+  {% for sample in samples.values() if sample.gltype in ['genome', 'exome'] and sample.glprep not in ['longread'] %}
+    {% if sample.read_groups.values() | selectattr('data_files') | list | length > 0 %}
+    {#
+    {% for data_file in sample.read_groups.values() | selectattr('data_files') %}
+      {% if data_file.fileType not in ('fastq', 'ubam') %}
+        {% set log_msg %}unsupported data file type! {{ data_file.fileType }}{% endset %}
+        {{ log(log_msg, level='WARNING') }}
+      {% endif %}
+    {% endfor %}
+    #}
+    {% set task_list = [] %}
+    {% set files_to_remove = [] %}
+    {% set platform = (sample.read_groups.values()|first).rgpm|default('') %}
+    {% if platform|lower in ['hiseq4000', 'novaseq6000', 'novaseqxplus'] %}
+      {% set opt_dup_distance = 2500 %}
+    {% else %}
+      {% set opt_dup_distance = 100 %}
+    {% endif %}
+
+    {# In main we check the following (commenting here for visibility):
+    {% if sample.gltype in ['genome', 'exome'] and sample.glprep not in ['longread'] %}
+        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_bwa"]|default(false) %}
+            {% do sample.aligners.append('bwa') %}
+        {% endif %}
+        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minibwa"]|default(false) %}
+            {% do sample.aligners.append('minibwa') %}
+        {% endif %}
+    {% endif %}
+    #}
+    {% if 'bwa' in sample.aligners %}
+      {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
+      {% set task %}chunked_samtools_merge_rgid_bams_{{ sample.name }}_{{ rglb }}_bwa{% endset %}
+      {% do task_list.append(task) %}
+      {% endfor %}
+      {{- bwa_mem2_samtools(sample, opt_dup_distance, aligner='bwa') }}
+      {{- bam_qc(sample, aligner='bwa') }}
+      {% set aligner = 'bwa' %}
+      {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+      {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
+        {% set file %}{{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam{% endset %}
+        {% do files_to_remove.append(file) %}
+        {% if sample.read_groups.values() | groupby('rglb') | length > 1 %}
+          {% set file %}{{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram{% endset %}
+          {% do files_to_remove.append(file) %}
+          {% set task %}chunked_samtools_merge_rglb_bams_{{ sample.name }}_{{ aligner }}{% endset %}
+          {% do task_list.append(task) %}
+        {% else %}
+          {% set task %}samtools_markdup_{{ sample.name }}_{{ rglb }}_{{ aligner }}{% endset %}
+          {% do task_list.append(task) %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {% if 'minibwa' in sample.aligners %}
+      {{- minibwa(sample, opt_dup_distance, aligner='minibwa') }}
+      {{- bam_qc(sample, aligner='minibwa') }}
+      {% set aligner = 'minibwa' %}
+      {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+      {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
+        {% set file %}{{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam{% endset %}
+        {% do files_to_remove.append(file) %}
+        {% for rgid in rg %}
+          {% set file %}{{ temp_dir }}/{{ rgid.rgid }}{% endset %}
+          {% do files_to_remove.append(file) %}
+        {% endfor %}
+        {% if sample.read_groups.values() | groupby('rglb') | length > 1 %}
+          {% set file %}{{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram{% endset %}
+          {% do files_to_remove.append(file) %}
+          {% set task %}chunked_samtools_merge_rglb_bams_{{ sample.name }}_{{ aligner }}{% endset %}
+          {% do task_list.append(task) %}
+        {% else %}
+          {% set task %}samtools_markdup_{{ sample.name }}_{{ rglb }}_{{ aligner }}{% endset %}
+          {% do task_list.append(task) %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {% if 'vg_giraffe' in sample.aligners %}
+      {{- vg_giraffe(sample, opt_dup_distance, aligner='vg_giraffe') }}
+      {{- bam_qc(sample, aligner='vg_giraffe')}}
+      {% set aligner = 'vg_giraffe' %}
+      {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+      {% for rglb, rg in sample.read_groups.values() | groupby('rglb') %}
+        {% set file %}{{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.bam{% endset %}
+        {% do files_to_remove.append(file) %}
+        {% for rgid in rg %}
+          {% set file %}{{ temp_dir }}/{{ rgid.rgid }}{% endset %}
+          {% do files_to_remove.append(file) %}
+        {% endfor %}
+        {% if sample.read_groups.values() | groupby('rglb') | length > 1 %}
+          {% set file %}{{ temp_dir }}/{{ sample.name }}_{{ rglb }}.{{ aligner }}.md.cram{% endset %}
+          {% do files_to_remove.append(file) %}
+          {% set task %}chunked_samtools_merge_rglb_bams_{{ sample.name }}_{{ aligner }}{% endset %}
+          {% do task_list.append(task) %}
+        {% else %}
+          {% set task %}samtools_markdup_{{ sample.name }}_{{ rglb }}_{{ aligner }}{% endset %}
+          {% do task_list.append(task) %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    {% for rgid, rg in sample.read_groups.items() %}
+      {% set r1fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R1')|first %}
+      {% set r1fastq_path %}temp/fastqs/{{ r1fastq.basename }}{% endset %}
+      {% do files_to_remove.append(r1fastq_path) %}
+
+      {% set r2fastq = rg.data_files|selectattr('fastqCode', 'eq', 'R2')|first %}
+      {% set r2fastq_path %}temp/fastqs/{{ r2fastq.basename }}{% endset %}
+      {% do files_to_remove.append(r2fastq_path) %}
+
+      {% set ubam_list = rg.data_files|selectattr('fileType', 'eq', 'ubam')|list %}
+      {% if ubam_list | length > 0 %}
+        {% set ubam = ubam_list|first %}
+        {% set ubam_path %}temp/ubams/{{ ubam.basename}}{% endset %}
+        {% do files_to_remove.append(ubam_path) %}
+      {% endif %}
+
+      {% set file %}temp/fastqs/{{ sample.name }}/{{ rgid }}{% endset %}
+      {% do files_to_remove.append(file) %}
+    {% endfor %}
+
+    {% set task_name %}{{ sample.name }}_dna_fastqs{% endset %}
+    {% if sample.aligners | length > 0 %}
+      {{- remove_files(none, task_list, files_to_remove, task_name) }}
+    {% endif %}
+    {% endif %}
+  {% endfor %}
+
+  {% for sample in samples.values() if sample.gltype in ['genome', 'exome'] and sample.glprep in ['longread'] %}
+    {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minimap2"]|default(false) %}
+      {{- minimap2(sample) }}
+      {{- bam_qc(sample, aligner='minimap2')}}
+    {% endif %}
+    {% set task_list = [] %}
+    {% set files_to_remove = [] %}
+    {% set temp_dir %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}{% endset %}
+    {% for rgid, rg in sample.read_groups.items() %}
+      {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
+        {% set file %}{{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}{% endset %}
+        {% set task %}minimap2_samtools_merge_rgids_{{ sample.name }}{% endset %}
+        {% do files_to_remove.append(file) %}
+        {% do task_list.append(task) %}
+      {% else %}
+        {% set task %}minimap2_{{ sample.name }}_{{ rgid | replace("/", "_") }}{% endset %}
+        {% do task_list.append(task) %}
+      {% endif %}
+      {% for file in rg.data_files %}
+        {% set ubam %}temp/ubams/{{ file.basename }}{% endset %}
+        {% do files_to_remove.append(ubam) %}
+
+        {% set fastq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+        {% do files_to_remove.append(fastq) %}
+        {% if file.fastqCode == 'duplex' %}
+          {% set fastq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz{% endset %}
+          {% do files_to_remove.append(fastq) %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+
+    {% set task_name %}{{ sample.name }}_longread_dna_datafiles{% endset %}
+    {% if sample.aligners | length > 0 %}
+      {{- remove_files(none, task_list, files_to_remove, task_name) }}
+    {% endif %}
+  {% endfor %}
+
+{% endmacro %}
+

@@ -1,0 +1,105 @@
+{% macro oarfish(sample, sample_bam) %}
+
+{% set temp_dir %}temp/{{ sample.gltype }}/quant/oarfish{% endset %}
+{% set results_dir %}{{ sample.gltype }}/quant/oarfish/{{ sample.name }}{% endset %}
+
+{% set longfqlist = [] %}
+
+{% for rgid, rg in sample.read_groups.items() %}
+  {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
+  {% if longfastq is defined %}
+    {% set longfastq_path %}temp/fastqs/{{ longfastq.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do longfastq.update({"path": longfastq_path}) %}
+    {% do longfqlist.append(longfastq) %}
+  {% endif %}
+{% endfor %}
+
+{% if longfqlist | length > 1 %}
+  {% set lr_fastq %}{{ temp_dir }}/{{ sample.name }}_lr_concat.fastq.gz{% endset %}
+{% else %}
+  {% set lr_fastq %}{{ longfqlist|map(attribute='path')|list|first }}{% endset %}
+{% endif %}
+
+- name: oarfish_{{ sample.name }}
+  reset: predecessors
+  input:
+    - {{ constants.grandcanyon[reference].transcriptome }}
+    {% for fq in longfqlist %}
+    - {{ fq.path }}
+    {% endfor %}
+  output: {{ results_dir }}
+  cpus: 16
+  mem: 64G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.oarfish.container }}
+  cmd: |
+
+    mkdir -p {{ results_dir }}
+    mkdir -p {{ temp_dir }}
+
+    {% if longfqlist | length > 1 %}
+    cat {{ longfqlist|map(attribute='path')|join(' ')}} > {{ lr_fastq }}
+    {% endif %}
+
+    oarfish \
+      --threads 16 \
+      --reads {{ lr_fastq }} \
+      --annotated {{ constants.grandcanyon[reference].transcriptome }} \
+      {% if sample.glprep.startswith('kinnex') %}
+      --seq-tech pac-bio-hifi \
+      {% else %}
+      --seq-tech ont-cdna \
+      {% endif %}
+      --filter-group no-filters \
+      --model-coverage \
+      --output {{ results_dir }}/{{ sample.name }}
+
+{% if sample.external_data is defined and sample.external_data.isoform_gtf is defined %}
+
+{% if sample.external_data.isoform_gtf.endswith('.gtf') %}
+  {% set gtf_basename = sample.external_data.isoform_gtf.split('.')[:-1]|join('_')|basename %}
+{% elif sample.external_data.isoform_gtf.endswith('.gtf.gz') %}
+  {% set gtf_basename = sample.external_data.isoform_gtf.split('.')[:-2]|join('_')|basename %}
+{% endif %}
+{% set transcriptome %}temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa{% endset %}
+
+- name: oarfish_{{ gtf_basename }}_{{ sample.name }}
+  reset: predecessors
+  input:
+    - {{ transcriptome }}
+    {% for fq in longfqlist %}
+    - {{ fq.path }}
+    {% endfor %}
+  output: {{ results_dir }}
+  cpus: 16
+  mem: 64G
+  walltime: "48:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.oarfish.container }}
+  cmd: |
+
+    mkdir -p {{ results_dir }}
+    mkdir -p {{ temp_dir }}
+
+    {% if longfqlist | length > 1 %}
+    cat {{ longfqlist|map(attribute='path')|join(' ')}} > {{ lr_fastq }}
+    {% endif %}
+
+    oarfish \
+      --threads 16 \
+      --reads {{ lr_fastq }} \
+      --annotated {{ transcriptome }} \
+      {% if sample.glprep.startswith('kinnex') %}
+      --seq-tech pac-bio-hifi \
+      {% else %}
+      --seq-tech ont-cdna \
+      {% endif %}
+      --filter-group no-filters \
+      --model-coverage \
+      --output {{ results_dir }}/{{ sample.name }}
+
+{% endif %}
+
+{% endmacro %}
+

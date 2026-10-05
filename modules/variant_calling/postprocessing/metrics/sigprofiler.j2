@@ -1,0 +1,89 @@
+{% macro sigprofiler(sample_or_pair, input_vcf, aligner, variant_caller) %}
+
+{% if constants.grandcanyon[reference].tool_resources.sigprofiler.ref_dir is defined %}
+
+{% if input_vcf.endswith('.vcf') %}
+  {% set vcf_prefix = input_vcf.split('.')[:-1]|join('.') %}
+{% elif input_vcf.endswith('.vcf.gz') %}
+  {% set vcf_prefix = input_vcf.split('.')[:-2]|join('.') %}
+{% else %}
+  {{ raise('{} does not appear to be a vcf!'.format(input_vcf)) }}
+{% endif %}
+
+{% set temp_dir %}temp/{{ sample_or_pair.gltype }}/metrics/sigprofiler/{{ sample_or_pair.name }}_{{ aligner }}_{{ variant_caller }}{% endset %}
+{% set temp_vcf_dir %}{{ temp_dir }}/vcfs{% endset %}
+{% set results_dir %}{{ sample_or_pair.gltype }}/metrics/sigprofiler/{{ sample_or_pair.name }}_{{ aligner }}_{{ variant_caller }}{% endset %}
+
+- name: sigprofiler_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, mutational_signatures, sigprofiler, {{ sample_or_pair.name }}]
+  input:
+    - {{ input_vcf }}
+    - {{ constants.grandcanyon[reference].tool_resources.sigprofiler.ref_dir }}
+  cpus: 2
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.sigprofiler.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_vcf_dir }} || true
+    mkdir -p {{ temp_vcf_dir }}
+
+    gunzip -c {{ input_vcf }} > {{ temp_vcf_dir }}/{{ vcf_prefix | basename }}.vcf
+
+    export SIGPROFILERMATRIXGENERATOR_VOLUME="{{ constants.grandcanyon[reference].tool_resources.sigprofiler.ref_dir }}"
+    export SIGPROFILERASSIGNMENT_VOLUME="{{ temp_dir }}"
+
+    SigProfilerMatrixGenerator matrix_generator \
+      {% if sample_or_pair.gltype == 'exome' %}
+      --exome \
+      {% endif %}
+      {{ sample_or_pair.name }} \
+      GRCh38 \
+      {{ temp_vcf_dir }}
+
+    if [ -e {{ temp_vcf_dir }}/output/SBS ]; then
+      mkdir -p {{ results_dir }}/SBS
+      SigProfilerAssignment cosmic_fit \
+        {% if sample_or_pair.gltype == 'exome' %}
+        {{ temp_vcf_dir }}/output/SBS/{{ sample_or_pair.name }}.SBS96.exome \
+        {% else %}
+        {{ temp_vcf_dir }}/output/SBS/{{ sample_or_pair.name }}.SBS96.all \
+        {% endif %}
+        {{ results_dir }}/SBS \
+        --genome_build GRCh38 \
+        --cosmic_version 3.5 \
+        --input_type matrix \
+        {% if sample_or_pair.gltype == 'exome' %}
+        --exome True \
+        {% endif %}
+        --context_type "96"
+    fi
+
+    if [ -e {{ temp_vcf_dir }}/output/DBS ]; then
+      mkdir -p {{ results_dir }}/DBS
+      SigProfilerAssignment cosmic_fit \
+        {% if sample_or_pair.gltype == 'exome' %}
+        {{ temp_vcf_dir }}/output/DBS/{{ sample_or_pair.name }}.DBS78.exome \
+        {% else %}
+        {{ temp_vcf_dir }}/output/DBS/{{ sample_or_pair.name }}.DBS78.all \
+        {% endif %}
+        {{ results_dir }}/DBS \
+        --genome_build GRCh38 \
+        --cosmic_version 3.5 \
+        --input_type matrix \
+        --collapse_to_SBS96 False \
+        {% if sample_or_pair.gltype == 'exome' %}
+        --exome True \
+        {% endif %}
+        --context_type "DINUC"
+      fi
+
+{% else %}
+  {% set log_msg %}sigprofiler was enabled, but the sigprofiler ref_dir was not defined for {{ reference }}{% endset %}
+  {{ log(log_msg, level='WARNING') }}
+{% endif %}
+
+{% endmacro %}

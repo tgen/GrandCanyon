@@ -1,0 +1,153 @@
+{% from 'modules/assembly/assembly_qc.j2' import assembly_qc with context %}
+{% from 'modules/assembly/quast.j2' import quast with context %}
+
+{% from 'modules/assembly/minimap2.j2' import minimap2_asm with context %}
+
+{% macro hifiasm(input) %}
+
+{%- set temp_dir %}temp/{{ input.gltype }}/assembly/hifiasm/{{ input.project }}{% endset %}
+{%- set results_dir %}{{ input.gltype }}/assembly/hifiasm/{{ input.project }}{% endset %}
+
+{% set hifi_list = input.hifi %}
+{% set ont_list = input.duplex + input.corr %}
+{% set input_config = 'pb_only' %}
+{% if input.hifi | length == 0 and input.simplex | length > 0 %}
+  {% set hifi_list = input.simplex %}
+  {% set input_config = 'ont_only' %}
+{% elif ont_list | length > 0 %}
+  {% set chopped_ont %}temp/fastqs/{{ input.project }}.chopped.ont.fastq.gz{% endset %}
+  {% set hifi_list = input.hifi + [chopped_ont] %}
+  {% set input_config = 'mixed' %}
+{% endif %}
+
+{# PacBio Hifi reads are consistently between 10kb and 30 kb, and therefore it does not need chopping #}
+{% if ont_list | length > 0 and input_config in ('mixed') %}
+- name: prep_hifiasm_input_{{ input.project }}
+  reset: predecessors
+  input:
+    {% for file in ont_list %}
+    - {{ file }}
+    {% endfor %}
+  output:
+    - {{ chopped_ont }}
+  cpus: 4
+  mem: 16G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.seqkit.container }}
+  cmd: |
+    set -eu
+
+    seqkit sliding \
+      -s 30000 \
+      -W 30000 \
+      -g {{ ont_list | join(' ') }} |\
+    seqkit seq \
+      -m 10000 \
+      -o {{ chopped_ont }} \
+      -
+{% endif %}
+
+
+{% if input.hic_r1 | length > 0 %}
+  {% set asm_str = "hic" %}
+{% else %}
+  {% set asm_str = "bp" %}
+{% endif %}
+
+{% set raw_assembly %}{{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.r_utg.fa{% endset %}
+{% set raw_collapsed_assembly %}{{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.p_utg.fa{% endset %}
+{% set primary_assembly %}{{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.p_ctg.fa{% endset %}
+{% if input.yak_pat | length > 0 %}
+  {% set haplotype1_assembly %}{{ results_dir }}/{{ input.project }}.asm.dip.hap1.p_ctg.fa{% endset %}
+  {% set haplotype2_assembly %}{{ results_dir }}/{{ input.project }}.asm.dip.hap2.p_ctg.fa{% endset %}
+{% else %}
+  {% set haplotype1_assembly %}{{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.hap1.p_ctg.fa{% endset %}
+  {% set haplotype2_assembly %}{{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.hap2.p_ctg.fa{% endset %}
+{% endif %}
+{% set input_assemblies = [primary_assembly, haplotype1_assembly, haplotype2_assembly] %}
+{% set align_assemblies = [raw_assembly, raw_collapsed_assembly, primary_assembly, haplotype1_assembly, haplotype2_assembly] %}
+
+{% if hifi_list | length > 0 %}
+- name: hifiasm_{{ input.project }}
+  reset: predecessors
+  input:
+    {% for file in hifi_list + input.ulong + input.yak_pat + input.yak_mat %}
+    - {{ file }}
+    {% endfor %}
+  output:
+    {% if input.yak_pat | length > 0 %}
+    - {{ results_dir }}/{{ input.project }}.asm.dip.hap1.p_ctg.fa
+    - {{ results_dir }}/{{ input.project }}.asm.dip.hap2.p_ctg.fa
+    {% else %}
+    - {{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.hap1.p_ctg.fa
+    - {{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.hap2.p_ctg.fa
+    {% endif %}
+    - {{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.r_utg.fa
+    - {{ results_dir }}/{{ input.project }}.asm.{{ asm_str }}.p_ctg.fa
+  cpus: 32
+  mem: 600G
+  walltime: "48:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.hifiasm.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    export TMPDIR={{ temp_dir }}
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    hifiasm \
+      -t 32 \
+      -o {{ temp_dir }}/{{ input.project }}.asm \
+      --telo-m CCCTAA \
+      {% if input.ulong | length > 0 and input_config not in ('ont_only') %}
+      --ul "{{ input.ulong | join(',') }}" \
+      --ul-cut 50000 \
+      {% endif %}
+      {% if input.hic_r1 | length > 0 %}
+      --h1 "{{ input.hic_r1 | sort | join(',') }}" \
+      --h2 "{{ input.hic_r2 | sort | join(',') }}" \
+      {% endif %}
+      --dual-scaf \
+      {% if input_config in ('ont_only') %}
+      --ont \
+      {% endif %}
+      {{ hifi_list | join(' ') }}
+
+    {% if input.yak_pat | length > 0 %}
+    hifiasm \
+      -t 32 \
+      -o {{ temp_dir }}/{{ input.project }}.asm \
+      -1 {{ input.yak_pat | first }} \
+      -2 {{ input.yak_mat | first }} \
+      /dev/null
+    {% endif %}
+
+    for graph in {{ temp_dir }}/{{ input.project }}.asm.*.gfa ; do
+      awk '/^S/{print ">"$2;print $3}' ${graph} > {{ results_dir }}/$(basename ${graph%.gfa}.fa)
+    done
+    mv {{ temp_dir }}/{{ input.project }}.asm.*.gfa {{ results_dir }}/
+    mv {{ temp_dir }}/{{ input.project }}.asm.*.lowQ.bed {{ results_dir }}/
+
+
+{% if tasks.Genome_assembly_metrics_assembly_qc|default(false) %}
+{{- assembly_qc(input, primary_assembly, 'hifiasm') }}
+{% endif %}
+
+{% if tasks.Genome_assembly_metrics_quast|default(false) %}
+{{- quast(input, results_dir, input_assemblies, 'hifiasm') }}
+{% endif %}
+
+{% if tasks.Genome_assembly_metrics_align_minimap2|default(false) %}
+{{- minimap2_asm(input, align_assemblies, 'hifiasm') }}
+{% endif %}
+
+{% else %}
+  {% set log_msg %}hifiasm was enabled, but no pacbio data was found. Hifiasm requires pacbio input data, so this task was skipped{% endset %}
+  {{ log(log_msg, level='WARNING') }}
+{% endif %}
+{% endmacro %}

@@ -1,0 +1,81 @@
+{% from 'modules/rna/isoform/sqanti3.j2' import sqanti3 with context %}
+
+{% macro flair(sample, sample_bam, input_fq, reference_fasta, gtf, SIRV=false) %}
+
+{% if sample.external_data is defined and sample.external_data.sj_tab is defined %}
+  {% set sample_sj_tab %}{{ sample.external_data.sj_tab }}{% endset %}
+{% endif %}
+
+{% if SIRV %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/isoforms/flair_SIRV/{{ sample.name }}{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/isoforms/flair_SIRV/{{ sample.name }}{% endset %}
+{% else %}
+  {% set temp_dir %}temp/{{ sample.gltype }}/isoforms/flair/{{ sample.name }}{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/isoforms/flair/{{ sample.name }}{% endset %}
+{% endif %}
+
+{% if SIRV %}
+- name: flair_SIRV_{{ sample.name }}
+{% else %}
+- name: flair_{{ sample.name }}
+{% endif %}
+  input:
+    - {{ reference_fasta }}
+    - {{ gtf }}
+    - {{ sample_bam }}
+    - {{ input_fq }}
+    {% if sample_sj_tab is defined %}
+    - {{ sample_sj_tab }}
+    {% endif %}
+  output:
+    - {{ temp_dir }}/flair.collapse.isoforms.fa
+    - {{ results_dir }}/{{ sample.name }}.isoforms.gtf
+    - {{ results_dir }}/{{ sample.name }}.quantify.counts.tsv
+    - {{ results_dir }}/{{ sample.name }}_flair_top10.txt
+  cpus: 10
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.flair.container }}
+  cmd: |
+    set -e
+
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+    flair transcriptome \
+      --genomealignedbam {{ sample_bam }} \
+      --genome {{ reference_fasta }} \
+      --gtf {{ gtf }} \
+      {% if sample_sj_tab is defined %}
+      --shortread {{ sample_sj_tab }} \
+      {% endif %}
+      --output {{ temp_dir }}/{{ sample.name }}
+
+    mv {{ temp_dir }}/{{ sample.name }}.* {{ results_dir }}
+
+    {# generate reads_manifest.tsv file for flair quantify #}
+    printf "{{ sample.name }}\tcondition1\tbatch1\t{{ input_fq }}\n" > {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv
+
+    flair quantify \
+      --threads 10 \
+      --temp_dir {{ temp_dir }} \
+      --reads_manifest {{ temp_dir }}/{{ sample.name }}.reads_manifest.tsv \
+      --sample_id_only \
+      --isoforms {{ results_dir }}/{{ sample.name }}.isoforms.fa \
+      --output {{ results_dir }}/{{ sample.name }}.quantify
+
+    {# generate file with the 10 longest isoforms #}
+    awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' {{ results_dir }}/{{ sample.name }}.isoforms.fa |\
+    awk '{printf("%d\t%s\t%s\t%s\n",length($2),$1,$1,$2);}' |\
+    sort -t $'\t' -k1,1nr | cut -f 1,2 | head > {{ results_dir }}/{{ sample.name }}_flair_top10.txt
+
+    sed 's/_ENSG[0-9]\+//' {{ results_dir }}/{{ sample.name }}.quantify.counts.tsv > {{ results_dir }}/{{ sample.name }}.quantify.flnc.counts.tsv
+
+{% if tasks['RNA_transcriptome_isoform_discovery_sqanti3']|default(false) %}
+  {% set isoforms %}{{ results_dir }}/{{ sample.name }}.isoforms.gtf{% endset %}
+  {% set flnc_count %}{{ results_dir }}/{{ sample.name }}.quantify.flnc.counts.tsv{% endset %}
+  {{- sqanti3(sample, isoforms, flnc_count, temp_dir, results_dir, 'flair') }}
+{% endif %}
+
+{% endmacro %}
+

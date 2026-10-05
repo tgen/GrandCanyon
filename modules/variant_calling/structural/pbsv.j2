@@ -1,0 +1,33 @@
+{% macro pbsv(sample, aligner) %}
+
+{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_structural_calls/pbsv/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_structural_calls/pbsv/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.pbsv.all.vcf{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.pbsv.pass.vcf.gz{% endset %}
+
+- name: pbsv_{{ sample.name }}_{{ aligner }}
+  reset: predecessors
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ all_vcf }}
+  cpus: 8
+  mem: 64G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.pbsv.container }}
+  cmd: |
+
+    pbsv discover \
+      {{ bam }} \
+      {{ results_dir }}/{{ sample.name }}.svsig.gz
+
+    pbsv call \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
+      {{ results_dir }}/{{ sample.name }}.svsig.gz \
+      {{ all_vcf }}
+
+{% endmacro %}

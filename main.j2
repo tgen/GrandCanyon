@@ -1,0 +1,371 @@
+{# Tasks contains switches for toggling many of the features #}
+{% if tasks is not defined %}
+    {% set tasks = {} %}
+{% endif %}
+
+{% if num_chunks is not defined %}
+    {% set num_chunks = 20 %}
+{% endif %}
+
+{% if reference is not defined or reference == "" %}
+    {% set reference = "grch38" %}
+    {% set log_msg %}reference not defined, defaulting to grch38{% endset %}
+    {{ log(log_msg, level='WARNING') }}
+{% elif constants.grandcanyon[reference] is not defined %}
+    {% set raise_msg %}Unsupported reference defined! {{ reference|lower }} is not in pipeline.yaml or user supplied input{% endset %}
+    {{ raise(raise_msg) }}
+{% endif %}
+
+{% if source_reference is defined %}
+  {% set temp_reference_dict = constants.grandcanyon[reference] %}
+  {% do constants.grandcanyon[reference].update(constants.grandcanyon[source_reference]) %}
+  {% do constants.grandcanyon[reference].update(temp_reference_dict) %}
+  {% if constants.grandcanyon[reference].chain_file is defined %}
+    {% from 'utilities/prepare_resources.j2' import liftover_vcf with context %}
+    {% set log_msg %}Detected {{ constants.grandcanyon[reference].chain_file }} chain file. Assuming chain is for {{ source_reference }} -> {{ reference }}{% endset %}
+    {{ log(log_msg, level='WARNING') }}
+    {% set liftover_output_dir %}{{ constants.grandcanyon[reference].reference_fasta | dirname }}{% endset %}
+    {% set source_fasta %}{{ constants.grandcanyon[source_reference].reference_fasta }}{% endset %}
+    {% set result_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+    {% set source_vcf %}{{ constants.grandcanyon[source_reference].tool_resources.mutect2.germline_reference }}{% endset %}
+    {% set result_vcf %}{{ liftover_output_dir }}/vcfs/{{ source_vcf | basename }}{% endset %}
+    {% do constants.grandcanyon[reference].update({'tool_resources': {'mutect2': {'germline_reference': result_vcf }}}) %}
+    {{ liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta, 'tool_resources_mutect2_germline_reference') }}
+  {% endif %}
+{% endif %}
+{% if constants.grandcanyon[reference].reference_fasta is defined %}
+    {% from 'utilities/prepare_resources.j2' import prepare_reference with context %}
+    {% if constants.grandcanyon[reference].reference_fai is not defined
+    or constants.grandcanyon[reference].reference_dict is not defined
+    or constants.grandcanyon[reference].reference_non_N_interval_list is not defined %}
+        {% set reference_fasta = constants.grandcanyon[reference].reference_fasta %}
+        {% set reference_fai %}{{ reference_fasta }}.fai{% endset %}
+        {% set reference_dict %}{{ reference_fasta }}.dict{% endset %}
+        {% set reference_non_N_interval_list %}{{ reference_fasta }}.primary_contigs.nonN.interval_list{% endset %}
+        {% do constants.grandcanyon[reference].update({'reference_fai': reference_fai}) %}
+        {% do constants.grandcanyon[reference].update({'reference_dict': reference_dict}) %}
+        {% do constants.grandcanyon[reference].update({'reference_non_N_interval_list': reference_non_N_interval_list}) %}
+        {{- prepare_reference() }}
+    {% endif %}
+    {% from 'utilities/prepare_resources.j2' import prepare_bwa_index with context %}
+    {% for task in tasks if task.endswith("alignment_dna_alignment_bwa") and tasks[task] %}
+      {% if loop.last and constants.grandcanyon[reference].bwa_mem2_index is not defined %}
+        {% set bwa_mem2_index %}{{ constants.grandcanyon[reference].reference_fasta | dirname | dirname }}/tool_resources/bwa_mem2/{{ constants.grandcanyon[reference].reference_fasta | basename }}{% endset %}
+        {% do constants.grandcanyon[reference].update({'bwa_mem2_index': bwa_mem2_index}) %}
+        {{- prepare_bwa_index() }}
+      {% endif %}
+    {% endfor %}
+    {% if constants.grandcanyon[reference].tool_resources is not defined
+    or constants.grandcanyon[reference].tool_resources.ascat is not defined
+    or constants.grandcanyon[reference].tool_resources.ascat.ascat_resources is not defined %}
+      {% if tasks["Genome_variant_calling_cna_caller_ascat"]|default(false) or tasks["Exome_variant_calling_cna_caller_ascat"]|default(false) %}
+        {% from 'utilities/prepare_resources.j2' import generate_cnv_resources with context %}
+        {% set ascat_resources %}{{ constants.grandcanyon[reference].reference_fasta | dirname | dirname }}/tool_resources/ascat{% endset %}
+        {% do constants.grandcanyon[reference].update({'tool_resources': {'ascat': { 'ascat_resources': ascat_resources }}}) %}
+        {{- generate_cnv_resources() }}
+      {% endif %}
+    {% endif %}
+{% else %}
+    {% set raise_msg %}reference_fasta not defined! constants.grandcanyon.{{ reference }}.reference_fasta is not in pipeline.yaml or user supplied input{% endset %}
+    {{ raise(raise_msg) }}
+{% endif %}
+{% if constants.grandcanyon[reference].reference_gfa is defined %}
+    {% from 'utilities/prepare_resources.j2' import prepare_pangenome_reference with context %}
+    {% if constants.grandcanyon[reference].reference_hapl is not defined
+    or constants.grandcanyon[reference].reference_gbz is not defined %}
+        {% set reference_gfa = constants.grandcanyon[reference].reference_gfa %}
+        {% set reference_hapl %}{{ reference_gfa | replace("gfa", "hapl") }}{% endset %}
+        {% set reference_gbz %}{{ reference_gfa | replace("gfa", "gbz") }}{% endset %}
+        {% do constants.grandcanyon[reference].update({'reference_hapl': reference_hapl}) %}
+        {% do constants.grandcanyon[reference].update({'reference_gbz': reference_gbz}) %}
+        {{- prepare_pangenome_reference() }}
+    {% endif %}
+{% endif %}
+{% if constants.grandcanyon[reference].gff3 is defined and constants.grandcanyon[reference].gtf is not defined %}
+    {% from 'utilities/prepare_resources.j2' import convert_gff3_to_gtf with context %}
+        {% set gene_model_gff = constants.grandcanyon[reference].gff3 %}
+        {% if gene_model_gff.endswith('.gz') %}
+          {% set gene_model_prefix = gene_model_gff.split('.')[:-2]|join('.') %}
+        {% else %}
+          {% set gene_model_prefix = gene_model_gff.split('.')[:-1]|join('.') %}
+        {% endif %}
+        {% set gene_model_gtf %}{{ gene_model_prefix }}.gtf{% endset %}
+        {% do constants.grandcanyon[reference].update({'gtf': gene_model_gtf}) %}
+        {{- convert_gff3_to_gtf() }}
+{% endif %}
+{% if constants.grandcanyon[reference].gtf is defined %}
+    {% from 'utilities/prepare_resources.j2' import prepare_gene_model with context %}
+    {% if constants.grandcanyon[reference].ref_flat is not defined
+    or constants.grandcanyon[reference].starfusion_index is not defined %}
+        {% set gene_model_dir = constants.grandcanyon[reference].gtf | dirname %}
+        {% set gene_model_gtf = constants.grandcanyon[reference].gtf %}
+        {% set gene_model_prefix = gene_model_gtf.split('.')[:-1]|join('.') %}
+        {% set ref_flat %}{{ gene_model_prefix }}.refFlat.txt{% endset %}
+        {% do constants.grandcanyon[reference].update({'ref_flat': ref_flat}) %}
+
+        {% if tasks['RNA_transcriptome_fusion_caller_STAR_Fusion']|default(false) %}
+          {% set starfusion_index %}{{ gene_model_dir }}/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir{% endset %}
+          {% do constants.grandcanyon[reference].update({'starfusion_index': starfusion_index}) %}
+        {% endif %}
+        {{- prepare_gene_model() }}
+    {% endif %}
+    {% from 'utilities/prepare_resources.j2' import prepare_transcriptome with context %}
+    {% if constants.grandcanyon[reference].transcriptome is not defined %}
+        {% set gene_model_gtf = constants.grandcanyon[reference].gtf %}
+        {% set gene_model_prefix = gene_model_gtf.split('.')[:-1]|join('.') %}
+        {% set transcriptome %}{{ gene_model_prefix }}.transcriptome.fasta{% endset %}
+        {% do constants.grandcanyon[reference].update({'transcriptome': transcriptome}) %}
+        {{- prepare_transcriptome() }}
+    {% endif %}
+{% else %}
+    {% set raise_msg %}gene_model gtf not defined! constants.grandcanyon.{{ reference }}.gtf is not in pipeline.yaml or user supplied input{% endset %}
+    {{ log(raise_msg) }}
+{% endif %}
+
+{% set reference = reference | lower %}
+
+{# Known long read platform models in lower case for comparison against sample.rgpm #}
+{% set known_long_read_platforms = ['revio', 'promethion', 'minion'] %}
+
+{% set required_scripts = {} %}
+{% for name, value in constants.grandcanyon.required_scripts.items() %}
+    {% set path = '${JS_PIPELINE_PATH}/' ~ __pipeline__.bin ~ value %}
+    {% do required_scripts.update({name: {}}) %}
+    {% do required_scripts[name].update({"path": path}) %}
+{% endfor %}
+
+{# submissionSource toggles specific tasks based on how they were submitted #}
+{% if submissionSource is not defined %}
+    {% set submissionSource = "unknown" %}
+{% endif %}
+
+{% from 'utilities/copy_fastq.j2' import copy_fastq with context %}
+{% from 'utilities/copy_ubam.j2' import copy_ubam with context %}
+{% from 'utilities/copy_bam.j2' import copy_bam with context %}
+{% from 'utilities/fastq_stats.j2' import fastq_stats with context %}
+{% from 'utilities/finalize.j2' import finalize with context %}
+{% from 'utilities/prepare_resources.j2' import prepare_chunk_intervals with context %}
+{% from 'modules/dna_alignment/main.j2' import dna_alignment with context %}
+{% from 'modules/rna/main.j2' import rna_alignment with context %}
+{% from 'modules/variant_calling/main.j2' import constitutional_variant_calling with context %}
+{% from 'modules/variant_calling/main.j2' import somatic_variant_calling with context %}
+{% from 'modules/methylation/main.j2' import methylation_calling with context %}
+{% from 'modules/assembly/main.j2' import assembly with context %}
+{% from 'modules/qc/bam_qc_snpsniffer.j2' import snpsniffer_summary with context %}
+
+{{- prepare_chunk_intervals() }}
+
+{% set samples = {} %}
+
+{% if dataFiles is defined %}
+{% for file in dataFiles %}
+    {% if file.fastqPath is defined %}
+        {% set path = file.fastqPath %}
+    {% elif file.path is defined %}
+        {% set path = file.path %}
+    {% endif %}
+    {% set bn = path | basename %}
+    {% set gltype = file.glType | lower | replace("genomephased", "genome") %}
+    {% set glprep = file.glPrep | lower %}
+    {% if 'sampleMergeKey' in file %}
+        {% set name = file.sampleMergeKey %}
+    {% else %}
+        {% set name = file.sampleName %}
+    {% endif %}
+
+    {% do file.update({'name': name}) %}
+    {% do file.update({'basename': bn}) %}
+    {% do file.update({'gltype': gltype}) %}
+    {% do file.update({'glprep': glprep}) %}
+    {% do file.update({'path': path}) %}
+
+    {% if 'subGroup' not in file %}
+        {% do file.update({'subGroup': 'constitutional'}) %}
+    {% endif %}
+
+    {% if long_read_only|default(false) and file.rgpl not in ['ONT', 'PACBIO'] %}
+
+    {% else %}
+    {% if name not in samples %}
+        {% do samples.update({name: {}}) %}
+        {% do samples[name].update(file) %}
+        {% do samples[name].update({"name": name}) %}
+    {% endif %}
+    {% endif %}
+
+{% endfor %}
+
+{% for rgid, data_files in dataFiles | groupby('rgid') %}
+    {% set rg = data_files|first %}
+    {% if 'sampleMergeKey' in rg %}
+        {% set name = rg.sampleMergeKey %}
+    {% else %}
+        {% set name = rg.sampleName %}
+    {% endif %}
+
+    {% if name in samples %}
+    {% if not 'read_groups' in samples[name] %}
+        {% do samples[name].update({'read_groups': {}}) %}
+    {% endif %}
+
+    {% set alignable_files = [] %}
+    {% set aligned_files = [] %}
+    {% for file in data_files %}
+      {% if file.fileType in ('fastq', 'fasterq', 'ubam') %}
+        {% if file.fileType in ('ubam') and file.glPrep|lower not in ('longread', 'kinnexfulllength') %}
+          {% set r1fastq = file.copy() %}
+          {% set r2fastq = file.copy() %}
+
+          {% set r1fastq_basename %}{{ file.basename | replace(".", "_") }}_R1.fastq.gz{% endset %}
+          {% set r2fastq_basename %}{{ file.basename | replace(".", "_") }}_R2.fastq.gz{% endset %}
+
+          {% set r1fastq_path %}temp/fastqs/{{ r1fastq_basename }}{% endset %}
+          {% set r2fastq_path %}temp/fastqs/{{ r2fastq_basename }}{% endset %}
+
+          {% do r1fastq.update({"path": r1fastq_path, "basename": r1fastq_basename, "fastqCode": "R1", "fileType": "fastq"}) %}
+          {% do r2fastq.update({"path": r2fastq_path, "basename": r2fastq_basename, "fastqCode": "R2", "fileType": "fastq"}) %}
+
+          {% do alignable_files.append(r1fastq) %}
+          {% do alignable_files.append(r2fastq) %}
+          {% do alignable_files.append(file) %}
+        {% else %}
+          {% do alignable_files.append(file) %}
+        {% endif %}
+      {% elif file.fileType in ('bam') %}
+        {% do aligned_files.append(file) %}
+      {% else %}
+        {% set log_msg %}Unsupported data file type provided - {{ file.fileType }}. It will not be processed.{% endset %}
+        {{ log(log_msg, level='WARNING') }}
+      {% endif %}
+    {% endfor %}
+    {% do samples[name]['read_groups'].update({rgid: {}}) %}
+    {% do samples[name]['read_groups'][rgid].update(rg) %}
+    {% do samples[name]['read_groups'][rgid].update({'data_files': alignable_files}) %}
+    {% do samples[name]['read_groups'][rgid].update({'aligned_files': aligned_files}) %}
+
+    {% for file in data_files %}
+      {% if file.fileType in ["fastq", "fasterq"] %}
+        {{- copy_fastq(file) }}
+      {% elif file.fileType == "ubam" %}
+        {{- copy_ubam(file) }}
+      {% endif %}
+    {% endfor %}
+
+    {% endif %}
+{% endfor %}
+
+{% for sample in samples.values() %}
+    {% do sample.update({'aligners': []}) %}
+
+    {% if sample.gltype in ['genome', 'exome'] and sample.glprep not in ['longread'] %}
+        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_bwa"]|default(false) %}
+            {% do sample.aligners.append('bwa') %}
+        {% endif %}
+        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minibwa"]|default(false) %}
+            {% do sample.aligners.append('minibwa') %}
+        {% endif %}
+        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_vg_giraffe"]|default(false) %}
+            {% do sample.aligners.append('vg_giraffe') %}
+        {% endif %}
+    {% else %}
+        {% if tasks[sample.gltype|capitalize+"_alignment_dna_alignment_minimap2"]|default(false) %}
+            {% do sample.aligners.append('minimap2') %}
+        {% endif %}
+    {% endif %}
+
+    {% for rgid, rg in sample.read_groups.items() %}
+        {% for file in rg.data_files|selectattr('fastqCode', 'defined')|selectattr('fastqCode', 'eq', 'simplex') %}
+          {% set duplex_matches = rg.data_files|selectattr('fastqCode', 'defined')|selectattr('fastqCode', 'eq', 'duplex')|selectattr('sampleName', 'eq', file.sampleName)|selectattr('rgid', 'eq', file.rgid)|list %}
+          {% if duplex_matches | length > 0 %}
+              {% do rg.data_files.pop(loop.index) %}
+          {% endif %}
+        {% endfor %}
+        {% if sample.gltype == 'rna' %}
+          {% set taskPrefix = 'RNA' %}
+        {% elif sample.gltype == 'exome' %}
+          {% set taskPrefix = 'Exome' %}
+        {% elif sample.gltype in 'genome' %}
+          {% set taskPrefix = 'Genome' %}
+        {% endif %}
+        {% if tasks[taskPrefix+'_preprocessing_trim_reads']|default(false) %}
+          {% from 'utilities/read_trimming.j2' import trim_reads with context %}
+          {{- trim_reads(sample, rg, rgid) }}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+{% set capture_kits = [] %}
+{% for sample in samples.values() if sample.gltype == 'exome' %}
+    {% do sample.update({'library_code': sample.assayCode[0:2]|upper}) %}
+    {% do sample.update({'capture_kit_code': sample.assayCode[-3:]|upper}) %}
+
+    {% set capture_kit_path_prefix %}{{ constants.grandcanyon[reference].capture_kit_path }}/{{ sample.capture_kit_code }}/{{ sample.capture_kit_code }}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}{% endset %}
+    {% set targets_interval_list %}{{ capture_kit_path_prefix }}.targets.interval_list{% endset %}
+    {% set no_header_targets_interval_list %}{{ capture_kit_path_prefix }}.no.header.targets.interval_list{% endset %}
+    {% set baits_interval_list %}{{ capture_kit_path_prefix }}.baits.interval_list{% endset %}
+    {% set extended_bed %}{{ capture_kit_path_prefix }}.extended.bed{% endset %}
+
+    {% do sample.update({'capture_kit': {}}) %}
+    {% do sample['capture_kit'].update({'targets_interval_list': targets_interval_list}) %}
+    {% do sample['capture_kit'].update({'no_header_targets_interval_list': no_header_targets_interval_list}) %}
+    {% do sample['capture_kit'].update({'baits_interval_list': baits_interval_list}) %}
+    {% do sample['capture_kit'].update({'extended_bed': extended_bed}) %}
+
+    {% if sample.capture_kit_code not in capture_kits %}
+        {% do capture_kits.append(sample.capture_kit_code) %}
+    {% endif %}
+{% endfor %}
+{% if capture_kits | length > 0 %}
+    {% from 'utilities/prepare_resources.j2' import generate_capture_kit_resources with context %}
+    {{ generate_capture_kit_resources(capture_kits) }}
+{% endif %}
+
+{% for sample in samples.values() if sample.gltype == 'rna' %}
+    {% set readOrientation=sample.readOrientation|default('inward')|lower|replace('-','') %}
+    {% set rnaStrandType=sample.rnaStrandType|default('unstranded')|lower|replace('-','') %}
+    {% set rnaStrandDirection=sample.rnaStrandDirection|default('notapplicable')|lower|replace('-','') %}
+    {% set strandedness %}{{ readOrientation }}-{{ rnaStrandType }}-{{ rnaStrandDirection }}{% endset %}
+    {% do sample.update({'strandedness': strandedness}) %}
+{% endfor %}
+
+{% for sample in samples.values() %}
+  {% if sample.read_groups.values() | selectattr('aligned_files') | list | length > 0 %}
+    {% if sample.read_groups.values() | selectattr('data_files') | list | length > 0 %}
+      {% set log_msg %}Unsupported input configuration! {{ sample.name }} has both aligned_files and unaligned_files{% endset %}
+      {{ log(log_msg, level='WARNING') }}
+    {% else %}
+      {{- copy_bam(sample) }}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{% if external_data is defined %}
+  {% for sample in samples.values() %}
+    {% do sample.update({'external_data': external_data[sample.name]}) %}
+  {% endfor %}
+{% endif %}
+
+{# Start of module calls #}
+{{- dna_alignment(samples) }}
+
+{{- rna_alignment(samples) }}
+
+{{- constitutional_variant_calling(samples) }}
+
+{{- somatic_variant_calling(samples) }}
+
+{{- methylation_calling(samples) }}
+
+{{- assembly() }}
+
+{# project level quality control #}
+{% if samples|length > 1 %}
+  {{- snpsniffer_summary(samples) }}
+{% endif %}
+
+{{- finalize(samples) }}
+
+{#
+{{- fastq_stats() }}
+#}
+{% endif %}

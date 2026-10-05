@@ -1,0 +1,93 @@
+{% from 'modules/variant_calling/postprocessing/whatshap.j2' import whatshap_haplotag with context %}
+
+{% macro savana(sample_or_pair, aligner) %}
+
+{% if sample_or_pair.normal is defined %}
+  {% if sample_or_pair.normal.phased_vcf is defined %}
+    {{- whatshap_haplotag(sample_or_pair.tumor, aligner, 'deepvariant', sample_or_pair.normal.phased_vcf) }}
+    {%- set normal_bam %}{{ sample_or_pair.normal.phased_bam }}{% endset %}
+    {%- set bam %}{{ sample_or_pair.tumor.phased_bam }}{% endset %}
+    {%- set snp_vcf %}{{ sample_or_pair.normal.phased_vcf }}{% endset %}
+  {% else %}
+    {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+    {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+    {%- set snp_vcf %}{{ sample_or_pair.normal.gltype }}/constitutional_variant_calls/deepvariant/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.deepvariant.pass.vcf.gz{% endset %}
+  {% endif %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/savana/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/savana/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set input_config = "paired" %}
+  {% if sample_or_pair.normal.rgpl == 'PACBIO' %}
+    {%- set mode_type = '--pb' %}
+  {% elif sample_or_pair.normal.rgpl == 'ONT' %}
+    {%- set mode_type = '--ont' %}
+  {% endif %}
+{% else %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/savana/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/savana/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set input_config = "tumor_only" %}
+  {% if sample_or_pair.rgpl == 'PACBIO' %}
+    {%- set mode_type = '--pb' %}
+  {% elif sample_or_pair.rgpl == 'ONT' %}
+    {%- set mode_type = '--ont' %}
+  {% endif %}
+{% endif %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.savana.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.savana.pass.vcf.gz{% endset %}
+
+{% set g1000_dict = {'grch38': '1000g_hg38', 'grch37': '1000g_hg19', 'chm13': '1000g_t2t'} %}
+
+- name: savana_{{ sample_or_pair.name }}_{{ aligner }}
+  reset: predecessors
+  input:
+    {% if snp_vcf is defined %}
+    - {{ snp_vcf }}
+    {% endif %}
+    {% if normal_bam is defined %}
+    - {{ normal_bam }}
+    - {{ normal_bam }}.bai
+    {% endif %}
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+  cpus: 8
+  mem: 128G
+  walltime: "12:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.savana.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+      sed 's/SN://;s/LN://' |\
+      awk '{ print $2 }' \
+      > {{ temp_dir }}/calling_contigs.txt
+
+    {% if input_config in ('paired') %}
+    savana \
+      --sample {{ sample_or_pair.tumor.rgsm }} \
+      --tumour {{ bam }} \
+      --normal {{ normal_bam }} \
+      {% if snp_vcf is defined %}
+      --snp_vcf {{ snp_vcf }} \
+      {% endif %}
+    {% else %}
+    savana to \
+      --sample {{ sample_or_pair.rgsm }} \
+      --tumour {{ bam }} \
+      --g1000_vcf {{ g1000_dict[reference] }} \
+    {% endif %}
+      --outdir {{ results_dir }} \
+      {{ mode_type }} \
+      --threads 8 \
+      --cna_threads 8 \
+      --contigs {{ temp_dir }}/calling_contigs.txt \
+      --ref {{ constants.grandcanyon[reference].reference_fasta }}
+
+{% endmacro %}

@@ -1,0 +1,536 @@
+__pipeline__:
+  name: grandcanyon
+  main: main.j2
+  description: Adaptable genomics suite supporting short and long read sequencing data
+  version: 1.0.0.dev
+  bin: required_scripts/
+constants:
+  tools:
+    agat:
+      container: quay.io/biocontainers/agat:1.5.1--pl5321hdfd78af_0
+    allelecounter:
+      container: quay.io/biocontainers/cancerit-allelecount:4.3.0--h8bd2d3b_7
+    amplicon_architect:
+      container: ghcr.io/tgen/containers/amplicon_suite:1.6.0-patched
+    ascat:
+      container: quay.io/biocontainers/ascat:3.2.0--r44hdfd78af_1
+    assembly_stats:
+      container: quay.io/biocontainers/assembly-stats:1.0.1--h4ac6f70_7
+    base:
+      container: ghcr.io/tgen/containers/debian:bullseye
+      digest: b8f30ec0fb3f1c1ab0de63703b438f8476296df3097af5b52917ec7ce8417863
+    bcftools:
+      container: quay.io/biocontainers/bcftools:1.20--h8b25389_1
+    bedtools:
+      container: ghcr.io/tgen/containers/bedtools:2.29.0-23080313
+      digest: cde92d1b69ecfda6e5f115c6b9220a312c380b0d7aa30378437476cd50206ee0
+    bpure:
+      container: ghcr.io/tgen/containers/b_pure:1.2.0
+      digest: c00b4bf858f636f7cb1be02958aa617ff4aa4a3355fe171b046fa05c1de7f787
+    bwa_mem2_samtools:
+      container: ghcr.io/tgen/containers/bwa_mem2_samtools:2.2.1-23080315
+      digest: 98a83bc2d70fa39755a02c2d81de64ef36dac292cdf6b1fcf02570a3e227b7f6
+    clair3:
+      container: hkubal/clair3:v1.2.0
+    clairs:
+      container: hkubal/clairs:v0.4.3
+    cnvear:
+      container: ghcr.io/tgen/containers/cnvear:0.4.1
+      digest: 7caabd0c91d241090ceff9e3d9a616e71a8e65d17a41c66b0d2fb02113ad1ea4
+    cnvkit:
+      container: quay.io/biocontainers/cnvkit:0.9.13--pyhdfd78af_0
+    compleasm:
+      container: quay.io/biocontainers/compleasm:0.2.7--pyh7e72e81_1
+    ctat_lr:
+      container: trinityctat/ctat_lr_fusion:1.4.0
+    cutesv:
+      container: quay.io/biocontainers/cutesv:2.1.3--pyhdfd78af_0
+    deepsomatic:
+      container: google/deepvariant:deepsomatic-1.10.0-gpu
+    deeptrio:
+      container: google/deepvariant:deeptrio-1.10.0-gpu
+    deepvariant:
+      container: google/deepvariant:1.10.0-gpu
+    deepvariant_pangenome:
+      container: google/deepvariant:pangenome_aware_deepvariant-1.10.0-gpu
+    dorado:
+      container: nanoporetech/dorado:shaae1d5e75f94041e4fd7af4a7ed6e6432b0eaea29
+      version: 0.8.2
+    dupblaster:
+      container: quay.io/biocontainers/dupblaster:0.2.0--hfa8f182_0
+    dysgu:
+      container: quay.io/biocontainers/dysgu:1.8.8--py313h5d164f8_0
+    fastp:
+      container: ghcr.io/tgen/fastp:1.1.1-tgen
+    flair:
+      container: brookslab/flair:3.0.0
+    flye:
+      container: quay.io/biocontainers/flye:2.9.6--py311h2de2dd3_0
+    freebayes:
+      container: quay.io/biocontainers/freebayes:1.3.10--hbefcdb2_0
+    gatk:
+      container: broadinstitute/gatk:4.5.0.0
+    gffread:
+      container: quay.io/biocontainers/gffread:0.12.7--h077b44d_6
+    glnexus:
+      container: ghcr.io/dnanexus-rnd/glnexus:v1.4.3
+      digest: ce6fecf59dddc6089a8100b31c29c1e6ed50a0cf123da9f2bc589ee4b0c69c8e
+    gtftogenepred:
+      container: quay.io/biocontainers/ucsc-gtftogenepred:469--h664eb37_1
+    hifiasm:
+      container: quay.io/biocontainers/hifiasm:0.25.0--h5ca1c30_0
+    hificnv:
+      container: quay.io/biocontainers/hificnv:1.0.1--h9ee0642_0
+    hmmcopy:
+      container: quay.io/biocontainers/hmmcopy:0.1.1--h8b12597_4
+    ichorcna:
+      container: gavinhalab/ichorcna:3.0.0
+    isoquant:
+      container: quay.io/biocontainers/isoquant:4.0.0--pyh106432d_0
+    isoseq:
+      container: quay.io/biocontainers/isoseq:26.2.0--h9ee0642_0
+    lancet2:
+      container: ghcr.io/tgen/containers/lancet2:2.9.0_main_7b33422eaa
+    liftover:
+      container: quay.io/biocontainers/ucsc-liftover:482--h0b57e2e_0
+    liftover_vcf:
+      container: quay.io/biocontainers/bcftools-liftover-plugin:1.22--hb66fcc3_0
+    longphase:
+      container: quay.io/biocontainers/longphase:2.0.2--h4e109e1_0
+    manta:
+      container: ghcr.io/tgen/containers/manta:1.6.0-23082819
+      digest: 8413ec3da1e20da9f0cc9544722c7e9d30135f4ee0aa8092b67fc74c782913a3
+    medaka:
+      container: quay.io/biocontainers/medaka:2.2.2--py312h3050eb1_0
+    merqury:
+      container: /home/tgenref/containers/merqury_1.3.sif
+    methbat:
+      container: quay.io/biocontainers/methbat:1.1.0--h9ee0642_0
+    minigraph:
+      container: quay.io/biocontainers/minigraph:0.21--he4a0461_1
+    minibwa:
+      container: ghcr.io/tgen/containers/minibwa_samtools:0.4_1.21
+    minimap2:
+      container: /home/tgenref/containers/minimap2-samtools_2.28_1.20.sif
+    modkit:
+      container: quay.io/biocontainers/ont-modkit:0.5.0--hcdda2d0_0
+    mosdepth:
+      container: quay.io/biocontainers/mosdepth:0.3.14--h05c3d44_0
+    msisensor:
+      container: quay.io/biocontainers/msisensor-pro:1.3.0--hd979922_1
+    multiqc:
+      container: quay.io/biocontainers/multiqc:1.31--pyhdfd78af_0
+    mutation_burden:
+      container: ghcr.io/tgen/containers/mutation-burden:1.2.4_20260623
+    oarfish:
+      container: quay.io/biocontainers/oarfish:0.10.0--hd727d2a_0
+    pbmm2:
+      container: quay.io/biocontainers/pbmm2:26.2.99--h9ee0642_0
+    pbpigeon:
+      container: quay.io/biocontainers/pbpigeon:26.2.0--h9ee0642_0
+    pbsv:
+      container: quay.io/biocontainers/pbsv:2.11.0--h9ee0642_0
+    pbtk:
+      container: quay.io/biocontainers/pbtk:3.5.0--h9ee0642_0
+    pychopper:
+      container: quay.io/biocontainers/pychopper:2.7.10--pyhdfd78af_0
+    python3:
+      container: python:3.7.16-slim-bullseye
+    python3_with_modules:
+      container: ghcr.io/tgen/jetstream_containers/python:3.7.2-v1-with_modules
+    quast:
+      container: quay.io/biocontainers/quast:5.3.0--py312pl5321hdcc493e_1
+    R:
+      container: ghcr.io/tgen/containers/r_with_modules:4.1.2-23080815
+    rastair:
+      container: quay.io/biocontainers/rastair:2.1.1--h03e3cfe_0
+    riker:
+      container: quay.io/biocontainers/riker:0.4.1--hec9b1f2_0
+    salmon:
+      container: quay.io/biocontainers/salmon:2.3.2--hfa8f182_0
+    samtools:
+      container: quay.io/biocontainers/samtools:1.20--h50ea8bc_1
+    savana:
+      container: quay.io/biocontainers/savana:1.3.7--pyhdfd78af_0
+    seqkit:
+      container: quay.io/biocontainers/seqkit:2.8.2--h9ee0642_1
+    seqtk:
+      container: quay.io/biocontainers/seqtk:1.5--h577a1d6_1
+    severus:
+      container: quay.io/biocontainers/severus:1.7--pyhdfd78af_0
+    shasta:
+      container: quay.io/biocontainers/shasta:0.11.1--h4ac6f70_2
+    sigprofiler:
+      container: quay.io/biocontainers/sigprofilerassignment:1.1.4--pyh106432d_0
+    snpsniffer:
+      container: ghcr.io/tgen/containers/snpsniffer:7.0.2
+      digest: 09a8aed0fd1b8662a431bbe6893e5f9148a45f64d0930fb5e0407d41d95d7209 
+    sniffles:
+      container: quay.io/biocontainers/sniffles:2.8.0--pyhdfd78af_0
+    somalier:
+      container: brentp/somalier:v0.3.1
+    spectre:
+      container: /home/tgenref/containers/spectre-cnv_0.2.1.sif
+    sqanti3:
+      container: ghcr.io/tgen/containers/sqanti3:6.0.2
+    star_fusion:
+      container: trinityctat/starfusion:1.14.0
+      digest: b66201d38db7055d84b6af2928c8cf44159254b747adad784250fbaa1230e86d
+    strelka:
+      container: ghcr.io/tgen/containers/strelka:2.9.10-23080711
+      digest: e4c48b1470f2524da5734ebd84232446feec0e332b28e08c8997c3f21dffdc8e
+    subread:
+      container: quay.io/biocontainers/subread:2.0.6--he4a0461_0
+    thred:
+      container: ghcr.io/tgen/containers/thred:1.1.0-23080712
+    trgt:
+      container: quay.io/biocontainers/trgt:5.0.0--h9ee0642_0
+    vardict:
+      container: quay.io/biocontainers/vardict-java:1.8.3--hdfd78af_0
+      digest: 4069c082c97470bce4a07f228dbf74b6ea3fc5c4eaa93ba76d2826a496ca3c44
+    vcfmerger:
+      container: ghcr.io/tgen/containers/vcfmerger2:0.10.2
+      digest: e88bc035bc1be9563b1f968e7512c232b074ceec789af15292e30c19860c73de
+    vep:
+      container: ensemblorg/ensembl-vep:release_113.4
+    verifybamid2:
+      container: quay.io/biocontainers/verifybamid2:2.0.3--hc004090_0
+    verkko:
+      container: quay.io/biocontainers/verkko:2.3.2--hb0edd9e_0
+    vg:
+      container: ghcr.io/tgen/containers/vg_samtools:1.76.1_1.21
+    wakhan:
+      container: quay.io/biocontainers/wakhan:0.4.3--pyhdfd78af_0
+    whatshap:
+      container: quay.io/biocontainers/whatshap:2.8--py312hf731ba3_0
+    yak:
+      container: quay.io/biocontainers/yak:0.1--h577a1d6_6
+  grandcanyon:
+    chm13:
+      species: homo_sapiens
+      genome_build: t2t_chm13
+      genome_subversion_name: chm13v2
+      gene_model_name: ensembl_v107
+      gene_model_version: 107
+      capture_kit_path: /home/tgenref/homo_sapiens/grch38_hg38/hg38_tempe/gene_model/ensembl_v103/tool_resources/capture_kits
+      reference_fasta: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa
+      reference_fai: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.fa.fai
+      reference_fastaSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa
+      reference_faiSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa.fai
+      reference_dict: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.dict
+      reference_non_N_interval_list: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/genome_reference/chm13v2.0_maskedY_rCRS.primary_contigs_no_chrX_chrY.interval_list
+      gff3: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-genes.gff3.gz
+      gtf: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-genes.ucsc.fixed.sorted.gtf
+      gtfSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/gene_model/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf
+      transcriptome: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-cdna.fa
+      transcriptomeSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/transcriptome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa
+      starfusion_index: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/STAR-fusion/T2T-CHM13_CTAT_lib_Feb162023.plug-n-play/ctat_genome_lib_build_dir
+      vep_data: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/indexed_vep_data
+      ref_flat: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-genes.ucsc.fixed.sorted.refFlat.txt
+      ribo_locations: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/gene_model/Homo_sapiens-GCA_009914755.4-2022_07-genes.ucsc.fixed.sorted.ribo.interval_list
+      annotation_databases:
+        - {
+            "file": "/home/tgenref/homo_sapiens/t2t_chm13/public_databases/dbsnp/chm13v2.0_dbSNPv155.vcf.gz",
+            "mark_sites": "DB",
+            "columns": "ID",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/t2t_chm13/public_databases/gnomad/Homo_sapiens-GCA_009914755.4-2022_10-gnomad.pass.reduced.bcf",
+            "mark_sites": "GNOMAD",
+            "columns": "GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/t2t_chm13/public_databases/clinvar/chm13v2.0_ClinVar20220313.vcf.gz",
+            "mark_sites": "CLINVAR",
+            "columns": "CLNDN,CLNDNINCL,CLNDISDB,CLNDISDBINCL,CLNHGVS,CLNREVSTAT,CLNSIG,CLNSIGCONF,CLNSIGINCL,CLNVC,CLNVCSO,CLNVI,CLNORIGIN:=ORIGIN",
+          }
+      tool_resources:
+        severus:
+          vntrs: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/severus/chm13.bed
+          pon: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/severus/PoN_1000G_chm13.tsv.gz
+        somalier:
+          sites: https://github.com/brentp/somalier/files/9954286/sites.chm13v2.T2T.vcf.gz
+        spectre:
+          mdr: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/spectre/grch38.mdr
+          denylist: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/spectre/grch38_blacklist_spectre.bed
+        trgt:
+          strchive: /home/tgenref/homo_sapiens/t2t_chm13/chm13_v2/tool_resources/trgt/STRchive-disease-loci.T2T-chm13.TRGT.bed
+    grch38:
+      species: homo_sapiens
+      genome_build: grch38_hg38
+      genome_subversion_name: hg38
+      gene_model_name: ensembl_v113
+      gene_model_version: 113
+      capture_kit_path: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/tool_resources/capture_kits
+      known_capture_kits: /home/tgenref/homo_sapiens/grch38_hg38/capture_kits/manifest.yaml
+      reference_fasta: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa
+      reference_fasta_no_alt: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy.fa
+      reference_fai: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa.fai
+      reference_alts: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.fa.alt
+      reference_fastaSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa
+      reference_faiSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/genome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507.fa.fai
+      reference_dict: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/genome_reference/GRCh38tgen_decoy_alts_hla.dict
+      reference_non_N_interval_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/samtools_stats/GRCh38tgen_decoy_alts_hla_samstats_no_N_1based_primary_contigs_no_chrX_chrY.txt
+      reference_gbz: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/vg/hprc-v2.1-mc-grch38.gbz
+      reference_hapl: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/vg/hprc-v2.1-mc-grch38.hapl
+      bwa_mem2_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/bwa2_2.2.1/GRCh38tgen_decoy_alts_hla.fa
+      gff3: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.gff3.gz
+      gtf: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.ucsc.gtf
+      gtfSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/gene_model/SIRV_ERCC_longSIRV_multi-fasta_20210507.gtf
+      transcriptome: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.ucsc.transcriptome.fasta
+      transcriptomeSIRV: /home/tgenref/homo_sapiens/t2t_chm13/SIRV/transcriptome_reference/SIRV_ERCC_longSIRV_multi-fasta_20210507_transcriptome.fa
+      starfusion_index: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir
+      snpSniffer_sites: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/snpSniffer/positions_387_hg38_ucsc.txt
+      snpSniffer_database: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/snpSniffer/databaseV5_hg38_ucsc.ini
+      vep_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/v113/
+      vep_plugin_data: /home/tgenref/homo_sapiens/grch38_hg38/tool_specific_resources/vep/plugins
+      ref_flat: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.ucsc.refFlat.txt
+      ribo_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/gene_model/ensembl_v113/Homo_sapiens.GRCh38.113.ucsc.ribo.interval_list
+      encode_denylist: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/ncbi/Encode_deny_list_with_ncbi_centromere.merged.bed
+      centromere: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/ncbi/Modeled_regions_for_GRCh38_centromere_blacklist_merged.bed
+      annotation_databases:
+        - {
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/dbsnp/b154/dbSNP_b154_hg38tgen.bcf",
+            "mark_sites": "DB",
+            "columns": "ID",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.reduced.bcf",
+            "mark_sites": "GNOMAD",
+            "columns": "GNOMAD_AC:=AC,GNOMAD_AN:=AN,GNOMAD_AF:=AF",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/cosmic/v96/CosmicCodingMuts_v96_hg38_tempe.bcf",
+            "mark_sites": "COSMIC",
+            "columns": "COSMIC_CNT:=CNT",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/cosmic/v96/CosmicNonCodingMuts_v96_hg38_tempe.bcf",
+            "mark_sites": "COSMIC_NC",
+            "columns": "COSMIC_NC_CNT:=CNT",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/clinvar/20250907/clinvar_20250907_hg38.bcf",
+            "mark_sites": "CLINVAR",
+            "columns": "CLNORIGIN:=ORIGIN,CLNDN,CLNDNINCL,CLNHGVS,CLNREVSTAT,CLNSIG,CLNSIGCONF,CLNSIGINCL,CLNSIGSCV,GENEINFO,ONCDN,ONCDNINCL,ONC,ONCINCL,ONCREVSTAT,ONCSCV,ONCCONF,SCIDN,SCIDNINCL,SCIREVSTAT,SCI,SCIINCL,SCISCV",
+          }
+        - {
+            "file": "/home/tgenref/homo_sapiens/grch38_hg38/public_databases/topmed/freeze8/All.BRAVO_TOPMed_Freeze_8.bcf",
+            "mark_sites": "TOPMED",
+            "columns": "TOPMED_AF:=AF,TOPMED_AN:=AN,TOPMED_AC:=AC,TOPMED_HET:=Het,TOPMED_HOM:=Hom",
+          }
+      vqsr_resources:
+        - {
+            "config": "hapmap,known=false,training=true,truth=true,prior=15.0",
+            "location": /home/tgenref/homo_sapiens/grch38_hg38/public_databases/broad_resource_bundle/hapmap_3.3.hg38.vcf.gz,
+          }
+        - {
+            "config": "1000G,known=false,training=true,truth=false,prior=10.0",
+            "location": /home/tgenref/homo_sapiens/grch38_hg38/public_databases/broad_resource_bundle/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz,
+          }
+        - {
+            "config": "dbsnp,known=true,training=false,truth=false,prior=2.0",
+            "location": /home/tgenref/homo_sapiens/grch38_hg38/public_databases/broad_resource_bundle/Homo_sapiens_assembly38.dbsnp138.vcf,
+          }
+      tool_resources:
+        ascat:
+          ascat_resources: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/ascat
+        amplicon_architect:
+          data_repo: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/amplicon_architect
+        cnvear:
+          fish_probe_locations: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/seq_fish/GRCh38_Myeloma_FISH_Probe_Locations_for_CNVear.bed
+        gatk_cnv:
+          mappability_track: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/bismap/k100.umap.no_header.bed
+        mutect2:
+          germline_reference: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.AnnotationReference.vcf.gz
+          contamination: /home/tgenref/homo_sapiens/grch38_hg38/public_databases/gnomad/r4.1.0/gnomad.joint.r4.1.sites.pass.common.vcf.gz
+        msisensor:
+          msi_list: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/msisensor_pro/GRCh38tgen_decoy_alts_hla.microsatellites.list
+        severus:
+          vntrs: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/severus/human_GRCh38_no_alt_analysis_set.trf.bed
+          pon: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/severus/PoN_1000G_hg38.tsv.gz
+        sex_check:
+          sex_check_targets: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/tgen_gender_check/chrx_common_dbSNPv152_snv_exons.bed
+          sex_check_vcf: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/tgen_gender_check/chrx_common_dbSNPv152_snv_exons.vcf.gz
+        sigprofiler:
+          ref_dir: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/references/chromosomes
+          sbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/COSMIC_v3.6_SBS_GRCh38.txt
+          dbs: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/COSMIC_v3.6_DBS_GRCh38.txt
+          sv: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sigprofiler/COSMIC_v3.6_SV_GRCh38.txt
+        somalier:
+          sites: https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz
+        spectre:
+          mdr: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/spectre/grch38.mdr
+          denylist: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/spectre/grch38_blacklist_spectre.bed
+        sqanti3:
+          tappas_gff: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sqanti3/human_tappas_gencode_annotation_file.gff3
+          cage_peak: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sqanti3/human.refTSS_v3.1.hg38.bed
+          polya_motif: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/sqanti3/mouse_and_human.polyA_motif.txt
+        trgt:
+          strchive: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/trgt/STRchive-disease-loci.hg38.TRGT.bed
+        verifybamid:
+          verifybamid_resources: /home/tgenref/homo_sapiens/grch38_hg38/hg38tgen/tool_resources/VerifyBamID_2.0.1
+    canfam4:
+      species: canis_lupus_familiarisgsd
+      genome_build: canfam4
+      genome_subversion_name: UU_Cfam_GSD_1.0
+      gene_model_name: ensembl_v112
+      gene_model_version: 112
+      capture_kit_path: /home/tgenref/canis_familiaris/canfam4/gene_model/tool_resources/capture_kits
+      reference_fasta: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa
+      reference_fai: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa.fai
+      reference_dict: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa.dict
+      reference_non_N_interval_list: /home/tgenref/canis_familiaris/canfam4/genome_reference/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa.primary.interval_list
+      bwa_mem2_index: /home/tgenref/canis_familiaris/canfam4/tool_resources/bwa_mem2/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.dna.toplevel.fa
+      gff3: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.gff3.gz
+      gtf: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.gtf
+      transcriptome: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.transcriptome.fasta
+      starfusion_index: /home/tgenref/canis_familiaris/canfam4/gene_model/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir
+      snpSniffer_sites: /home/tgenref/canis_familiaris/canfam4/tool_resources/snpSniffer/positions_393_CanFam4.txt
+      snpSniffer_database: /home/tgenref/canis_familiaris/canfam4/tool_resources/snpSniffer/databaseV6_CanFam4_ucsc.ini
+      vep_data: /home/tgenref/canis_familiaris/canfam4/gene_model/indexed_vep_cache
+      ref_flat: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.refFlat.txt
+      ribo_locations: /home/tgenref/canis_familiaris/canfam4/gene_model/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.112.ribo.interval_list
+      annotation_databases:
+        - {
+            "file": "/home/tgenref/canis_familiaris/UU_Cfam_GSD_1.0/public_databases/dog10k/AutoAndXPAR.SNPs.fill-tags.norm.vcf.gz",
+            "mark_sites": "DOG10K",
+            "columns": "DOG10K_AC:=AC,DOG10K_AN:=AN,DOG10K_AF:=AF",
+          }
+      tool_resources:
+        mutect2:
+          germline_reference: /home/tgenref/canis_familiaris/UU_Cfam_GSD_1.0/public_databases/dog10k/AutoAndXPAR.SNPs.fill-tags.norm.vcf.gz
+          contamination: /home/tgenref/canis_familiaris/UU_Cfam_GSD_1.0/public_databases/dog10k/AutoAndXPAR.SNPs.fill-tags.norm.common.vcf.gz
+    grcm39:
+      species: mus_musculus
+      genome_build: grcm39_mm39
+      genome_subversion_name: mm39
+      gene_model_name: ensembl_v112
+      gene_model_version: 112
+      reference_fasta: /home/tgenref/mus_musculus/grcm39_mm39/genome_reference/Mus_musculus.GRCm39.dna.toplevel.fa
+      reference_fai: /home/tgenref/mus_musculus/grcm39_mm39/genome_reference/Mus_musculus.GRCm39.dna.toplevel.fa.fai
+      reference_dict: /home/tgenref/mus_musculus/grcm39_mm39/genome_reference/Mus_musculus.GRCm39.dna.toplevel.fa.dict
+      reference_non_N_interval_list: /home/tgenref/mus_musculus/grcm39_mm39/genome_reference/Mus_musculus.GRCm39.dna.toplevel.fa.primary.interval_list
+      gtf: /home/tgenref/mus_musculus/grcm39_mm39/gene_model/Mus_musculus.GRCm39.112.gtf
+      transcriptome: /home/tgenref/mus_musculus/grcm39_mm39/gene_model/Mus_musculus.GRCm39.112.transcriptome.fasta
+      starfusion_index: /home/tgenref/mus_musculus/grcm39_mm39/gene_model/tool_resources/starFusion_Resources/ctat_genome_lib_build_dir
+      vep_data: /home/tgenref/mus_musculus/grcm39_mm39/gene_model/indexed_vep_cache
+      ref_flat: /home/tgenref/mus_musculus/grcm39_mm39/gene_model/Mus_musculus.GRCm39.112.refFlat.txt
+      ribo_locations: /home/tgenref/mus_musculus/grcm39_mm39/gene_model/Mus_musculus.GRCm39.112.ribo.interval_list
+    dfam_db: /home/tgenref/multi_species_resources/tool_specific_resources/dfam/3.8/Dfam.hmm
+    ont_resources: /home/tgenref/instrument_resources/ont
+    lineages: /home/tgenref/multi_species_resources/tool_specific_resources/busco_lineages
+    required_scripts:
+      germline_variant_filter_Rscript: germline_variant_filter.R
+      plotSamStats_Rscript: summarize_samstats.R
+      stats2json: samStats2json.py
+      stats2lims: uploadStats2Lims.py
+      plotCNVplus_Rscript: plotCNVplus.R
+      verifybamid_plot: verifybamid_plot.R
+    lims_contigs:
+      "chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,
+      chrY,
+      chrM,
+      chrUn_GL000220v1,
+      chr22_KI270733v1_random,
+      chrUn_KN707925v1_decoy,
+      chr14_KI270726v1_random,
+      chrUn_JTFH01000119v1_decoy,
+      chrUn_JTFH01000204v1_decoy,
+      chrUn_JTFH01000678v1_decoy,
+      chrUn_JTFH01000497v1_decoy,
+      chrUn_KN707927v1_decoy,
+      chrUn_JTFH01000562v1_decoy,
+      chrUn_JTFH01000659v1_decoy,
+      chrUn_JTFH01001134v1_decoy,
+      chrUn_JTFH01000888v1_decoy,
+      chrUn_JTFH01000695v1_decoy,
+      chrUn_JTFH01000697v1_decoy"
+    strandedness_options:
+      inward-unstranded-notapplicable:
+        salmon: "IU"
+        featurecounts: "0"
+        collectrnaseqmetrics: "NONE"
+      inward-stranded-forward:
+        salmon: "ISF"
+        featurecounts: "1"
+        collectrnaseqmetrics: "FIRST_READ_TRANSCRIPTION_STRAND"
+      inward-stranded-reverse:
+        salmon: "ISR"
+        featurecounts: "2"
+        collectrnaseqmetrics: "SECOND_READ_TRANSCRIPTION_STRAND"
+      singleend-unstranded-notapplicable:
+        salmon: "IU"
+        featurecounts: "0"
+        collectrnaseqmetrics: "NONE"
+      singleend-stranded-forward:
+        salmon: "ISF"
+        featurecounts: "1"
+        collectrnaseqmetrics: "FIRST_READ_TRANSCRIPTION_STRAND"
+      singleend-stranded-reverse:
+        salmon: "ISR"
+        featurecounts: "2"
+        collectrnaseqmetrics: "SECOND_READ_TRANSCRIPTION_STRAND"
+task_variables:
+  umi_options:
+    correct_umi_umi_files: /home/tgenref/assay_files/twist_umi_adaptor_system/known_umi_sequences.txt
+    correct_umi_max_mismatches: 1
+    correct_umi_min_distance: 2
+    correct_umi_read_structure: "5M2S+T 5M2S+T"
+    group_reads_edits: 1
+    group_reads_min_map_q: 1
+    group_reads_strategy: "paired"
+    consensus_error_rate_pre_umi: 45
+    consensus_error_rate_post_umi: 40
+    consensus_min_input_base_quality: 10
+    filter_min_reads: 1
+    filter_min_base_quality: 30
+    filter_max_no_call_fraction: 0.1
+    filter_max_base_error_rate: 0.1
+  somatic_variant_filtering:
+    genome:
+      vcfmerger_exclude_filter: "(FMT/DP<10 | FMT/AR[0]>=0.02 | FMT/AR[1]<0.05)"
+    exome:
+      vcfmerger_exclude_filter: "(FMT/DP<10 | FMT/AR[0]>=0.02 | FMT/AR[1]<0.05)"
+  tumor_only_variant_filtering:
+    genome:
+      COSMIC_Ratio_Threshold: 0.10
+      vcfmerger_exclude_filter: "(FMT/DP<10 | FMT/AR[0]>=0.02 | FMT/AR[1]<0.05)"
+    exome:
+      COSMIC_Ratio_Threshold: 0.10
+      vcfmerger_exclude_filter: "(FMT/DP<10 | FMT/AR[0]>=0.02 | FMT/AR[1]<0.05)"
+  cnvear_copy_number_thresholds:
+    genome:
+      high_gain: 1.32
+      gain: 0.16
+      het_loss: -0.16
+      hom_loss: -1.32
+    exome:
+      high_gain: 1.32
+      gain: 0.16
+      het_loss: -0.16
+      hom_loss: -1.32
+  read_trimming:
+    genome:
+      n_base_limit: 5
+      length_required: 75
+      qualified_quality_phred: 15
+      unqualified_percent_limit: 40
+      trim_poly_g: true
+      trim_poly_g_by_percent: true
+      poly_g_percent: 0.85
+      trim_poly_g_read2only: true
+    exome:
+      n_base_limit: 5
+      length_required: 75
+      qualified_quality_phred: 15
+      unqualified_percent_limit: 40
+      trim_poly_g: true
+      trim_poly_g_by_percent: true
+      poly_g_percent: 0.85
+      trim_poly_g_read2only: true
+    rna:
+      n_base_limit: 5
+      length_required: 75
+      qualified_quality_phred: 15
+      unqualified_percent_limit: 40

@@ -1,0 +1,90 @@
+{% from 'modules/assembly/assembly_qc.j2' import assembly_qc with context %}
+{% from 'modules/assembly/quast.j2' import quast with context %}
+
+{% from 'modules/assembly/minimap2.j2' import minimap2_asm with context %}
+
+{% macro shasta(pair) %}
+
+{%- set temp_dir %}temp/{{ pair.gltype }}/assembly/shasta/{{ pair.project }}{% endset %}
+{%- set results_dir %}{{ pair.gltype }}/assembly/shasta/{{ pair.project }}{% endset %}
+
+{% set ontfqlist = [] %}
+{% set pacbiofqlist = [] %}
+
+{% for file in pair.pacbio %}
+    {% set pacbiofq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do pacbiofqlist.append(pacbiofq) %}
+{% endfor %}
+
+{% for file in pair.ont|selectattr('fastqCode', 'eq', 'duplex')|list %}
+    {% set duplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do pacbiofqlist.append(duplexfq) %}
+    {% set simplexfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.simplex.fastq.gz{% endset %}
+    {% do ontfqlist.append(simplexfq) %}
+{% endfor %}
+
+{% for file in pair.ont|selectattr('fastqCode', 'eq', 'simplex')|list %}
+    {% set ontfq %}temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do ontfqlist.append(ontfq) %}
+{% endfor %}
+
+- name: shasta_{{ pair.project }}
+  input:
+    {% for ontfq in ontfqlist %}
+    - {{ ontfq }}
+    {% endfor %}
+    {% for pacbiofq in pacbiofqlist %}
+    - {{ pacbiofq }}
+    {% endfor %}
+  output:
+    - {{ results_dir }}/Assembly-Detailed.csv
+    - {{ results_dir }}/Assembly-Detailed.fasta
+    - {{ results_dir }}/Assembly-Detailed.gfa
+    - {{ results_dir }}/Assembly-Detailed-NoSequence.gfa
+    - {{ results_dir }}/Assembly-Haploid.csv
+    - {{ results_dir }}/Assembly-Haploid.fasta
+    - {{ results_dir }}/Assembly-Haploid.gfa
+    - {{ results_dir }}/Assembly-Haploid-NoSequence.gfa
+    - {{ results_dir }}/Assembly-Phased.csv
+    - {{ results_dir }}/Assembly-Phased-Details.csv
+    - {{ results_dir }}/Assembly-Phased.fasta
+    - {{ results_dir }}/Assembly-Phased.gfa
+    - {{ results_dir }}/Assembly-Phased-NoSequence.gfa
+  cpus: 32
+  mem: 600G
+  walltime: "48:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.shasta.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}/run_dir
+    mkdir -p {{ results_dir }}
+
+    {% for fastq in ontfqlist %}
+    gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.split('.fastq.gz')[0] | basename }}.fasta
+    {% endfor %}
+    {% for fastq in pacbiofqlist %}
+    gunzip -c {{ fastq }} | awk '{if(NR%4==1) {printf(">%s\n",substr($0,2));} else if(NR%4==2) print;}' > {{ temp_dir }}/{{ fastq.split('.fastq.gz')[0] | basename }}.fasta
+    {% endfor %}
+
+    shasta \
+      --threads 32 \
+      --input {{ temp_dir }}/*.fasta \
+      --config Nanopore-Phased-R10-Fast-Nov2022 \
+      --Reads.minReadLength 500 \
+      --assemblyDirectory {{ temp_dir }}/run_dir
+
+    mv {{ temp_dir }}/run_dir/Assembly* {{ results_dir }}
+
+{% set input_assembly %}{{ results_dir }}/Assembly-Phased.fasta{% endset %}
+{{- assembly_qc(pair, input_assembly, 'shasta') }}
+{{- quast(pair, input_assembly, 'shasta') }}
+
+{% if tasks.Genome_assembly_metrics_align_minimap2 | default(false) %}
+{{- minimap2_asm(pair, input_assembly, 'shasta') }}
+{% endif %}
+
+{% endmacro %}

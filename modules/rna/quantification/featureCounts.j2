@@ -1,0 +1,41 @@
+{% macro featureCounts(sample, sample_bam, gtf, SIRV=false) %}
+
+{% if SIRV %}
+  {% set results_dir %}{{ sample.gltype }}/quant/featureCounts_SIRV/{{ sample.name }}{% endset %}
+{% else %}
+  {% set results_dir %}{{ sample.gltype }}/quant/featureCounts/{{ sample.name }}{% endset %}
+{% endif %}
+
+{% if SIRV %}
+- name: featureCounts_SIRV_{{ sample.name }}
+{% else %}
+- name: featureCounts_{{ sample.name }}
+{% endif %}
+  input:
+    - {{ gtf }}
+    - {{ sample_bam }}
+  output: {{ results_dir }}/{{ sample.name }}.counts.txt
+  cpus: 10
+  mem: 32G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.subread.container }}
+  cmd: |
+
+    {# note: this step performs gene level quantification from the human aligned bam #}
+    {# input: human aligned bam #}
+    {# output: gene counts #}
+
+    mkdir -p {{ results_dir }}
+
+    featureCounts \
+      -T 10 \
+      -t exon \
+      -g gene_id \
+      -a {{ gtf }} \
+      -L \
+      -o {{ results_dir }}/{{ sample.name }}.counts.txt \
+      {{ sample_bam }}
+
+{% endmacro %}
+

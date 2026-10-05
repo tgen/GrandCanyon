@@ -1,0 +1,110 @@
+{% macro ctat_lr(sample) %}
+
+{%- set temp_dir %}temp/{{ sample.gltype }}/fusions/starfusion/{{ sample.name }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/fusions/starfusion/{{ sample.name }}{% endset %}
+
+{# Here we build up lists of all the fastq files for this sample #}
+{% set longfqlist = [] %}
+{% set r1fqlist = [] %}
+{% set r2fqlist = [] %}
+
+{% for rgid, rg in sample.read_groups.items() %}
+  {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
+  {% if longfastq is defined %}
+    {% set longfastq_path %}temp/fastqs/{{ longfastq.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz{% endset %}
+    {% do longfastq.update({"path": longfastq_path}) %}
+    {% do longfqlist.append(longfastq) %}
+  {% endif %}
+{% endfor %}
+
+{% for rgid, data_files in dataFiles|selectattr('rgsm', 'eq', sample.rgsm)|selectattr('glType', 'eq', 'RNA')|selectattr('rgpl', 'eq', 'ILLUMINA')|selectattr('rgpm', 'eq', 'NOVASEQXPLUS')|groupby('rgid') %}
+  {% set rg = data_files %}
+  {% set r1fastq = rg|selectattr('fastqCode', 'eq', 'R1')|first %}
+  {% set r2fastq = rg|selectattr('fastqCode', 'eq', 'R2')|first %}
+  {% if r1fastq is defined %}
+    {% do r1fastq.update({"path": "temp/fastqs/" + r1fastq.basename}) %}
+    {% do r1fqlist.append(r1fastq) %}
+  {% endif %}
+
+  {% if r2fastq is defined %}
+    {% do r2fastq.update({"path": "temp/fastqs/" + r2fastq.basename}) %}
+    {% do r2fqlist.append(r2fastq) %}
+  {% endif %}
+{% endfor %}
+
+{% if r1fqlist | length > 0 %}
+  {% if r1fqlist | length > 1 %}
+    {% set r1_fastq %}{{ temp_dir }}/{{ sample.name }}_sr_concat_R1.fastq.gz{% endset %}
+    {% set r2_fastq %}{{ temp_dir }}/{{ sample.name }}_sr_concat_R2.fastq.gz{% endset %}
+  {% else %}
+    {% set r1_fastq %}{{ r1fqlist|map(attribute='path')|list|first }}{% endset %}
+    {% set r2_fastq %}{{ r2fqlist|map(attribute='path')|list|first }}{% endset %}
+  {% endif %}
+{% endif %}
+{% if longfqlist | length > 0 %}
+  {% if longfqlist | length > 1 %}
+    {% set lr_fastq %}{{ temp_dir }}/{{ sample.name }}_lr_concat.fastq.gz{% endset %}
+  {% else %}
+    {% set lr_fastq %}{{ longfqlist|map(attribute='path')|list|first }}{% endset %}
+  {% endif %}
+
+- name: ctat_lr_{{ sample.name }}
+  input:
+    - {{ constants.grandcanyon[reference].starfusion_index }}
+  {% for fq in longfqlist %}
+    - {{ fq.path }}
+  {% endfor %}
+  {% for fq in r1fqlist %}
+    - {{ fq.path }}
+  {% endfor %}
+  {% for fq in r2fqlist %}
+    - {{ fq.path }}
+  {% endfor %}
+  output:
+    - {{ results_dir }}/{{ sample.name }}.fusion_inspector_web.html
+    - {{ results_dir }}/{{ sample.name }}.fusion_predictions.abridged.tsv
+    - {{ results_dir }}/{{ sample.name }}.fusion_predictions.preliminary.abridged.tsv
+    - {{ results_dir }}/{{ sample.name }}.fusion_predictions.preliminary.tsv
+    - {{ results_dir }}/{{ sample.name }}.fusion_predictions.tsv
+  cpus: 10
+  mem: 80G
+  walltime: "36:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.ctat_lr.container }}
+  cmd: |
+    set -eu
+
+    rm -rf {{ temp_dir }}
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+    {% if longfqlist | length > 1 %}
+    cat {{ longfqlist|map(attribute='path')|join(' ')}} > {{ lr_fastq }}
+    {% endif %}
+    {% if r1fqlist | length > 1 %}
+    cat {{ r1fqlist|map(attribute='path')|join(' ') }} > {{ r1_fastq }}
+    cat {{ r2fqlist|map(attribute='path')|join(' ') }} > {{ r2_fastq }}
+    {% endif %}
+
+    ctat-LR-fusion \
+      --CPU 10 \
+      --genome_lib_dir {{ constants.grandcanyon[reference].starfusion_index }} \
+      -T "{{ lr_fastq }}" \
+      {% if r1fqlist | length > 0 %}
+      --left_fq "{{ r1_fastq }}" \
+      --right_fq "{{ r2_fastq }}" \
+      {% endif %}
+      --output {{ temp_dir }} \
+      --vis
+
+    mv {{ temp_dir }}/ctat-LR-fusion.fusion_inspector_web.html {{ results_dir }}/{{ sample.name }}.fusion_inspector_web.html
+    mv {{ temp_dir }}/ctat-LR-fusion.fusion_predictions.abridged.tsv {{ results_dir }}/{{ sample.name }}.fusion_predictions.abridged.tsv
+    mv {{ temp_dir }}/ctat-LR-fusion.fusion_predictions.preliminary.abridged.tsv {{ results_dir }}/{{ sample.name }}.fusion_predictions.preliminary.abridged.tsv
+    mv {{ temp_dir }}/ctat-LR-fusion.fusion_predictions.preliminary.tsv {{ results_dir }}/{{ sample.name }}.fusion_predictions.preliminary.tsv
+    mv {{ temp_dir }}/ctat-LR-fusion.fusion_predictions.tsv {{ results_dir }}/{{ sample.name }}.fusion_predictions.tsv
+
+{% else %}
+  {% set log_msg %}ctat_lr_fusion was enabled, but no compatible long read data was found for {{ sample.name }}{% endset %}
+  {{ log(log_msg, level='WARNING') }}
+{% endif %}
+
+{% endmacro %}

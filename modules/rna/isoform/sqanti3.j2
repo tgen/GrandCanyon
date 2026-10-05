@@ -1,0 +1,100 @@
+{% macro sqanti3(sample, isoforms, flnc_count, temp_dir, results_dir, toolname) %}
+
+{% if sample.external_data is defined and sample.external_data.sj_tab is defined %}
+  {% set sample_sj_tab %}{{ sample.external_data.sj_tab }}{% endset %}
+{% endif %}
+
+{% set longfqlist = [] %}
+{% set shortfqlist = [] %}
+
+{# TODO: Need to sort out a technique to select the best set of short read data, or decide whether or not all of it should likely be used. #}
+{% for rgid, data_files in dataFiles|selectattr('rgsm', 'eq', sample.rgsm)|selectattr('glType', 'eq', 'RNA')|selectattr('rgpl', 'eq', 'ILLUMINA')|selectattr('rgpm', 'eq', 'NOVASEQXPLUS')|groupby('rgid') %}
+  {% set rg = data_files %}
+  {% set r1fastq = rg|selectattr('fastqCode', 'eq', 'R1')|first %}
+  {% set r2fastq = rg|selectattr('fastqCode', 'eq', 'R2')|first %}
+  {% if r1fastq is defined and r2fastq is defined %}
+    {% set sr_pair = {"r1path": "temp/fastqs/" + r1fastq.basename, "r2path": "temp/fastqs/" + r2fastq.basename} %}
+    {% do shortfqlist.append(sr_pair) %}
+  {% endif %}
+{% endfor %}
+
+{% for rgid, rg in sample.read_groups.items() %}
+  {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
+  {% if longfastq is defined %}
+    {% set longfastq_path %}temp/ubams/{{ longfastq.basename }}{% endset %}
+    {% do longfastq.update({"path": longfastq_path}) %}
+    {% do longfqlist.append(longfastq) %}
+  {% endif %}
+{% endfor %}
+
+{% if shortfqlist | length > 0 or sample_sj_tab is defined %}
+  {% set output_prefix %}{{ sample.name }}.sqanti3_with_sr{% endset %}
+{% else %}
+  {% set output_prefix %}{{ sample.name }}.sqanti3{% endset %}
+{% endif %}
+
+{% if longfqlist | length > 0 %}
+
+- name: sqanti3_{{ toolname }}_{{ sample.name }}
+  input:
+    - {{ isoforms }}
+    - {{ flnc_count }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].gtf }}
+    - {{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }}
+    {% for pair in shortfqlist %}
+    - {{ pair.r1path }}
+    - {{ pair.r2path }}
+    {% endfor %}
+    {% if sample_sj_tab is defined %}
+    - {{ sample_sj_tab }}
+    {% endif %}
+  output:
+    - {{ results_dir }}/{{ output_prefix }}.collapsed.sorted.gff
+    - {{ results_dir }}/{{ output_prefix }}.collapsed_classification.txt
+  cpus: 20
+  mem: 64G
+  walltime: "12:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.sqanti3.container }}
+  cmd: |
+    set -e
+
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    {% if shortfqlist | length > 0 %}
+    cat <<EOF > "{{ temp_dir }}/{{ sample.name }}_short_reads.fofn"
+    {% for pair in shortfqlist %}
+    {{ pair.r1path }} {{ pair.r2path }}
+    {% endfor %}
+    EOF
+    {% endif %}
+
+    conda run -n sqanti3 sqanti3 init \
+      -c {{ results_dir }}/sqanti3_config.yaml \
+      -a \
+      cpus=20 \
+      dir={{ results_dir }} \
+      refGTF={{ constants.grandcanyon[reference].gtf }} \
+      refFasta={{ constants.grandcanyon[reference].reference_fasta }} \
+      isoforms={{ isoforms }} \
+      output={{ output_prefix }} \
+      gff3={{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }} \
+      CAGE_peak={{ constants.grandcanyon[reference].tool_resources.sqanti3.cage_peak }} \
+      polyA_motif_list={{ constants.grandcanyon[reference].tool_resources.sqanti3.polya_motif }} \
+      isoAnnotLite=True \
+      fl_count={{ flnc_count }} \
+      {% if shortfqlist | length > 0 %}
+      short_reads={{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
+      {% endif %}
+      {% if sample_sj_tab is defined %}
+      coverage={{ sample_sj_tab }} \
+      {% endif %}
+      report=both
+
+    conda run -n sqanti3 sqanti3 all -c {{ results_dir }}/sqanti3_config.yaml
+
+{% endif %}
+
+{% endmacro %}

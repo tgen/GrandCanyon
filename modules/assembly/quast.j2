@@ -1,0 +1,36 @@
+{% macro quast(pair, results_dir, input_assemblies, assembler) %}
+
+- name: quast_{{ pair.project }}_{{ assembler }}
+  input:
+    {% for assembly in input_assemblies %}
+    - {{ assembly }}
+    {% endfor %}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    {% if constants.grandcanyon[reference].gtf is defined %}
+    - {{ constants.grandcanyon[reference].gtf }}
+    {% endif %}
+  output: {{ results_dir }}/quast_results
+  cpus: 16
+  mem: 160G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.quast.container }}
+  cmd: |
+
+    rm -rf {{ results_dir }}/quast_results
+    mkdir -p {{ results_dir }}
+
+    quast \
+      -t 16 \
+      -r {{ constants.grandcanyon[reference].reference_fasta }} \
+      {% if constants.grandcanyon[reference].gtf is defined %}
+      -g {{ constants.grandcanyon[reference].gtf }} \
+      {% endif %}
+      --large \
+      --no-snps \
+      --no-sv \
+      --output-dir {{ results_dir }}/quast_results \
+      {{ input_assemblies | join(" ") }}
+
+{% endmacro %}
+

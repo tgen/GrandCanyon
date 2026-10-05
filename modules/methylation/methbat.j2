@@ -1,0 +1,33 @@
+{% macro methbat(sample, aligner) %}
+
+{%- set bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/methylation/methbat/{{ sample.name }}_{{ aligner }}{% endset %}
+
+- name: methbat_{{ sample.name }}_{{ aligner }}
+  reset: predecessors
+  input:
+    - {{ bam }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.5mC.bed.gz
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.methbat.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    methbat pileup \
+      --threads 8 \
+      --input-bam {{ bam }} \
+      --output-prefix {{ results_dir }}/{{ sample.name }}.{{ aligner }}
+
+    methbat segment \
+      --input-pileup {{ results_dir }}/{{ sample.name }}.{{ aligner }}.5mC.bed.gz \
+      --output-prefix {{ results_dir }}/{{ sample.name }}.{{ aligner }}
+
+{% endmacro %}
