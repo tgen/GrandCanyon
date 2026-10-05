@@ -348,8 +348,8 @@
     - {{ constants.grandcanyon[reference].reference_fasta }}
   output:
     - temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa
-  cpus: 1
-  mem: 16G
+  cpus: 2
+  mem: 20G
   walltime: "1:00:00"
   container: {{ constants.tools.gffread.container }}
   cmd: |
