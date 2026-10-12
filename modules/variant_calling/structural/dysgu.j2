@@ -1,0 +1,190 @@
+{% from 'modules/variant_calling/postprocessing/whatshap.j2' import whatshap_haplotag with context %}
+
+{% macro dysgu(sample_or_pair, aligner) %}
+
+{% if sample_or_pair.normal is defined %}
+  {% if sample_or_pair.normal.phased_vcf is defined %}
+    {{- whatshap_haplotag(sample_or_pair.tumor, aligner, 'deepvariant', sample_or_pair.normal.phased_vcf) }}
+    {%- set normal_bam %}{{ sample_or_pair.normal.phased_bam }}{% endset %}
+    {%- set bam %}{{ sample_or_pair.tumor.phased_bam }}{% endset %}
+  {% else %}
+    {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+    {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {% endif %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set normal_vcf %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.normal.name }}_{{ aligner }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.dysgu.all.vcf{% endset %}
+  {%- set input_config = "paired" %}
+  {% if sample_or_pair.normal.rgpl == 'PACBIO' %}
+    {%- set mode_type = 'pacbio-revio' %}
+  {% elif sample_or_pair.normal.rgpl == 'ONT' %}
+    {%- set mode_type = 'nanopore-r10' %}
+  {% endif %}
+{% else %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {% if sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set input_config = "tumor_only" %}
+  {% else %}
+    {% if tasks[sample_or_pair.gltype|capitalize+"_variant_calling_snp_indel_caller_deepvariant"]|default(false)  %}
+      {%- set bam %}{{ sample_or_pair.phased_bam }}{% endset %}
+    {% endif %}
+    {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set results_dir %}{{ sample_or_pair.gltype }}/constitutional_structural_calls/dysgu/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+    {%- set input_config = "germline" %}
+  {% endif %}
+  {% if sample_or_pair.rgpl == 'PACBIO' %}
+    {%- set mode_type = 'pacbio-revio' %}
+  {% elif sample_or_pair.rgpl == 'ONT' %}
+    {%- set mode_type = 'nanopore-r10' %}
+  {% endif %}
+{% endif %}
+{%- set discordant_bam %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.discordant.bam{% endset %}
+{%- set discordant_cram %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.discordant.cram{% endset %}
+{%- set temp_all_vcf %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.dysgu.all.vcf{% endset %}
+{%- set temp_pass_vcf %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.dysgu.pass.vcf{% endset %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.dysgu.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.dysgu.pass.vcf.gz{% endset %}
+
+{#
+{% if rgpl in ['ONT', 'PACBIO'] %}
+  {%- set input_type = "long_read" %}
+{% else %}
+  {%- set input_type = "short_read" %}
+{% endif %}
+{% if input_type == "short_read" %}
+- name: dysgu_fetch_{{ sample_or_pair.name }}_{{ aligner }}
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ discordant_bam }}
+  cpus: 8
+  mem: 32G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.dysgu.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+      sed 's/SN://;s/LN://' |\
+      awk '{ OFS="\t" ; print $2,0,$3-1 }' \
+      > {{ temp_dir }}/calling_intervals.bed
+
+    dysgu fetch \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --output {{ discordant_bam }} \
+      --search {{ temp_dir }}/calling_intervals.bed \
+      --procs 8 \
+      --overwrite \
+      --pl 'pe' \
+      {{ temp_dir }} {{ bam }}
+
+{% endif %}
+#}
+
+- name: dysgu_call_{{ sample_or_pair.name }}_{{ aligner }}
+  reset: predecessors
+  input:
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ temp_all_vcf }}
+  cpus: 8
+  mem: 32G
+  walltime: "12:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.dysgu.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+      sed 's/SN://;s/LN://' |\
+      awk '{ OFS="\t" ; print $2,0,$3-1 }' \
+      > {{ temp_dir }}/calling_intervals.bed
+
+    dysgu call \
+      --svs-out {{ temp_all_vcf }} \
+      --out-format vcf \
+      --mode "{{ mode_type }}" \
+      --procs 8 \
+      --overwrite \
+      {{ constants.grandcanyon[reference].reference_fasta }} \
+      {{ temp_dir }} \
+      {{ bam }}
+
+
+- name: dysgu_filter_{{ sample_or_pair.name }}_{{ aligner }}
+  input:
+    {% if input_config == 'paired' %}
+    - {{ normal_vcf }}
+    - {{ normal_bam }}
+    {% endif %}
+    - {{ temp_all_vcf }}
+  output:
+    - {{ temp_pass_vcf }}
+  cpus: 8
+  mem: 32G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.dysgu.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    dysgu filter \
+      --min-prob 0.1 \
+      --support-fraction 0.1 \
+      --pass-prob 0.3 \
+      {% if input_config == 'paired' %}
+      --normal-vcf {{ normal_vcf }} \
+      {{ temp_all_vcf }} \
+      {{ normal_bam }} \
+      {% else %}
+      {{ temp_all_vcf }} \
+      {% endif %}
+      > {{ temp_pass_vcf }}
+
+
+- name: dysgu_bcftools_compress_{{ sample_or_pair.name }}_{{ aligner }}
+  input:
+    - {{ temp_all_vcf }}
+    - {{ temp_pass_vcf }}
+  output:
+    - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    bcftools view \
+      --output-type z \
+      --output-file {{ all_vcf }} \
+      --write-index \
+      {{ temp_all_vcf }}
+
+    bcftools view \
+      --include 'FILTER == "PASS"' \
+      --output-type z \
+      --output-file {{ pass_vcf }} \
+      --write-index \
+      {{ temp_pass_vcf }}
+
+{% endmacro %}

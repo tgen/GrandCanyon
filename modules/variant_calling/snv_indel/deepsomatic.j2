@@ -1,0 +1,176 @@
+{%- macro deepsomatic(sample_or_pair, aligner) %}
+
+{% if sample_or_pair.normal is defined %}
+  {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+  {%- set tumor_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/deepsomatic/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/deepsomatic/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {% if sample_or_pair.normal.rgpl == 'PACBIO' %}
+    {%- set model_type = 'PACBIO' %}
+  {% elif sample_or_pair.normal.rgpl == 'ONT' %}
+    {%- set model_type = 'ONT' %}
+  {% elif sample_or_pair.gltype == 'exome' %}
+    {%- set model_type = 'WES' %}
+  {% else %}
+    {%- set model_type = 'WGS' %}
+  {% endif %}
+{% else %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_variant_calls/deepsomatic/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_variant_calls/deepsomatic/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {% if sample_or_pair.rgpl == 'PACBIO' %}
+    {%- set model_type = 'PACBIO_TUMOR_ONLY' %}
+  {% elif sample_or_pair.rgpl == 'ONT' %}
+    {%- set model_type = 'ONT_TUMOR_ONLY' %}
+  {% elif sample_or_pair.gltype == 'exome' %}
+    {%- set model_type = 'WES_TUMOR_ONLY' %}
+  {% else %}
+    {%- set model_type = 'WGS_TUMOR_ONLY' %}
+  {% endif %}
+{% endif %}
+
+{%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.deepsomatic.all.vcf.gz{% endset %}
+{%- set all_gvcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.deepsomatic.all.g.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.deepsomatic.pass.vcf.gz{% endset %}
+
+- name: deepsomatic_prep_and_make_examples_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, deepsomatic, {{ sample_or_pair.name }}]
+  reset: predecessors
+  input:
+    {% if sample_or_pair.normal is defined %}
+    - {{ tumor_bam }}
+    - {{ tumor_bam }}.bai
+    - {{ normal_bam }}
+    - {{ normal_bam }}.bai
+    {% else %}
+    - {{ bam }}
+    {% endif %}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ temp_dir }}/intermediate_results_dir/make_examples.tfrecord@20.gz
+    - {{ temp_dir }}/intermediate_results_dir/gvcf.tfrecord@20.gz
+    - {{ temp_dir }}/deepsomatic_make_examples.sh
+    - {{ temp_dir }}/deepsomatic_call_variants.sh
+    - {{ temp_dir }}/deepsomatic_postprocess_variants.sh
+  cpus: 20
+  mem: 120G
+  walltime: "12:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.deepsomatic.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+    export TMPDIR={{ temp_dir }}/intermediate_results_dir
+
+    run_deepsomatic \
+      --dry_run \
+      --model_type {{ model_type }} \
+      --ref {{ constants.grandcanyon[reference].reference_fasta }} \
+      {% if sample_or_pair.normal is defined %}
+      --reads_tumor {{ tumor_bam }} \
+      --reads_normal {{ normal_bam }} \
+      {% else %}
+      --reads_tumor {{ bam }} \
+      {% endif %}
+      --output_vcf {{ all_vcf }} \
+      --output_gvcf {{ all_gvcf }} \
+      --num_shards 20 \
+      --novcf_stats_report \
+      --logging_dir {{ temp_dir }}/logs \
+      --intermediate_results_dir {{ temp_dir }}/intermediate_results_dir 2> /dev/null |\
+      csplit --prefix="{{ temp_dir }}/deepsomatic_" -s -z --suppress-matched - "/Running/" '{*}'
+
+    rm {{ temp_dir }}/deepsomatic_00
+    mv {{ temp_dir }}/deepsomatic_01 {{ temp_dir }}/deepsomatic_make_examples.sh
+    mv {{ temp_dir }}/deepsomatic_02 {{ temp_dir }}/deepsomatic_call_variants.sh
+    mv {{ temp_dir }}/deepsomatic_03 {{ temp_dir }}/deepsomatic_postprocess_variants.sh
+    sed -i '1i #!/bin/sh' {{ temp_dir }}/deepsomatic_*.sh
+
+    cat {{ temp_dir }}/deepsomatic_make_examples.sh
+    bash {{ temp_dir }}/deepsomatic_make_examples.sh
+
+
+- name: deepsomatic_call_variants_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, deepsomatic, {{ sample_or_pair.name }}]
+  reset: predecessors
+  input:
+    - {{ temp_dir }}/intermediate_results_dir/make_examples.tfrecord@20.gz
+    - {{ temp_dir }}/deepsomatic_call_variants.sh
+  output:
+    - {{ temp_dir }}/intermediate_results_dir/call_variants_output.tfrecord.gz
+  cpus: 8
+  mem: 40G
+  walltime: "2:00:00"
+  queue_preset: "DEEPVARIANT"
+  container: {{ constants.tools.deepsomatic.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    export TMPDIR={{ temp_dir }}/intermediate_results_dir
+
+    cat {{ temp_dir }}/deepsomatic_call_variants.sh
+    bash {{ temp_dir }}/deepsomatic_call_variants.sh
+
+
+- name: deepsomatic_postprocess_variants_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, deepsomatic, {{ sample_or_pair.name }}]
+  input:
+    - {{ temp_dir }}/deepsomatic_postprocess_variants.sh
+    - {{ temp_dir }}/intermediate_results_dir/gvcf.tfrecord@20.gz
+    - {{ temp_dir }}/intermediate_results_dir/call_variants_output.tfrecord.gz
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ all_vcf }}
+    - {{ all_gvcf }}
+  cpus: 16
+  mem: 128G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.deepsomatic.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    export TMPDIR={{ temp_dir }}/intermediate_results_dir
+
+    cat {{ temp_dir }}/deepsomatic_postprocess_variants.sh
+    bash {{ temp_dir }}/deepsomatic_postprocess_variants.sh
+
+
+- name: deepsomatic_filter_variants_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, snp_indel_caller, deepsomatic, {{ sample_or_pair.name }}]
+  input:
+    - {{ all_vcf }}
+  output:
+    - {{ all_vcf }}.tbi
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    bcftools index --tbi --force "{{ all_vcf }}"
+
+    bcftools view \
+      --include 'FILTER == "PASS"' \
+      --output-type z \
+      --output {{ pass_vcf }} \
+      --write-index \
+      {{ all_vcf }}
+
+{% if not tasks[sample_or_pair.gltype|capitalize+"_variant_calling_merge_vcfs_vcfMerger2"]|default(false) or sample_or_pair.glprep in 'longread' %}
+{% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_small_variants with context %}
+{{- postprocess_small_variants(sample_or_pair, pass_vcf, temp_dir, results_dir, aligner, 'deepsomatic') }}
+{% endif %}
+
+{% endmacro %}

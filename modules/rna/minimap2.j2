@@ -1,0 +1,172 @@
+{% from 'utilities/read_group_line.j2' import read_group_line with context %}
+{% from 'modules/rna/quantification/featureCounts.j2' import featureCounts with context %}
+{% from 'modules/rna/quantification/oarfish.j2' import oarfish with context %}
+{% from 'modules/rna/isoform/flair.j2' import flair with context %}
+{% from 'modules/rna/isoform/isoquant.j2' import isoquant with context %}
+
+{% macro minimap2_rna(sample) %}
+
+{% set temp_dir %}temp/{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/alignment/minimap2/{{ sample.name }}{% endset %}
+
+{% if constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
+{% else %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+{% endif %}
+
+{% for rgid, rg in sample.read_groups.items() %}
+- name: minimap2_{{ sample.name }}_{{ rgid | replace("/", "_") }}
+  reset: predecessors
+  input:
+    - {{ reference_fasta }}
+    {% for file in rg.data_files %}
+    - temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz
+    {% endfor %}
+  output:
+    - {{ temp_dir }}/st_sort_temp/{{ rgid | replace("/", "_") }}
+    {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
+    - {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram
+    - {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram.crai
+    {% else %}
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram.crai
+    {% endif %}
+  cpus: 20
+  mem: 80G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
+  cmd: |
+
+    rm -r {{ temp_dir }}/st_sort_temp/{{ rgid | replace("/", "_") }} || true
+    mkdir -p {{ temp_dir }}/st_sort_temp/{{ rgid | replace("/", "_") }}
+    mkdir -p {{ results_dir }}
+
+    paftools.js gff2bed {{ constants.grandcanyon[reference].gtf }} > {{ temp_dir }}/{{ sample.name }}_anno.bed
+
+    minimap2 \
+      {% if sample.glprep.startswith('kinnex') %}
+      -ax splice:hq \
+      -uf \
+      {% else %}
+      -ax splice \
+      -ub \
+      {% endif %}
+      --junc-bed {{ temp_dir }}/{{ sample.name }}_anno.bed \
+      -t 20 \
+      -L \
+      -Y \
+      {{ reference_fasta }} \
+      {% for file in rg.data_files %}
+      temp/fastqs/{{ file.basename.split('.fastq.gz')[0] | replace(".", "_") }}.fastq.gz \
+      {% endfor %}
+    | samtools addreplacerg \
+      --threads 10 \
+      -r "{{ read_group_line(rg, format='minimap2') }}" \
+      - \
+    | samtools sort \
+      --threads 20 \
+      --reference {{ reference_fasta }} \
+      -T {{ temp_dir }}/st_sort_temp/{{ rg.rgid | replace("/", "_") }} \
+      {% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
+      -o {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram \
+      {% else %}
+      -o {{ results_dir }}/{{ sample.name }}.minimap2.cram \
+      {% endif %}
+      --output-fmt CRAM \
+      --write-index \
+      -
+
+{% endfor %}
+
+{% if sample.read_groups.values() | groupby('rgid') | length > 1 %}
+- name: minimap2_samtools_merge_rgids_{{ sample.name }}
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
+  reset: predecessors
+  input:
+    - {{ reference_fasta }}
+  {% for rgid, rg in sample.read_groups.items() %}
+    - {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram
+    - {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram.crai
+  {% endfor %}
+  output:
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram.crai
+  walltime: "8:00:00"
+  cpus: 4
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# No long options available for the following:
+      -c           Combine @RG headers with colliding IDs [alter IDs to be distinct]
+      -f           Overwrite the output BAM if exist
+    #}
+    samtools merge \
+      --threads 4 \
+      --reference {{ reference_fasta }} \
+      -c \
+      -f \
+      --write-index \
+      {{ results_dir }}/{{ sample.name }}.minimap2.cram \
+      {% for rgid, rg in sample.read_groups.items() %}
+      {% if not loop.last %}
+      {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram \
+      {% else %}
+      {{ temp_dir }}/{{ rg.rgid | replace("/", "_") }}/{{ sample.name }}_{{ rgid | replace("/", "_") }}.cram
+      {% endif %}
+      {% endfor %}
+
+{% endif %}
+
+- name: minimap2_samtools_create_temp_bam_{{ sample.name }}
+  tags: [{{ sample.gltype }}, alignment, dna_alignment, bwa, {{ sample.name }}]
+  input:
+    - {{ reference_fasta }}
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram
+    - {{ results_dir }}/{{ sample.name }}.minimap2.cram.crai
+  output:
+    - {{ temp_dir }}/{{ sample.name }}.minimap2.bam
+    - {{ temp_dir }}/{{ sample.name }}.minimap2.bam.bai
+  walltime: "4:00:00"
+  cpus: 8
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.minimap2.container }}
+  cmd: |
+
+    samtools view \
+      -@ 8 \
+      --reference {{ reference_fasta }} \
+      --no-PG \
+      -o {{ temp_dir }}/{{ sample.name }}.minimap2.bam \
+      --write-index \
+      {{ results_dir }}/{{ sample.name }}.minimap2.cram
+
+{% if tasks['RNA_transcriptome_quantify_expression_featureCounts']|default(false) %}
+  {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.bam{% endset %}
+  {% set gtf %}{{ constants.grandcanyon[reference].gtf }}{% endset %}
+  {{- featureCounts(sample, sample_bam, gtf, SIRV=false) }}
+{% endif %}
+
+{% if tasks['RNA_transcriptome_quantify_expression_oarfish']|default(false) %}
+  {{- oarfish(sample) }}
+{% endif %}
+
+{% if tasks['RNA_transcriptome_quantify_expression_flair']|default(false) %}
+  {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.bam{% endset %}
+  {% set gtf %}{{ constants.grandcanyon[reference].gtf }}{% endset %}
+  {{- flair(sample, sample_bam, prepped_fastq, reference_fasta, gtf, SIRV=false) }}
+{% endif %}
+
+{% if tasks['RNA_transcriptome_quantify_expression_isoquant']|default(false) %}
+  {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.bam{% endset %}
+  {% set gtf %}{{ constants.grandcanyon[reference].gtf }}{% endset %}
+  {{- isoquant(sample, sample_bam, reference_fasta, gtf, SIRV=false) }}
+{% endif %}
+
+{% endmacro %}
