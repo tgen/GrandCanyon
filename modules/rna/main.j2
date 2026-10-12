@@ -13,6 +13,7 @@
     {% if sample.external_data is defined and sample.external_data.isoform_gtf is defined %}
       {{- prepare_custom_transcriptome(sample.external_data.isoform_gtf) }}
     {% endif %}
+    {{- prepare_custom_transcriptome(constants.grandcanyon[reference].gtf) }}
     {% if sample.rgpm|lower in known_long_read_platforms %}
       {% if tasks['RNA_alignment_rna_alignment_minimap2']|default(false) %}
         {{- minimap2_rna(sample) }}

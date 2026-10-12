@@ -20,10 +20,17 @@
   {% set lr_fastq %}{{ longfqlist|map(attribute='path')|list|first }}{% endset %}
 {% endif %}
 
+{% if constants.grandcanyon[reference].gtf.endswith('.gtf') %}
+  {% set gtf_basename = constants.grandcanyon[reference].gtf.split('.')[:-1]|join('_')|basename %}
+{% elif constants.grandcanyon[reference].gtf.endswith('.gtf.gz') %}
+  {% set gtf_basename = constants.grandcanyon[reference].gtf.split('.')[:-2]|join('_')|basename %}
+{% endif %}
+{% set transcriptome %}temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa{% endset %}
+
 - name: oarfish_{{ sample.name }}
   reset: predecessors
   input:
-    - {{ constants.grandcanyon[reference].transcriptome }}
+    - {{ transcriptome }}
     {% for fq in longfqlist %}
     - {{ fq.path }}
     {% endfor %}
@@ -53,7 +60,7 @@
       {% endif %}
       --filter-group no-filters \
       --model-coverage \
-      --output {{ results_dir }}/{{ sample.name }}
+      --output {{ results_dir }}/{{ sample.name }}.{{ gtf_basename }}
 
 {% if sample.external_data is defined and sample.external_data.isoform_gtf is defined %}
 
@@ -97,7 +104,7 @@
       {% endif %}
       --filter-group no-filters \
       --model-coverage \
-      --output {{ results_dir }}/{{ sample.name }}
+      --output {{ results_dir }}/{{ sample.name }}.{{ gtf_basename }}
 
 {% endif %}
 
