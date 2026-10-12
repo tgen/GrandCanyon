@@ -52,7 +52,7 @@
     oarfish \
       --threads 16 \
       --reads {{ lr_fastq }} \
-      --annotated {{ constants.grandcanyon[reference].transcriptome }} \
+      --annotated {{ transcriptome }} \
       {% if sample.glprep.startswith('kinnex') %}
       --seq-tech pac-bio-hifi \
       {% else %}
