@@ -113,5 +113,7 @@
       --write-index \
       {{ all_vcf }}
 
+{% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_structural_variants with context %}
+{{- postprocess_structural_variants(input, pass_vcf, temp_dir, results_dir, aligner, 'cutesv') }}
 
 {% endmacro %}
