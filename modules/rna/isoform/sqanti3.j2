@@ -38,7 +38,9 @@
 - name: sqanti3_{{ toolname }}_{{ sample.name }}
   input:
     - {{ isoforms }}
+    {% if flnc_count is defined and flnc_count %}
     - {{ flnc_count }}
+    {% endif %}
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].gtf }}
     - {{ constants.grandcanyon[reference].tool_resources.sqanti3.tappas_gff }}
@@ -84,7 +86,9 @@
       CAGE_peak={{ constants.grandcanyon[reference].tool_resources.sqanti3.cage_peak }} \
       polyA_motif_list={{ constants.grandcanyon[reference].tool_resources.sqanti3.polya_motif }} \
       isoAnnotLite=True \
+      {% if flnc_count is defined and flnc_count %}
       fl_count={{ flnc_count }} \
+      {% endif %}
       {% if shortfqlist | length > 0 %}
       short_reads={{ temp_dir }}/{{ sample.name }}_short_reads.fofn \
       {% endif %}

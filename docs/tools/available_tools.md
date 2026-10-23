@@ -13,6 +13,7 @@ Version Implemented refers to the container versions declared in `constants.tool
 
 | Tool | Version Implemented |
 | :---: | :---: |
+| [bambu](https://github.com/GoekeLab/bambu) | 3.12.1 |
 | [bcftools](https://github.com/samtools/bcftools/releases) | 1.20 |
 | [bedtools](https://github.com/arq5x/bedtools2/releases) | 2.29.0 |
 | [b_pure](https://github.com/tgen/b_pure) | 1.2.0 |

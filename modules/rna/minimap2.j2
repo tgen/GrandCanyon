@@ -3,6 +3,7 @@
 {% from 'modules/rna/quantification/oarfish.j2' import oarfish with context %}
 {% from 'modules/rna/isoform/flair.j2' import flair with context %}
 {% from 'modules/rna/isoform/isoquant.j2' import isoquant with context %}
+{% from 'modules/rna/isoform/bambu.j2' import bambu with context %}
 
 {% macro minimap2_rna(sample) %}
 
@@ -167,6 +168,12 @@
   {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.bam{% endset %}
   {% set gtf %}{{ constants.grandcanyon[reference].gtf }}{% endset %}
   {{- isoquant(sample, sample_bam, reference_fasta, gtf, SIRV=false) }}
+{% endif %}
+
+{% if tasks['RNA_transcriptome_isoform_discovery_bambu']|default(false) %}
+  {% set sample_bam %}{{ temp_dir }}/{{ sample.name }}.minimap2.bam{% endset %}
+  {% set gtf %}{{ constants.grandcanyon[reference].gtf }}{% endset %}
+  {{- bambu(sample, sample_bam, reference_fasta, gtf) }}
 {% endif %}
 
 {% endmacro %}

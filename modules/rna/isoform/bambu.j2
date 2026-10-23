@@ -1,0 +1,131 @@
+{% from 'modules/rna/isoform/sqanti3.j2' import sqanti3 with context %}
+
+{% macro bambu(sample, sample_bam, reference_fasta, gtf) %}
+
+{% set temp_dir %}temp/{{ sample.gltype }}/isoforms/bambu/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/isoforms/bambu/{{ sample.name }}{% endset %}
+{% set sample_gtf %}{{ results_dir }}/{{ sample.name }}.transcripts.gtf{% endset %}
+
+- name: bambu_{{ sample.name }}
+  input:
+    - {{ sample_bam }}
+    - {{ sample_bam }}.bai
+    - {{ reference_fasta }}
+    - {{ gtf }}
+  output:
+    - {{ sample_gtf }}
+    - {{ results_dir }}/{{ sample.name }}.transcript_counts.tsv
+    - {{ results_dir }}/{{ sample.name }}.gene_counts.tsv
+    - {{ results_dir }}/{{ sample.name }}.bambu_transcripts.rds
+    - {{ results_dir }}/{{ sample.name }}.bambu_genes.rds
+    - {{ results_dir }}/{{ sample.name }}.transcript_metadata.tsv
+  cpus: 4
+  mem: 30G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bambu.container }}
+  cmd: |
+    set -eu
+
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+    export TMPDIR={{ temp_dir }}
+
+    cat <<EOF > {{ temp_dir }}/run_bambu.R
+    library(bambu)
+    library(Rsamtools)
+
+    annotations <- bambu::prepareAnnotations("{{ gtf }}")
+
+    reads <- Rsamtools::BamFileList("{{ sample_bam }}", yieldSize = 250000L)
+
+    message("Running bambu transcript discovery...")
+    discovered_annotations <- bambu(
+      reads = reads,
+      annotations = annotations,
+      genome = "{{ reference_fasta }}",
+      discovery = TRUE,
+      quant = FALSE,
+      lowMemory = TRUE,
+      yieldSize = 250000L
+    )
+
+    message("Running bambu quantification over discovered annotations...")
+    se <- bambu(
+      reads = reads,
+      annotations = discovered_annotations,
+      genome = "{{ reference_fasta }}",
+      discovery = FALSE,
+      quant = TRUE,
+      lowMemory = TRUE
+    )
+
+    colnames(se) <- "{{ sample.name }}"
+
+    keep_idx <- rowSums(SummarizedExperiment::assays(se)$counts) > 0
+    if (!any(keep_idx)) {
+      stop(
+        "All transcripts have zero counts after quantification for {{ sample.name }}; ",
+        "check the alignment and reference annotation"
+      )
+    }
+    se <- se[keep_idx, , drop = FALSE]
+
+    gene_se <- bambu::transcriptToGeneExpression(se)
+
+    bambu::writeToGTF(SummarizedExperiment::rowRanges(se), file = "{{ temp_dir }}/{{ sample.name }}.transcripts.gtf")
+
+    saveRDS(se, "{{ temp_dir }}/{{ sample.name }}.bambu_transcripts.rds")
+    saveRDS(gene_se, "{{ temp_dir }}/{{ sample.name }}.bambu_genes.rds")
+
+    tx_meta <- as.data.frame(SummarizedExperiment::rowData(se))
+    if (!"TXNAME" %in% names(tx_meta)) {
+      tx_meta$TXNAME <- rownames(se)
+    }
+    if (!"GENEID" %in% names(tx_meta)) {
+      tx_meta$GENEID <- rep(NA_character_, nrow(tx_meta))
+    }
+    write.table(
+      tx_meta,
+      file = "{{ temp_dir }}/{{ sample.name }}.transcript_metadata.tsv",
+      sep = "\t",
+      quote = FALSE,
+      row.names = FALSE
+    )
+
+    counts_mat <- SummarizedExperiment::assays(se)$counts
+    counts_df <- data.frame(TXNAME = rownames(se), counts_mat, check.names = FALSE)
+    write.table(
+      counts_df,
+      file = "{{ temp_dir }}/{{ sample.name }}.transcript_counts.tsv",
+      sep = "\t",
+      quote = FALSE,
+      row.names = FALSE
+    )
+
+    gene_counts_mat <- SummarizedExperiment::assays(gene_se)$counts
+    gene_counts_df <- data.frame(GENEID = rownames(gene_se), gene_counts_mat, check.names = FALSE)
+    write.table(
+      gene_counts_df,
+      file = "{{ temp_dir }}/{{ sample.name }}.gene_counts.tsv",
+      sep = "\t",
+      quote = FALSE,
+      row.names = FALSE
+    )
+    EOF
+
+    Rscript {{ temp_dir }}/run_bambu.R
+
+    mv {{ temp_dir }}/{{ sample.name }}.transcripts.gtf \
+       {{ temp_dir }}/{{ sample.name }}.transcript_counts.tsv \
+       {{ temp_dir }}/{{ sample.name }}.gene_counts.tsv \
+       {{ temp_dir }}/{{ sample.name }}.bambu_transcripts.rds \
+       {{ temp_dir }}/{{ sample.name }}.bambu_genes.rds \
+       {{ temp_dir }}/{{ sample.name }}.transcript_metadata.tsv \
+       {{ results_dir }}/
+
+{% if tasks['RNA_transcriptome_isoform_discovery_sqanti3']|default(false) %}
+  {{- sqanti3(sample, sample_gtf, none, temp_dir, results_dir, 'bambu') }}
+{% endif %}
+
+{% endmacro %}
