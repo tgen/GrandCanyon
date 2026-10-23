@@ -38,6 +38,7 @@
     export TMPDIR={{ temp_dir }}
 
     isoquant \
+      --analysis transcript_discovery \
       --reference {{ reference_fasta }} \
       --genedb {{ gtf }} \
       --complete_genedb \
