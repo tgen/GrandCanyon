@@ -1,0 +1,167 @@
+{% macro vep(sample_or_pair, results_dir, input_vcf, variant_caller, final_vcf_prefix, aligner) %}
+
+{% if constants.grandcanyon[reference].species is defined %}
+  {% if constants.grandcanyon[reference].species in ('homo_sapiens', 'human') %}
+    {% set is_human = true %}
+  {% else %}
+    {% set is_human = false %}
+  {% endif %}
+{% else %}
+  {% set raise_msg %}VEP was enabled, but species is not defined for {{ reference }}. Please define a VEP compatible species or disable the VEP task{% endset %}
+  {{ raise(raise_msg) }}
+{% endif %}
+
+{% if constants.grandcanyon[reference].vep_data is defined %}
+{% elif constants.grandcanyon[reference].gff3 is defined %}
+  {% set transcript_file_command %}--gff {{ constants.grandcanyon[reference].gff3 }}{% endset %}
+{% elif constants.grandcanyon[reference].gtf is defined %}
+  {% set transcript_file_command %}--gtf {{ constants.grandcanyon[reference].gtf }}{% endset %}
+{% else %}
+  {% set raise_msg %}VEP was enabled, but no compatible annotation sources is defined for {{ reference }}. Please disable the VEP task or define one of the following sources: vep_cache, gtf, gff{% endset %}
+  {{ raise(raise_msg) }}
+{% endif %}
+
+- name: vep_all_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
+  input:
+    - {{ input_vcf }}
+    {% if constants.grandcanyon[reference].vep_data is defined %}
+    - {{ constants.grandcanyon[reference].vep_data }}
+    {% if reference == "grch38" %}
+    - {{ constants.grandcanyon[reference].vep_plugin_data }}
+    {% endif %}
+    {% endif %}
+    {% if constants.grandcanyon[reference].gff3 is defined %}
+    - {{ constants.grandcanyon[reference].gff3 }}
+    {% elif constants.grandcanyon[reference].gtf is defined %}
+    - {{ constants.grandcanyon[reference].gtf }}
+    {% endif %}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ final_vcf_prefix }}.vep.full.vcf.gz
+    - {{ final_vcf_prefix }}.vep.full.vcf.gz.tbi
+  walltime: "8:00:00"
+  cpus: 4
+  mem: 16G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.vep.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# Use VEP to create full annotation file with all transcripts #}
+    vep --fork 4 \
+        --input_file "{{ input_vcf }}" \
+        --format vcf \
+        --output_file "{{ final_vcf_prefix }}.vep.full.vcf.gz" \
+        --compress_output bgzip \
+        --vcf \
+        --vcf_info_field CSQ \
+        {% if is_human %}
+        --species homo_sapiens \
+        {% if reference in ('grch38', 'grch37') %}
+        --sift b \
+        --polyphen b \
+        --humdiv \
+        {% endif %}
+        {% else %}
+        --species {{ constants.grandcanyon[reference].species }} \
+        {% endif %}
+        --force_overwrite \
+        {% if constants.grandcanyon[reference].vep_data is defined %}
+        --cache \
+        --dir_cache "{{ constants.grandcanyon[reference].vep_data }}" \
+        --cache_version {{ constants.grandcanyon[reference].gene_model_version }} \
+        {% elif transcript_file_command is defined %}
+        {{ transcript_file_command }} \
+        {% endif %}
+        --offline \
+        --fasta "{{ constants.grandcanyon[reference].reference_fasta }}" \
+        {% if reference == "grch38" %}
+        --plugin AlphaMissense,file={{ constants.grandcanyon[reference].vep_plugin_data }}/AlphaMissense/AlphaMissense_hg38.tsv.gz \
+        --tsl \
+        --appris \
+        --mane \
+        {% endif %}
+        --buffer_size 10000 \
+        --terms SO \
+        --hgvs \
+        --hgvsg \
+        --symbol \
+        --uniprot \
+        --domains \
+        --canonical \
+        --flag_pick_allele_gene
+
+    tabix {{ final_vcf_prefix }}.vep.full.vcf.gz
+
+- name: vep_con_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
+  input:
+    - {{ input_vcf }}
+    - {{ constants.grandcanyon[reference].vep_data }}
+    {% if reference == "grch38" %}
+    - {{ constants.grandcanyon[reference].vep_plugin_data }}
+    {% endif %}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ final_vcf_prefix }}.vep.pick.vcf.gz
+    - {{ final_vcf_prefix }}.vep.pick.vcf.gz.tbi
+  walltime: "8:00:00"
+  cpus: 4
+  mem: 16G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.vep.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    {# Use VEP to create full annotation file with all transcripts #}
+    vep --fork 4 \
+        --input_file "{{ input_vcf }}" \
+        --format vcf \
+        --output_file "{{ final_vcf_prefix }}.vep.pick.vcf.gz" \
+        --compress_output bgzip \
+        --vcf \
+        --vcf_info_field CSQ \
+        {% if is_human %}
+        --species homo_sapiens \
+        {% if reference in ('grch38', 'grch37') %}
+        --sift b \
+        --polyphen b \
+        --humdiv \
+        {% endif %}
+        {% else %}
+        --species {{ constants.grandcanyon[reference].species }} \
+        {% endif %}
+        --force_overwrite \
+        {% if constants.grandcanyon[reference].vep_data is defined %}
+        --cache \
+        --dir_cache "{{ constants.grandcanyon[reference].vep_data }}" \
+        --cache_version {{ constants.grandcanyon[reference].gene_model_version }} \
+        {% endif %}
+        {% if transcript_file_command is defined %}
+        {{ transcript_file_command }} \
+        {% endif %}
+        --offline \
+        --fasta "{{ constants.grandcanyon[reference].reference_fasta }}" \
+        {% if reference == "grch38" %}
+        --plugin AlphaMissense,file={{ constants.grandcanyon[reference].vep_plugin_data }}/AlphaMissense/AlphaMissense_hg38.tsv.gz \
+        --tsl \
+        --appris \
+        --mane \
+        {% endif %}
+        --buffer_size 10000 \
+        --terms SO \
+        --hgvs \
+        --hgvsg \
+        --symbol \
+        --uniprot \
+        --domains \
+        --canonical \
+        --pick_allele_gene
+
+    tabix {{ final_vcf_prefix }}.vep.pick.vcf.gz
+
+{% endmacro %}
+

@@ -1,0 +1,31 @@
+{% macro read_group_line(rg, format='minimap2') -%}
+{% set tags = [
+  'ID:{}'.format(rg.rgid|default('unknown')),
+  'LB:{}'.format(rg.rglb|default('unknown')),
+  'PU:{}'.format(rg.rgpu|default('unknown')),
+  'SM:{}'.format(rg.rgsm|default(rg.sampleName)),
+  'PL:{}'.format(rg.rgpl|default('unknown')),
+  'CN:{}'.format(rg.rgcn|default('TGen')),
+  'PM:{}'.format(rg.rgpm|default('unknown')),
+  'BC:{}'.format(rg.rgbc|default('unknown'))
+] %}
+{% if format in ['minimap2','bwa'] %}
+  {# BWA requires one argument with fields separated by \t #}
+  {% set rg_line = '\\t'.join(['@RG'] + tags) %}
+{% elif format in ['exec_minimap2', 'exec_bwa'] %}
+  {% set rg_line = '\\\\t'.join(['@RG'] + tags) %}
+{% elif format == 'star' %}
+  {# STAR requires one argument per field #}
+  {% set wrapped_tags = [] %}
+  {% for tag in tags %}
+    {% do wrapped_tags.append('"' + tag + '"') %}
+  {% endfor %}
+  {% set rg_line = ' '.join(wrapped_tags) %}
+{% elif format in ['vg'] %}
+  {% set rg_line = ' '.join(tags) %}
+{% else %}
+  {{ raise('Read group line format should be "bwa" or "star"') }}
+{% endif %}
+{{ rg_line }}
+{%- endmacro %}
+

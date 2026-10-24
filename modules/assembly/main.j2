@@ -1,0 +1,171 @@
+{% from 'modules/assembly/flye.j2' import flye with context %}
+{% from 'modules/assembly/verkko.j2' import verkko with context %}
+{% from 'modules/assembly/shasta.j2' import shasta with context %}
+{% from 'modules/assembly/hifiasm.j2' import hifiasm with context %}
+{% from 'modules/assembly/herro.j2' import herro with context %}
+{% from 'modules/assembly/meryl.j2' import meryl with context %}
+{% from 'modules/assembly/ul_filter.j2' import ul_filter with context %}
+{% from 'modules/assembly/yak.j2' import yak with context %}
+
+{%- macro assembly() %}
+
+  {% set assembly = namespace(enabled=false) %}
+  {% for task in tasks if task.startswith("Genome_assembly") and tasks[task] %}
+    {% set assembly.enabled = true %}
+  {% endfor %}
+  {% if assembly.enabled %}
+    {% set trio = {} %}
+    {% if sampleRelations is defined %}
+      {% for sample in sampleRelations if sample.paternalID != '' or sample.maternalID != '' %}
+        {% if sample.paternalID is defined %}
+          {% set paternal = sampleRelations|selectattr('patientID', 'eq', sample.paternalID)|first|default(none) %}
+          {% set paternal_datafiles = [] %}
+          {% for rgsm in paternal.rgsm %}
+            {% for file in dataFiles|selectattr('rgsm', 'eq', rgsm) %}
+              {% if file.fileType in ('ubam') and file.glPrep|lower not in ('longread') %}
+                {% set r1fastq = file.copy() %}
+                {% set r2fastq = file.copy() %}
+
+                {% set r1fastq_basename %}{{ file.basename | replace(".", "_") }}_R1.fastq.gz{% endset %}
+                {% set r2fastq_basename %}{{ file.basename | replace(".", "_") }}_R2.fastq.gz{% endset %}
+
+                {% set r1fastq_path %}temp/fastqs/{{ r1fastq_basename }}{% endset %}
+                {% set r2fastq_path %}temp/fastqs/{{ r2fastq_basename }}{% endset %}
+
+                {% do r1fastq.update({"path": r1fastq_path, "basename": r1fastq_basename, "fastqCode": "R1", "fileType": "fastq"}) %}
+                {% do r2fastq.update({"path": r2fastq_path, "basename": r2fastq_basename, "fastqCode": "R2", "fileType": "fastq"}) %}
+
+                {% do paternal_datafiles.append(r1fastq) %}
+                {% do paternal_datafiles.append(r2fastq) %}
+              {% else %}
+                {% do paternal_datafiles.append(file) %}
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+        {% endif %}
+        {% if sample.maternalID is defined %}
+          {% set maternal = sampleRelations|selectattr('patientID', 'eq', sample.maternalID)|first|default(none) %}
+          {% set maternal_datafiles = [] %}
+          {% for rgsm in maternal.rgsm %}
+            {% for file in dataFiles|selectattr('rgsm', 'eq', rgsm) %}
+              {% if file.fileType in ('ubam') and file.glPrep|lower not in ('longread') %}
+                {% set r1fastq = file.copy() %}
+                {% set r2fastq = file.copy() %}
+
+                {% set r1fastq_basename %}{{ file.basename | replace(".", "_") }}_R1.fastq.gz{% endset %}
+                {% set r2fastq_basename %}{{ file.basename | replace(".", "_") }}_R2.fastq.gz{% endset %}
+
+                {% set r1fastq_path %}temp/fastqs/{{ r1fastq_basename }}{% endset %}
+                {% set r2fastq_path %}temp/fastqs/{{ r2fastq_basename }}{% endset %}
+
+                {% do r1fastq.update({"path": r1fastq_path, "basename": r1fastq_basename, "fastqCode": "R1", "fileType": "fastq"}) %}
+                {% do r2fastq.update({"path": r2fastq_path, "basename": r2fastq_basename, "fastqCode": "R2", "fileType": "fastq"}) %}
+
+                {% do maternal_datafiles.append(r1fastq) %}
+                {% do maternal_datafiles.append(r2fastq) %}
+              {% else %}
+                {% do maternal_datafiles.append(file) %}
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+        {% endif %}
+        {% set child_datafiles = [] %}
+        {% for rgsm in sample.rgsm %}
+          {% for file in dataFiles|selectattr('rgsm', 'eq', rgsm) %}
+            {% do child_datafiles.append(file) %}
+          {% endfor %}
+        {% endfor %}
+        {% do trio.update({'sample_ped': sample, 'child': child_datafiles, 'paternal': paternal_datafiles, 'maternal': maternal_datafiles}) %}
+      {% endfor %}
+    {% endif %}
+    {% set input = {'project': project} %}
+    {% do input.update({'gltype': 'genome'}) %}
+    {% do input.update({'ulong': []}) %}
+    {% do input.update({'corr': []}) %}
+    {% do input.update({'hifi': []}) %}
+    {% do input.update({'simplex': []}) %}
+    {% do input.update({'duplex': []}) %}
+    {% do input.update({'hic_r1': []}) %}
+    {% do input.update({'hic_r2': []}) %}
+    {% do input.update({'yak_pat': []}) %}
+    {% do input.update({'yak_mat': []}) %}
+
+    {% if trio | length > 0 %}
+      {% set assembly_dataFiles = trio.child %}
+      {% set paternal_yak %}temp/genome/assembly/yak/{{ trio.sample_ped.paternalID }}.yak{% endset %}
+      {% set maternal_yak %}temp/genome/assembly/yak/{{ trio.sample_ped.maternalID }}.yak{% endset %}
+      {{- yak(trio.sample_ped.paternalID, trio.paternal, paternal_yak) }}
+      {{- yak(trio.sample_ped.maternalID, trio.maternal, maternal_yak) }}
+      {% do input.yak_pat.append(paternal_yak) %}
+      {% do input.yak_mat.append(maternal_yak) %}
+    {% else %}
+      {% set assembly_dataFiles = dataFiles %}
+    {% endif %}
+
+    {% for file in assembly_dataFiles|selectattr('gltype', 'in', ['genome']) %}
+      {% if file.glprep == '3c' %}
+        {% set hic_file %}temp/fastqs/{{ file.basename }}{% endset %}
+        {% if file.fastqCode == 'R1' %}
+          {% do input.hic_r1.append(hic_file) %}
+        {% elif file.fastqCode == 'R2' %}
+          {% do input.hic_r2.append(hic_file) %}
+        {% endif %}
+      {% elif file.rgpl in ('ONT') %}
+        {% if file.fastqCode == 'simplex' %}
+          {% set duplex_matches = assembly_dataFiles|selectattr('fastqCode', 'eq', 'duplex')|selectattr('sampleName', 'eq', file.sampleName)|selectattr('rgid', 'eq', file.rgid)|list %}
+          {% if not duplex_matches | length > 0 %}
+            {% set simplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
+            {% set ul_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.ul.filtered.fastq.gz{% endset %}
+            {{- ul_filter(simplex_file, ul_file) }}
+            {% do input.ulong.append(ul_file) %}
+
+            {% set corrected_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.corrected.fa{% endset %}
+            {% if tasks.Genome_assembly_long_read_assembler_herro_correction | default(false) %}
+              {{- herro(input, simplex_file, corrected_file) }}
+              {% do input.corr.append(corrected_file) %}
+            {% endif %}
+            {% do input.simplex.append(simplex_file) %}
+          {% endif %}
+        {% elif file.fastqCode == 'duplex' %}
+          {% set simplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.simplex.fastq.gz{% endset %}
+          {% set ul_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.ul.simplex.filtered.fastq.gz{% endset %}
+          {{- ul_filter(simplex_file, ul_file) }}
+          {% do input.ulong.append(ul_file) %}
+          {% do input.simplex.append(simplex_file) %}
+
+          {% set duplex_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
+          {% do input.duplex.append(duplex_file) %}
+          {% set ul_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.ul.filtered.fastq.gz{% endset %}
+          {{- ul_filter(duplex_file, ul_file) }}
+          {% do input.ulong.append(ul_file) %}
+
+          {% set corrected_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.simplex.corrected.fa{% endset %}
+          {% if tasks.Genome_assembly_long_read_assembler_herro_correction | default(false) %}
+            {% do input.corr.append(corrected_file) %}
+            {{- herro(input, simplex_file, corrected_file) }}
+          {% endif %}
+        {% endif %}
+      {% elif file.rgpl in ('PACBIO') %}
+        {% set pacbio_file %}temp/fastqs/{{ file.basename | replace(".", "_") }}.fastq.gz{% endset %}
+        {% do input.hifi.append(pacbio_file) %}
+      {% endif %}
+    {% endfor %}
+
+    {% if assembly_dataFiles|selectattr('gltype', 'in', ['genome'])|selectattr('glprep', 'in', ['longread','3c'])|list | length > 0 %}
+      {{- meryl(input) }}
+      {% if tasks.Genome_assembly_long_read_assembler_flye|default(false) %}
+        {{- flye(input) }}
+      {% endif %}
+      {% if tasks.Genome_assembly_long_read_assembler_hifiasm|default(false) %}
+        {{- hifiasm(input) }}
+      {% endif %}
+      {% if tasks.Genome_assembly_long_read_assembler_verkko|default(false) %}
+        {{- verkko(input) }}
+      {% endif %}
+      {% if tasks.Genome_assembly_long_read_assembler_shasta|default(false) %}
+        {{- shasta(input) }}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+
+{% endmacro %}
