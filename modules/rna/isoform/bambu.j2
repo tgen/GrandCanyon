@@ -39,11 +39,13 @@
 
     reads <- Rsamtools::BamFileList("{{ sample_bam }}", yieldSize = 250000L)
 
+    genome <- Rsamtools::FaFile("{{ reference_fasta }}")
+
     message("Running bambu transcript discovery...")
     discovered_annotations <- bambu(
       reads = reads,
       annotations = annotations,
-      genome = "{{ reference_fasta }}",
+      genome = genome,
       discovery = TRUE,
       quant = FALSE,
       lowMemory = TRUE,
@@ -54,7 +56,7 @@
     se <- bambu(
       reads = reads,
       annotations = discovered_annotations,
-      genome = "{{ reference_fasta }}",
+      genome = genome,
       discovery = FALSE,
       quant = TRUE,
       lowMemory = TRUE
