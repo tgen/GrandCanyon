@@ -19,7 +19,7 @@
 {% endfor %}
 
 {% for rgid, rg in sample.read_groups.items() %}
-  {% set longfastq = rg.data_files|selectattr('fastqCode', 'eq', 'hifi')|first %}
+  {% set longfastq = rg.data_files|first %}
   {% if longfastq is defined %}
     {% set longfastq_path %}temp/ubams/{{ longfastq.basename }}{% endset %}
     {% do longfastq.update({"path": longfastq_path}) %}
