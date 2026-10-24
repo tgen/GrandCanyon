@@ -25,12 +25,7 @@
   queue_preset: "DEFAULT"
   container: {{ constants.tools.isoquant.container }}
   cmd: |
-
     set -eu
-
-    {# note: this step performs isoquant for read correction, annotation, and quantification #}
-    {# input: human aligned genome bam #}
-    {# output: gene and transcript quantification, gtf #}
 
     rm -r {{ temp_dir }} || true
     mkdir -p {{ temp_dir }}
@@ -47,6 +42,8 @@
       {% else %}
       --data_type nanopore \
       {% endif %}
+      --max_coverage_small_chr 100000 \
+      --max_coverage_normal_chr 100000 \
       --bam {{ sample_bam }} \
       --labels {{ sample.name }} \
       --prefix {{ sample.name }} \

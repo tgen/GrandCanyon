@@ -25,7 +25,7 @@
   queue_preset: "DEFAULT"
   container: {{ constants.tools.bambu.container }}
   cmd: |
-    set -eu
+    set -e
 
     mkdir -p {{ temp_dir }}
     mkdir -p {{ results_dir }}
