@@ -1,0 +1,36 @@
+{% macro msisensor_pro(pair, normal_bam, tumor_bam, aligner) %}
+
+{% set results_dir %}{{ pair.gltype }}/metrics/msisensor_pro/{{ pair.name }}_{{ aligner }}{% endset %}
+
+- name: msisensor_pro_{{ pair.name }}_{{ aligner }}
+  tags: [{{ pair.gltype }}, metrics, msisensor, {{ pair.name }} ]
+  reset: predecessors
+  input:
+    - {{ normal_bam }}
+    - {{ tumor_bam }}
+    - {{ constants.grandcanyon[reference].tool_resources.msisensor.msi_list }}
+  output: {{ results_dir }}/{{ pair.name }}_msisensor_pro_results
+  walltime: "24:00:00"
+  cpus: 4
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.msisensor.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    msisensor-pro msi \
+        -d {{ constants.grandcanyon[reference].tool_resources.msisensor.msi_list }} \
+        -n {{ normal_bam }} \
+        -t {{ tumor_bam }} \
+        {% if pair.gltype == 'exome' %}
+        -c 20 \
+        {% else %}
+        -c 15 \
+        {% endif %}
+        -b 4 \
+        -o {{ results_dir }}/{{ pair.name }}_msisensor_pro_results
+
+{% endmacro %}

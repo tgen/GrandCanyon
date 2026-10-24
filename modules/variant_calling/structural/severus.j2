@@ -1,0 +1,128 @@
+{% from 'modules/variant_calling/postprocessing/whatshap.j2' import whatshap_haplotag with context %}
+
+{% macro severus(sample_or_pair, aligner) %}
+
+{% if sample_or_pair.normal is defined %}
+  {% if sample_or_pair.normal.phased_vcf is defined %}
+    {{- whatshap_haplotag(sample_or_pair.tumor, aligner, 'deepvariant', sample_or_pair.normal.phased_vcf) }}
+    {%- set phased_vcf %}{{ sample_or_pair.normal.phased_vcf }}{% endset %}
+    {%- set normal_bam %}{{ sample_or_pair.normal.phased_bam }}{% endset %}
+    {%- set bam %}{{ sample_or_pair.tumor.phased_bam }}{% endset %}
+  {% else %}
+    {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+    {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {% endif %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set temp_vcf %}{{ temp_dir }}/somatic_SVs/severus_somatic.vcf{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+{% else %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+  {%- set temp_vcf %}{{ temp_dir }}/all_SVs/severus_all.vcf{% endset %}
+  {%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_structural_calls/severus/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+{% endif %}
+{%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.severus.all.vcf.gz{% endset %}
+{%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.severus.pass.vcf.gz{% endset %}
+
+- name: severus_{{ sample_or_pair.name }}_{{ aligner }}
+  reset: predecessors
+  input:
+    {% if phased_vcf is defined %}
+    - {{ phased_vcf }}
+    {% endif %}
+    {% if normal_bam is defined %}
+    - {{ normal_bam }}
+    - {{ normal_bam }}.bai
+    {% endif %}
+    - {{ bam }}
+    - {{ bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+    - {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }}
+    - {{ constants.grandcanyon[reference].tool_resources.severus.pon }}
+  output:
+    - {{ temp_vcf }}
+    - {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
+    - {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.csv
+    - {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters_list.tsv
+    - {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_graph.gv
+  cpus: 16
+  mem: 64G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.severus.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    {% if sample_or_pair.normal is defined %}
+    severus \
+      --threads 16 \
+      --out-dir {{ temp_dir }} \
+      {% if phased_vcf is defined %}
+      --phasing-vcf {{ phased_vcf }} \
+      {% endif %}
+      --control-bam {{ normal_bam }} \
+      --target-bam {{ bam }} \
+      --control-sample {{ sample_or_pair.normal.rgsm }} \
+      --target-sample {{ sample_or_pair.tumor.rgsm }} \
+      --vntr-bed {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }} \
+      --PON {{ constants.grandcanyon[reference].tool_resources.severus.pon }}
+
+    mv {{ temp_dir }}/breakpoints_double.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
+    mv {{ temp_dir }}/somatic_SVs/breakpoint_clusters.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.tsv
+    mv {{ temp_dir }}/somatic_SVs/breakpoint_clusters_list.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters_list.tsv
+    {% else %}
+    severus \
+      --threads 16 \
+      --target-bam {{ bam }} \
+      --target-sample {{ sample_or_pair.rgsm }} \
+      --out-dir {{ temp_dir }} \
+      --vntr-bed {{ constants.grandcanyon[reference].tool_resources.severus.vntrs }} \
+      --PON {{ constants.grandcanyon[reference].tool_resources.severus.pon }}
+
+    mv {{ temp_dir }}/breakpoints_double.csv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoints_double.csv
+    mv {{ temp_dir }}/all_SVs/breakpoint_clusters.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters.tsv
+    mv {{ temp_dir }}/all_SVs/breakpoint_clusters_list.tsv {{ results_dir }}/{{ sample_or_pair.name }}_breakpoint_clusters_list.tsv
+    {% endif %}
+
+
+- name: severus_filter_variants_{{ sample_or_pair.name }}_{{ aligner }}
+  input:
+    - {{ temp_vcf }}
+  output:
+    - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+
+    mkdir -p {{ results_dir }}
+
+    bcftools view \
+      --output-type z \
+      --output {{ all_vcf }} \
+      --write-index \
+      {{ temp_vcf }}
+
+    bcftools view \
+      --include 'FILTER == "PASS"' \
+      --output-type z \
+      --output {{ pass_vcf }} \
+      --write-index \
+      {{ all_vcf }}
+
+{% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_structural_variants with context %}
+{{- postprocess_structural_variants(sample_or_pair, pass_vcf, temp_dir, results_dir, aligner, 'severus') }}
+
+{% endmacro %}

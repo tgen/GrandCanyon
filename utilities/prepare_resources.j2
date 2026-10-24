@@ -1,0 +1,685 @@
+{% macro prepare_reference() %}
+
+- name: create_samtools_resources_for_{{ reference | replace('.', '_') }}
+  input: {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ constants.grandcanyon[reference].reference_fai }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+    - {{ constants.grandcanyon[reference].reference_non_N_interval_list }}
+  cpus: 4
+  mem: 16G
+  walltime: "4:00:00"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -uev
+
+    [ -e {{ constants.grandcanyon[reference].reference_fai }} ] ||\
+    samtools faidx {{ constants.grandcanyon[reference].reference_fasta }}
+
+    [ -e {{ constants.grandcanyon[reference].reference_dict }} ] ||\
+    samtools dict \
+      -o {{ constants.grandcanyon[reference].reference_dict }} \
+      {{ constants.grandcanyon[reference].reference_fasta }}
+
+    if [ ! -e {{ constants.grandcanyon[reference].reference_non_N_interval_list }} ]; then
+      CONTIG_LIST=$(grep 'SN:\(chr\)\?[0-9]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+        sed 's/SN://;s/LN://' |\
+        awk '{ ORS="CONTIG_SEP" ; print $2 }' | sed 's/CONTIG_SEP$//')
+
+      awk -v CONTIG_LIST="$CONTIG_LIST" 'BEGIN {
+        START=0
+        CONTIG="beginning"
+        split(CONTIG_LIST, CONTIGS, "CONTIG_SEP")
+        for (i in CONTIGS) CONTIGS[CONTIGS[i]] = ""
+        SKIP_CONTIG="No"
+      };
+      $1 ~ /^>/ {
+        if (CONTIG != "beginning" && b[length(b)] != "N" && SKIP_CONTIG == "No") {
+          OFS = "\t"
+          print CONTIG,TOTAL-START,TOTAL-1
+        }
+        split($1, a, ">")
+        TOTAL=1
+        START=0
+        RESET="No"
+        split(a[2], c, " ")
+        CONTIG=c[1]
+        if (CONTIG in CONTIGS == 0) {
+          SKIP_CONTIG="Yes"
+        }
+        next
+      }
+      {
+        if ( SKIP_CONTIG == "No" ) {
+          split($0, b, "")
+          for (i=1; i <= length($0); i++) {
+            if (b[i] == "N") {
+              if ( RESET == "Yes" ) {
+                OFS = "\t"
+                print CONTIG,TOTAL-START,TOTAL-1
+                RESET="No"
+              }
+              TOTAL+=1
+              START=0
+            } else {
+              RESET="Yes"
+              START+=1
+              TOTAL+=1
+            }
+          }
+        }
+      } END {
+        if (b[length(b)] != "N" && SKIP_CONTIG == "No") {
+          OFS = "\t"
+          print CONTIG,TOTAL-START,TOTAL-1
+        }
+      }' {{ constants.grandcanyon[reference].reference_fasta }} > {{ constants.grandcanyon[reference].reference_non_N_interval_list }}
+    fi
+
+{% endmacro %}
+
+{% macro prepare_bwa_index() %}
+
+- name: create_bwa_index_for_{{ reference | replace('.', '_') }}
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].reference_fai }}
+    {% if constants.grandcanyon[reference].reference_alts is defined %}
+    - {{ constants.grandcanyon[reference].reference_alts }}
+    {% endif %}
+  output:
+    - {{ constants.grandcanyon[reference].bwa_mem2_index }}
+  cpus: 4
+  mem: 64G
+  walltime: "4:00:00"
+  container: {{ constants.tools.bwa_mem2_samtools.container }}
+  cmd: |
+    set -uev
+
+    mkdir -p $(dirname {{ constants.grandcanyon[reference].bwa_mem2_index }})
+    cd $(dirname {{ constants.grandcanyon[reference].bwa_mem2_index }})
+
+    if [ ! -e {{ constants.grandcanyon[reference].reference_fasta | basename }}.bwt.2bit.64 ] ; then
+      [ -e {{ constants.grandcanyon[reference].reference_fasta | basename }} ] ||\
+      ln -s {{ constants.grandcanyon[reference].reference_fasta }} .
+
+      [ -e {{ constants.grandcanyon[reference].reference_fai | basename }} ] ||\
+      ln -s {{ constants.grandcanyon[reference].reference_fai }} .
+
+      {% if constants.grandcanyon[reference].reference_alts is defined %}
+      [ -e {{ constants.grandcanyon[reference].reference_alts | basename }} ] ||\
+      rsync {{ constants.grandcanyon[reference].reference_alts }} .
+      {% endif %}
+
+      bwa-mem2 index {{ constants.grandcanyon[reference].reference_fasta | basename }}
+    fi
+
+{% endmacro %}
+
+{% macro prepare_pangenome_reference() %}
+
+{% set reference_dist %}{{ constants.grandcanyon[reference].reference_gbz | replace(".gbz", ".dist") }}{% endset %}
+{% set reference_ri %}{{ constants.grandcanyon[reference].reference_gbz | replace(".gbz", ".ri") }}{% endset %}
+- name: create_pangenome_reference_base_{{ reference | replace('.', '_') }}
+  input:
+    - {{ constants.grandcanyon[reference].reference_gfa }}
+  output:
+    - {{ constants.grandcanyon[reference].reference_gbz }}
+    - {{ constants.grandcanyon[reference].reference_hapl }}
+  cpus: 20
+  mem: 120G
+  walltime: "4:00:00"
+  container: {{ constants.tools.vg.container }}
+  cmd: |
+    set -eu
+
+    mkdir -p $(dirname {{ constants.grandcanyon[reference].reference_gbz }})
+
+    [ -e {{ constants.grandcanyon[reference].reference_gbz }} ] ||\
+    vg gbwt \
+      -p \
+      --num-threads 20 \
+      -G {{ constants.grandcanyon[reference].reference_gfa }} \
+      --gbz-format \
+      -g {{ constants.grandcanyon[reference].reference_gbz }}
+
+    [ -e {{ reference_dist }} ] ||\
+    vg index \
+      -t 20 \
+      -j {{ reference_dist }} \
+      {{ constants.grandcanyon[reference].reference_gbz }}
+
+    [ -e {{ reference_ri }} ] ||\
+    vg gbwt \
+      -p \
+      --num-threads 20 \
+      -r {{ reference_ri }} \
+      -Z {{ constants.grandcanyon[reference].reference_gbz }}
+
+    [ -e {{ constants.grandcanyon[reference].reference_hapl }} ] ||\
+    vg haplotypes \
+      -t 20 \
+      -v 2 \
+      -d {{ reference_dist }} \
+      -r {{ reference_ri }} \
+      -H {{ constants.grandcanyon[reference].reference_hapl }} \
+      {{ constants.grandcanyon[reference].reference_gbz }}
+
+{% endmacro %}
+
+{% macro prepare_chunk_intervals(exclusion_list=none) %}
+
+{% set temp_dir %}temp/pipeline_resources{% endset %}
+
+- name: create_chunking_intervals_for_{{ reference | replace('.', '_') }}
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    {% for chunk in range(1, num_chunks+1) %}
+    - {{ temp_dir }}/calling_intervals/calling_interval_{{ chunk }}.bed
+    - {{ temp_dir }}/calling_intervals/primary_calling_interval_{{ chunk }}.bed
+    {% endfor %}
+  cpus: 4
+  mem: 16G
+  walltime: "4:00:00"
+  container: {{ constants.tools.gatk.container }}
+  cmd: |
+    set -uev
+
+    mkdir -p {{ temp_dir }}/calling_intervals
+
+    gatk ScatterIntervalsByNs \
+      --REFERENCE {{ constants.grandcanyon[reference].reference_fasta }} \
+      --OUTPUT_TYPE ACGT \
+      --OUTPUT {{ temp_dir }}/calling_intervals/{{ constants.grandcanyon[reference].reference_fasta | basename }}.ACGT.interval_list
+
+    grep '^\(@SQ\sSN:\)\?\(chr\)\?[0-9XY]\+\s' {{ temp_dir }}/calling_intervals/{{ constants.grandcanyon[reference].reference_fasta | basename }}.ACGT.interval_list \
+    > {{ temp_dir }}/calling_intervals/{{ constants.grandcanyon[reference].reference_fasta | basename }}.ACGT.primary_interval_list
+
+    gatk IntervalListTools \
+      --SCATTER_COUNT {{ num_chunks }} \
+      --SUBDIVISION_MODE BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \
+      --UNIQUE true \
+      --SORT true \
+      --INPUT {{ temp_dir }}/calling_intervals/{{ constants.grandcanyon[reference].reference_fasta | basename }}.ACGT.interval_list \
+      --OUTPUT {{ temp_dir }}/calling_intervals/gatk_chunk_intervals
+
+    for interval in {{ temp_dir }}/calling_intervals/gatk_chunk_intervals/temp_00*_of_{{ num_chunks }}/scattered.interval_list ; do
+      chunk=$(echo "$interval" | grep -oP '[0-9]{4}' | sed 's/^0\+//')
+      grep -v '^@' $interval | awk '{ OFS="\t" ; print $1,$2-1,$3 }' > {{ temp_dir }}/calling_intervals/calling_interval_${chunk}.bed
+    done
+
+    gatk IntervalListTools \
+      --SCATTER_COUNT {{ num_chunks }} \
+      --SUBDIVISION_MODE BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \
+      --UNIQUE true \
+      --SORT true \
+      --INPUT {{ temp_dir }}/calling_intervals/{{ constants.grandcanyon[reference].reference_fasta | basename }}.ACGT.primary_interval_list \
+      --OUTPUT {{ temp_dir }}/calling_intervals/primary_chunk_intervals
+
+    for interval in {{ temp_dir }}/calling_intervals/primary_chunk_intervals/temp_00*_of_{{ num_chunks }}/scattered.interval_list ; do
+      chunk=$(echo "$interval" | grep -oP '[0-9]{4}' | sed 's/^0\+//')
+      grep -v '^@' $interval | awk '{ OFS="\t" ; print $1,$2-1,$3 }' > {{ temp_dir }}/calling_intervals/primary_calling_interval_${chunk}.bed
+    done
+
+{% endmacro %}
+
+{% macro prepare_gene_model() %}
+
+- name: create_gene_model_resources_for_{{ reference | replace('.', '_') }}
+  input: {{ constants.grandcanyon[reference].gtf }}
+  output:
+    - {{ constants.grandcanyon[reference].gtf }}.gene.bed
+    - {{ constants.grandcanyon[reference].gtf }}.exon.bed
+    - {{ constants.grandcanyon[reference].gtf }}.cds.bed
+  cpus: 4
+  mem: 16G
+  walltime: "4:00:00"
+  container: {{ constants.tools.bedtools.container }}
+  cmd: |
+    set -uev
+
+    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "gene") { OFS = "\t" ; print $1, $4, $5, $10 }}' {{ constants.grandcanyon[reference].gtf }} |\
+      sort -k1,1V -k2,2n -k3,3n > {{ constants.grandcanyon[reference].gtf }}.gene.bed
+
+    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "exon") { OFS = "\t" ; print $1, $4, $5, $10 }}' {{ constants.grandcanyon[reference].gtf }} |\
+      sort -k1,1V -k2,2n -k3,3n > {{ constants.grandcanyon[reference].gtf }}.exon.bed
+
+    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "CDS" && $4 < $5) { OFS = "\t" ; print $1, $4, $5, "CDS" }}' {{ constants.grandcanyon[reference].gtf }} |\
+      awk '!dup[$0]++' | sort -k1,1V -k2,2n -k3,3n | bedtools merge -i - > {{ constants.grandcanyon[reference].gtf }}.cds.bed
+
+
+{% if constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+  {% set reference_dict %}{{ constants.grandcanyon[reference].reference_fasta_no_alt | replace('.fa','.dict') }}{% endset %}
+{% else %}
+  {% set reference_dict %}{{ constants.grandcanyon[reference].reference_dict }}{% endset %}
+{% endif %}
+- name: create_rnaseq_resources_for_{{ reference | replace('.', '_') }}
+  input:
+    - {{ constants.grandcanyon[reference].gtf }}
+    - {{ reference_dict }}
+  output:
+    - {{ constants.grandcanyon[reference].ref_flat }}
+    - {{ constants.grandcanyon[reference].ref_flat | replace('.txt', '.hugoID.txt') }}
+  cpus: 1
+  mem: 4G
+  walltime: "1:00:00"
+  container: {{ constants.tools.gtftogenepred.container }}
+  cmd: |
+    set -eu
+
+    [ -e {{ constants.grandcanyon[reference].ref_flat }} ] ||\
+    gtfToGenePred -genePredExt \
+        -ignoreGroupsWithoutExons \
+        {{ constants.grandcanyon[reference].gtf }} \
+        /dev/stdout |\
+        awk 'BEGIN { OFS="\t"} {print $12, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10}' > {{ constants.grandcanyon[reference].ref_flat }}
+
+    [ -e {{ constants.grandcanyon[reference].ref_flat | replace('.txt', '.hugoID.txt') }} ] ||\
+    gtfToGenePred -genePredExt \
+        -ignoreGroupsWithoutExons \
+        -geneNameAsName2 \
+        {{ constants.grandcanyon[reference].gtf }} \
+        /dev/stdout |\
+        awk 'BEGIN { OFS="\t"} {print $12, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10}' > {{ constants.grandcanyon[reference].ref_flat | replace('.txt', '.hugoID.txt') }}
+
+
+{% if tasks['RNA_transcriptome_fusion_caller_STAR_Fusion']|default(false) %}
+
+- name: create_starfusion_resources_for_{{ reference | replace('.', '_') }}
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ constants.grandcanyon[reference].gtf }}
+    - {{ constants.grandcanyon.dfam_db }}
+  output: {{ constants.grandcanyon[reference].starfusion_index }}
+  cpus: 32
+  mem: 64G
+  walltime: "72:00:00"
+  container: {{ constants.tools.star_fusion.container }}
+  digest: {{ constants.tools.star_fusion.digest }}
+  cmd: |
+    set -eu
+
+    [ -e {{ constants.grandcanyon[reference].starfusion_index }} ] ||\
+    /usr/local/src/STAR-Fusion/ctat-genome-lib-builder/prep_genome_lib.pl \
+      --CPU 32 \
+      --max_readlength 150 \
+      --genome_fa {{ constants.grandcanyon[reference].reference_fasta }} \
+      --gtf {{ constants.grandcanyon[reference].gtf }} \
+      --pfam_db current \
+      --dfam_db {{ constants.grandcanyon.dfam_db }} \
+      --output_dir {{ constants.grandcanyon[reference].starfusion_index }}
+
+{% endif %}
+
+{% endmacro %}
+
+{% macro prepare_transcriptome() %}
+
+- name: create_transcriptome_fasta_for_{{ reference | replace('.', '_') }}
+  input:
+    - {{ constants.grandcanyon[reference].gtf }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ constants.grandcanyon[reference].transcriptome }}
+  cpus: 1
+  mem: 4G
+  walltime: "1:00:00"
+  container: {{ constants.tools.gffread.container }}
+  cmd: |
+    set -eu
+
+    [ -e {{ constants.grandcanyon[reference].transcriptome }} ] ||\
+    gffread {{ constants.grandcanyon[reference].gtf }} -g {{ constants.grandcanyon[reference].reference_fasta }} -w {{ constants.grandcanyon[reference].transcriptome }}
+
+{% endmacro %}
+
+{% macro prepare_custom_transcriptome(gtf) %}
+
+{% if gtf.endswith('.gtf') %}
+  {% set gtf_basename = gtf.split('.')[:-1]|join('_')|basename %}
+{% elif gtf.endswith('.gtf.gz') %}
+  {% set gtf_basename = gtf.split('.')[:-2]|join('_')|basename %}
+{% endif %}
+
+- name: create_transcriptome_fasta_for_{{ gtf_basename }}
+  input:
+    - {{ gtf }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa
+  cpus: 2
+  mem: 20G
+  walltime: "1:00:00"
+  container: {{ constants.tools.gffread.container }}
+  cmd: |
+    set -eu
+
+    {% if gtf.endswith('.gtf.gz') %}
+    gunzip -c {{ gtf }} > temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.gtf
+
+    gffread temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.gtf \
+      -g {{ constants.grandcanyon[reference].reference_fasta }} \
+      -w temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa
+    {% else %}
+    gffread {{ gtf }} \
+      -g {{ constants.grandcanyon[reference].reference_fasta }} \
+      -w temp/pipeline_resources/transcriptome_{{ gtf_basename }}/{{ gtf_basename }}.transcriptome.fa
+    {% endif %}
+
+{% endmacro %}
+
+{% macro generate_capture_kit_resources(capture_kit_codes) %}
+
+{% set temp_dir %}temp/pipeline_resources/capture_kit_resources{% endset %}
+
+- name: create_capture_kit_resources_gatk
+  input:
+    - {{ constants.grandcanyon[reference].known_capture_kits }}
+    - {{ constants.grandcanyon[reference].reference_fai }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+    {% for capture_kit_code in capture_kit_codes %}
+    - {{ constants.grandcanyon[reference].known_capture_kits | dirname }}/{{ capture_kit_code }}
+    {% endfor %}
+  output:
+    {% for capture_kit_code in capture_kit_codes %}
+    {% set capture_kit_path_prefix %}{{ constants.grandcanyon[reference].capture_kit_path }}/{{ capture_kit_code }}/{{ capture_kit_code }}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}{% endset %}
+    - {{ capture_kit_path_prefix }}.targets.interval_list
+    - {{ capture_kit_path_prefix }}.no.header.targets.interval_list
+    - {{ capture_kit_path_prefix }}.baits.interval_list
+    - {{ capture_kit_path_prefix }}.no.header.baits.interval_list
+    {% endfor %}
+  cpus: 2
+  mem: 4G
+  walltime: "1:00:00"
+  container: {{ constants.tools.gatk.container }}
+  cmd: |
+    for capture_kit_code in {{ capture_kit_codes | join(' ') }}; do
+      SOURCE_DIR={{ constants.grandcanyon[reference].known_capture_kits | dirname }}/${capture_kit_code}
+      OUTPUT_PATH_PREFIX={{ constants.grandcanyon[reference].capture_kit_path }}/${capture_kit_code}/${capture_kit_code}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}
+      TARGETS=${SOURCE_DIR}/$(grep -A3 "${capture_kit_code}:" {{ constants.grandcanyon[reference].known_capture_kits }} | grep source_targets | awk '{ print $2 }')
+      BAITS=${SOURCE_DIR}/$(grep -A3 "${capture_kit_code}:" {{ constants.grandcanyon[reference].known_capture_kits }} | grep source_baits | awk '{ print $2 }')
+      LABEL=$(grep -A3 "${capture_kit_code}:" {{ constants.grandcanyon[reference].known_capture_kits }} | grep prefix | awk '{ print $2 }')
+
+      [ -e {{ constants.grandcanyon[reference].capture_kit_path }}/${LABEL} ] ||\
+      touch {{ constants.grandcanyon[reference].capture_kit_path }}/${LABEL}
+
+      [ -e ${OUTPUT_PATH_PREFIX}.targets.interval_list ] ||\
+      gatk BedToIntervalList -SD {{ constants.grandcanyon[reference].reference_dict }} --INPUT "$TARGETS" --OUTPUT ${OUTPUT_PATH_PREFIX}.targets.interval_list
+      [ -e ${OUTPUT_PATH_PREFIX}.no.header.targets.interval_list ] ||\
+      grep -v "@" ${OUTPUT_PATH_PREFIX}.targets.interval_list > ${OUTPUT_PATH_PREFIX}.no.header.targets.interval_list
+
+      [ -e ${OUTPUT_PATH_PREFIX}.baits.interval_list ] ||\
+      gatk BedToIntervalList -SD {{ constants.grandcanyon[reference].reference_dict }} --INPUT "$BAITS" --OUTPUT ${OUTPUT_PATH_PREFIX}.baits.interval_list
+      [ -e ${OUTPUT_PATH_PREFIX}.no.header.baits.interval_list ] ||\
+      grep -v "@" ${OUTPUT_PATH_PREFIX}.baits.interval_list > ${OUTPUT_PATH_PREFIX}.no.header.baits.interval_list
+    done
+
+- name: create_capture_kit_resources_bedtools
+  input:
+    - {{ constants.grandcanyon[reference].known_capture_kits }}
+    - {{ constants.grandcanyon[reference].reference_fai }}
+    - {{ constants.grandcanyon[reference].gtf }}
+    {% for capture_kit_code in capture_kit_codes %}
+    - {{ constants.grandcanyon[reference].known_capture_kits | dirname }}/{{ capture_kit_code }}
+    {% endfor %}
+  output:
+    {% for capture_kit_code in capture_kit_codes %}
+    {% set capture_kit_path_prefix %}{{ constants.grandcanyon[reference].capture_kit_path }}/{{ capture_kit_code }}/{{ capture_kit_code }}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}{% endset %}
+    - {{ capture_kit_path_prefix }}.extended.bed
+    {% endfor %}
+  cpus: 2
+  mem: 4G
+  walltime: "1:00:00"
+  container: {{ constants.tools.bedtools.container }}
+  cmd: |
+    for capture_kit_code in {{ capture_kit_codes | join(' ') }}; do
+      SOURCE_DIR={{ constants.grandcanyon[reference].known_capture_kits | dirname }}/${capture_kit_code}
+      OUTPUT_PATH_PREFIX={{ constants.grandcanyon[reference].capture_kit_path }}/${capture_kit_code}/${capture_kit_code}_{{ constants.grandcanyon[reference].genome_subversion_name }}_{{ constants.grandcanyon[reference].gene_model_name }}
+      TARGETS=${SOURCE_DIR}/$(grep -A3 "${capture_kit_code}:" {{ constants.grandcanyon[reference].known_capture_kits }} | grep source_targets | awk '{ print $2 }')
+
+      if [ ! -e ${OUTPUT_PATH_PREFIX}.extended.bed ]; then
+        mkdir -p {{ temp_dir }}
+        awk '$3 == "exon" {print $1 "\t" $4-1 "\t" $5}' {{ constants.grandcanyon[reference].gtf }} > "{{ temp_dir }}/{{ constants.grandcanyon[reference].gtf }}.exons.bed"
+
+        bedtools slop -b 100 -g {{ constants.grandcanyon[reference].reference_fai }} -i "$TARGETS" > "{{ temp_dir }}/${capture_kit_code}.padded_targets.bed"
+
+        bedtools intersect \
+          -wa \
+          -a "{{ temp_dir }}/{{ constants.grandcanyon[reference].gtf }}.exons.bed" \
+          -b "{{ temp_dir }}/${capture_kit_code}.padded_targets.bed" \
+          > "{{ temp_dir }}/${capture_kit_code}.captured_exons.bed"
+
+        cat "{{ temp_dir }}/${capture_kit_code}.padded_targets.bed" "{{ temp_dir }}/${capture_kit_code}.captured_exons.bed" > "{{ temp_dir }}/${capture_kit_code}.union.bed"
+        bedtools sort \
+          -faidx {{ constants.grandcanyon[reference].reference_fai }} \
+          -i "{{ temp_dir }}/${capture_kit_code}.union.bed" | \
+        bedtools merge -i stdin > ${OUTPUT_PATH_PREFIX}.extended.bed
+      fi
+    done
+
+{% endmacro %}
+
+{% macro convert_gff3_to_gtf() %}
+
+{% set temp_gene_model_gff %}{{ constants.grandcanyon[reference].gff3 | basename | replace('.gff3.gz', '.gff3') }}{% endset %}
+{% set temp_dir %}temp/pipeline_resources/agat_gff_to_gtf{% endset %}
+- name: convert_gff3_to_gtf_for_{{ reference | replace('.', '_') }}
+  input:
+    - {{ constants.grandcanyon[reference].reference_dict }}
+    - {{ constants.grandcanyon[reference].gff3 }}
+  output:
+    - {{ constants.grandcanyon[reference].gtf }}
+  cpus: 2
+  mem: 32G
+  walltime: "1:00:00"
+  container: {{ constants.tools.agat.container }}
+  cmd: |
+    set -eu
+
+    rm -rf {{ temp_dir }}
+    mkdir -p {{ temp_dir }}
+
+    cd {{ temp_dir }}
+    agat config --expose
+    sed -i 's/tabix: false/tabix: true/' agat_config.yaml
+
+    if [ ! -e {{ constants.grandcanyon[reference].gtf }} ]; then
+      # If the reference dictionary is "chr" prefixed we should maintain this for the gff and gtf files
+      if grep -m1 -q '^@SQ.*SN:chr' {{ constants.grandcanyon[reference].reference_dict }} ; then
+        zcat -f {{ constants.grandcanyon[reference].gff3 }} | awk -F'\t' 'BEGIN {OFS="\t"}
+            /^#/ {print; next}
+            $3 == "chromosome" || $3 == "scaffold" {
+                match($9, /Alias=[^;]*/);
+                alias_str = substr($9, RSTART+6, RLENGTH-6);
+                split(alias_str, aliases, ",");
+                for (i in aliases) {
+                    if (aliases[i] ~ /^chr/) {
+                        current = aliases[i];
+                        break;
+                    }
+                }
+            }
+        { if (current != "") $1 = current; print }' > {{ temp_gene_model_gff }}
+      else
+        zcat -f {{ constants.grandcanyon[reference].gff3 }} > {{ temp_gene_model_gff }}
+      fi
+      agat_convert_sp_gff2gtf.pl --gff {{ temp_gene_model_gff }} --gtf_version 3 -o {{ constants.grandcanyon[reference].gtf }}
+    fi
+
+{% endmacro %}
+
+
+{% macro generate_cnv_resources() %}
+
+{% if tasks["Genome_variant_calling_cna_caller_ascat"]|default(false) or tasks["Exome_variant_calling_cna_caller_ascat"]|default(false) %}
+
+{% set temp_dir %}temp/pipeline_resources/ascat_resources{% endset %}
+
+{% if constants.grandcanyon[reference].annotation_databases is defined and constants.grandcanyon[reference].annotation_databases | length > 0 %}
+  {% set population_vcf %}{{ constants.grandcanyon[reference].annotation_databases[0].file }}{% endset %}
+{% else %}
+  {{ raise('Missing databases') }}
+{% endif %}
+
+- name: generate_ascat_loci_resources_for_{{ reference | replace('.', '_') }}
+  input:
+    - {{ population_vcf }}
+  output:
+    - {{ temp_dir }}/all_loci_{{ reference }}.txt
+    - {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/loci
+    - {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/alleles
+  cpus: 2
+  mem: 32G
+  walltime: "4:00:00"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/{loci,alleles}
+
+    bcftools query \
+      --include 'AF>=0.35 && AF<=0.65' \
+      -f "%CHROM\_%POS\t%CHROM\t%POS" {{ population_vcf }} | sed '1i _\tChrom\tPosition' | sed '1 s/_//' > {{ temp_dir }}/all_loci_{{ reference }}.txt
+
+    cd {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/loci && \
+    bcftools query \
+      --include 'AF>=0.35 && AF<=0.65' \
+      -f "%CHROM\t%POS" {{ population_vcf }} | \
+    awk '{print $0 >> $1 "_loci_{{ reference }}.txt"}'
+
+    cd {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/alleles && \
+    bcftools query \
+      --include 'AF>=0.35 && AF<=0.65' \
+      -f "%CHROM\t%POS\t%REF\t%ALT" {{ population_vcf }} | \
+    awk 'BEGIN { map["A"]=1; map["C"]=2; map["G"]=3; map["T"]=4; OFS="\t" }
+    {
+        $3 = map[$3];
+        $4 = map[$4];
+        print $0 >> $1 "_alleles_{{ reference }}.txt"
+    }'
+    for file in *_alleles_{{ reference }}.txt ; do
+      cut -f2- $file | sed '1i position\ta0\ta1'> tmp_$file && mv tmp_$file $file
+    done
+
+- name: generate_ascat_gc_correction_resources_for_{{ reference | replace('.', '_') }}
+  input:
+    - {{ temp_dir }}/all_loci_{{ reference }}.txt
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}
+    - {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/gc_correction
+  cpus: 16
+  mem: 32G
+  walltime: "1:00:00"
+  container: {{ constants.tools.ascat.container }}
+  cmd: |
+    set -eu
+
+    mkdir -p {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/gc_correction
+
+    cd {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/gc_correction
+
+    cat <<EOF > "createGCcontentFile.R"
+    process=function(CHRSEQ,SNP_POS,WINDOW,THRESH,NCORES) {
+      CHRSIZE=length(CHRSEQ)
+      # Quick check: make sure that A/C/G/T/N represent >99.99% of reference sequence
+      stopifnot(letterFrequency(CHRSEQ,c('ACGTN'))/CHRSIZE>0.9999)
+      if (WINDOW%%2==0) WINDOW=WINDOW+1
+      # Add Ns at chromosome extremities so nearby SNPs can be processed.
+      CHRSEQ=xscat(paste0(rep('N',floor(WINDOW/2)),collapse=''),CHRSEQ,paste0(rep('N',floor(WINDOW/2)),collapse=''))
+      # Get G+C and A+T counts for all positions
+      LFISV=as.data.frame(letterFrequencyInSlidingView(CHRSEQ,WINDOW,c('GC','AT'),OR='_'))
+      # Make sure that we have one value for each position
+      stopifnot(CHRSIZE==nrow(LFISV))
+      # Keep SNP information
+      LFISV=LFISV[SNP_POS\$Position,]
+      # Effective window size (A/C/G/T only)
+      LFISV\$NREALS=LFISV\$G_C+LFISV\$A_T
+      # Compute GC%
+      LFISV\$GC=LFISV\$G_C/LFISV\$NREALS
+      # If effective size is smaller than threshold, set NA
+      LFISV\$GC[LFISV\$NREALS<THRESH]=NA
+      return(round(LFISV\$GC,6))
+    }
+
+    suppressPackageStartupMessages(library(doParallel))
+    suppressPackageStartupMessages(library(foreach))
+    suppressPackageStartupMessages(library(Biostrings))
+    options(scipen=999,digits=6)
+    THRESH=20 # Defines the minimum number of A/C/G/T to compute GC%, otherwise set NA
+    WINDOWS=c(25,50,100,200,500,1e3,2e3,5e3,1e4,
+              2e4,5e4,1e5,2e5,5e5,1e6)
+    names(WINDOWS)=c('25bp','50bp','100bp','200bp','500bp','1kb','2kb','5kb','10kb',
+                     '20kb','50kb','100kb','200kb','500kb','1Mb')
+
+    args=commandArgs(trailingOnly=TRUE)
+    LOCI_file=args[1]
+    stopifnot(file.exists(LOCI_file))
+    LOCI=read.table(LOCI_file,sep='\t',header=T,stringsAsFactors=F,row.names=1)
+    NCORES=as.numeric(args[2])
+    stopifnot(is.finite(NCORES) && NCORES %in% 1:24)
+    registerDoParallel(cores=NCORES)
+    refFASTA=args[3]
+    stopifnot(file.exists(refFASTA))
+    print('Loading reference genome')
+    CHRSEQ=readDNAStringSet(refFASTA,format='fasta')
+    names(CHRSEQ)=sapply(strsplit(names(CHRSEQ),' '),function(x) x[[1]])
+    CHRSEQ=CHRSEQ[which(names(CHRSEQ) %in% as.character(LOCI\$Chr))]
+    stopifnot(all(unique(LOCI\$Chr) %in% names(CHRSEQ)))
+
+    OUT=foreach(CHR=unique(as.character(LOCI\$Chr)),.combine=rbind) %dopar% {
+      print(paste0('Processing chromosome: ',CHR))
+      stopifnot(CHR %in% names(CHRSEQ))
+      SNP_POS=LOCI[which(LOCI\$Chr==CHR),]
+      for (i in 1:length(WINDOWS)) {
+        SNP_POS[,names(WINDOWS)[i]]=process(CHRSEQ[[CHR]],SNP_POS,WINDOWS[i],THRESH,NCORES)
+      }; rm(i)
+      return(SNP_POS)
+    }
+    write.table(OUT,file='GCcontent_SNPloci.txt',col.names=NA,row.names=T,quote=F,sep='\t')
+    print("Done!")
+    EOF
+
+    Rscript createGCcontentFile.R {{ constants.grandcanyon[reference].tool_resources.ascat.ascat_resources }}/WGS/loci/all_loci_{{ reference }}.txt 16 {{ constants.grandcanyon[reference].reference_fasta }}
+
+{% endif %}
+
+{% endmacro %}
+
+{% macro liftover_vcf(source_vcf, source_fasta, result_vcf, result_fasta, task_name) %}
+
+{% set temp_dir %}temp/pipeline_resources/liftover_vcf{% endset %}
+
+- name: liftover_vcf_{{ task_name }}
+  input:
+    - {{ source_vcf }}
+    - {{ source_fasta }}
+  output:
+    - {{ result_vcf }}
+    - {{ result_fasta }}
+  cpus: 4
+  mem: 32G
+  walltime: "1:00:00"
+  container: {{ constants.tools.liftover_vcf.container }}
+  cmd: |
+    set -eu
+
+    rm -rf {{ temp_dir }}
+    mkdir -p {{ temp_dir }}
+
+    [ -e {{ result_vcf }} ] ||\
+    bcftools +liftover \
+      {{ source_vcf }} -- \
+      --src-fasta-ref {{ source_fasta }} \
+      --fasta-ref {{ result_fasta }} \
+      --chain {{ constants.grandcanyon[reference].chain_file }} \
+      2> {{ temp_dir }}/{{ result_vcf | basename }}_liftover.log | \
+    bcftools sort \
+      --output-type z \
+      --output {{ result_vcf }} \
+      --temp-dir {{ temp_dir }}/bcftools \
+      --write-index=tbi
+
+{% endmacro %}
