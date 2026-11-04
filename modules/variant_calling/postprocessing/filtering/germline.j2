@@ -10,17 +10,31 @@
 
 {% set output_vcf %}{{ vcf_prefix }}.filtered.vcf.gz{% endset %}
 
+{% set exclude_filters = [] %}
+
 {% if tasks[sample.gltype|capitalize+"_variant_calling_annotate_vcfs_vep"]|default(false) %}
   {% if reference == 'grch38' %}
-    {% set exclude_filter %}FORMAT/DP<10 | (PS="." & GT="het") | GNOMAD_AF>0.001 | TOPMED_AF>0.001 | am_pathogenicity<0.6 | SIFT~"tolerated" | PolyPhen~"benign" | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
+    {% set CSQ_FILTER %}FORMAT/DP<10 | am_pathogenicity<0.6 | SIFT~"tolerated" | PolyPhen~"benign" | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
     {% set query_format %}'%CHROM\t%POS\t[%GT\t%VAF\t%AD\t%PS\t]%Consequence\t%IMPACT\t%Gene\t%SYMBOL\t%SIFT\t%PolyPhen\t%am_pathogenicity\n'{% endset %}
   {% elif reference == 'grch37' %}
-    {% set exclude_filter %}FORMAT/DP<10 | (PS="." & GT="het") | GNOMAD_AF>0.001 | TOPMED_AF>0.001 | SIFT~"tolerated" | PolyPhen~"benign" | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
+    {% set CSQ_FILTER %}FORMAT/DP<10 | SIFT~"tolerated" | PolyPhen~"benign" | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
     {% set query_format %}'%CHROM\t%POS\t[%GT\t%VAF\t%AD\t%PS\t]%Consequence\t%IMPACT\t%Gene\t%SYMBOL\t%SIFT\t%PolyPhen\n'{% endset %}
   {% else %}
-    {% set exclude_filter %}FORMAT/DP<10 | (PS="." & GT="het") | GNOMAD_AF>0.001 | TOPMED_AF>0.001 | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
+    {% set CSQ_FILTER %}FORMAT/DP<10 | IMPACT="LOW" | IMPACT="MODIFIER"{% endset %}
     {% set query_format %}'%CHROM\t%POS\t[%GT\t%VAF\t%AD\t%PS\t]%Consequence\t%IMPACT\t%Gene\t%SYMBOL\n'{% endset %}
   {% endif %}
+
+  {% do exclude_filters.append(CSQ_FILTER) %}
+
+  {% if sample.rgpm|lower in known_long_read_platforms and variant_caller in ['deepvariant'] %}
+    {% set PHASE_FILTER %}(PS="." & GT="het"){% endset %}
+    {% do exclude_filters.append(PHASE_FILTER) %}
+  {% endif %}
+
+  {% set POP_DB_FILTER %}GNOMAD_AF>0.001 | TOPMED_AF>0.001{% endset %}
+  {% do exclude_filters.append(POP_DB_FILTER) %}
+
+  {% set exclude_filter %}{{ exclude_filters|join(' | ') }}{% endset %}
 
 - name: germline_candidate_filter_bcftools_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
   input:

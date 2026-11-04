@@ -30,6 +30,8 @@
       --output {{ final_vcf_prefix }}.csq.local.vcf.gz \
       --output-type z \
       --local-csq \
+      --allow mig \
+      --unify-chr-names chr,-,chr \
       --write-index \
       {{ input_vcf }}
 
@@ -40,6 +42,8 @@
       --output {{ final_vcf_prefix }}.csq.all_gt.vcf.gz \
       --output-type z \
       --phase a \
+      --allow mig \
+      --unify-chr-names chr,-,chr \
       --write-index \
       {{ input_vcf }}
 
