@@ -22,7 +22,7 @@ constants:
       container: ghcr.io/tgen/containers/debian:bullseye
       digest: b8f30ec0fb3f1c1ab0de63703b438f8476296df3097af5b52917ec7ce8417863
     bcftools:
-      container: quay.io/biocontainers/bcftools:1.20--h8b25389_1
+      container: quay.io/biocontainers/bcftools:1.25--h118bc1c_1
     bedtools:
       container: ghcr.io/tgen/containers/bedtools:2.29.0-23080313
       digest: cde92d1b69ecfda6e5f115c6b9220a312c380b0d7aa30378437476cd50206ee0
@@ -56,12 +56,12 @@ constants:
     deepvariant_pangenome:
       container: google/deepvariant:pangenome_aware_deepvariant-1.10.0-gpu
     dorado:
-      container: nanoporetech/dorado:shaae1d5e75f94041e4fd7af4a7ed6e6432b0eaea29
+      container: nanoporetech/dorado:sha9809639e07a927bcc0f584dadd5e59674cf59f3f
       version: 0.8.2
     dupblaster:
       container: quay.io/biocontainers/dupblaster:0.2.0--hfa8f182_0
     dysgu:
-      container: quay.io/biocontainers/dysgu:1.8.8--py313h5d164f8_0
+      container: quay.io/biocontainers/dysgu:1.10.0--py313h5d164f8_0
     fastp:
       container: ghcr.io/tgen/fastp:1.1.1-tgen
     flair:
@@ -125,7 +125,7 @@ constants:
     mutation_burden:
       container: ghcr.io/tgen/containers/mutation-burden:1.2.4_20260623
     oarfish:
-      container: quay.io/biocontainers/oarfish:0.10.0--hd727d2a_0
+      container: quay.io/biocontainers/oarfish:0.11.0--hd727d2a_0
     pbmm2:
       container: quay.io/biocontainers/pbmm2:26.2.99--h9ee0642_0
     pbpigeon:
