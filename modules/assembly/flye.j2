@@ -1,0 +1,68 @@
+{% from 'modules/assembly/assembly_qc.j2' import assembly_qc with context %}
+{% from 'modules/assembly/quast.j2' import quast with context %}
+
+{% from 'modules/assembly/minimap2.j2' import minimap2_asm with context %}
+
+{% macro flye(input) %}
+
+{%- set temp_dir %}temp/{{ input.gltype }}/assembly/flye/{{ input.project }}{% endset %}
+{%- set results_dir %}{{ input.gltype }}/assembly/flye/{{ input.project }}{% endset %}
+
+- name: flye_{{ input.project }}
+  reset: predecessors
+  input:
+    {% for ontfq in input.hifi %}
+    - {{ ontfq }}
+    {% endfor %}
+    {% for pacbiofq in input.hifi %}
+    - {{ pacbiofq }}
+    {% endfor %}
+  output:
+    - {{ results_dir }}/assembly.fasta
+    - {{ results_dir }}/assembly_graph.gfa
+    - {{ results_dir }}/assembly_graph.gv
+    - {{ results_dir }}/assembly_info.txt
+  cpus: 32
+  mem: 400G
+  walltime: "48:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.flye.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    flye \
+      --threads 32 \
+      {% if input.hifi | length > 0 %}
+      --pacbio-hifi "{{ input.hifi | join('" "') }}" \
+      {% endif %}
+      {% if input.hifi | length > 0 %}
+      --nano-hq "{{ input.hifi | join('" "') }}" \
+      {% endif %}
+      --out-dir {{ temp_dir }}
+
+    mv {{ temp_dir }}/assembly.fasta {{ results_dir }}
+    mv {{ temp_dir }}/assembly_graph.gfa {{ results_dir }}
+    mv {{ temp_dir }}/assembly_graph.gv {{ results_dir }}
+    mv {{ temp_dir }}/assembly_info.txt {{ results_dir }}
+
+
+{% set input_assembly %}{{ results_dir }}/assembly.fasta{% endset %}
+
+{% if tasks.Genome_assembly_metrics_assembly_qc|default(false) %}
+{{- assembly_qc(input, input_assembly, 'flye') }}
+{% endif %}
+
+{% if tasks.Genome_assembly_metrics_quast|default(false) %}
+{{- quast(input, input_assembly, 'flye') }}
+{% endif %}
+
+{% if tasks.Genome_assembly_metrics_align_minimap2|default(false) %}
+{{- minimap2_asm(input, input_assembly, 'flye') }}
+{% endif %}
+
+{% endmacro %}

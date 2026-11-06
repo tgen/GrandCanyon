@@ -1,0 +1,71 @@
+{% macro bcftools_annotate(sample_or_pair, temp_dir, input_vcf, variant_caller, output_vcf, aligner='minimap2') %}
+
+{% set output_bcf %}{{ temp_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.{{ variant_caller }}.db.bcf{% endset %}
+
+{% if constants.grandcanyon[reference].annotation_databases is defined and constants.grandcanyon[reference].annotation_databases | length > 0 %}
+
+- name: bcftools_annotate_{{ variant_caller }}_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, annotate_vcfs, {{ variant_caller }}, {{ sample_or_pair.name }}]
+  input:
+    - {{ input_vcf }}
+    {% for db in constants.grandcanyon[reference].annotation_databases %}
+    - {{ db.file }}
+    {% endfor %}
+  output:
+    - {{ output_vcf }}
+    - {{ output_vcf }}.tbi
+  walltime: "8:00:00"
+  cpus: 4
+  mem: 4G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ temp_dir }}"
+
+    {#
+    # we need to convert whatever vcf type we are given into a bcf (bcftools loves bcfs)
+    # also create a temp bcf that we will use for all annotation runs
+    #}
+    bcftools view \
+      --threads 4 \
+      --output-type b \
+      --output-file "{{ output_bcf }}" \
+      "{{ input_vcf }}"
+
+    bcftools index --threads 4 --force "{{ output_bcf }}"
+
+    {% for db in constants.grandcanyon[reference].annotation_databases %}
+    bcftools annotate \
+      --threads 4 \
+      --annotations {{ db.file }} \
+      --mark-sites {{ db.mark_sites }} \
+      {% if db.columns != "" %}
+      --columns {{ db.columns }} \
+      {% endif %}
+      --output-type b \
+      --output "{{ temp_dir }}/tempout.bcf" \
+      "{{ output_bcf }}"
+
+    {# move tempout to tempin for next step #}
+    mv "{{ temp_dir }}/tempout.bcf" "{{ output_bcf }}"
+
+    bcftools index --threads 4 --force "{{ output_bcf }}"
+    {% endfor %}
+
+    bcftools view \
+    --threads 4 \
+    --output-type z \
+    --output-file "{{ output_vcf }}" \
+    "{{ output_bcf }}"
+
+    bcftools index --threads 4 --tbi --force "{{ output_vcf }}"
+
+{% else %}
+  {% set log_msg %}bcftools annotation was enabled, but no annotation databases were found so this task was skipped{% endset %}
+  {{ log(log_msg, level='WARNING') }}
+{% endif %}
+
+{% endmacro -%}

@@ -1,0 +1,97 @@
+{% from 'modules/rna/isoform/sqanti3.j2' import sqanti3 with context %}
+
+{% macro bambu(sample, sample_bam, reference_fasta, gtf) %}
+
+{% set temp_dir %}temp/{{ sample.gltype }}/isoforms/bambu/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/isoforms/bambu/{{ sample.name }}{% endset %}
+{% set sample_gtf %}{{ results_dir }}/{{ sample.name }}.transcripts.gtf{% endset %}
+
+- name: bambu_{{ sample.name }}
+  input:
+    - {{ sample_bam }}
+    - {{ sample_bam }}.bai
+    - {{ reference_fasta }}
+    - {{ gtf }}
+  output:
+    - {{ sample_gtf }}
+    - {{ results_dir }}/{{ sample.name }}.transcript_metadata.tsv
+    - {{ results_dir }}/{{ sample.name }}.bambu_transcripts.rds
+  cpus: 4
+  mem: 30G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bambu.container }}
+  cmd: |
+    set -e
+
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+    export TMPDIR={{ temp_dir }}
+
+    cat <<EOF > {{ temp_dir }}/run_bambu.R
+    library(bambu)
+    library(Rsamtools)
+
+    transcripts_rds <- "{{ results_dir }}/{{ sample.name }}.bambu_transcripts.rds"
+
+    if (file.exists(transcripts_rds)) {
+      message("RESUME: found saved discovery RDS at ", transcripts_rds, "; skipping bambu")
+      discovered_transcripts <- readRDS(transcripts_rds)
+    } else {
+      annotations <- bambu::prepareAnnotations("{{ gtf }}")
+
+      reads <- Rsamtools::BamFileList("{{ sample_bam }}", yieldSize = 250000L)
+
+      genome <- Rsamtools::FaFile("{{ reference_fasta }}")
+
+      message("Running bambu transcript discovery...")
+      discovered_transcripts <- bambu(
+        reads = reads,
+        annotations = annotations,
+        genome = genome,
+        discovery = TRUE,
+        quant = FALSE,
+        lowMemory = TRUE,
+        yieldSize = 250000L
+      )
+      saveRDS(discovered_transcripts, transcripts_rds)
+      message("Saved discovered transcripts to ", transcripts_rds, " (resume checkpoint)")
+    }
+
+    message("Discovered ", length(discovered_transcripts), " transcripts")
+
+    bambu::writeToGTF(discovered_transcripts, file = "{{ temp_dir }}/{{ sample.name }}.transcripts.gtf")
+
+    tx_meta <- as.data.frame(S4Vectors::mcols(discovered_transcripts))
+    for (col_name in names(tx_meta)) {
+      col_vals <- tx_meta[[col_name]]
+      if (inherits(col_vals, "Rle")) {
+        tx_meta[[col_name]] <- as.vector(col_vals)
+      } else if (inherits(col_vals, "List") || is.list(col_vals)) {
+        tx_meta[[col_name]] <- vapply(seq_along(col_vals), function(i) {
+          paste(as.character(col_vals[[i]]), collapse = ";")
+        }, character(1))
+      }
+    }
+    if (!"TXNAME" %in% names(tx_meta)) {
+      tx_meta$TXNAME <- names(discovered_transcripts)
+    }
+    write.table(
+      tx_meta,
+      file = "{{ temp_dir }}/{{ sample.name }}.transcript_metadata.tsv",
+      sep = "\t",
+      quote = FALSE,
+      row.names = FALSE
+    )
+    EOF
+
+    Rscript {{ temp_dir }}/run_bambu.R
+
+    mv {{ temp_dir }}/{{ sample.name }}.transcripts.gtf \
+       {{ temp_dir }}/{{ sample.name }}.transcript_metadata.tsv \
+       {{ results_dir }}/
+{% if tasks['RNA_transcriptome_isoform_discovery_sqanti3']|default(false) %}
+  {{- sqanti3(sample, sample_gtf, none, temp_dir, results_dir, 'bambu') }}
+{% endif %}
+
+{% endmacro %}

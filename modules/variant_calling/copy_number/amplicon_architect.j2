@@ -1,0 +1,157 @@
+{%- macro amplicon_architect(sample_or_pair, cnvkit_cns, aligner) %}
+
+{%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/amplicon_architect/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/amplicon_architect/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+
+{% if sample_or_pair.normal is defined %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.tumor.name }}/{{ sample_or_pair.tumor.name }}.{{ aligner }}.bam{% endset %}
+  {%- set normal_bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.normal.name }}/{{ sample_or_pair.normal.name }}.{{ aligner }}.bam{% endset %}
+  {%- set input_config = "paired" %}
+{% elif sample_or_pair.subGroup|lower in ('tumor','tumour','case') %}
+  {%- set bam %}temp/{{ sample_or_pair.gltype }}/alignment/{{ aligner }}/{{ sample_or_pair.name }}/{{ sample_or_pair.name }}.{{ aligner }}.bam{% endset %}
+  {%- set input_config = "tumor_only" %}
+{% endif %}
+
+- name: amplicon_architect_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, amplicon_architect, {{ sample_or_pair.name }}]
+  reset: predecessors
+  input:
+    {% if input_config in 'paired' %}
+    - {{ normal_bam }}
+    {% endif %}
+    - {{ bam }}
+    - {{ cnvkit_cns }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+    - {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}
+  output:
+    - {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bam
+    - {{ results_dir }}/{{ sample_or_pair.name }}_AA_results
+    - {{ results_dir }}/{{ sample_or_pair.name }}_classification
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.amplicon_architect.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p "{{ temp_dir }}/data_repo"
+    mkdir -p "{{ results_dir }}"
+
+    cp -r {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}/* {{ temp_dir }}/data_repo/
+
+    export AA_DATA_REPO="{{ temp_dir }}/data_repo"
+    export AA_SRC=$(dirname $(python -c "import ampliconarchitectlib; print(ampliconarchitectlib.__file__)"))
+    export AC_SRC=$(dirname $(which amplicon_classifier.py))
+
+    AmpliconSuite-pipeline.py \
+      -o {{ results_dir }} \
+      -s {{ sample_or_pair.name }} \
+      -t 8 \
+      --bam {{ bam }} \
+      {% if input_config in 'paired' %}
+      --normal_bam {{ normal_bam }} \
+      {% endif %}
+      --cnv_bed {{ cnvkit_cns }} \
+      --ref "GRCh38"
+
+    mkdir -p {{ results_dir }}/{{ sample_or_pair.name }}_AA_results
+    mkdir -p {{ results_dir }}/{{ sample_or_pair.name }}_classification
+
+    {# AmpliconSuite-pipeline defaults to a downsample of 10 for run_AA, replicating here #}
+    python3 /opt/conda/lib/python3.12/site-packages/ampliconarchitectlib/AmpliconArchitect.py \
+      --ref GRCh38 \
+      --downsample 10 \
+      --bed {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed \
+      --bam {{ bam }} \
+      --runmode FULL \
+      --extendmode EXPLORE \
+      --no_cstats \
+      --solver clarabel \
+      --out {{ results_dir }}/{{ sample_or_pair.name }}_AA_results/{{ sample_or_pair.name }}
+
+    make_input.sh {{ results_dir }}/{{ sample_or_pair.name }}_AA_results {{ results_dir }}/{{ sample_or_pair.name }}_classification/{{ sample_or_pair.name }}
+
+    python3 /opt/conda/bin/amplicon_classifier.py \
+      -i {{ results_dir }}/{{ sample_or_pair.name }}_classification/{{ sample_or_pair.name }}.input \
+      --ref GRCh38 \
+      -o {{ results_dir }}/{{ sample_or_pair.name }}_classification/{{ sample_or_pair.name }}
+
+    if [ -s {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed ]; then
+      grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ constants.grandcanyon[reference].reference_dict }} |\
+        sed 's/SN://;s/LN://' |\
+        awk '{ OFS="\t" ; print $2, $3 }' > {{ temp_dir }}/contig_lengths.tsv
+
+      bedtools slop \
+        -i {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_SEEDS.bed \
+        -b 10000 \
+        -g {{ temp_dir }}/contig_lengths.tsv \
+        > {{ temp_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bed
+
+      samtools view \
+        --threads 8 \
+        --regions-file {{ temp_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bed \
+        --bam \
+        --output {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bam \
+        {{ bam }}
+    else
+      echo "Skipping evidence bam creation as no events were detected."
+    fi
+
+
+{%- set temp_dir %}temp/{{ sample_or_pair.gltype }}/somatic_copy_number/amplicon_suite/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample_or_pair.gltype }}/somatic_copy_number/amplicon_suite/{{ sample_or_pair.name }}_{{ aligner }}{% endset %}
+
+- name: amplicon_suite_{{ sample_or_pair.name }}_{{ aligner }}
+  tags: [{{ sample_or_pair.gltype }}, somatic, cna_caller, amplicon_architect, {{ sample_or_pair.name }}]
+  reset: predecessors
+  input:
+    {% if input_config in 'paired' %}
+    - {{ normal_bam }}
+    {% endif %}
+    - {{ bam }}
+    - {{ constants.grandcanyon[reference].reference_dict }}
+    - {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}
+  output:
+    - {{ results_dir }}/{{ sample_or_pair.name }}_AA_CNV_evidence.bam
+    - {{ results_dir }}/{{ sample_or_pair.name }}_AA_results
+    - {{ results_dir }}/{{ sample_or_pair.name }}_classification
+  cpus: 8
+  mem: 32G
+  walltime: "24:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.amplicon_architect.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    rm -r {{ temp_dir }} || true
+    mkdir -p "{{ temp_dir }}/data_repo"
+    mkdir -p "{{ results_dir }}"
+
+    cp -r {{ constants.grandcanyon[reference].tool_resources.amplicon_architect.data_repo }}/* {{ temp_dir }}/data_repo/
+
+    export AA_DATA_REPO="{{ temp_dir }}/data_repo"
+    export AA_SRC=$(dirname $(python -c "import ampliconarchitectlib; print(ampliconarchitectlib.__file__)"))
+    export AC_SRC=$(dirname $(which amplicon_classifier.py))
+
+    AmpliconSuite-pipeline.py \
+      -o {{ results_dir }} \
+      -s {{ sample_or_pair.name }} \
+      -t 8 \
+      --bam {{ bam }} \
+      {% if input_config in 'paired' %}
+      --normal_bam {{ normal_bam }} \
+      {% endif %}
+      --ref "GRCh38" \
+      --run_AA \
+      --AA_solver clarabel \
+      --run_AC
+
+    for graph in {{ results_dir }}/{{ sample_or_pair.name }}_AA_results/*_graph.txt ; do
+      python3 /opt/conda/bin/CE.py --graph ${graph} --output ${graph%.txt}.CE_cycles.txt --solver highs || true
+    done
+
+{% endmacro %}

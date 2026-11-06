@@ -1,0 +1,113 @@
+{% from 'modules/qc/main.j2' import bam_qc with context %}
+
+{% macro copy_bam(sample) %}
+
+{% if sample.glprep not in ['longread'] %}
+  {% if sample.aligners | length > 1 %}
+    {% set log_msg %}Unsupported input configuration! More than one aligner enabled for {{ sample.name }}, this is not compatible with bam input{% endset %}
+    {{ log(log_msg, level='WARNING') }}
+  {% elif sample.aligners | length == 0 %}
+    {% set aligner = 'bwa' %}
+  {% else %}
+    {% set aligner = sample.aligners | first %}
+  {% endif %}
+{% else %}
+  {% set aligner = 'minimap2' %}
+{% endif %}
+
+{% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+{% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+
+{% set bam_list = [] %}
+{% for bam in sample.read_groups.values() | selectattr('aligned_files') %}
+  {% do bam_list.append(bam) %}
+{% endfor %}
+
+- name: input_bam_to_cram_{{ sample.name }}
+  input:
+    {% for bam in bam_list %}
+    - {{ bam.path }}
+    {% endfor %}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
+  cpus: 8
+  mem: 40G
+  walltime: "8:00:00"
+  {% if bam_list | length == 1 and bam_list[0].path.endswith('.cram') %}
+  {% else %}
+  container: {{ constants.tools.gatk.container }}
+  {% endif %}
+  cmd: |
+    set -uev
+
+    mkdir -p {{ results_dir }}
+  {% if bam_list | length == 1 %}
+    {% set input_bam = bam_list | first %}
+    {% if input_bam.path.endswith('.cram') %}
+    rsync {{ input_bam.path }} {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    {% else %}
+    gatk CleanSam \
+      -I {{ input_bam.path }} \
+      -O /dev/stdout \
+      --VALIDATION_STRINGENCY LENIENT |\
+    gatk ReorderSam \
+      -I /dev/stdin \
+      -O {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
+      -SD {{ constants.grandcanyon[reference].reference_dict }} \
+      --REFERENCE_SEQUENCE {{ constants.grandcanyon[reference].reference_fasta }} \
+      --ALLOW_INCOMPLETE_DICT_CONCORDANCE true \
+      --CREATE_INDEX true
+    {% endif %}
+  {% else %}
+    samtools merge \
+      --threads 4 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      -c \
+      -f \
+      --write-index \
+      -O CRAM \
+      -o {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram \
+    {% for input_bam in bam_list %}
+      {% if not loop.last %}
+        {{ input_bam.path }} \
+      {% else %}
+        {{ input_bam.path }}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+{% if aligner in ('bwa') %}
+  {% set aligner_prefix = 'bwa_mem2' %}
+{% else %}
+  {% set aligner_prefix = aligner %}
+{% endif %}
+- name: {{ aligner_prefix }}_samtools_create_temp_bam_{{ sample.name }}
+  input:
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+    - {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.crai
+  output:
+    - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
+    - {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam.bai
+  walltime: "4:00:00"
+  cpus: 8
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+
+    samtools view \
+      -@ 8 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --no-PG \
+      -o {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam \
+      --write-index \
+      {{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram
+
+    samtools index -@8 {{ temp_dir }}/{{ sample.name }}.{{ aligner }}.bam
+
+{{- bam_qc(sample, aligner) }}
+
+{% endmacro %}

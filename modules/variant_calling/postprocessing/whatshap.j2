@@ -1,0 +1,209 @@
+{% macro whatshap_phase(sample, aligner, variant_caller) %}
+
+{%- set input_bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set temp_dir %}temp/{{ sample.gltype }}/constitutional_variant_calls/{{ variant_caller }}/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set results_dir %}{{ sample.gltype }}/constitutional_variant_calls/{{ variant_caller }}/{{ sample.name }}_{{ aligner }}{% endset %}
+{%- set output_prefix %}{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.pass.whatshap{% endset %}
+{%- set input_vcf %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.pass.vcf.gz{% endset %}
+{%- set phased_vcf %}{{ results_dir }}/{{ output_prefix }}.phased.vcf.gz{% endset %}
+{% do sample.update({'phased_vcf': phased_vcf}) %}
+
+{% if aligner in "bwa" %}
+  {% set aligner_task %}bwa_mem2_samtools_create_temp_bam_{{ sample.name }}{% endset %}
+{% else %}
+  {% set aligner_task %}{{ aligner }}_samtools_create_temp_bam_{{ sample.name }}{% endset %}
+{% endif %}
+
+- name: whatshap_phase_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
+  reset: {{ aligner_task }}
+  input:
+    - {{ input_vcf }}
+    - {{ input_bam }}
+    - {{ input_bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ phased_vcf }}
+  cpus: 2
+  mem: 32G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.whatshap.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    whatshap phase \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --output {{ phased_vcf }} \
+      --ignore-read-groups \
+      --use-supplementary \
+      {{ input_vcf }} \
+      {{ input_bam }}
+
+    tabix --threads 2 -C {{ phased_vcf }}
+
+- name: whatshap_stats_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
+  input:
+    - {{ phased_vcf }}
+  output:
+    - {{ results_dir }}/{{ output_prefix }}.phased_stats.tsv
+    - {{ results_dir }}/{{ output_prefix }}.phased.gtf
+  cpus: 2
+  mem: 8G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.whatshap.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    whatshap stats \
+      --tsv {{ results_dir }}/{{ output_prefix }}.phased_stats.tsv \
+      --gtf {{ results_dir }}/{{ output_prefix }}.phased.gtf \
+      {{ results_dir }}/{{ output_prefix }}.phased.vcf.gz
+
+
+{% if constants.grandcanyon[reference].gtf is defined %}
+- name: whatshap_stats_extended_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
+  input:
+    - {{ constants.grandcanyon[reference].gtf }}
+    - {{ results_dir }}/{{ output_prefix }}.phased.gtf
+  output:
+    - {{ results_dir }}/{{ output_prefix }}.phased_gene_stats.tsv
+  cpus: 1
+  mem: 2G
+  walltime: "1:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bedtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ temp_dir }}
+
+    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "gene") { OFS = "\t" ; print $1, $4, $5, $10 }}' {{ constants.grandcanyon[reference].gtf }} |\
+      sort -k1,1V -k2,2n -k3,3n > {{ temp_dir }}/gtf_to_gene.bed
+    awk -F '[\t"]' '$1 !~ /^#/ { if ($3 == "CDS" && $4 < $5) { OFS = "\t" ; print $1, $4, $5, "CDS" }}' {{ constants.grandcanyon[reference].gtf }} | awk '!dup[$0]++' | \
+      sort -k1,1V -k2,2n -k3,3n | bedtools merge -i - > {{ temp_dir }}/gtf_to_cds.bed
+
+    PHASED_GENES=$(bedtools intersect \
+      -a {{ temp_dir }}/gtf_to_gene.bed \
+      -b {{ results_dir }}/{{ output_prefix }}.phased.gtf \
+      -wa -f 1.0 | wc -l)
+
+    TOTAL_GENES=$(cat {{ temp_dir }}/gtf_to_gene.bed | wc -l)
+
+    PERCENT_GENES=$(echo $PHASED_GENES $TOTAL_GENES | awk '{ print $1/$2 }')
+
+    PERCENT_CDS=$(bedtools intersect \
+      -a <(awk '{ OFS="\t" ; print $1,$2,$3,$3-$2 }' {{ temp_dir }}/gtf_to_cds.bed) \
+      -b {{ results_dir }}/{{ output_prefix }}.phased.gtf -wao \
+      | awk '{ cds_sum+=$4 ; phased_sum+=$NF } END { print phased_sum/cds_sum }')
+
+    echo -e "SOURCE\tPHASED_GENES\tTOTAL_GENES\tPERCENT_PHASED_GENES\tPERCENT_PHASED_CDS_BASES" > {{ results_dir }}/{{ output_prefix }}.phased_gene_stats.tsv
+    echo -e "{{ output_prefix }}\t${PHASED_GENES}\t${TOTAL_GENES}\t${PERCENT_GENES}\t${PERCENT_CDS}" >> {{ results_dir }}/{{ output_prefix }}.phased_gene_stats.tsv
+
+{% endif %}
+{% endmacro %}
+
+{% macro whatshap_haplotag(sample, aligner, variant_caller, phased_vcf='none' ) %}
+
+{% if phased_vcf == 'none' %}
+{%- set phased_vcf %}{{ sample.phased_vcf }}{% endset %}
+{% endif %}
+{%- set input_bam %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+{%- set output_prefix %}{{ sample.name }}.{{ aligner }}.{{ variant_caller }}.whatshap{% endset %}
+{%- set output_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+{% set phased_bam %}{{ output_dir }}/{{ output_prefix }}.haplotagged.bam{% endset %}
+{% do sample.update({'phased_bam': phased_bam}) %}
+
+{% if aligner in "bwa" %}
+  {% set aligner_task %}bwa_mem2_samtools_create_temp_bam_{{ sample.name }}{% endset %}
+{% else %}
+  {% set aligner_task %}{{ aligner }}_samtools_create_temp_bam_{{ sample.name }}{% endset %}
+{% endif %}
+
+- name: whatshap_haplotag_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
+  reset: {{ aligner_task }}
+  input:
+    - {{ phased_vcf }}
+    - {{ input_bam }}
+    - {{ input_bam }}.bai
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ phased_bam }}
+  cpus: 8
+  mem: 32G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.whatshap.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ output_dir }}
+
+    whatshap haplotag \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      -o {{ phased_bam }} \
+      --ignore-read-groups \
+      --tag-supplementary \
+      --skip-missing-contigs \
+      --output-threads=4 \
+      {{ phased_vcf }} \
+      {{ input_bam }}
+
+- name: whatshap_haplotag_index_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
+  input:
+    - {{ phased_bam }}
+  output:
+    - {{ phased_bam }}.bai
+  cpus: 8
+  mem: 8G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    samtools index -@8 {{ phased_bam }}
+
+{% if tasks[sample.gltype|capitalize+'_variant_calling_phasing_keep_phased_cram']|default(true) %}
+{% set output_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}{% endset %}
+{% set phased_bam %}temp/{{ output_dir }}/{{ output_prefix }}.haplotagged.bam{% endset %}
+{% set phased_cram %}{{ output_dir }}/{{ output_prefix }}.haplotagged.cram{% endset %}
+
+- name: whatshap_hapolotag_samtools_compress_{{ variant_caller }}_{{ sample.name }}_{{ aligner }}
+  input:
+    - {{ phased_bam }}
+    - {{ constants.grandcanyon[reference].reference_fasta }}
+  output:
+    - {{ phased_cram }}
+    - {{ phased_cram }}.crai
+  cpus: 8
+  mem: 32G
+  walltime: "8:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ output_dir }}
+
+    samtools view \
+      -@ 8 \
+      --reference {{ constants.grandcanyon[reference].reference_fasta }} \
+      --no-PG \
+      -o {{ phased_cram }} \
+      --write-index \
+      {{ phased_bam }}
+
+{% endif %}
+
+{% endmacro %}

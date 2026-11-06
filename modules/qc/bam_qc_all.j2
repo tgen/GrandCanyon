@@ -1,0 +1,643 @@
+# These macros are run on bams from the dna_alignment and the star_quant modules.
+# A cram is made for each bam followed by running BAM qc steps with samtools and gatk.
+# Currently supports any sample.
+
+{% from 'modules/qc/stats2json.j2' import stats2json with context %}
+{% from 'modules/qc/stats2lims.j2' import stats2lims with context %}
+
+{% macro bam_qc_samtools_stats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner='minimap2', bam_level=true) %}
+{% if tasks[taskPrefix+"_quality_control_stats_samtools_stats"]|default(false) %}
+
+  {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+  {% set readformat %}{{ sample.readOrientation | default("Inward") | replace("-", "") | replace("Inward","PairedEnd") }}{% endset %}
+
+  {% if bam_level is sameas false %}
+    {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
+    {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
+    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram{% endset %}
+    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.crai{% endset %}
+    {% set regions %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.samstats_no_N_1based_target_regions.txt{% endset %}
+  {% else %}
+    {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
+    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
+    {% set regions %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram.samstats_no_N_1based_target_regions.txt{% endset %}
+  {% endif %}
+
+  {% set sample_name_string %}{{ sample.name }}_{{ sample_lb }}{% endset %}
+
+  {% set baseQuality_output %}{{ results_dir }}/{{ sample_name_string }}.{{ aligner }}.cram_samtools_baseQualityYield_summary.tsv{% endset %}
+  {% set baseQuality_output_json %}{{ results_dir }}/{{ sample_name_string }}.{{ aligner }}.cram_samtools_baseQualityYield_summary.json{% endset %}
+
+  {% set coverage_output %}{{ results_dir }}/{{ sample_name_string }}.{{ aligner }}.cram_samtools_coverage_summary.tsv{% endset %}
+  {% set coverage_output_json %}{{ results_dir }}/{{ sample_name_string }}.{{ aligner }}.cram_samtools_coverage_summary.json{% endset %}
+
+  {% set summaryNumbers_output %}{{ results_dir }}/{{ sample_name_string }}.{{ aligner }}.cram_samtools_summaryNumbers_summary.tsv{% endset %}
+  {% set summaryNumbers_output_json %}{{ results_dir }}/{{ sample_name_string }}.{{ aligner }}.cram_samtools_summaryNumbers_summary.json{% endset %}
+
+  {% set insertSize_output %}{{ results_dir }}/{{ sample_name_string }}.{{ aligner }}.cram_samtools_insertSize_summary.tsv{% endset %}
+  {% set insertSize_output_json %}{{ results_dir }}/{{ sample_name_string }}.{{ aligner }}.cram_samtools_insertSize_summary.json{% endset %}
+
+{% if bam_level is sameas true %}
+
+  {% set bam_level_baseQuality_output %}{{ results_dir }}/{{ bam|basename }}_samtools_baseQualityYield_summary.tsv{% endset %}
+  {% set bam_level_baseQuality_output_json %}{{ results_dir }}/{{ bam|basename }}_samtools_baseQualityYield_summary.json{% endset %}
+
+  {% set bam_level_coverage_output %}{{ results_dir }}/{{ bam|basename }}_samtools_coverage_summary.tsv{% endset %}
+  {% set bam_level_coverage_output_json %}{{ results_dir }}/{{ bam|basename }}_samtools_coverage_summary.json{% endset %}
+
+  {% set bam_level_summaryNumbers_output %}{{ results_dir }}/{{ bam|basename }}_samtools_summaryNumbers_summary.tsv{% endset %}
+  {% set bam_level_summaryNumbers_output_json %}{{ results_dir }}/{{ bam|basename }}_samtools_summaryNumbers_summary.json{% endset %}
+
+  {% set bam_level_insertSize_output %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram_samtools_insertSize_summary.tsv{% endset %}
+  {% set bam_level_insertSize_output_json %}{{ results_dir }}/{{ sample.name }}.{{ aligner }}.cram_samtools_insertSize_summary.json{% endset %}
+
+{% endif %}
+
+{% if sample.gltype == 'exome' %}
+- name: samtools_stats_exome_region_prep_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, stats, samtools_stats, {{ sample.name }}]
+  methods: Quality control metrics for {{ sample.name }} ({{ aligner }}) were generated with samtools stats.
+  input:
+    - {{ bam }}
+    - {{ bam_index }}
+    - {{ constants.grandcanyon[reference].reference_non_N_interval_list }}
+    - {{ sample.capture_kit.no_header_targets_interval_list }}
+  output:
+    - {{ regions }}
+    {% if libraryCount == 1 %}
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.samstats_no_N_1based_target_regions.txt
+    {% endif %}
+  walltime: "4:00:00"
+  cpus: 1
+  mem: 2G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bedtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    bedtools intersect \
+      -a {{ constants.grandcanyon[reference].reference_non_N_interval_list }} \
+      -b {{ sample.capture_kit.no_header_targets_interval_list }} \
+      | \
+    sort -k1,1 -k2,2n \
+      > {{ regions }}
+
+    {% if libraryCount == 1 %}
+    cp {{ regions }} {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.samstats_no_N_1based_target_regions.txt
+    {% endif %}
+
+{% endif %}
+
+{% if sample.gltype == 'rna' and constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
+{% else %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+{% endif %}
+
+- name: samtools_stats_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, stats, samtools_stats, {{ sample.name }}]
+  methods: Quality control metrics for {{ sample.name }} ({{ aligner }}) were generated with samtools stats.
+  input:
+    - {{ bam }}
+    - {{ bam_index }}
+    {% if sample.gltype == 'exome' %}
+    - {{ regions }}
+    {% else %}
+    - {{ constants.grandcanyon[reference].reference_non_N_interval_list }}
+    {% endif %}
+    - {{ reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ bam|basename }}.cramstats.txt
+    {% if libraryCount == 1 %}
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.cramstats.txt
+    {% endif %}
+  {% if bam_level is sameas false %}
+  reset: predecessors
+  {% endif %}
+  walltime: "8:00:00"
+  cpus: 4
+  mem: 16G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p {{ results_dir }}
+
+    {#
+      samtools stats
+       --filtering-flag 256
+            not primary alignment (0x100)
+       --coverage <int>,<int>,<int>    Coverage distribution min,max,step [1,1000,1]
+    #}
+    samtools stats \
+      --threads 4 \
+      --remove-dups \
+      --remove-overlaps \
+      --filtering-flag 256 \
+      --coverage 1,2500,1 \
+      {% if sample.rgpm|lower not in known_long_read_platforms %}
+      --GC-depth 100 \
+      {% endif %}
+      {% if sample.gltype == 'exome' %}
+      --target-regions {{ regions }} \
+      {% else %}
+      --target-regions {{ constants.grandcanyon[reference].reference_non_N_interval_list }} \
+      {% endif %}
+      --reference {{ reference_fasta }} \
+      {{ bam }} \
+      > {{ results_dir }}/{{ bam|basename }}.cramstats.txt
+
+    {% if libraryCount == 1 %}
+      cp {{ results_dir }}/{{ bam|basename }}.cramstats.txt {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.cramstats.txt
+    {% endif %}
+
+- name: process_samtools_stats_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, stats, samtools_stats, {{ sample.name }}]
+  methods: Quality control metrics for {{ sample.name }} ({{ aligner }}) were generated with samtools stats.
+  input:
+    - {{ results_dir }}/{{ bam|basename }}.cramstats.txt
+    {% if libraryCount == 1 %}
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.cramstats.txt
+    {% endif %}
+  output:
+    - {{ results_dir }}/{{ bam|basename }}_samtools_baseQualityYield_summary.tsv
+    - {{ results_dir }}/{{ bam|basename }}_samtools_coverage_summary.tsv
+    - {{ results_dir }}/{{ bam|basename }}_samtools_summaryNumbers_summary.tsv
+    - {{ results_dir }}/{{ bam|basename }}_samtools_insertSize_summary.tsv
+    - {{ results_dir }}/{{ bam|basename }}_samtools_baseDistribution_linePlot.png
+    - {{ results_dir }}/{{ bam|basename }}_samtools_baseQualityDistribution_histogram.png
+    - {{ results_dir }}/{{ bam|basename }}_samtools_baseQualityDistribution_histogram.tsv
+    - {{ results_dir }}/{{ bam|basename }}_samtools_coverage_histogram.png
+    - {{ results_dir }}/{{ bam|basename }}_samtools_coverage_histogram.tsv
+    - {{ results_dir }}/{{ bam|basename }}_samtools_gcDepth_histogram.tsv
+    - {{ results_dir }}/{{ bam|basename }}_samtools_gcDepth_plot.png
+    - {{ results_dir }}/{{ bam|basename }}_samtools_indelDistByCycle_linePlot.png
+    - {{ results_dir }}/{{ bam|basename }}_samtools_indelSize_linePlot.png
+    - {{ results_dir }}/{{ bam|basename }}_samtools_meanBaseQualityByCycle_histogram.tsv
+    - {{ results_dir }}/{{ bam|basename }}_samtools_meanBaseQualityByCycle_lineplot.png
+    {% if libraryCount == 1 %}
+    - {{ baseQuality_output }}
+    - {{ coverage_output }}
+    - {{ summaryNumbers_output }}
+    - {{ insertSize_output }}
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_baseDistribution_linePlot.png
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_baseQualityDistribution_histogram.png
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_baseQualityDistribution_histogram.tsv
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_coverage_histogram.png
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_coverage_histogram.tsv
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_gcDepth_histogram.tsv
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_gcDepth_plot.png
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_indelDistByCycle_linePlot.png
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_indelSize_linePlot.png
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_meanBaseQualityByCycle_histogram.tsv
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram_samtools_meanBaseQualityByCycle_lineplot.png
+    {% endif %}
+  {% if bam_level is sameas false %}
+  reset: predecessors
+  {% endif %}
+  walltime: "8:00:00"
+  cpus: 4
+  mem: 16G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.R.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    cd {{ results_dir }}
+
+    # {{ required_scripts.plotSamStats_Rscript.path }} md5: {{ required_scripts.plotSamStats_Rscript.path | md5 }}
+    Rscript {{ required_scripts.plotSamStats_Rscript.path }} \
+        --samtoolsStatsFile={{ bam|basename }}.cramstats.txt \
+        --bam={{ bam|basename }} \
+        --sample={{ sample.name }} \
+        --library={{ sample_lb }} \
+        --readformat={{ readformat }} \
+        --platformModel={{ sample.rgpm }}
+
+    {% if libraryCount == 1 %}
+      cp {{ bam|basename }}.cramstats.txt {{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.cramstats.txt
+
+      Rscript {{ required_scripts.plotSamStats_Rscript.path }} \
+        --samtoolsStatsFile={{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.cramstats.txt \
+        --bam={{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram \
+        --sample={{ sample.name }} \
+        --library={{ sample_lb }} \
+        --readformat={{ readformat }} \
+        --platformModel={{ sample.rgpm }}
+    {% endif %}
+
+    {% if bam_level is sameas true %}
+      {{- stats2json(sample.gltype, sample.name, task, bam_level_summaryNumbers_output, bam_level_summaryNumbers_output_json, "samtools_summaryNumbers_summary", sample=sample, sample_name=sample.name, lims_upload=false) }}
+      {{- stats2json(sample.gltype, sample.name, task, bam_level_baseQuality_output, bam_level_baseQuality_output_json, "samtools_baseQualityYield_summary", sample=sample, sample_name=sample.name, lims_upload=false) }}
+      {{- stats2json(sample.gltype, sample.name, task, bam_level_coverage_output, bam_level_coverage_output_json, "samtools_coverage_summary", sample=sample, sample_name=sample.name, lims_upload=false) }}
+      {% if readformat == 'PairedEnd' %}
+      {{- stats2json(sample.gltype, sample.name, task, bam_level_insertSize_output, bam_level_insertSize_output_json, "samtools_insertSize_summary", sample=sample, sample_name=sample.name, lims_upload=false) }}
+      {% endif %}
+    {% endif %}
+
+    {% if libraryCount == 1 or bam_level is sameas false %}
+      {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
+      {{- stats2json(sample.gltype, sample.name, task, summaryNumbers_output, summaryNumbers_output_json, "samtools_summaryNumbers_summary", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+      {{- stats2json(sample.gltype, sample.name, task, baseQuality_output, baseQuality_output_json, "samtools_baseQualityYield_summary", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+      {{- stats2json(sample.gltype, sample.name, task, coverage_output, coverage_output_json, "samtools_coverage_summary", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+      {% if readformat == 'PairedEnd' %}
+      {{- stats2json(sample.gltype, sample.name, task, insertSize_output, insertSize_output_json, "samtools_insertSize_summary", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+      {% endif %}
+    {% endif %}
+
+{% endif %}
+{% endmacro %}
+
+{% macro bam_qc_samtools_markdup(sample, sample_lb, taskPrefix=taskPrefix, aligner=aligner) %}
+{% if tasks[taskPrefix+"_quality_control_stats_samtools_markdup_stats"]|default(false) %}
+
+  {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+  {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
+  {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.bam{% endset %}
+
+  {% set output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.samtools.markdup_summary.json{% endset %}
+
+- name: samtools_markdup_stats_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, stats, samtools_markdup, {{ sample.name }}]
+  methods: Quality control metrics for {{ sample.name }} ({{ aligner }}) were generated with samtools stats.
+  input: {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.samtools.markdup.json
+  output: {{ output }}
+  walltime: "4:00:00"
+  cpus: 1
+  mem: 4G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.R.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    cd {{ results_dir }}
+
+    # {{ required_scripts.plotSamStats_Rscript.path }} md5: {{ required_scripts.plotSamStats_Rscript.path | md5 }}
+    Rscript {{ required_scripts.plotSamStats_Rscript.path }} \
+        --samtoolsDuplicatesFile={{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam.samtools.markdup.json \
+        --bam={{ sample.name }}_{{ sample_lb }}.{{ aligner }}.bam \
+        --sample={{ sample.name }} \
+        --library={{ sample_lb }}
+
+    {{- stats2lims(sample.gltype, sample.name, task, output, "samtools_markdup_summary") }}
+
+{% endif %}
+{% endmacro %}
+
+{% macro bam_qc_samtools_idxstats(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=true) %}
+{% if tasks[taskPrefix+"_quality_control_stats_samtools_idxstats"]|default(false) %}
+
+  {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+
+  {% if bam_level is sameas false %}
+    {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
+    {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
+    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram{% endset %}
+    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.crai{% endset %}
+  {% else %}
+    {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
+    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
+  {% endif %}
+
+  {% set output %}{{ results_dir }}/{{ bam|basename }}.idxstats.txt{% endset %}
+  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.idxstats.txt{% endset %}
+  {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.idxstats.json{% endset %}
+
+
+- name: samtools_idxstats_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, stats, samtools_idxstats, {{ sample.name }}]
+  methods: Index stats for {{ sample.name }} ({{ aligner }}) were generated with samtools idxstats.
+  input:
+    - {{ bam }}
+    - {{ bam_index }}
+  output:
+    - {{ output }}
+    {% if libraryCount == 1 %}
+    - {{ sample_lb_output }}
+    {% endif %}
+  {% if bam_level is sameas false %}
+  reset: predecessors
+  {% endif %}
+  walltime: "4:00:00"
+  cpus: 1
+  mem: 2G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.samtools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ results_dir }}"
+
+    samtools idxstats \
+      {{ bam }} > \
+      {{ output }}
+
+    {% if libraryCount == 1 %}
+      cp {{ output }} {{ sample_lb_output }}
+    {% endif %}
+
+  {% if libraryCount == 1 %}
+    {{- stats2json(sample.gltype, sample.name, task, sample_lb_output, json, "samtools_idxstats", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+  {% elif bam_level is sameas false %}
+    {{- stats2json(sample.gltype, sample.name, task, output, json, "samtools_idxstats", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+  {% endif %}
+
+{% endif %}
+{% endmacro %}
+
+
+{% macro bam_qc_gatk_collectmultiplemetrics(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=true) %}
+{% if tasks[taskPrefix+"_quality_control_stats_gatk_CollectMultipleMetrics"]|default(false) %}
+
+  {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+
+  {% if bam_level is sameas false %}
+    {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
+    {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
+    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram{% endset %}
+    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.crai{% endset %}
+  {% else %}
+    {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
+    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
+  {% endif %}
+
+  {% set alignment_summary_metrics %}{{ results_dir }}/{{ bam|basename }}.alignment_summary_metrics{% endset %}
+  {% set alignment_summary_metrics_json %}{{ alignment_summary_metrics }}.json{% endset %}
+
+  {% set gc_bias_metrics %}{{ results_dir }}/{{ bam|basename }}.gc_bias.summary_metrics{% endset %}
+  {% set gc_bias_metrics_json %}{{ gc_bias_metrics }}.json{% endset %}
+
+  {% set error_metrics %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.error_summary_metrics{% endset %}
+  {% set quality_yield_metrics %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.quality_yield_metrics{% endset %}
+  {% set error_metrics_json %}{{ error_metrics }}.json{% endset %}
+  {% set quality_yield_metrics_json %}{{ quality_yield_metrics }}.json{% endset %}
+
+  {% if sample.gltype == 'rna' and constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
+  {% else %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+  {% endif %}
+
+- name: gatk_collectmultiplemetrics_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, stats, gatk_CollectMultipleMetrics, {{ sample.name }}]
+  methods: Alignment metrics, base distribution, quality, and other metrics for
+    {{ sample.name }} ({{ aligner }}) were gathered with gatk CollectMultipleMetrics.
+  input:
+    - {{ bam }}
+    - {{ bam_index }}
+    - {{ reference_fasta }}
+  output:
+    - {{ results_dir }}/{{ bam|basename }}.alignment_summary_metrics
+    - {{ results_dir }}/{{ bam|basename }}.bait_bias_detail_metrics
+    - {{ results_dir }}/{{ bam|basename }}.bait_bias_summary_metrics
+    - {{ results_dir }}/{{ bam|basename }}.base_distribution_by_cycle_metrics
+    - {{ results_dir }}/{{ bam|basename }}.base_distribution_by_cycle.pdf
+    - {{ results_dir }}/{{ bam|basename }}.error_summary_metrics
+    {% if sample.gltype not in 'rna' %}
+    - {{ results_dir }}/{{ bam|basename }}.gc_bias.detail_metrics
+    - {{ results_dir }}/{{ bam|basename }}.gc_bias.pdf
+    - {{ results_dir }}/{{ bam|basename }}.gc_bias.summary_metrics
+    {% endif %}
+    - {{ results_dir }}/{{ bam|basename }}.pre_adapter_detail_metrics
+    - {{ results_dir }}/{{ bam|basename }}.pre_adapter_summary_metrics
+    - {{ results_dir }}/{{ bam|basename }}.quality_by_cycle_metrics
+    - {{ results_dir }}/{{ bam|basename }}.quality_by_cycle.pdf
+    - {{ results_dir }}/{{ bam|basename }}.quality_distribution_metrics
+    - {{ results_dir }}/{{ bam|basename }}.quality_distribution.pdf
+    - {{ results_dir }}/{{ bam|basename }}.quality_yield_metrics
+    {% if libraryCount == 1 %}
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.base_distribution_by_cycle_metrics
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.base_distribution_by_cycle.pdf
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.error_summary_metrics
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.quality_by_cycle_metrics
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.quality_by_cycle.pdf
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.quality_distribution_metrics
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.quality_distribution.pdf
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.quality_yield_metrics
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.gc_bias.pdf
+    {% endif %}
+  {% if bam_level is sameas false %}
+  reset: predecessors
+  {% endif %}
+  walltime: "36:00:00"
+  cpus: 2
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.gatk.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ results_dir }}"
+
+    gatk CollectMultipleMetrics \
+      --java-options "-Xmx7G" \
+      --INPUT {{ bam }} \
+      --OUTPUT {{ results_dir }}/{{ bam|basename }} \
+      --REFERENCE_SEQUENCE {{ reference_fasta }} \
+      --METRIC_ACCUMULATION_LEVEL null \
+      --METRIC_ACCUMULATION_LEVEL LIBRARY \
+      --METRIC_ACCUMULATION_LEVEL SAMPLE \
+      --PROGRAM null \
+      --PROGRAM CollectAlignmentSummaryMetrics \
+      --PROGRAM CollectBaseDistributionByCycle \
+      --PROGRAM MeanQualityByCycle \
+      --PROGRAM QualityScoreDistribution \
+      {% if sample.gltype not in 'rna' %}
+      --PROGRAM CollectGcBiasMetrics \
+      {% endif %}
+      --PROGRAM CollectSequencingArtifactMetrics \
+      --PROGRAM CollectQualityYieldMetrics
+
+    {% if libraryCount == 1 %}
+      cp {{ results_dir }}/{{ bam|basename }}.base_distribution_by_cycle_metrics {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.base_distribution_by_cycle_metrics
+      cp {{ results_dir }}/{{ bam|basename }}.base_distribution_by_cycle.pdf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.base_distribution_by_cycle.pdf
+      cp {{ results_dir }}/{{ bam|basename }}.error_summary_metrics {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.error_summary_metrics
+      cp {{ results_dir }}/{{ bam|basename }}.quality_by_cycle_metrics {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.quality_by_cycle_metrics
+      cp {{ results_dir }}/{{ bam|basename }}.quality_by_cycle.pdf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.quality_by_cycle.pdf
+      cp {{ results_dir }}/{{ bam|basename }}.quality_distribution_metrics {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.quality_distribution_metrics
+      cp {{ results_dir }}/{{ bam|basename }}.quality_distribution.pdf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.quality_distribution.pdf
+      cp {{ results_dir }}/{{ bam|basename }}.quality_yield_metrics {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.quality_yield_metrics
+
+      {% if sample.gltype not in 'rna' %}
+      cp {{ results_dir }}/{{ bam|basename }}.gc_bias.pdf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.cram.gc_bias.pdf
+      {% endif %}
+
+      {{- stats2json(sample.gltype, sample.name, task, error_metrics, error_metrics_json, "picard_error_summary_metrics", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+      {{- stats2json(sample.gltype, sample.name, task, quality_yield_metrics, quality_yield_metrics_json, "picard_quality_yield_metrics", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+
+    {% elif bam_level is sameas false %}
+      {{- stats2json(sample.gltype, sample.name, task, error_metrics, error_metrics_json, "picard_error_summary_metrics", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+      {{- stats2json(sample.gltype, sample.name, task, quality_yield_metrics, quality_yield_metrics_json, "picard_quality_yield_metrics", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+    {% endif %}
+
+  {% if bam_level is sameas true %}
+    {{- stats2json(sample.gltype, sample.name, task, alignment_summary_metrics, alignment_summary_metrics_json, "picard_alignment_summary_metrics", sample=sample) }}
+    {% if sample.gltype not in 'rna' %}
+      {{- stats2json(sample.gltype, sample.name, task, gc_bias_metrics, gc_bias_metrics_json, "picard_gc_bias_summary_metrics", sample=sample) }}
+    {% endif %}
+  {% endif %}
+
+{% endif %}
+{% endmacro %}
+
+{% macro bam_qc_snpsniffer_geno(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=true) %}
+{% if tasks[taskPrefix+"_quality_control_genotype_concordance_snpSniffer"]|default(false) and constants.grandcanyon[reference].snpSniffer_sites is defined %}
+
+  {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+
+  {% set alignment_format = 'cram' %}
+  {% set index_format = 'crai' %}
+  {% if bam_level is sameas false %}
+    {% set task %}{{ sample.name }}_{{ sample_lb }}_{{ aligner }}{% endset %}
+    {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}_{{ sample_lb }}{% endset %}
+    {% set bam %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}{% endset %}
+    {% set bam_index %}{{ temp_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.{{ index_format }}{% endset %}
+  {% else %}
+    {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
+    {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.{{ alignment_format }}{% endset %}
+    {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.{{ alignment_format }}.{{ index_format }}{% endset %}
+  {% endif %}
+
+  {% set sample_lb_output %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer_HetRate_Summary.tsv{% endset %}
+  {% set json %}{{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer_HetRate_Summary.json{% endset %}
+  {% set output %}{{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv{% endset %}
+
+{% if sample.gltype == 'rna' and constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
+  {% set reference_dict %}{{ constants.grandcanyon[reference].reference_fasta_no_alt | replace('.fa','.dict') }}{% endset %}
+{% else %}
+  {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+  {% set reference_dict %}{{ constants.grandcanyon[reference].reference_dict }}{% endset %}
+{% endif %}
+- name: snpsniffer_geno_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, genotype_concordance, snpSniffer, {{ sample.name }}]
+  input:
+    - {{ bam }}
+    - {{ bam_index }}
+    - {{ reference_fasta }}
+    - {{ reference_dict }}
+    - {{ constants.grandcanyon[reference].snpSniffer_sites }}
+  output:
+    - {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf
+    - {{ output }}
+    {% if libraryCount == 1 %}
+    - {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer.vcf
+    - {{ sample_lb_output }}
+    {% endif %}
+  {% if bam_level is sameas false %}
+  reset: predecessors
+  {% endif %}
+  cpus: 2
+  mem: 4G
+  walltime: "12:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    grep 'SN:\(chr\)\?[0-9XY]\+\([a-z]\)\?\s' {{ reference_dict }} |\
+      sed 's/SN:chr//;s/LN://' |\
+      awk '{ print "chr"$2, $2 }' \
+      > {{ results_dir }}/{{ task }}_chr_remap.txt
+
+    bcftools mpileup \
+      --no-BAQ \
+      --max-depth 5000 \
+      --min-MQ 0 \
+      --min-BQ 13 \
+      --fasta-ref "{{ reference_fasta }}" \
+      --regions-file "{{ constants.grandcanyon[reference].snpSniffer_sites }}" \
+      {{ bam }} \
+      | \
+    bcftools call \
+      --consensus-caller \
+      --skip-variants indels \
+      | \
+    bcftools sort \
+      | \
+    bcftools annotate \
+      --threads 2 \
+      --include 'INFO/DP >= 5' \
+      --rename-chrs {{ results_dir }}/{{ task }}_chr_remap.txt \
+      --output-type v \
+      --output "{{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf"
+
+    TESTED_GENOTYPES=`bcftools view -H --include 'GT!="mis"' {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf | wc -l`
+    HOMOZYGOUS_TOTAL=`bcftools view -H --include 'GT="hom"' {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf | wc -l`
+    HETEROZYGOUS_TOTAL=`bcftools view -H --include 'GT="het"' {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf | wc -l`
+    HET_RATIO=$(echo "$HETEROZYGOUS_TOTAL $TESTED_GENOTYPES" | awk '{ print $1/$2 }')
+
+    echo -e "SAMPLE\tLIBRARY\tHomozygous\tHeterozygous\tTotal\thetRatio" > {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv
+    echo -e "{{ sample.name }}\t{{ sample_lb }}\t${HOMOZYGOUS_TOTAL}\t${HETEROZYGOUS_TOTAL}\t${TESTED_GENOTYPES}\t${HET_RATIO}" >> {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv
+    {% if libraryCount == 1 %}
+      cp {{ results_dir }}/{{ bam|basename }}.snpSniffer.vcf {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer.vcf
+      cp {{ results_dir }}/{{ bam|basename }}.snpSniffer_HetRate_Summary.tsv {{ results_dir }}/{{ sample.name }}_{{ sample_lb }}.{{ aligner }}.{{ alignment_format }}.snpSniffer_HetRate_Summary.tsv
+    {% endif %}
+
+    rm {{ results_dir }}/{{ task }}_chr_remap.txt 
+
+  {% if libraryCount == 1 %}
+    {{- stats2json(sample.gltype, sample.name, task, sample_lb_output, json, "snpsniffer_summary", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+  {% elif bam_level is sameas false %}
+    {{- stats2json(sample.gltype, sample.name, task, output, json, "snpsniffer_summary", sample=sample, sample_name=sample.name, library_name=sample_lb) }}
+  {% endif %}
+
+{% endif %}
+{% endmacro %}
+
+{% macro bam_qc_riker(sample, libraryCount, sample_lb, taskPrefix=taskPrefix, aligner=aligner, bam_level=true) %}
+{% if tasks[taskPrefix+"_quality_control_stats_riker"]|default(false) %}
+
+  {% set temp_dir %}temp/{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+  {% set results_dir %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/stats{% endset %}
+
+  {% set task %}{{ sample.name }}_{{ aligner }}{% endset %}
+  {% set bam %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram{% endset %}
+  {% set bam_index %}{{ sample.gltype }}/alignment/{{ aligner }}/{{ sample.name }}/{{ sample.name }}.{{ aligner }}.cram.crai{% endset %}
+
+  {% if sample.gltype == 'rna' and constants.grandcanyon[reference].reference_fasta_no_alt is defined %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta_no_alt }}{% endset %}
+  {% else %}
+    {% set reference_fasta %}{{ constants.grandcanyon[reference].reference_fasta }}{% endset %}
+  {% endif %}
+
+- name: riker_multi_{{ task }}
+  tags: [{{ sample.gltype }}, quality_control, stats, gatk_CollectMultipleMetrics, {{ sample.name }}]
+  input:
+    - {{ bam }}
+    - {{ bam_index }}
+    - {{ reference_fasta }}
+  walltime: "8:00:00"
+  cpus: 4
+  mem: 8G
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.riker.container }}
+  cmd: |
+    set -eu
+    set -o pipefail
+
+    mkdir -p "{{ temp_dir }}"
+    mkdir -p "{{ results_dir }}"
+
+    riker multi \
+      --threads 4 \
+      -i {{ bam }} \
+      -r {{ reference_fasta }} \
+      -o {{ temp_dir }}/{{ bam|basename }}.riker \
+      --tools alignment isize basic gcbias \
+
+{% endif %}
+{% endmacro %}

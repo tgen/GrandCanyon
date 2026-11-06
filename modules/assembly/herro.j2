@@ -1,0 +1,49 @@
+{% macro herro(input, fastq, corrected_fasta) %}
+
+{%- set temp_dir %}temp/{{ input.gltype }}/assembly/herro/{{ input.project }}{% endset %}
+{%- set results_dir %}{{ input.gltype }}/assembly/herro/{{ input.project }}{% endset %}
+{% set filtered_fastq %}{{ temp_dir }}/{{ fastq | basename | replace('.fastq.gz', '.filtered.fastq') }}{% endset %}
+
+- name: herro_preprocess_{{ fastq | basename | replace('.', '_') }}
+  reset: predecessors
+  input: {{ fastq }}
+  output: {{ filtered_fastq }}
+  cpus: 4
+  mem: 8G
+  walltime: "12:00:00"
+  container: {{ constants.tools.seqkit.container }}
+  cmd: |
+    set -eu
+
+    mkdir -p {{ temp_dir }}
+    mkdir -p {{ results_dir }}
+
+    seqkit seq \
+      --min-qual 10 \
+      --min-len 10000 \
+      -o {{ filtered_fastq }} \
+      {{ fastq }}
+
+- name: dorado_herro_{{ fastq | basename | replace('.', '_') }}
+  reset: predecessors
+  input:
+    - {{ constants.grandcanyon.ont_resources }}
+    - {{ filtered_fastq }}
+  output:
+    - {{ corrected_fasta }}
+  cpus: 16
+  mem: 192G
+  walltime: "24:00:00"
+  queue_preset: "HERRO"
+  container: {{ constants.tools.dorado.container }}
+  cmd: |
+    set -e
+
+    dorado correct \
+      -v \
+      -m {{ constants.grandcanyon.ont_resources }}/dorado_models/herro-v1 \
+      -t 16 \
+      {{ filtered_fastq }} \
+      > {{ corrected_fasta }}
+
+{% endmacro %}

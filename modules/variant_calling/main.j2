@@ -1,0 +1,562 @@
+{# general snv callers #}
+{% from 'modules/variant_calling/snv_indel/deepvariant.j2' import deepvariant with context %}
+{% from 'modules/variant_calling/snv_indel/deepvariant_pangenome.j2' import deepvariant_pangenome with context %}
+{% from 'modules/variant_calling/snv_indel/deepsomatic.j2' import deepsomatic with context %}
+{% from 'modules/variant_calling/snv_indel/clair3.j2' import clair3 with context %}
+{% from 'modules/variant_calling/snv_indel/clairs.j2' import clairs with context %}
+
+{# short-read snv callers #}
+{% from 'modules/variant_calling/snv_indel/haplotypecaller.j2' import haplotypecaller with context %}
+{% from 'modules/variant_calling/snv_indel/lancet2.j2' import lancet2 with context %}
+{% from 'modules/variant_calling/snv_indel/mutect2.j2' import mutect2 with context %}
+{% from 'modules/variant_calling/snv_indel/strelka2.j2' import strelka2 with context %}
+{% from 'modules/variant_calling/snv_indel/vardict.j2' import vardict with context %}
+{% from 'modules/variant_calling/snv_indel/vcfmerger2.j2' import vcfmerger2 with context %}
+
+{# long-read snv callers #}
+{% from 'modules/variant_calling/snv_indel/trgt.j2' import trgt with context %}
+
+{# joint snv variant callers #}
+{% from 'modules/variant_calling/snv_indel/deeptrio.j2' import deeptrio with context %}
+{% from 'modules/variant_calling/snv_indel/glnexus.j2' import glnexus with context %}
+{% from 'modules/variant_calling/snv_indel/gatk_joint.j2' import gatk_joint_genotype with context %}
+
+{# general sv callers #}
+{% from 'modules/variant_calling/structural/dysgu.j2' import dysgu with context %}
+
+{# short-read sv callers #}
+{% from 'modules/variant_calling/structural/manta.j2' import manta with context %}
+
+{# long-read sv callers #}
+{% from 'modules/variant_calling/structural/cutesv.j2' import cutesv with context %}
+{% from 'modules/variant_calling/structural/sniffles.j2' import sniffles with context %}
+{% from 'modules/variant_calling/structural/pbsv.j2' import pbsv with context %}
+{% from 'modules/variant_calling/structural/severus.j2' import severus with context %}
+{% from 'modules/variant_calling/structural/savana.j2' import savana with context %}
+
+{# short-read copy number callers #}
+{% from 'modules/variant_calling/copy_number/gatk_cnv.j2' import gatk_cnv with context %}
+{% from 'modules/variant_calling/copy_number/ichorcna.j2' import ichorcna with context %}
+{% from 'modules/variant_calling/copy_number/cnvkit.j2' import cnvkit with context %}
+{% from 'modules/variant_calling/copy_number/ascat.j2' import ascat with context %}
+
+{# long-read copy number callers #}
+{% from 'modules/variant_calling/copy_number/spectre.j2' import spectre with context %}
+{% from 'modules/variant_calling/copy_number/hifi_cnv.j2' import hifi_cnv with context %}
+{% from 'modules/variant_calling/copy_number/wakhan.j2' import wakhan with context %}
+
+{# variant phasing #}
+{% from 'modules/variant_calling/postprocessing/whatshap.j2' import whatshap_haplotag with context %}
+{% from 'modules/variant_calling/postprocessing/whatshap.j2' import whatshap_phase with context %}
+
+{# sample signatures/metrics and status calling #}
+{% from 'modules/variant_calling/metrics/main.j2' import collect_sample_metrics with context %}
+
+
+{# utilities #}
+{% from 'utilities/create_ped.j2' import create_ped with context %}
+
+{%- macro constitutional_variant_calling(samples) %}
+
+{%- for sample in samples.values() if sample.gltype in ('exome','genome') and sample.subGroup|lower in ('constitutional','germline','normal','control') %}
+
+  {% for aligner in sample.aligners %}
+
+    {% if sample.gltype in 'exome' %}
+      {% set taskPrefix = 'Exome' %}
+    {% elif sample.gltype in 'genome' %}
+      {% set taskPrefix = 'Genome' %}
+    {% endif %}
+
+    {############
+    # snv and indel variant callers
+    ############}
+
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant"]|default(false) %}
+      {{- deepvariant(sample, aligner) }}
+      {% if tasks[taskPrefix+"_variant_calling_phasing_whatshap"]|default(false) and sample.glprep in 'longread' %}
+        {% do sample.update({'phased_bam': '', 'phased_vcf': ''}) %}
+        {{- whatshap_phase(sample, aligner, 'deepvariant') }}
+        {{- whatshap_haplotag(sample, aligner, 'deepvariant') }}
+      {% endif %}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepvariant_pangenome"]|default(false) %}
+      {% if constants.grandcanyon[reference].reference_gbz is defined %}
+        {{- deepvariant_pangenome(sample, aligner) }}
+      {% endif %}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_haplotypecaller"]|default(false) %}
+      {{- haplotypecaller(sample, aligner) }}
+    {% endif %}
+
+    {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clair3"]|default(false) %}
+      {{- clair3(sample, aligner) }}
+    {% endif %}
+
+    {% if sample.glprep in 'longread' %}
+
+      {% if sample.rgpl in ('PACBIO') %}
+        {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_trgt"]|default(false) %}
+          {{- trgt(sample, aligner) }}
+        {% endif %}
+      {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
+        {{- strelka2(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
+        {% if aligner not in 'vg_giraffe' %}
+          {{- vardict(sample, aligner) }}
+        {% endif %}
+      {% endif %}
+
+    {% endif %}
+
+    {############
+    # structural variant callers
+    ############}
+
+    {% if sample.glprep in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_cutesv"]|default(false) %}
+        {{- cutesv(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(false) %}
+        {{- dysgu(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(false) %}
+        {{- sniffles(sample, aligner) }}
+      {% endif %}
+
+      {% if sample.rgpl in ('PACBIO') %}
+        {% if tasks[taskPrefix+"_variant_calling_structural_caller_pbsv"]|default(false) %}
+          {{- pbsv(sample, aligner) }}
+        {% endif %}
+      {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
+        {{- manta(sample, aligner) }}
+      {% endif %}
+
+    {% endif %}
+
+    {############
+    # copy number variant callers
+    ############}
+
+    {% if sample.glprep in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_spectre"]|default(false) %}
+        {{- spectre(sample, aligner) }}
+      {% endif %}
+
+      {% if sample.rgpl in ('PACBIO') %}
+        {% if tasks[taskPrefix+"_variant_calling_cna_caller_hificnv"]|default(false) %}
+          {{- hifi_cnv(sample, aligner) }}
+        {% endif %}
+      {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
+        {{- gatk_cnv(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_ichorcna"]|default(false) %}
+        {{- ichorcna(sample, aligner) }}
+      {% endif %}
+
+    {% endif %}
+
+  {% endfor %}
+
+{% endfor %}
+
+
+{############
+# Multisample constitutional variant calling, groups constitutional samples by assayCode for variant calling
+############}
+
+{% set sample_tuples = [] %}
+{% for assay_code, sample_tuple in samples.values()|selectattr('subGroup', 'eq', 'Constitutional')|groupby('assayCode') %}
+  {% set sample = sample_tuple|first %}
+  {% set tuple_name %}{{ project }}_{{ assay_code }}{% endset %}
+  {% if sample_tuple | length > 1 %}
+    {% do sample_tuples.append({'name': tuple_name, 'gltype': sample.gltype, 'samples': sample_tuple}) %}
+  {% endif %}
+{% endfor %}
+
+{% for sample_tuple in sample_tuples %}
+  {% set sample = sample_tuple.samples|first %}
+  {% for aligner in sample.aligners %}
+
+    {% if sample.glprep in 'longread' %}
+
+      {% if tasks[sample_tuple.gltype|capitalize+"_variant_calling_structural_caller_sniffles"]|default(false) %}
+        {{- sniffles(sample_tuple, aligner) }}
+      {% endif %}
+
+    {% endif %}
+
+  {% endfor %}
+{% endfor %}
+
+{############
+# Trio variant calling is only available if relationships are defined in the input
+############}
+
+{% set trio = {} %}
+{% if sampleRelations is defined %}
+  {% for sample in sampleRelations if sample.paternalID != '' or sample.maternalID != '' %}
+    {% set parents = [] %}
+    {% if sample.paternalID is defined %}
+      {% set paternal = sampleRelations|selectattr('patientID', 'eq', sample.paternalID)|first|default(none) %}
+      {% set paternal_sample = samples.values()|selectattr('sampleMergeKey', 'eq', paternal.sampleMergeKey)|first|default(none) %}
+      {% if paternal_sample is not none %}
+        {% do parents.append(paternal_sample) %}
+      {% else %}
+
+      {% endif %}
+    {% endif %}
+    {% if sample.maternalID is defined %}
+      {% set maternal = sampleRelations|selectattr('patientID', 'eq', sample.maternalID)|first|default(none) %}
+      {% set maternal_sample = samples.values()|selectattr('sampleMergeKey', 'eq', maternal.sampleMergeKey)|first|default(none) %}
+      {% if maternal_sample is not none %}
+        {% do parents.append(maternal_sample) %}
+      {% else %}
+
+      {% endif %}
+    {% endif %}
+    {% set child = samples.values()|selectattr('sampleMergeKey', 'eq', sample.sampleMergeKey)|first|default(none) %}
+    {% do trio.update({'name': familyCode, 'gltype': child.gltype, 'child': child, 'parents': parents}) %}
+  {% endfor %}
+
+  {{- create_ped(trio) }}
+
+  {% for aligner in trio.child.aligners %}
+
+    {% if tasks[trio.gltype|capitalize+"_variant_calling_joint_variant_caller_deeptrio"]|default(false) %}
+      {{- deeptrio(trio, aligner) }}
+    {% endif %}
+
+    {% if tasks[trio.gltype|capitalize+"_variant_calling_joint_variant_caller_glnexus"]|default(false) %}
+      {{- glnexus(trio, aligner) }}
+    {% endif %}
+
+    {% if trio.child.glprep in 'longread' %}
+
+    {% else %}
+
+      {% if tasks[trio.gltype|capitalize+"_variant_calling_joint_variant_caller_gatk"]|default(false) %}
+        {{- gatk_joint_genotype(trio, aligner) }}
+      {% endif %}
+
+    {% endif %}
+
+  {% endfor %}
+{% endif %}
+
+{% endmacro %}
+
+{% macro somatic_variant_calling(samples) %}
+
+{% set pairs = [] %}
+{% set tumors_with_normal = [] %}
+{% for tumor in samples.values() if tumor.subGroup|lower in ('tumor','tumour','case') and tumor.gltype in ('exome','genome') %}
+
+  {% if tasks['RNA_alignment_rna_alignment_STAR']|default(false) and tumor.dnaRnaMergeKey is defined %}
+    {% for rna in samples.values() if rna.dnaRnaMergeKey is defined and rna.dnaRnaMergeKey == tumor.dnaRnaMergeKey and rna.gltype == 'rna' %}
+      {% if 'rna_samples' not in tumor %}
+         {% do tumor.update({'rna_samples': []}) %}
+      {% endif %}
+      {% do tumor.rna_samples.append(rna) %}
+   {% endfor %}
+  {% endif %}
+
+  {% for normal in samples.values() if normal.subGroup|lower in ('constitutional','germline','normal','control') and normal.gltype == tumor.gltype and normal.assayCode == tumor.assayCode %}
+    {% set pair_name = normal.name + '-' + tumor.name %}
+    {% do pairs.append({'name': pair_name, 'gltype': normal.gltype, 'glprep': normal.glprep, 'normal': normal, 'tumor': tumor}) %}
+    {% do tumors_with_normal.append(tumor) %}
+  {% endfor %}
+{% endfor %}
+
+{############
+# This generates tasks for true tumor only compatible variant callers
+############}
+{%- for sample in samples.values() if sample.gltype in ('exome','genome') and sample.subGroup|lower in ('tumor','tumour','case') %}
+
+  {% if sample not in tumors_with_normal or allow_tumor_only|default(false) %}
+
+  {% if sample.gltype in 'exome' %}
+    {% set taskPrefix = 'Exome' %}
+  {% elif sample.gltype in 'genome' %}
+    {% set taskPrefix = 'Genome' %}
+  {% endif %}
+  {% do sample.update({'callers': []}) %}
+  {% do sample.update({'sv_callers': []}) %}
+
+  {% for aligner in sample.aligners %}
+
+    {############
+    # snv and indel variant callers
+    ############}
+    {% if sample.glprep in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
+        {{- deepsomatic(sample, aligner) }}
+      {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
+        {% do sample.callers.append('deepsomatic') %}
+        {{- deepsomatic(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_mutect2"]|default(false) %}
+        {% do sample.callers.append('mutect2') %}
+        {{- mutect2(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
+        {% do sample.callers.append('strelka2') %}
+        {{- strelka2(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
+        {% if aligner not in 'vg_giraffe' %}
+          {% do sample.callers.append('vardict') %}
+          {{- vardict(sample, aligner) }}
+        {% endif %}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_lancet2"]|default(false) %}
+        {% do sample.callers.append('lancet2') %}
+        {{- lancet2(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_merge_vcfs_vcfMerger2"]|default(false) %}
+        {{- vcfmerger2(sample, aligner) }}
+      {% endif %}
+
+    {% endif %}
+
+    {% if sample.glprep in 'longread' %}
+      {% if sample.rgpl in ('PACBIO') %}
+        {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_trgt"]|default(false) %}
+          {{- trgt(sample, aligner) }}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+
+    {############
+    # structural variant callers
+    ############}
+    {% if sample.glprep in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_cutesv"]|default(false) %}
+        {% do sample.sv_callers.append('cutesv') %}
+        {{- cutesv(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(false) %}
+        {% do sample.sv_callers.append('dysgu') %}
+        {{- dysgu(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_savana"]|default(false) %}
+        {% do sample.sv_callers.append('savana') %}
+        {{- savana(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
+        {% do sample.sv_callers.append('severus') %}
+        {{- severus(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_sniffles"]|default(false) %}
+        {{- sniffles(sample, aligner) }}
+      {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
+        {% do sample.sv_callers.append('manta') %}
+        {{- manta(sample, aligner) }}
+      {% endif %}
+
+    {% endif %}
+
+    {############
+    # copy number variant callers
+    ############}
+
+    {% if sample.glprep in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_wakhan"]|default(false) %}
+        {{- wakhan(sample, aligner) }}
+      {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
+        {{- gatk_cnv(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_ichorcna"]|default(false) %}
+        {{- ichorcna(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_cnvkit"]|default(false) %}
+        {{- cnvkit(sample, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_ascat"]|default(false) %}
+        {{- ascat(sample, aligner) }}
+      {% endif %}
+
+    {% endif %}
+
+  {% endfor %}
+
+  {% endif %}
+
+{% endfor %}
+
+{# Start of the macro calls that will actually add the tasks to the workflow #}
+{% for pair in pairs %}
+  {% if pair.gltype in 'exome' %}
+    {% set taskPrefix = 'Exome' %}
+  {% elif pair.gltype in 'genome' %}
+    {% set taskPrefix = 'Genome' %}
+  {% endif %}
+  {% do pair.update({'callers': []}) %}
+  {% do pair.update({'sv_callers': []}) %}
+
+  {% for aligner in pair.tumor.aligners %}
+
+    {############
+    # snv and indel variant callers
+    ############}
+
+    {% if pair.glprep in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
+        {{- deepsomatic(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_clairs"]|default(false) %}
+        {{- clairs(pair, aligner) }}
+      {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_deepsomatic"]|default(false) %}
+        {% do pair.callers.append('deepsomatic') %}
+        {{- deepsomatic(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_lancet2"]|default(false) %}
+        {% do pair.callers.append('lancet2') %}
+        {{- lancet2(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_mutect2"]|default(false) %}
+        {% do pair.callers.append('mutect2') %}
+        {{- mutect2(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_strelka2"]|default(false) %}
+        {% do pair.callers.append('strelka2') %}
+        {{- strelka2(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_snp_indel_caller_vardict"]|default(false) %}
+        {% if aligner not in 'vg_giraffe' %}
+          {% do pair.callers.append('vardict') %}
+          {{- vardict(pair, aligner) }}
+        {% endif %}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_merge_vcfs_vcfMerger2"]|default(false) %}
+        {{- vcfmerger2(pair, aligner) }}
+      {% endif %}
+
+    {% endif %}
+
+    {############
+    # structural variant callers
+    ############}
+
+    {% if pair.glprep in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_dysgu"]|default(false) %}
+        {% do pair.sv_callers.append('dysgu') %}
+        {{- dysgu(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_savana"]|default(false) %}
+        {% do pair.sv_callers.append('savana') %}
+        {{- savana(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_severus"]|default(false) %}
+        {% do pair.sv_callers.append('severus') %}
+        {{- severus(pair, aligner) }}
+      {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_structural_caller_manta"]|default(false) %}
+        {% do pair.sv_callers.append('manta') %}
+        {{- manta(pair, aligner) }}
+      {% endif %}
+
+    {% endif %}
+
+    {############
+    # copy number variant callers
+    ############}
+
+    {% if pair.glprep in 'longread' %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_wakhan"]|default(false) %}
+        {{- wakhan(pair, aligner) }}
+      {% endif %}
+
+    {% else %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_gatk_cnv"]|default(false) %}
+        {{- gatk_cnv(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_cnvkit"]|default(false) %}
+        {{- cnvkit(pair, aligner) }}
+      {% endif %}
+
+      {% if tasks[taskPrefix+"_variant_calling_cna_caller_ascat"]|default(false) %}
+        {{- ascat(pair, aligner) }}
+      {% endif %}
+
+    {% endif %}
+
+    {############
+    # signatures and metrics
+    ############}
+
+    {{- collect_sample_metrics(pair, aligner) }}
+
+  {% endfor %}
+
+{% endfor %}
+
+{% endmacro %}

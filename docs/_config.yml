@@ -1,0 +1,25 @@
+title: GrandCanyon
+description: GrandCanyon - A jetstream workflow for multiple genome references using long and short reads
+theme: just-the-docs
+
+url: https://tgen.github.io/grandcanyon
+
+nav_enabled: true
+permalink: pretty
+exclude:
+  - README.md
+
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+
+callouts:
+  important:
+    title: Important
+    color: blue
+
+mermaid:
+  version: "11.10.1"
