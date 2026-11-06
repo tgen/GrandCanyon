@@ -32,6 +32,15 @@
     {%- set mode_type = '--ont' %}
   {% endif %}
 {% endif %}
+
+{% if input_config in ('paired') %}
+  {%- set output_prefix %}{{ sample_or_pair.tumor.rgsm }}{% endset %}
+  {%- set temp_vcf %}{{ sample_or_pair.tumor.rgsm }}.classified.vcf{% endset %}
+{% else %}
+  {%- set output_prefix %}{{ sample_or_pair.rgsm }}{% endset %}
+  {%- set temp_vcf %}{{ sample_or_pair.rgsm }}.classified.vcf{% endset %}
+{% endif %}
+
 {%- set all_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.savana.all.vcf.gz{% endset %}
 {%- set pass_vcf %}{{ results_dir }}/{{ sample_or_pair.name }}.{{ aligner }}.savana.pass.vcf.gz{% endset %}
 
@@ -51,6 +60,15 @@
     - {{ bam }}.bai
     - {{ constants.grandcanyon[reference].reference_fasta }}
     - {{ constants.grandcanyon[reference].reference_dict }}
+  output:
+    - {{ temp_vcf }}
+    - {{ results_dir }}/{{ output_prefix }}.inserted_sequences.fa
+    - {{ results_dir }}/{{ output_prefix }}_allele_counts_hetSNPs.bed
+    - {{ results_dir }}/{{ output_prefix }}_fitted_purity_ploidy.tsv
+    - {{ results_dir }}/{{ output_prefix }}_ranked_solutions.tsv
+    - {{ results_dir }}/{{ output_prefix }}_raw_read_counts.tsv
+    - {{ results_dir }}/{{ output_prefix }}_read_counts_self_log2r_segmented.tsv
+    - {{ results_dir }}/{{ output_prefix }}_segmented_absolute_copy_number.tsv
   cpus: 8
   mem: 128G
   walltime: "12:00:00"
@@ -76,6 +94,8 @@
       --normal {{ normal_bam }} \
       {% if snp_vcf is defined %}
       --snp_vcf {{ snp_vcf }} \
+      {% else %}
+      --g1000_vcf {{ g1000_dict[reference] }} \
       {% endif %}
     {% else %}
     savana to \
@@ -83,12 +103,51 @@
       --tumour {{ bam }} \
       --g1000_vcf {{ g1000_dict[reference] }} \
     {% endif %}
-      --outdir {{ results_dir }} \
+      --outdir {{ temp_dir }} \
       {{ mode_type }} \
       --threads 8 \
       --cna_threads 8 \
       --contigs {{ temp_dir }}/calling_contigs.txt \
       --ref {{ constants.grandcanyon[reference].reference_fasta }}
+
+    mv {{ temp_dir }}/{{ output_prefix }}.inserted_sequences.fa {{ results_dir }}
+    mv {{ temp_dir }}/{{ output_prefix }}_allele_counts_hetSNPs.bed {{ results_dir }}
+    mv {{ temp_dir }}/{{ output_prefix }}_fitted_purity_ploidy.tsv {{ results_dir }}
+    mv {{ temp_dir }}/{{ output_prefix }}_ranked_solutions.tsv {{ results_dir }}
+    mv {{ temp_dir }}/{{ output_prefix }}_raw_read_counts.tsv {{ results_dir }}
+    mv {{ temp_dir }}/{{ output_prefix }}_read_counts_self_log2r_segmented.tsv {{ results_dir }}
+    mv {{ temp_dir }}/{{ output_prefix }}_segmented_absolute_copy_number.tsv {{ results_dir }}
+
+- name: savana_filter_variants_{{ sample_or_pair.name }}_{{ aligner }}
+  input:
+    - {{ temp_vcf }}
+  output:
+    - {{ all_vcf }}
+    - {{ all_vcf }}.tbi
+    - {{ pass_vcf }}
+    - {{ pass_vcf }}.tbi
+  cpus: 1
+  mem: 4G
+  walltime: "4:00:00"
+  queue_preset: "DEFAULT"
+  container: {{ constants.tools.bcftools.container }}
+  cmd: |
+    set -eu
+
+    mkdir -p {{ results_dir }}
+
+    bcftools view \
+      --output-type z \
+      --output {{ all_vcf }} \
+      --write-index \
+      {{ temp_vcf }}
+
+    bcftools view \
+      --include 'FILTER == "PASS"' \
+      --output-type z \
+      --output {{ pass_vcf }} \
+      --write-index \
+      {{ all_vcf }}
 
 {% from 'modules/variant_calling/postprocessing/main.j2' import postprocess_structural_variants with context %}
 {{- postprocess_structural_variants(sample_or_pair, pass_vcf, temp_dir, results_dir, aligner, 'savana') }}
